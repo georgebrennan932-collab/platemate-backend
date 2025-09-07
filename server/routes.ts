@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertFoodAnalysisSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -103,6 +103,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get analysis error:", error);
       res.status(500).json({ error: "Failed to retrieve analysis" });
+    }
+  });
+
+  // Diary routes
+  app.post("/api/diary", async (req, res) => {
+    try {
+      const validatedEntry = insertDiaryEntrySchema.parse(req.body);
+      const diaryEntry = await storage.createDiaryEntry(validatedEntry);
+      res.json(diaryEntry);
+    } catch (error) {
+      console.error("Create diary entry error:", error);
+      res.status(400).json({ error: "Invalid diary entry data" });
+    }
+  });
+
+  app.get("/api/diary", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const entries = await storage.getDiaryEntries(limit);
+      res.json(entries);
+    } catch (error) {
+      console.error("Get diary entries error:", error);
+      res.status(500).json({ error: "Failed to retrieve diary entries" });
+    }
+  });
+
+  app.get("/api/diary/:id", async (req, res) => {
+    try {
+      const entry = await storage.getDiaryEntry(req.params.id);
+      if (!entry) {
+        return res.status(404).json({ error: "Diary entry not found" });
+      }
+      res.json(entry);
+    } catch (error) {
+      console.error("Get diary entry error:", error);
+      res.status(500).json({ error: "Failed to retrieve diary entry" });
+    }
+  });
+
+  app.delete("/api/diary/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteDiaryEntry(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Diary entry not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete diary entry error:", error);
+      res.status(500).json({ error: "Failed to delete diary entry" });
     }
   });
 
