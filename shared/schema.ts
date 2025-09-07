@@ -25,6 +25,19 @@ export const diaryEntries = pgTable("diary_entries", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const drinkEntries = pgTable("drink_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  drinkName: varchar("drink_name").notNull(),
+  drinkType: varchar("drink_type").notNull(), // water, coffee, tea, juice, soda, etc.
+  amount: integer("amount").notNull(), // in ml
+  calories: integer("calories").default(0),
+  caffeine: integer("caffeine").default(0), // in mg
+  sugar: integer("sugar").default(0), // in grams
+  loggedAt: timestamp("logged_at").notNull(), // when the drink was consumed
+  notes: text("notes"), // optional user notes
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const DetectedFoodSchema = z.object({
   name: z.string(),
   portion: z.string(),
@@ -54,8 +67,19 @@ export const insertDiaryEntrySchema = createInsertSchema(diaryEntries).omit({
   notes: z.string().optional(),
 });
 
+export const insertDrinkEntrySchema = createInsertSchema(drinkEntries).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  drinkType: z.enum(["water", "coffee", "tea", "juice", "soda", "sports_drink", "alcohol", "other"]),
+  loggedAt: z.string().or(z.date()), // Accept string or Date
+  notes: z.string().optional(),
+});
+
 export type InsertDiaryEntry = z.infer<typeof insertDiaryEntrySchema>;
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
+export type InsertDrinkEntry = z.infer<typeof insertDrinkEntrySchema>;
+export type DrinkEntry = typeof drinkEntries.$inferSelect;
 
 // Relations
 export const foodAnalysesRelations = relations(foodAnalyses, ({ many }) => ({

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, insertDrinkEntrySchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -189,6 +189,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Generate diet advice error:", error);
       res.status(500).json({ error: "Failed to generate diet advice" });
+    }
+  });
+
+  // Drink routes
+  app.post("/api/drinks", async (req, res) => {
+    try {
+      const validatedEntry = insertDrinkEntrySchema.parse(req.body);
+      const drinkEntry = await storage.createDrinkEntry(validatedEntry);
+      res.json(drinkEntry);
+    } catch (error) {
+      console.error("Create drink entry error:", error);
+      res.status(400).json({ error: "Invalid drink entry data" });
+    }
+  });
+
+  app.get("/api/drinks", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const entries = await storage.getDrinkEntries(limit);
+      res.json(entries);
+    } catch (error) {
+      console.error("Get drink entries error:", error);
+      res.status(500).json({ error: "Failed to retrieve drink entries" });
+    }
+  });
+
+  app.get("/api/drinks/:id", async (req, res) => {
+    try {
+      const entry = await storage.getDrinkEntry(req.params.id);
+      if (!entry) {
+        return res.status(404).json({ error: "Drink entry not found" });
+      }
+      res.json(entry);
+    } catch (error) {
+      console.error("Get drink entry error:", error);
+      res.status(500).json({ error: "Failed to retrieve drink entry" });
+    }
+  });
+
+  app.delete("/api/drinks/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteDrinkEntry(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Drink entry not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete drink entry error:", error);
+      res.status(500).json({ error: "Failed to delete drink entry" });
     }
   });
 

@@ -4,6 +4,7 @@ import { CameraInterface } from "@/components/camera-interface";
 import { ProcessingState } from "@/components/processing-state";
 import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
+import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
 import { Book, Utensils, Lightbulb } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
@@ -65,6 +66,13 @@ export default function Home() {
               <span>Get Diet Advice</span>
             </button>
           </Link>
+        </div>
+      )}
+
+      {/* Drinks Bar */}
+      {currentState === 'camera' && (
+        <div className="max-w-md mx-auto">
+          <DrinksBar />
         </div>
       )}
       
