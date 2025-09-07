@@ -6,12 +6,7 @@ import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
 import path from "path";
-import OpenAI from "openai";
-
-// Configure OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { aiManager } from "./ai-providers/ai-manager";
 
 // Configure multer for image uploads
 const upload = multer({ 
@@ -69,8 +64,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail the request if cleanup fails
       }
 
-      // Real food recognition and nutrition analysis using OpenAI Vision
-      const foodAnalysisData = await performRealFoodAnalysis(processedImagePath);
+      // Real food recognition and nutrition analysis using multi-AI provider system
+      const foodAnalysisData = await aiManager.analyzeFoodImage(processedImagePath);
 
       const analysis = await storage.createFoodAnalysis(foodAnalysisData);
 
@@ -168,8 +163,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Analyze the data and provide advice
-      const advice = await generateDietAdvice(entries);
+      // Analyze the data and provide advice using multi-AI provider system
+      const advice = await aiManager.generateDietAdvice(entries);
       res.json(advice);
     } catch (error) {
       console.error("Get diet advice error:", error);
@@ -189,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const advice = await generateDietAdvice(entries);
+      const advice = await aiManager.generateDietAdvice(entries);
       res.json(advice);
     } catch (error) {
       console.error("Generate diet advice error:", error);
@@ -197,223 +192,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Provider monitoring routes
+  app.get("/api/ai/status", async (req, res) => {
+    try {
+      const systemHealth = aiManager.getSystemHealth();
+      res.json(systemHealth);
+    } catch (error) {
+      console.error("Get AI status error:", error);
+      res.status(500).json({ error: "Failed to retrieve AI status" });
+    }
+  });
+
+  app.post("/api/ai/reset", async (req, res) => {
+    try {
+      aiManager.resetProviders();
+      res.json({ success: true, message: "All providers reset successfully" });
+    } catch (error) {
+      console.error("Reset AI providers error:", error);
+      res.status(500).json({ error: "Failed to reset providers" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
-}
-
-// Generate diet advice using OpenAI
-async function generateDietAdvice(entries: any[]) {
-  try {
-    // Analyze eating patterns
-    const totalEntries = entries.length;
-    const totalCalories = entries.reduce((sum, entry) => sum + (entry.analysis?.totalCalories || 0), 0);
-    const avgCalories = totalCalories / totalEntries;
-    
-    const totalProtein = entries.reduce((sum, entry) => sum + (entry.analysis?.totalProtein || 0), 0);
-    const totalCarbs = entries.reduce((sum, entry) => sum + (entry.analysis?.totalCarbs || 0), 0);
-    const totalFat = entries.reduce((sum, entry) => sum + (entry.analysis?.totalFat || 0), 0);
-    
-    // Count meal types
-    const mealTypeCounts = entries.reduce((counts, entry) => {
-      counts[entry.mealType] = (counts[entry.mealType] || 0) + 1;
-      return counts;
-    }, {});
-
-    const analysisData = {
-      totalMeals: totalEntries,
-      averageCalories: Math.round(avgCalories),
-      totalNutrients: {
-        protein: Math.round(totalProtein),
-        carbs: Math.round(totalCarbs),
-        fat: Math.round(totalFat)
-      },
-      mealPattern: mealTypeCounts,
-      recentFoods: entries.slice(0, 10).map(entry => 
-        entry.analysis?.detectedFoods?.map((food: any) => food.name).join(', ') || 'Unknown'
-      ).filter(Boolean)
-    };
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-      messages: [
-        {
-          role: "system",
-          content: "You are a certified nutritionist and diet advisor. Analyze the user's eating patterns and provide helpful, personalized advice."
-        },
-        {
-          role: "user",
-          content: `Analyze my eating patterns and provide diet advice. Here's my data from the last 30 days:
-
-${JSON.stringify(analysisData, null, 2)}
-
-Please provide advice in the following JSON format:
-{
-  "personalizedAdvice": ["advice based on my specific patterns..."],
-  "nutritionGoals": ["specific goals I should work towards..."],
-  "improvements": ["areas where I can improve..."],
-  "generalTips": ["helpful nutrition tips..."]
-}
-
-Keep each array item to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice.`
-        }
-      ],
-      response_format: { type: "json_object" },
-    });
-
-    const adviceData = JSON.parse(response.choices[0].message.content || '{}');
-    return adviceData;
-  } catch (error) {
-    console.error("Error generating diet advice:", error);
-    // Return fallback advice if AI fails
-    return {
-      personalizedAdvice: [
-        "Keep tracking your meals to understand your eating patterns better.",
-        "Focus on maintaining consistent meal timing throughout the day."
-      ],
-      nutritionGoals: [
-        "Aim for balanced meals with protein, healthy fats, and complex carbs.",
-        "Include 5-7 servings of fruits and vegetables daily."
-      ],
-      improvements: [
-        "Consider adding more variety to your food choices.",
-        "Stay hydrated by drinking water throughout the day."
-      ],
-      generalTips: [
-        "Plan your meals ahead to make healthier choices.",
-        "Listen to your body's hunger and fullness cues."
-      ]
-    };
-  }
-}
-
-// Real food analysis function using OpenAI Vision API
-async function performRealFoodAnalysis(imagePath: string) {
-  try {
-    // Convert image to base64
-    const imageBuffer = await fs.readFile(imagePath);
-    const base64Image = imageBuffer.toString('base64');
-    const mimeType = 'image/jpeg';
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Analyze this food image and identify all visible food items. For each food item, estimate the portion size and provide nutritional information (calories, protein, carbs, fat in grams). Return the response as a JSON object with this exact structure:
-
-{
-  "confidence": number (0-100),
-  "detectedFoods": [
-    {
-      "name": "Food Name",
-      "portion": "estimated portion size",
-      "calories": number,
-      "protein": number,
-      "carbs": number,
-      "fat": number,
-      "icon": "appropriate icon name from: egg, bacon, bread-slice, apple-alt"
-    }
-  ]
-}
-
-Be as accurate as possible with portion estimates and nutritional values. If you can't clearly identify something, don't include it. Use standard USDA nutritional values.`
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${mimeType};base64,${base64Image}`
-              }
-            }
-          ]
-        }
-      ],
-      max_tokens: 1000,
-      temperature: 0.1
-    });
-
-    const responseText = response.choices[0].message.content;
-    
-    if (!responseText) {
-      throw new Error("No response from OpenAI");
-    }
-
-    // Clean the response text by removing markdown formatting
-    const cleanedText = responseText
-      .replace(/```json\s*/g, '')
-      .replace(/```\s*/g, '')
-      .trim();
-
-    // Parse the JSON response
-    const parsed = JSON.parse(cleanedText);
-    
-    // Validate the response structure
-    if (!parsed.detectedFoods || !Array.isArray(parsed.detectedFoods)) {
-      throw new Error("Invalid response format from OpenAI");
-    }
-
-    // Calculate totals
-    const totalCalories = parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.calories || 0), 0);
-    const totalProtein = parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.protein || 0), 0);
-    const totalCarbs = parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.carbs || 0), 0);
-    const totalFat = parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.fat || 0), 0);
-
-    return {
-      imageUrl: imagePath,
-      confidence: parsed.confidence || 85,
-      totalCalories,
-      totalProtein,
-      totalCarbs,
-      totalFat,
-      detectedFoods: parsed.detectedFoods
-    };
-
-  } catch (error: any) {
-    console.error("Error analyzing food with OpenAI:", error);
-    
-    // Check if it's a rate limit error
-    if (error?.status === 429 || error?.code === 'rate_limit_exceeded') {
-      return {
-        imageUrl: imagePath,
-        confidence: 0,
-        totalCalories: 0,
-        totalProtein: 0,
-        totalCarbs: 0,
-        totalFat: 0,
-        detectedFoods: [
-          {
-            name: "Rate Limit Reached",
-            portion: "OpenAI API limit exceeded",
-            calories: 0,
-            protein: 0,
-            carbs: 0,
-            fat: 0,
-            icon: "apple-alt"
-          }
-        ]
-      };
-    }
-    
-    // Fallback for other errors
-    return {
-      imageUrl: imagePath,
-      confidence: 50,
-      totalCalories: 250,
-      totalProtein: 12,
-      totalCarbs: 25,
-      totalFat: 10,
-      detectedFoods: [
-        {
-          name: "Analysis Error",
-          portion: "Could not process image",
-          calories: 250,
-          protein: 12,
-          carbs: 25,
-          fat: 10,
-          icon: "apple-alt"
-        }
-      ]
-    };
-  }
 }
