@@ -22,18 +22,13 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const addToDiaryMutation = useMutation({
     mutationFn: async () => {
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
-      return await apiRequest('/api/diary', {
-        method: 'POST',
-        body: JSON.stringify({
-          analysisId: data.id,
-          mealType: selectedMealType,
-          mealDate: mealDateTime.toISOString(),
-          notes: ""
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const response = await apiRequest('POST', '/api/diary', {
+        analysisId: data.id,
+        mealType: selectedMealType,
+        mealDate: mealDateTime.toISOString(),
+        notes: ""
       });
+      return await response.json();
     },
     onSuccess: () => {
       toast({

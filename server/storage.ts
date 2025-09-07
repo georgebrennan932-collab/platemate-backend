@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type InsertDiaryEntry, foodAnalyses, diaryEntries } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, foodAnalyses, diaryEntries } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
@@ -9,8 +9,8 @@ export interface IStorage {
   
   // Diary methods
   createDiaryEntry(entry: InsertDiaryEntry): Promise<DiaryEntry>;
-  getDiaryEntries(limit?: number): Promise<DiaryEntry[]>;
-  getDiaryEntry(id: string): Promise<DiaryEntry | undefined>;
+  getDiaryEntries(limit?: number): Promise<DiaryEntryWithAnalysis[]>;
+  getDiaryEntry(id: string): Promise<DiaryEntryWithAnalysis | undefined>;
   deleteDiaryEntry(id: string): Promise<boolean>;
 }
 
@@ -54,17 +54,23 @@ export class DatabaseStorage implements IStorage {
     return diaryEntry;
   }
 
-  async getDiaryEntries(limit = 50): Promise<DiaryEntry[]> {
-    return await db
-      .select()
-      .from(diaryEntries)
-      .orderBy(desc(diaryEntries.mealDate))
-      .limit(limit);
+  async getDiaryEntries(limit = 50): Promise<DiaryEntryWithAnalysis[]> {
+    return await db.query.diaryEntries.findMany({
+      limit,
+      orderBy: desc(diaryEntries.mealDate),
+      with: {
+        analysis: true,
+      },
+    });
   }
 
-  async getDiaryEntry(id: string): Promise<DiaryEntry | undefined> {
-    const [entry] = await db.select().from(diaryEntries).where(eq(diaryEntries.id, id));
-    return entry || undefined;
+  async getDiaryEntry(id: string): Promise<DiaryEntryWithAnalysis | undefined> {
+    return await db.query.diaryEntries.findFirst({
+      where: eq(diaryEntries.id, id),
+      with: {
+        analysis: true,
+      },
+    });
   }
 
   async deleteDiaryEntry(id: string): Promise<boolean> {

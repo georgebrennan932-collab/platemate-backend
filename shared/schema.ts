@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, jsonb, timestamp, integer } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -55,3 +56,20 @@ export const insertDiaryEntrySchema = createInsertSchema(diaryEntries).omit({
 
 export type InsertDiaryEntry = z.infer<typeof insertDiaryEntrySchema>;
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
+
+// Relations
+export const foodAnalysesRelations = relations(foodAnalyses, ({ many }) => ({
+  diaryEntries: many(diaryEntries),
+}));
+
+export const diaryEntriesRelations = relations(diaryEntries, ({ one }) => ({
+  analysis: one(foodAnalyses, {
+    fields: [diaryEntries.analysisId],
+    references: [foodAnalyses.id],
+  }),
+}));
+
+// Type with relations for frontend
+export type DiaryEntryWithAnalysis = DiaryEntry & {
+  analysis: FoodAnalysis;
+};
