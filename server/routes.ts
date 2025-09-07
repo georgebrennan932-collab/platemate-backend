@@ -41,10 +41,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // First validate the image by attempting to get metadata
         await sharp(req.file.path).metadata();
         
-        // If validation passes, process the image
+        // If validation passes, process the image (smaller size to reduce tokens)
         await sharp(req.file.path)
-          .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-          .jpeg({ quality: 85 })
+          .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 75 })
           .toFile(processedImagePath);
       } catch (sharpError) {
         console.error("Image processing error:", sharpError);
