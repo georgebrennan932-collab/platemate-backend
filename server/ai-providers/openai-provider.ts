@@ -182,11 +182,11 @@ Be as accurate as possible with portion estimates and nutritional values. If you
         messages: [
           {
             role: "system",
-            content: "You are a certified nutritionist and diet advisor. Analyze the user's eating patterns and provide helpful, personalized advice."
+            content: "You are a certified nutritionist and diet advisor. Analyze the user's eating patterns and provide helpful, personalized advice including specific meal ideas tailored to their individual needs."
           },
           {
             role: "user",
-            content: `Analyze my eating patterns and provide diet advice. Here's my data from the last 30 days:
+            content: `Analyze my eating patterns and provide diet advice with personalized meal ideas. Here's my data from the last 30 days:
 
 ${JSON.stringify(analysisData, null, 2)}
 
@@ -195,10 +195,23 @@ Please provide advice in the following JSON format:
   "personalizedAdvice": ["advice based on my specific patterns..."],
   "nutritionGoals": ["specific goals I should work towards..."],
   "improvements": ["areas where I can improve..."],
-  "generalTips": ["helpful nutrition tips..."]
+  "generalTips": ["helpful nutrition tips..."],
+  "mealIdeas": [
+    {
+      "mealType": "breakfast/lunch/dinner/snack",
+      "name": "Meal Name",
+      "description": "Brief description of the meal",
+      "calories": 400,
+      "protein": 25,
+      "carbs": 35,
+      "fat": 15,
+      "ingredients": ["ingredient1", "ingredient2", "ingredient3"],
+      "benefits": "Why this meal is good for the user based on their patterns"
+    }
+  ]
 }
 
-Keep each array item to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice.`
+Generate 4-6 meal ideas that address the user's specific nutritional needs, deficiencies, or goals based on their eating patterns. Include a variety of meal types (breakfast, lunch, dinner, snacks). Keep advice items to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice.`
           }
         ],
         response_format: { type: "json_object" },
