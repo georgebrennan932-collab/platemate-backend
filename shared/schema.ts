@@ -28,7 +28,7 @@ export const users = pgTable("users", {
 
 export const nutritionGoals = pgTable("nutrition_goals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().unique().references(() => users.id),
   dailyCalories: integer("daily_calories").default(2000),
   dailyProtein: integer("daily_protein").default(150), // in grams
   dailyCarbs: integer("daily_carbs").default(250), // in grams
