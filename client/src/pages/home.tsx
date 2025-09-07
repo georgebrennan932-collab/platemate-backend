@@ -5,7 +5,7 @@ import { ProcessingState } from "@/components/processing-state";
 import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { Link } from "wouter";
-import { Book, Utensils } from "lucide-react";
+import { Book, Utensils, Lightbulb } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
@@ -44,9 +44,9 @@ export default function Home() {
     <div className="bg-background text-foreground min-h-screen">
       <AppHeader />
       
-      {/* Diary Navigation */}
+      {/* Navigation */}
       {currentState === 'camera' && (
-        <div className="max-w-md mx-auto px-4 py-2">
+        <div className="max-w-md mx-auto px-4 py-2 space-y-3">
           <Link href="/diary">
             <button 
               className="w-full bg-secondary text-secondary-foreground py-3 px-4 rounded-lg font-medium hover:bg-secondary/80 transition-colors flex items-center justify-center space-x-2"
@@ -54,6 +54,15 @@ export default function Home() {
             >
               <Book className="h-4 w-4" />
               <span>View Food Diary</span>
+            </button>
+          </Link>
+          <Link href="/advice">
+            <button 
+              className="w-full bg-primary/10 text-primary border border-primary/20 py-3 px-4 rounded-lg font-medium hover:bg-primary/20 transition-colors flex items-center justify-center space-x-2"
+              data-testid="button-diet-advice"
+            >
+              <Lightbulb className="h-4 w-4" />
+              <span>Get Diet Advice</span>
             </button>
           </Link>
         </div>

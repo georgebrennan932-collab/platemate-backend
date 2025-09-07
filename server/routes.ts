@@ -155,8 +155,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Diet advice routes
+  app.get("/api/diet-advice", async (req, res) => {
+    try {
+      const entries = await storage.getDiaryEntries(30); // Get last 30 entries
+      if (!entries || entries.length === 0) {
+        return res.json({
+          personalizedAdvice: [],
+          nutritionGoals: [],
+          improvements: [],
+          generalTips: []
+        });
+      }
+
+      // Analyze the data and provide advice
+      const advice = await generateDietAdvice(entries);
+      res.json(advice);
+    } catch (error) {
+      console.error("Get diet advice error:", error);
+      res.status(500).json({ error: "Failed to retrieve diet advice" });
+    }
+  });
+
+  app.post("/api/diet-advice/generate", async (req, res) => {
+    try {
+      const entries = await storage.getDiaryEntries(30);
+      if (!entries || entries.length === 0) {
+        return res.json({
+          personalizedAdvice: ["Start tracking your meals to get personalized advice!"],
+          nutritionGoals: ["Add meals to your diary to set nutrition goals"],
+          improvements: [],
+          generalTips: []
+        });
+      }
+
+      const advice = await generateDietAdvice(entries);
+      res.json(advice);
+    } catch (error) {
+      console.error("Generate diet advice error:", error);
+      res.status(500).json({ error: "Failed to generate diet advice" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Generate diet advice using OpenAI
+async function generateDietAdvice(entries: any[]) {
+  try {
+    // Analyze eating patterns
+    const totalEntries = entries.length;
+    const totalCalories = entries.reduce((sum, entry) => sum + (entry.analysis?.totalCalories || 0), 0);
+    const avgCalories = totalCalories / totalEntries;
+    
+    const totalProtein = entries.reduce((sum, entry) => sum + (entry.analysis?.totalProtein || 0), 0);
+    const totalCarbs = entries.reduce((sum, entry) => sum + (entry.analysis?.totalCarbs || 0), 0);
+    const totalFat = entries.reduce((sum, entry) => sum + (entry.analysis?.totalFat || 0), 0);
+    
+    // Count meal types
+    const mealTypeCounts = entries.reduce((counts, entry) => {
+      counts[entry.mealType] = (counts[entry.mealType] || 0) + 1;
+      return counts;
+    }, {});
+
+    const analysisData = {
+      totalMeals: totalEntries,
+      averageCalories: Math.round(avgCalories),
+      totalNutrients: {
+        protein: Math.round(totalProtein),
+        carbs: Math.round(totalCarbs),
+        fat: Math.round(totalFat)
+      },
+      mealPattern: mealTypeCounts,
+      recentFoods: entries.slice(0, 10).map(entry => 
+        entry.analysis?.detectedFoods?.map((food: any) => food.name).join(', ') || 'Unknown'
+      ).filter(Boolean)
+    };
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "system",
+          content: "You are a certified nutritionist and diet advisor. Analyze the user's eating patterns and provide helpful, personalized advice."
+        },
+        {
+          role: "user",
+          content: `Analyze my eating patterns and provide diet advice. Here's my data from the last 30 days:
+
+${JSON.stringify(analysisData, null, 2)}
+
+Please provide advice in the following JSON format:
+{
+  "personalizedAdvice": ["advice based on my specific patterns..."],
+  "nutritionGoals": ["specific goals I should work towards..."],
+  "improvements": ["areas where I can improve..."],
+  "generalTips": ["helpful nutrition tips..."]
+}
+
+Keep each array item to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice.`
+        }
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const adviceData = JSON.parse(response.choices[0].message.content || '{}');
+    return adviceData;
+  } catch (error) {
+    console.error("Error generating diet advice:", error);
+    // Return fallback advice if AI fails
+    return {
+      personalizedAdvice: [
+        "Keep tracking your meals to understand your eating patterns better.",
+        "Focus on maintaining consistent meal timing throughout the day."
+      ],
+      nutritionGoals: [
+        "Aim for balanced meals with protein, healthy fats, and complex carbs.",
+        "Include 5-7 servings of fruits and vegetables daily."
+      ],
+      improvements: [
+        "Consider adding more variety to your food choices.",
+        "Stay hydrated by drinking water throughout the day."
+      ],
+      generalTips: [
+        "Plan your meals ahead to make healthier choices.",
+        "Listen to your body's hunger and fullness cues."
+      ]
+    };
+  }
 }
 
 // Real food analysis function using OpenAI Vision API
