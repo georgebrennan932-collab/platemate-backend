@@ -26,6 +26,18 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const nutritionGoals = pgTable("nutrition_goals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  dailyCalories: integer("daily_calories").default(2000),
+  dailyProtein: integer("daily_protein").default(150), // in grams
+  dailyCarbs: integer("daily_carbs").default(250), // in grams
+  dailyFat: integer("daily_fat").default(65), // in grams
+  dailyWater: integer("daily_water").default(2000), // in ml
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const foodAnalyses = pgTable("food_analyses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   imageUrl: text("image_url").notNull(),
@@ -102,17 +114,33 @@ export const insertDrinkEntrySchema = createInsertSchema(drinkEntries).omit({
   notes: z.string().optional(),
 });
 
+export const insertNutritionGoalsSchema = createInsertSchema(nutritionGoals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertDiaryEntry = z.infer<typeof insertDiaryEntrySchema>;
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
 export type InsertDrinkEntry = z.infer<typeof insertDrinkEntrySchema>;
 export type DrinkEntry = typeof drinkEntries.$inferSelect;
+export type InsertNutritionGoals = z.infer<typeof insertNutritionGoalsSchema>;
+export type NutritionGoals = typeof nutritionGoals.$inferSelect;
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   diaryEntries: many(diaryEntries),
   drinkEntries: many(drinkEntries),
+  nutritionGoals: one(nutritionGoals),
+}));
+
+export const nutritionGoalsRelations = relations(nutritionGoals, ({ one }) => ({
+  user: one(users, {
+    fields: [nutritionGoals.userId],
+    references: [users.id],
+  }),
 }));
 
 export const foodAnalysesRelations = relations(foodAnalyses, ({ many }) => ({

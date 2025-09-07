@@ -2,9 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame } from "lucide-react";
+import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target } from "lucide-react";
 import { Link } from "wouter";
-import type { DiaryEntryWithAnalysis, DrinkEntry } from "@shared/schema";
+import { ProgressIndicators } from "@/components/progress-indicators";
+import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
 
 export function DiaryPage() {
   const { toast } = useToast();
@@ -16,6 +17,10 @@ export function DiaryPage() {
 
   const { data: drinkEntries, isLoading: drinksLoading } = useQuery<DrinkEntry[]>({
     queryKey: ['/api/drinks'],
+  });
+
+  const { data: nutritionGoals } = useQuery<NutritionGoals>({
+    queryKey: ['/api/nutrition-goals'],
   });
 
   const deleteMutation = useMutation({
@@ -78,17 +83,34 @@ export function DiaryPage() {
     return groups;
   }, {} as Record<string, DrinkEntry[]>) || {};
 
-  // Calculate daily calorie totals
-  const dailyCalorieTotal = (date: string): number => {
-    const foodCalories = groupedEntries[date]?.reduce((total, entry) => {
-      return total + (entry.analysis?.totalCalories || 0);
-    }, 0) || 0;
+  // Calculate daily nutrition totals
+  const getDailyNutrition = (date: string) => {
+    const foodNutrition = groupedEntries[date]?.reduce((total, entry) => {
+      return {
+        calories: total.calories + (entry.analysis?.totalCalories || 0),
+        protein: total.protein + (entry.analysis?.totalProtein || 0),
+        carbs: total.carbs + (entry.analysis?.totalCarbs || 0),
+        fat: total.fat + (entry.analysis?.totalFat || 0),
+      };
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0 }) || { calories: 0, protein: 0, carbs: 0, fat: 0 };
     
     const drinkCalories = groupedDrinks[date]?.reduce((total, drink) => {
       return total + (drink.calories || 0);
     }, 0) || 0;
     
-    return foodCalories + drinkCalories;
+    return {
+      calories: foodNutrition.calories + drinkCalories,
+      protein: foodNutrition.protein,
+      carbs: foodNutrition.carbs,
+      fat: foodNutrition.fat,
+      water: groupedDrinks[date]?.reduce((total, drink) => {
+        // Only count water-type drinks toward hydration
+        if (['water', 'tea', 'coffee'].includes(drink.drinkType)) {
+          return total + drink.amount;
+        }
+        return total;
+      }, 0) || 0,
+    };
   };
 
   const allDates = new Set([...Object.keys(groupedEntries), ...Object.keys(groupedDrinks)]);
@@ -165,10 +187,11 @@ export function DiaryPage() {
         ) : (
           <div className="space-y-6">
             {sortedDates.map((date) => {
-              const dailyTotal = dailyCalorieTotal(date);
+              const dailyNutrition = getDailyNutrition(date);
+              const isToday = new Date(date).toDateString() === new Date().toDateString();
               
               return (
-                <div key={date} className="space-y-3">
+                <div key={date} className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2 text-sm font-medium text-muted-foreground">
                       <Calendar className="h-4 w-4" />
@@ -177,10 +200,24 @@ export function DiaryPage() {
                     <div className="flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1 rounded-full">
                       <Flame className="h-4 w-4" />
                       <span className="text-sm font-semibold" data-testid={`daily-calories-${date}`}>
-                        {dailyTotal} cal
+                        {dailyNutrition.calories} cal
                       </span>
                     </div>
                   </div>
+
+                  {/* Progress indicators for today */}
+                  {isToday && nutritionGoals && (
+                    <div className="bg-card border rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Target className="h-4 w-4 text-primary" />
+                        <h3 className="font-medium">Today's Progress</h3>
+                      </div>
+                      <ProgressIndicators 
+                        goals={nutritionGoals} 
+                        consumed={dailyNutrition}
+                      />
+                    </div>
+                  )}
                 <div className="space-y-2">
                   {/* Food entries */}
                   {groupedEntries[date]?.map((entry) => (

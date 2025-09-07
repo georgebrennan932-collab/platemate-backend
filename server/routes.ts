@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, insertDrinkEntrySchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, insertDrinkEntrySchema, insertNutritionGoalsSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -304,6 +304,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete drink entry error:", error);
       res.status(500).json({ error: "Failed to delete drink entry" });
+    }
+  });
+
+  // Nutrition goals routes (protected)
+  app.get("/api/nutrition-goals", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goals = await storage.getNutritionGoals(userId);
+      res.json(goals);
+    } catch (error) {
+      console.error("Get nutrition goals error:", error);
+      res.status(500).json({ error: "Failed to retrieve nutrition goals" });
+    }
+  });
+
+  app.post("/api/nutrition-goals", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedGoals = insertNutritionGoalsSchema.parse({
+        ...req.body,
+        userId
+      });
+      const goals = await storage.upsertNutritionGoals(validatedGoals);
+      res.json(goals);
+    } catch (error) {
+      console.error("Set nutrition goals error:", error);
+      res.status(400).json({ error: "Invalid nutrition goals data" });
     }
   });
 

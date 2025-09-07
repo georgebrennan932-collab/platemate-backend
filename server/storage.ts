@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type User, type UpsertUser, foodAnalyses, diaryEntries, drinkEntries, users } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, foodAnalyses, diaryEntries, drinkEntries, users, nutritionGoals } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
@@ -22,6 +22,10 @@ export interface IStorage {
   getDrinkEntries(userId?: string, limit?: number): Promise<DrinkEntry[]>;
   getDrinkEntry(id: string): Promise<DrinkEntry | undefined>;
   deleteDrinkEntry(id: string): Promise<boolean>;
+  
+  // Nutrition goals methods
+  getNutritionGoals(userId: string): Promise<NutritionGoals | undefined>;
+  upsertNutritionGoals(goals: InsertNutritionGoals): Promise<NutritionGoals>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -156,6 +160,27 @@ export class DatabaseStorage implements IStorage {
   async deleteDrinkEntry(id: string): Promise<boolean> {
     const result = await db.delete(drinkEntries).where(eq(drinkEntries.id, id));
     return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Nutrition goals methods
+  async getNutritionGoals(userId: string): Promise<NutritionGoals | undefined> {
+    const [goals] = await db.select().from(nutritionGoals).where(eq(nutritionGoals.userId, userId));
+    return goals || undefined;
+  }
+
+  async upsertNutritionGoals(goalsData: InsertNutritionGoals): Promise<NutritionGoals> {
+    const [goals] = await db
+      .insert(nutritionGoals)
+      .values(goalsData)
+      .onConflictDoUpdate({
+        target: nutritionGoals.userId,
+        set: {
+          ...goalsData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return goals;
   }
 }
 
