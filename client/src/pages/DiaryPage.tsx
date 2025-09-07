@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine } from "lucide-react";
+import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame } from "lucide-react";
 import { Link } from "wouter";
 import type { DiaryEntryWithAnalysis, DrinkEntry } from "@shared/schema";
 
@@ -78,6 +78,19 @@ export function DiaryPage() {
     return groups;
   }, {} as Record<string, DrinkEntry[]>) || {};
 
+  // Calculate daily calorie totals
+  const dailyCalorieTotal = (date: string): number => {
+    const foodCalories = groupedEntries[date]?.reduce((total, entry) => {
+      return total + (entry.analysis?.totalCalories || 0);
+    }, 0) || 0;
+    
+    const drinkCalories = groupedDrinks[date]?.reduce((total, drink) => {
+      return total + (drink.calories || 0);
+    }, 0) || 0;
+    
+    return foodCalories + drinkCalories;
+  };
+
   const allDates = new Set([...Object.keys(groupedEntries), ...Object.keys(groupedDrinks)]);
   const sortedDates = Array.from(allDates).sort((a, b) => 
     new Date(b).getTime() - new Date(a).getTime()
@@ -151,12 +164,23 @@ export function DiaryPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {sortedDates.map((date) => (
-              <div key={date} className="space-y-3">
-                <div className="flex items-center space-x-2 text-sm font-medium text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
-                </div>
+            {sortedDates.map((date) => {
+              const dailyTotal = dailyCalorieTotal(date);
+              
+              return (
+                <div key={date} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 text-sm font-medium text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1 rounded-full">
+                      <Flame className="h-4 w-4" />
+                      <span className="text-sm font-semibold" data-testid={`daily-calories-${date}`}>
+                        {dailyTotal} cal
+                      </span>
+                    </div>
+                  </div>
                 <div className="space-y-2">
                   {/* Food entries */}
                   {groupedEntries[date]?.map((entry) => (
@@ -258,8 +282,9 @@ export function DiaryPage() {
                     </div>
                   )) || []}
                 </div>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
