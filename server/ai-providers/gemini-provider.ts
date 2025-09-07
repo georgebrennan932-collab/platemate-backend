@@ -177,18 +177,31 @@ Be as accurate as possible with portion estimates and nutritional values. If you
       };
 
       const systemPrompt = `You are a certified nutritionist and diet advisor. 
-Analyze the user's eating patterns and provide helpful, personalized advice.
+Analyze the user's eating patterns and provide helpful, personalized advice including specific meal ideas tailored to their individual needs.
 Respond with JSON in this format: 
 {
   "personalizedAdvice": ["advice based on specific patterns..."],
   "nutritionGoals": ["specific goals to work towards..."],
   "improvements": ["areas where can improve..."],
-  "generalTips": ["helpful nutrition tips..."]
+  "generalTips": ["helpful nutrition tips..."],
+  "mealIdeas": [
+    {
+      "mealType": "breakfast/lunch/dinner/snack",
+      "name": "Meal Name",
+      "description": "Brief description of the meal",
+      "calories": 400,
+      "protein": 25,
+      "carbs": 35,
+      "fat": 15,
+      "ingredients": ["ingredient1", "ingredient2", "ingredient3"],
+      "benefits": "Why this meal is good for the user based on their patterns"
+    }
+  ]
 }
 
-Keep each array item to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice.`;
+Generate 4-6 meal ideas that address the user's specific nutritional needs, deficiencies, or goals based on their eating patterns. Include a variety of meal types (breakfast, lunch, dinner, snacks). Keep advice items to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice.`;
 
-      const userPrompt = `Analyze my eating patterns and provide diet advice. Here's my data from the last 30 days:
+      const userPrompt = `Analyze my eating patterns and provide diet advice with personalized meal ideas. Here's my data from the last 30 days:
 
 ${JSON.stringify(analysisData, null, 2)}`;
 
@@ -204,8 +217,26 @@ ${JSON.stringify(analysisData, null, 2)}`;
               nutritionGoals: { type: "array", items: { type: "string" } },
               improvements: { type: "array", items: { type: "string" } },
               generalTips: { type: "array", items: { type: "string" } },
+              mealIdeas: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    mealType: { type: "string", enum: ["breakfast", "lunch", "dinner", "snack"] },
+                    name: { type: "string" },
+                    description: { type: "string" },
+                    calories: { type: "number" },
+                    protein: { type: "number" },
+                    carbs: { type: "number" },
+                    fat: { type: "number" },
+                    ingredients: { type: "array", items: { type: "string" } },
+                    benefits: { type: "string" }
+                  },
+                  required: ["mealType", "name", "description", "calories", "protein", "carbs", "fat", "ingredients", "benefits"]
+                }
+              }
             },
-            required: ["personalizedAdvice", "nutritionGoals", "improvements", "generalTips"],
+            required: ["personalizedAdvice", "nutritionGoals", "improvements", "generalTips", "mealIdeas"],
           },
         },
         contents: userPrompt,
