@@ -72,7 +72,7 @@ export function DiaryPage() {
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Link href="/">
+              <Link href="/scan">
                 <button 
                   className="p-2 hover:bg-muted rounded-lg transition-colors"
                   data-testid="button-back-to-home"
