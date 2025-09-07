@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { Images, Zap, Camera, CloudUpload } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import type { FoodAnalysis } from "@shared/schema";
-import plateMateLogoUrl from "@/assets/platemate-logo.png";
 
 interface CameraInterfaceProps {
   onAnalysisStart: () => void;
@@ -127,16 +126,6 @@ export function CameraInterface({
           >
             <Zap className="text-white h-5 w-5" />
           </button>
-        </div>
-        
-        {/* PlateMate Logo */}
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-          <img 
-            src={plateMateLogoUrl} 
-            alt="PlateMate Logo" 
-            className="w-40 h-40 opacity-80"
-            data-testid="platemate-logo"
-          />
         </div>
       </div>
       
