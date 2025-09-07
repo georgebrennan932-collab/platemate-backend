@@ -20,11 +20,24 @@ export interface DetectedFood {
   icon: string;
 }
 
+export interface MealIdea {
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  name: string;
+  description: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  ingredients: string[];
+  benefits: string;
+}
+
 export interface DietAdviceResult {
   personalizedAdvice: string[];
   nutritionGoals: string[];
   improvements: string[];
   generalTips: string[];
+  mealIdeas: MealIdea[];
 }
 
 export interface DiaryEntry {
