@@ -107,70 +107,79 @@ export function DrinksBar() {
 
   if (!isExpanded) {
     return (
-      <Card className="mx-4 mb-4 border-blue-200 dark:border-blue-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center space-x-2 text-lg">
-            <Droplets className="h-5 w-5 text-blue-500" />
-            <span>Quick Drinks</span>
+      <Card className="mx-4 mb-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 border-blue-200 dark:border-blue-800 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center space-x-3 text-lg">
+            <div className="p-2 bg-blue-500 rounded-full shadow-md">
+              <Droplets className="h-5 w-5 text-white" />
+            </div>
+            <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent font-bold">Quick Drinks</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            {/* Quick add buttons for common drinks */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {/* Water */}
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => handleQuickAdd('water')}
               disabled={addDrinkMutation.isPending}
-              className="flex items-center space-x-2"
+              className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-300 hover:from-blue-200 hover:to-cyan-200 hover:shadow-md transition-all duration-200 text-blue-700 dark:text-blue-300"
               data-testid="button-quick-water"
             >
-              <Droplets className="h-4 w-4" />
-              <span>Water</span>
+              <Droplets className="h-6 w-6" />
+              <span className="text-sm font-medium">Water</span>
             </Button>
+            
+            {/* Coffee */}
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => handleQuickAdd('coffee')}
               disabled={addDrinkMutation.isPending}
-              className="flex items-center space-x-2"
+              className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-amber-300 hover:from-amber-200 hover:to-orange-200 hover:shadow-md transition-all duration-200 text-amber-700 dark:text-amber-300"
               data-testid="button-quick-coffee"
             >
-              <Coffee className="h-4 w-4" />
-              <span>Coffee</span>
+              <Coffee className="h-6 w-6" />
+              <span className="text-sm font-medium">Coffee</span>
             </Button>
+            
+            {/* Beer */}
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => handleQuickAdd('beer')}
               disabled={addDrinkMutation.isPending}
-              className="flex items-center space-x-2 text-amber-600 border-amber-300 hover:bg-amber-50"
+              className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 border-yellow-300 hover:from-yellow-200 hover:to-amber-200 hover:shadow-md transition-all duration-200 text-yellow-700 dark:text-yellow-300"
               data-testid="button-quick-beer"
             >
-              <Wine className="h-4 w-4" />
-              <span>Beer</span>
+              <Wine className="h-6 w-6" />
+              <span className="text-sm font-medium">Beer</span>
             </Button>
+            
+            {/* Wine */}
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => handleQuickAdd('wine')}
               disabled={addDrinkMutation.isPending}
-              className="flex items-center space-x-2 text-purple-600 border-purple-300 hover:bg-purple-50"
+              className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 border-purple-300 hover:from-purple-200 hover:to-pink-200 hover:shadow-md transition-all duration-200 text-purple-700 dark:text-purple-300"
               data-testid="button-quick-wine"
             >
-              <Wine className="h-4 w-4" />
-              <span>Wine</span>
+              <Wine className="h-6 w-6" />
+              <span className="text-sm font-medium">Wine</span>
             </Button>
           </div>
+          
           <Button
-            variant="ghost"
+            variant="default"
             size="sm"
             onClick={() => setIsExpanded(true)}
-            className="w-full text-blue-600 hover:text-blue-700"
+            className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
             data-testid="button-more-drinks"
           >
             <Plus className="h-4 w-4 mr-2" />
-            More Drinks
+            More Drinks & Custom Amounts
           </Button>
         </CardContent>
       </Card>
@@ -178,143 +187,158 @@ export function DrinksBar() {
   }
 
   return (
-    <Card className="mx-4 mb-4 border-blue-200 dark:border-blue-800">
-      <CardHeader className="pb-3">
+    <Card className="mx-4 mb-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 border-blue-200 dark:border-blue-800 shadow-lg">
+      <CardHeader className="pb-4">
         <CardTitle className="flex items-center justify-between text-lg">
-          <div className="flex items-center space-x-2">
-            <Droplets className="h-5 w-5 text-blue-500" />
-            <span>Log a Drink</span>
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-500 rounded-full shadow-md">
+              <Droplets className="h-5 w-5 text-white" />
+            </div>
+            <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent font-bold">Log a Drink</span>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsExpanded(false)}
+            className="hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600 rounded-full h-8 w-8 p-0"
             data-testid="button-collapse-drinks"
           >
             ×
           </Button>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Quick buttons */}
-        <div className="grid grid-cols-4 gap-2 mb-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleQuickAdd('water')}
-            disabled={addDrinkMutation.isPending}
-            className="flex flex-col items-center space-y-1 h-auto py-2"
-            data-testid="button-quick-water-expanded"
-          >
+      <CardContent className="space-y-5">
+        {/* Non-Alcoholic Drinks */}
+        <div>
+          <h4 className="font-semibold text-sm mb-3 text-blue-700 dark:text-blue-300 flex items-center space-x-2">
             <Droplets className="h-4 w-4" />
-            <span className="text-xs">Water</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleQuickAdd('coffee')}
-            disabled={addDrinkMutation.isPending}
-            className="flex flex-col items-center space-y-1 h-auto py-2"
-            data-testid="button-quick-coffee-expanded"
-          >
-            <Coffee className="h-4 w-4" />
-            <span className="text-xs">Coffee</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleQuickAdd('tea')}
-            disabled={addDrinkMutation.isPending}
-            className="flex flex-col items-center space-y-1 h-auto py-2"
-            data-testid="button-quick-tea"
-          >
-            <Coffee className="h-4 w-4" />
-            <span className="text-xs">Tea</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleQuickAdd('soda')}
-            disabled={addDrinkMutation.isPending}
-            className="flex flex-col items-center space-y-1 h-auto py-2"
-            data-testid="button-quick-soda"
-          >
-            <Wine className="h-4 w-4" />
-            <span className="text-xs">Soda</span>
-          </Button>
+            <span>Non-Alcoholic</span>
+          </h4>
+          <div className="grid grid-cols-4 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('water')}
+              disabled={addDrinkMutation.isPending}
+              className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-300 hover:from-blue-200 hover:to-cyan-200 hover:shadow-md transition-all duration-200 text-blue-700 dark:text-blue-300"
+              data-testid="button-quick-water-expanded"
+            >
+              <Droplets className="h-4 w-4" />
+              <span className="text-xs font-medium">Water</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('coffee')}
+              disabled={addDrinkMutation.isPending}
+              className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-amber-300 hover:from-amber-200 hover:to-orange-200 hover:shadow-md transition-all duration-200 text-amber-700 dark:text-amber-300"
+              data-testid="button-quick-coffee-expanded"
+            >
+              <Coffee className="h-4 w-4" />
+              <span className="text-xs font-medium">Coffee</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('tea')}
+              disabled={addDrinkMutation.isPending}
+              className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border-green-300 hover:from-green-200 hover:to-emerald-200 hover:shadow-md transition-all duration-200 text-green-700 dark:text-green-300"
+              data-testid="button-quick-tea"
+            >
+              <Coffee className="h-4 w-4" />
+              <span className="text-xs font-medium">Tea</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('soda')}
+              disabled={addDrinkMutation.isPending}
+              className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 border-red-300 hover:from-red-200 hover:to-pink-200 hover:shadow-md transition-all duration-200 text-red-700 dark:text-red-300"
+              data-testid="button-quick-soda"
+            >
+              <Wine className="h-4 w-4" />
+              <span className="text-xs font-medium">Soda</span>
+            </Button>
+          </div>
         </div>
 
         {/* Alcohol Section */}
-        <div className="border-t pt-3 mb-3">
-          <h4 className="font-medium text-sm mb-2 text-amber-700 dark:text-amber-300">Alcohol</h4>
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+          <h4 className="font-semibold text-sm mb-3 text-amber-700 dark:text-amber-300 flex items-center space-x-2">
+            <Wine className="h-4 w-4" />
+            <span>Alcoholic Drinks</span>
+          </h4>
           <div className="grid grid-cols-4 gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleQuickAdd('beer')}
               disabled={addDrinkMutation.isPending}
-              className="flex flex-col items-center space-y-1 h-auto py-2 text-amber-600 border-amber-300 hover:bg-amber-50"
+              className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/40 dark:to-amber-900/40 border-yellow-300 hover:from-yellow-200 hover:to-amber-200 hover:shadow-md transition-all duration-200 text-yellow-700 dark:text-yellow-300"
               data-testid="button-quick-beer-expanded"
             >
               <Wine className="h-4 w-4" />
-              <span className="text-xs">Beer</span>
+              <span className="text-xs font-medium">Beer</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleQuickAdd('wine')}
               disabled={addDrinkMutation.isPending}
-              className="flex flex-col items-center space-y-1 h-auto py-2 text-purple-600 border-purple-300 hover:bg-purple-50"
+              className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/40 dark:to-pink-900/40 border-purple-300 hover:from-purple-200 hover:to-pink-200 hover:shadow-md transition-all duration-200 text-purple-700 dark:text-purple-300"
               data-testid="button-quick-wine-expanded"
             >
               <Wine className="h-4 w-4" />
-              <span className="text-xs">Wine</span>
+              <span className="text-xs font-medium">Wine</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleQuickAdd('spirits')}
               disabled={addDrinkMutation.isPending}
-              className="flex flex-col items-center space-y-1 h-auto py-2 text-red-600 border-red-300 hover:bg-red-50"
+              className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/40 dark:to-rose-900/40 border-red-300 hover:from-red-200 hover:to-rose-200 hover:shadow-md transition-all duration-200 text-red-700 dark:text-red-300"
               data-testid="button-quick-spirits"
             >
               <Wine className="h-4 w-4" />
-              <span className="text-xs">Spirits</span>
+              <span className="text-xs font-medium">Spirits</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleQuickAdd('cocktail')}
               disabled={addDrinkMutation.isPending}
-              className="flex flex-col items-center space-y-1 h-auto py-2 text-pink-600 border-pink-300 hover:bg-pink-50"
+              className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/40 dark:to-rose-900/40 border-pink-300 hover:from-pink-200 hover:to-rose-200 hover:shadow-md transition-all duration-200 text-pink-700 dark:text-pink-300"
               data-testid="button-quick-cocktail"
             >
               <Wine className="h-4 w-4" />
-              <span className="text-xs">Cocktail</span>
+              <span className="text-xs font-medium">Cocktail</span>
             </Button>
           </div>
         </div>
 
         {/* Custom drink form */}
-        <div className="border-t pt-4 space-y-3">
-          <h4 className="font-medium text-sm">Custom Amount</h4>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-950/50 dark:to-gray-950/50 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
+          <h4 className="font-semibold text-sm mb-4 text-slate-700 dark:text-slate-300 flex items-center space-x-2">
+            <Plus className="h-4 w-4" />
+            <span>Custom Amount & Type</span>
+          </h4>
+          <div className="grid grid-cols-2 gap-3 mb-3">
             <Select value={selectedDrink} onValueChange={setSelectedDrink}>
-              <SelectTrigger data-testid="select-drink-type">
+              <SelectTrigger className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 shadow-sm" data-testid="select-drink-type">
                 <SelectValue placeholder="Select drink" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="water">Water</SelectItem>
-                <SelectItem value="coffee">Coffee</SelectItem>
-                <SelectItem value="tea">Tea</SelectItem>
-                <SelectItem value="juice">Juice</SelectItem>
-                <SelectItem value="soda">Soda</SelectItem>
-                <SelectItem value="sports_drink">Sports Drink</SelectItem>
-                <SelectItem value="beer">Beer</SelectItem>
-                <SelectItem value="wine">Wine</SelectItem>
-                <SelectItem value="spirits">Spirits</SelectItem>
-                <SelectItem value="cocktail">Cocktail</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="water">💧 Water</SelectItem>
+                <SelectItem value="coffee">☕ Coffee</SelectItem>
+                <SelectItem value="tea">🍵 Tea</SelectItem>
+                <SelectItem value="juice">🧃 Juice</SelectItem>
+                <SelectItem value="soda">🥤 Soda</SelectItem>
+                <SelectItem value="sports_drink">⚡ Sports Drink</SelectItem>
+                <SelectItem value="beer">🍺 Beer</SelectItem>
+                <SelectItem value="wine">🍷 Wine</SelectItem>
+                <SelectItem value="spirits">🥃 Spirits</SelectItem>
+                <SelectItem value="cocktail">🍸 Cocktail</SelectItem>
+                <SelectItem value="other">🎯 Other</SelectItem>
               </SelectContent>
             </Select>
             <Input
@@ -322,23 +346,27 @@ export function DrinksBar() {
               placeholder="Amount (ml)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 shadow-sm"
               data-testid="input-drink-amount"
             />
           </div>
           
           {selectedDrink === 'other' && (
-            <Input
-              placeholder="Drink name"
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
-              data-testid="input-custom-drink-name"
-            />
+            <div className="mb-3">
+              <Input
+                placeholder="Enter drink name..."
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 shadow-sm"
+                data-testid="input-custom-drink-name"
+              />
+            </div>
           )}
 
           <Button
             onClick={handleCustomAdd}
             disabled={!selectedDrink || !amount || addDrinkMutation.isPending || (selectedDrink === 'other' && !customName)}
-            className="w-full"
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
             data-testid="button-log-custom-drink"
           >
             {addDrinkMutation.isPending ? (
@@ -346,7 +374,7 @@ export function DrinksBar() {
             ) : (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                Log Drink
+                Log Custom Drink
               </>
             )}
           </Button>
