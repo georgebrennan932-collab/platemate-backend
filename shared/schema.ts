@@ -102,20 +102,38 @@ export const insertDrinkEntrySchema = createInsertSchema(drinkEntries).omit({
   notes: z.string().optional(),
 });
 
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
 export type InsertDiaryEntry = z.infer<typeof insertDiaryEntrySchema>;
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
 export type InsertDrinkEntry = z.infer<typeof insertDrinkEntrySchema>;
 export type DrinkEntry = typeof drinkEntries.$inferSelect;
 
 // Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  diaryEntries: many(diaryEntries),
+  drinkEntries: many(drinkEntries),
+}));
+
 export const foodAnalysesRelations = relations(foodAnalyses, ({ many }) => ({
   diaryEntries: many(diaryEntries),
 }));
 
 export const diaryEntriesRelations = relations(diaryEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [diaryEntries.userId],
+    references: [users.id],
+  }),
   analysis: one(foodAnalyses, {
     fields: [diaryEntries.analysisId],
     references: [foodAnalyses.id],
+  }),
+}));
+
+export const drinkEntriesRelations = relations(drinkEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [drinkEntries.userId],
+    references: [users.id],
   }),
 }));
 
