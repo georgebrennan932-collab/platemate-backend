@@ -37,7 +37,16 @@ Preferred communication style: Simple, everyday language.
 - **Session Management**: Connect-pg-simple for PostgreSQL session storage (configured but not implemented)
 - **Architecture**: Cookie-based sessions with secure defaults prepared for implementation
 
+## AI Services Architecture
+- **Multi-Provider System**: Intelligent AI provider management with automatic failover
+- **Primary Provider**: OpenAI GPT-4o-mini for food analysis, GPT-5 for diet advice
+- **Secondary Provider**: Google Gemini 2.5 Flash/Pro for backup and load distribution
+- **Failover Logic**: Automatic switching on rate limits or provider failures
+- **Health Monitoring**: Real-time provider status tracking and system health endpoints
+- **Load Balancing**: Priority-based routing with exponential backoff retry logic
+
 ## External Dependencies
+- **AI Services**: OpenAI and Google Gemini APIs for food recognition and nutrition analysis
 - **Image Processing**: Sharp for server-side image optimization and resizing
 - **Database**: Neon Database (serverless PostgreSQL) with connection pooling
 - **UI Icons**: Lucide React for consistent iconography
