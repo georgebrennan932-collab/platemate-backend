@@ -113,17 +113,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // Real food analysis function using OpenAI Vision API
 async function performRealFoodAnalysis(imagePath: string) {
   try {
-    console.log("Starting food analysis for image:", imagePath);
-    console.log("OpenAI API Key available:", !!process.env.OPENAI_API_KEY);
-    
     // Convert image to base64
     const imageBuffer = await fs.readFile(imagePath);
-    console.log("Image buffer size:", imageBuffer.length);
     const base64Image = imageBuffer.toString('base64');
     const mimeType = 'image/jpeg';
-    console.log("Image converted to base64, length:", base64Image.length);
-
-    console.log("Making OpenAI API call...");
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -164,9 +157,7 @@ Be as accurate as possible with portion estimates and nutritional values. If you
       temperature: 0.1
     });
 
-    console.log("OpenAI API call completed successfully");
     const responseText = response.choices[0].message.content;
-    console.log("Raw response from OpenAI:", responseText);
     
     if (!responseText) {
       throw new Error("No response from OpenAI");
@@ -177,12 +168,9 @@ Be as accurate as possible with portion estimates and nutritional values. If you
       .replace(/```json\s*/g, '')
       .replace(/```\s*/g, '')
       .trim();
-    
-    console.log("Cleaned response text:", cleanedText);
 
     // Parse the JSON response
     const parsed = JSON.parse(cleanedText);
-    console.log("Parsed response:", parsed);
     
     // Validate the response structure
     if (!parsed.detectedFoods || !Array.isArray(parsed.detectedFoods)) {
@@ -205,26 +193,48 @@ Be as accurate as possible with portion estimates and nutritional values. If you
       detectedFoods: parsed.detectedFoods
     };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error analyzing food with OpenAI:", error);
-    console.error("Full error details:", JSON.stringify(error, null, 2));
     
-    // Fallback to a basic response if AI fails
+    // Check if it's a rate limit error
+    if (error?.status === 429 || error?.code === 'rate_limit_exceeded') {
+      return {
+        imageUrl: imagePath,
+        confidence: 0,
+        totalCalories: 0,
+        totalProtein: 0,
+        totalCarbs: 0,
+        totalFat: 0,
+        detectedFoods: [
+          {
+            name: "Rate Limit Reached",
+            portion: "OpenAI API limit exceeded",
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            icon: "apple-alt"
+          }
+        ]
+      };
+    }
+    
+    // Fallback for other errors
     return {
       imageUrl: imagePath,
       confidence: 50,
-      totalCalories: 300,
-      totalProtein: 15,
-      totalCarbs: 30,
-      totalFat: 12,
+      totalCalories: 250,
+      totalProtein: 12,
+      totalCarbs: 25,
+      totalFat: 10,
       detectedFoods: [
         {
-          name: "AI Analysis Failed",
-          portion: "Error occurred",
-          calories: 300,
-          protein: 15,
-          carbs: 30,
-          fat: 12,
+          name: "Analysis Error",
+          portion: "Could not process image",
+          calories: 250,
+          protein: 12,
+          carbs: 25,
+          fat: 10,
           icon: "apple-alt"
         }
       ]
