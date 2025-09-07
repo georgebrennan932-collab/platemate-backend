@@ -69,13 +69,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Drinks Bar */}
-      {currentState === 'camera' && (
-        <div className="max-w-md mx-auto">
-          <DrinksBar />
-        </div>
-      )}
-      
       <div className="max-w-md mx-auto">
         {currentState === 'camera' && (
           <CameraInterface
@@ -101,6 +94,13 @@ export default function Home() {
           />
         )}
       </div>
+
+      {/* Drinks Bar - Moved to bottom */}
+      {currentState === 'camera' && (
+        <div className="max-w-md mx-auto">
+          <DrinksBar />
+        </div>
+      )}
     </div>
   );
 }
