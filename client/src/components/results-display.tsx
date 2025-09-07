@@ -113,23 +113,24 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   return (
     <div className="p-4 space-y-4">
       {/* Photo thumbnail and actions */}
-      <div className="bg-card rounded-xl shadow-lg p-4">
+      <div className="modern-card glass-card p-6">
         <div className="flex items-center space-x-4">
-          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
+          <div className="w-24 h-24 rounded-2xl overflow-hidden bg-muted relative">
             <img 
               src={`/${data.imageUrl}`}
               alt="Analyzed food plate thumbnail" 
               className="w-full h-full object-cover"
               data-testid="img-thumbnail"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-lg" data-testid="text-meal-title">
-              Food Analysis
+            <h3 className="font-bold text-xl gradient-text" data-testid="text-meal-title">
+              Food Analysis Complete
             </h3>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-sm space-x-2">
               <span data-testid="text-timestamp">{formatTime(data.createdAt)}</span> • 
-              <span data-testid="text-confidence" className="ml-1">{data.confidence}% confidence</span>
+              <span data-testid="text-confidence" className="ml-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded-full font-medium">{data.confidence}% confidence</span>
             </p>
           </div>
           <div className="flex flex-col space-y-2">
@@ -150,59 +151,71 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       </div>
 
       {/* Nutrition Summary Cards */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         {/* Calories */}
-        <div className="bg-card rounded-xl p-4 shadow-lg border-l-4 border-red-500">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Calories</span>
-            <i className="fas fa-fire text-red-500"></i>
+        <div className="modern-card bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/10 dark:to-orange-900/10 p-5 border-0 relative overflow-hidden">
+          <div className="absolute -top-2 -right-2 w-16 h-16 bg-red-200/20 dark:bg-red-800/20 rounded-full"></div>
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-sm font-semibold text-red-700 dark:text-red-400">Calories</span>
+            <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+              <i className="fas fa-fire text-red-500 dark:text-red-400"></i>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-red-500" data-testid="text-calories">
+          <p className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1" data-testid="text-calories">
             {data.totalCalories}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-red-600/70 dark:text-red-400/70 font-medium">
             {Math.round((data.totalCalories / 2000) * 100)}% daily value
           </p>
         </div>
 
         {/* Protein */}
-        <div className="bg-card rounded-xl p-4 shadow-lg border-l-4 border-blue-500">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Protein</span>
-            <i className="fas fa-dumbbell text-blue-500"></i>
+        <div className="modern-card bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 p-5 border-0 relative overflow-hidden">
+          <div className="absolute -top-2 -right-2 w-16 h-16 bg-blue-200/20 dark:bg-blue-800/20 rounded-full"></div>
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">Protein</span>
+            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <i className="fas fa-dumbbell text-blue-500 dark:text-blue-400"></i>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-blue-500" data-testid="text-protein">
+          <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1" data-testid="text-protein">
             {data.totalProtein}g
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium">
             {Math.round((data.totalProtein / 50) * 100)}% daily value
           </p>
         </div>
 
         {/* Carbs */}
-        <div className="bg-card rounded-xl p-4 shadow-lg border-l-4 border-orange-500">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Carbs</span>
-            <i className="fas fa-bread-slice text-orange-500"></i>
+        <div className="modern-card bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/10 dark:to-amber-900/10 p-5 border-0 relative overflow-hidden">
+          <div className="absolute -top-2 -right-2 w-16 h-16 bg-orange-200/20 dark:bg-orange-800/20 rounded-full"></div>
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">Carbs</span>
+            <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+              <i className="fas fa-bread-slice text-orange-500 dark:text-orange-400"></i>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-orange-500" data-testid="text-carbs">
+          <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1" data-testid="text-carbs">
             {data.totalCarbs}g
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-orange-600/70 dark:text-orange-400/70 font-medium">
             {Math.round((data.totalCarbs / 300) * 100)}% daily value
           </p>
         </div>
 
         {/* Fat */}
-        <div className="bg-card rounded-xl p-4 shadow-lg border-l-4 border-yellow-500">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Fat</span>
-            <i className="fas fa-tint text-yellow-500"></i>
+        <div className="modern-card bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10 p-5 border-0 relative overflow-hidden">
+          <div className="absolute -top-2 -right-2 w-16 h-16 bg-yellow-200/20 dark:bg-yellow-800/20 rounded-full"></div>
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">Fat</span>
+            <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
+              <i className="fas fa-tint text-yellow-500 dark:text-yellow-400"></i>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-yellow-500" data-testid="text-fat">
+          <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1" data-testid="text-fat">
             {data.totalFat}g
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-yellow-600/70 dark:text-yellow-400/70 font-medium">
             {Math.round((data.totalFat / 65) * 100)}% daily value
           </p>
         </div>
@@ -310,22 +323,22 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       </div>
 
       {/* Action buttons */}
-      <div className="flex space-x-3 pt-4">
+      <div className="flex space-x-4 pt-6">
         <button 
-          className="flex-1 bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+          className="flex-1 gradient-button py-4 px-6 rounded-xl font-medium hover:scale-[1.02] flex items-center justify-center space-x-2"
           onClick={() => setShowDiaryDialog(true)}
           data-testid="button-add-diary"
         >
-          <Plus className="inline mr-2 h-4 w-4" />
-          Add to Diary
+          <Plus className="h-5 w-5" />
+          <span>Add to Diary</span>
         </button>
         <button 
-          className="flex-1 bg-secondary text-secondary-foreground py-3 px-4 rounded-lg font-medium hover:bg-secondary/90 transition-colors"
+          className="flex-1 modern-card bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 text-gray-700 dark:text-gray-300 py-4 px-6 rounded-xl font-medium hover:scale-[1.02] smooth-transition flex items-center justify-center space-x-2"
           onClick={onScanAnother}
           data-testid="button-scan-another"
         >
-          <Camera className="inline mr-2 h-4 w-4" />
-          Scan Another
+          <Camera className="h-5 w-5" />
+          <span>Scan Another</span>
         </button>
       </div>
 
