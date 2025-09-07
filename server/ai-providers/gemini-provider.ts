@@ -78,20 +78,29 @@ Be as accurate as possible with portion estimates and nutritional values. If you
         throw new Error("Invalid response format from Gemini");
       }
 
-      // Calculate totals
-      const totalCalories = parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.calories || 0), 0);
-      const totalProtein = parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.protein || 0), 0);
-      const totalCarbs = parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.carbs || 0), 0);
-      const totalFat = parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.fat || 0), 0);
+      // Calculate totals and round to integers for database compatibility
+      const totalCalories = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.calories || 0), 0));
+      const totalProtein = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.protein || 0), 0));
+      const totalCarbs = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.carbs || 0), 0));
+      const totalFat = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.fat || 0), 0));
+
+      // Round nutritional values in detected foods
+      const roundedDetectedFoods = parsed.detectedFoods.map((food: any) => ({
+        ...food,
+        calories: Math.round(food.calories || 0),
+        protein: Math.round(food.protein || 0),
+        carbs: Math.round(food.carbs || 0),
+        fat: Math.round(food.fat || 0)
+      }));
 
       const result: FoodAnalysisResult = {
         imageUrl: imagePath,
-        confidence: parsed.confidence || 80,
+        confidence: Math.round(parsed.confidence || 80),
         totalCalories,
         totalProtein,
         totalCarbs,
         totalFat,
-        detectedFoods: parsed.detectedFoods
+        detectedFoods: roundedDetectedFoods
       };
 
       this.recordSuccess();
