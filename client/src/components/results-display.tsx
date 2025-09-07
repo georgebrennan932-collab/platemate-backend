@@ -1,5 +1,9 @@
-import { Share2, Bookmark, Plus, Camera, Utensils, PieChart } from "lucide-react";
+import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface ResultsDisplayProps {
   data: FoodAnalysis;
@@ -7,6 +11,47 @@ interface ResultsDisplayProps {
 }
 
 export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
+  const [showDiaryDialog, setShowDiaryDialog] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState<"breakfast" | "lunch" | "dinner" | "snack">("lunch");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const addToDiaryMutation = useMutation({
+    mutationFn: async () => {
+      const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
+      return await apiRequest('/api/diary', {
+        method: 'POST',
+        body: JSON.stringify({
+          analysisId: data.id,
+          mealType: selectedMealType,
+          mealDate: mealDateTime.toISOString(),
+          notes: ""
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Added to Diary!",
+        description: "Your meal has been saved to your food diary.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      setShowDiaryDialog(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to save meal to diary. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error adding to diary:", error);
+    },
+  });
   const formatTime = (date: Date | string | null | undefined) => {
     try {
       // Handle null, undefined, or invalid inputs
@@ -273,6 +318,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       <div className="flex space-x-3 pt-4">
         <button 
           className="flex-1 bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+          onClick={() => setShowDiaryDialog(true)}
           data-testid="button-add-diary"
         >
           <Plus className="inline mr-2 h-4 w-4" />
@@ -287,6 +333,87 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           Scan Another
         </button>
       </div>
+
+      {/* Add to Diary Dialog */}
+      {showDiaryDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Add to Food Diary</h3>
+            
+            <div className="space-y-4">
+              {/* Meal Type Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Meal Type</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => (
+                    <button
+                      key={meal}
+                      onClick={() => setSelectedMealType(meal)}
+                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                        selectedMealType === meal
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      }`}
+                      data-testid={`button-meal-${meal}`}
+                    >
+                      {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Date Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  <Calendar className="inline h-4 w-4 mr-1" />
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-background"
+                  data-testid="input-meal-date"
+                />
+              </div>
+
+              {/* Time Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  <Clock className="inline h-4 w-4 mr-1" />
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-background"
+                  data-testid="input-meal-time"
+                />
+              </div>
+            </div>
+
+            {/* Dialog Actions */}
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowDiaryDialog(false)}
+                className="flex-1 py-2 px-4 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+                data-testid="button-cancel-diary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => addToDiaryMutation.mutate()}
+                disabled={addToDiaryMutation.isPending}
+                className="flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                data-testid="button-save-diary"
+              >
+                {addToDiaryMutation.isPending ? 'Saving...' : 'Save to Diary'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

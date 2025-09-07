@@ -30,7 +30,7 @@ export class DatabaseStorage implements IStorage {
         totalProtein: insertAnalysis.totalProtein,
         totalCarbs: insertAnalysis.totalCarbs,
         totalFat: insertAnalysis.totalFat,
-        detectedFoods: insertAnalysis.detectedFoods
+        detectedFoods: insertAnalysis.detectedFoods as DetectedFood[]
       })
       .returning();
     return analysis;
