@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, HelpCircle } from "lucide-react";
 import { Link } from "wouter";
 import { NutritionGoals } from "@/components/nutrition-goals";
 
@@ -8,16 +8,27 @@ export function GoalsPage() {
       {/* Header */}
       <div className="bg-card border-b sticky top-0 z-10">
         <div className="max-w-md mx-auto px-4 py-4">
-          <div className="flex items-center space-x-3">
-            <Link href="/diary">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Link href="/diary">
+                <button 
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  data-testid="button-back-to-diary"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              </Link>
+              <h1 className="text-xl font-bold">Nutrition Goals</h1>
+            </div>
+            <Link href="/help">
               <button 
                 className="p-2 hover:bg-muted rounded-lg transition-colors"
-                data-testid="button-back-to-diary"
+                data-testid="button-help-goals"
+                title="Help & Support"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
               </button>
             </Link>
-            <h1 className="text-xl font-bold">Nutrition Goals</h1>
           </div>
         </div>
       </div>

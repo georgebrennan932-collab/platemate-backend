@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target, TrendingUp } from "lucide-react";
+import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target, TrendingUp, HelpCircle } from "lucide-react";
 import { Link } from "wouter";
 import { ProgressIndicators } from "@/components/progress-indicators";
 import { WeeklyAnalytics } from "@/components/weekly-analytics";
@@ -157,29 +157,40 @@ export function DiaryPage() {
             </div>
             
             {/* Tab Navigation */}
-            <div className="flex bg-muted rounded-lg p-1">
-              <button
-                onClick={() => setActiveTab('diary')}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'diary' 
-                    ? 'bg-background text-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-                data-testid="tab-diary"
-              >
-                <Calendar className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'analytics' 
-                    ? 'bg-background text-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-                data-testid="tab-analytics"
-              >
-                <TrendingUp className="h-4 w-4" />
-              </button>
+            <div className="flex items-center space-x-2">
+              <div className="flex bg-muted rounded-lg p-1">
+                <button
+                  onClick={() => setActiveTab('diary')}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'diary' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid="tab-diary"
+                >
+                  <Calendar className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'analytics' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid="tab-analytics"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                </button>
+              </div>
+              <Link href="/help">
+                <button 
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  data-testid="button-help-diary"
+                  title="Help & Support"
+                >
+                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </Link>
             </div>
           </div>
         </div>

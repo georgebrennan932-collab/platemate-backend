@@ -6,7 +6,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
@@ -73,6 +73,15 @@ export default function Home() {
             >
               <Target className="h-4 w-4" />
               <span>Set Nutrition Goals</span>
+            </button>
+          </Link>
+          <Link href="/help">
+            <button 
+              className="w-full bg-muted/50 text-muted-foreground border border-muted py-3 px-4 rounded-lg font-medium hover:bg-muted transition-colors flex items-center justify-center space-x-2"
+              data-testid="button-help"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>Help & Support</span>
             </button>
           </Link>
         </div>
