@@ -113,11 +113,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // Real food analysis function using OpenAI Vision API
 async function performRealFoodAnalysis(imagePath: string) {
   try {
+    console.log("Starting food analysis for image:", imagePath);
+    console.log("OpenAI API Key available:", !!process.env.OPENAI_API_KEY);
+    
     // Convert image to base64
     const imageBuffer = await fs.readFile(imagePath);
+    console.log("Image buffer size:", imageBuffer.length);
     const base64Image = imageBuffer.toString('base64');
     const mimeType = 'image/jpeg';
+    console.log("Image converted to base64, length:", base64Image.length);
 
+    console.log("Making OpenAI API call...");
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -158,13 +164,17 @@ Be as accurate as possible with portion estimates and nutritional values. If you
       temperature: 0.1
     });
 
+    console.log("OpenAI API call completed successfully");
     const responseText = response.choices[0].message.content;
+    console.log("Raw response from OpenAI:", responseText);
+    
     if (!responseText) {
       throw new Error("No response from OpenAI");
     }
 
     // Parse the JSON response
     const parsed = JSON.parse(responseText);
+    console.log("Parsed response:", parsed);
     
     // Validate the response structure
     if (!parsed.detectedFoods || !Array.isArray(parsed.detectedFoods)) {
@@ -189,6 +199,7 @@ Be as accurate as possible with portion estimates and nutritional values. If you
 
   } catch (error) {
     console.error("Error analyzing food with OpenAI:", error);
+    console.error("Full error details:", JSON.stringify(error, null, 2));
     
     // Fallback to a basic response if AI fails
     return {
@@ -200,8 +211,8 @@ Be as accurate as possible with portion estimates and nutritional values. If you
       totalFat: 12,
       detectedFoods: [
         {
-          name: "Mixed Food Items",
-          portion: "Various",
+          name: "AI Analysis Failed",
+          portion: "Error occurred",
           calories: 300,
           protein: 15,
           carbs: 30,
