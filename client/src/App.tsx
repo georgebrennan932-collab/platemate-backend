@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth";
 import LandingPage from "@/pages/LandingPage";
 import Home from "@/pages/home";
 import { DiaryPage } from "@/pages/DiaryPage";
@@ -10,12 +11,20 @@ import { DietAdvicePage } from "@/pages/DietAdvicePage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
   return (
     <Switch>
-      <Route path="/" component={LandingPage} />
-      <Route path="/scan" component={Home} />
-      <Route path="/diary" component={DiaryPage} />
-      <Route path="/advice" component={DietAdvicePage} />
+      {isLoading || !isAuthenticated ? (
+        <Route path="/" component={LandingPage} />
+      ) : (
+        <>
+          <Route path="/" component={Home} />
+          <Route path="/scan" component={Home} />
+          <Route path="/diary" component={DiaryPage} />
+          <Route path="/advice" component={DietAdvicePage} />
+        </>
+      )}
       <Route component={NotFound} />
     </Switch>
   );

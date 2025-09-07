@@ -1,9 +1,12 @@
 import { Link } from "wouter";
-import { Camera, BookOpen, Brain, Sparkles, Zap, Shield } from "lucide-react";
+import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LandingPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+
   return (
     <div className="bg-background text-foreground min-h-screen relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -40,18 +43,33 @@ export default function LandingPage() {
       <main className="max-w-4xl mx-auto px-4 py-12">
         {/* Get Started Button */}
         <div className="text-center mb-16 animate-fade-in-up animation-delay-900">
-          <Link href="/scan">
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-pulse-glow relative overflow-hidden group"
-              data-testid="button-get-started"
-            >
-              {/* Animated shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <Camera className="h-6 w-6 mr-2 animate-bounce" />
-              Start Scanning Food
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <Link href="/scan">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-pulse-glow relative overflow-hidden group"
+                data-testid="button-get-started"
+              >
+                {/* Animated shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                <Camera className="h-6 w-6 mr-2 animate-bounce" />
+                Start Scanning Food
+              </Button>
+            </Link>
+          ) : (
+            <a href="/api/login">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-pulse-glow relative overflow-hidden group"
+                data-testid="button-login"
+              >
+                {/* Animated shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                <LogIn className="h-6 w-6 mr-2 animate-bounce" />
+                Login to Start
+              </Button>
+            </a>
+          )}
           <p className="text-sm text-muted-foreground mt-3 animate-fade-in animation-delay-1200">
             Take a photo of your meal to get instant nutrition analysis
           </p>
