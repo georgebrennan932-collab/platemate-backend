@@ -2,14 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target } from "lucide-react";
+import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { ProgressIndicators } from "@/components/progress-indicators";
+import { WeeklyAnalytics } from "@/components/weekly-analytics";
 import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
 
 export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'diary' | 'analytics'>('diary');
 
   const { data: diaryEntries, isLoading } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
@@ -152,15 +154,31 @@ export function DiaryPage() {
               </Link>
               <h1 className="text-xl font-bold">Food Diary</h1>
             </div>
-            <div className="flex items-center space-x-4 text-muted-foreground">
-              <div className="flex items-center space-x-1">
-                <Utensils className="h-4 w-4" />
-                <span className="text-sm">{diaryEntries?.length || 0} meals</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Droplets className="h-4 w-4" />
-                <span className="text-sm">{drinkEntries?.length || 0} drinks</span>
-              </div>
+            
+            {/* Tab Navigation */}
+            <div className="flex bg-muted rounded-lg p-1">
+              <button
+                onClick={() => setActiveTab('diary')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === 'diary' 
+                    ? 'bg-background text-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                data-testid="tab-diary"
+              >
+                <Calendar className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === 'analytics' 
+                    ? 'bg-background text-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                data-testid="tab-analytics"
+              >
+                <TrendingUp className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -168,7 +186,9 @@ export function DiaryPage() {
 
       {/* Content */}
       <div className="max-w-md mx-auto p-4">
-        {sortedDates.length === 0 ? (
+        {activeTab === 'analytics' ? (
+          <WeeklyAnalytics goals={nutritionGoals} />
+        ) : sortedDates.length === 0 ? (
           <div className="text-center py-12">
             <Utensils className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground mb-2">No entries yet</h3>
