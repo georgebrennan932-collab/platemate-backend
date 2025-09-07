@@ -53,6 +53,52 @@ export class AIManager {
         generalTips: [
           "Plan your meals ahead to make healthier choices.",
           "Listen to your body's hunger and fullness cues."
+        ],
+        mealIdeas: [
+          {
+            mealType: "breakfast" as const,
+            name: "Protein-Packed Overnight Oats",
+            description: "Creamy oats with Greek yogurt, berries, and nuts for sustained energy",
+            calories: 350,
+            protein: 18,
+            carbs: 42,
+            fat: 12,
+            ingredients: ["rolled oats", "Greek yogurt", "mixed berries", "almonds", "chia seeds"],
+            benefits: "High in protein and fiber to keep you full and energized throughout the morning"
+          },
+          {
+            mealType: "lunch" as const,
+            name: "Mediterranean Quinoa Bowl",
+            description: "Nutritious bowl with quinoa, vegetables, and lean protein",
+            calories: 420,
+            protein: 25,
+            carbs: 48,
+            fat: 15,
+            ingredients: ["quinoa", "grilled chicken", "cucumber", "tomatoes", "feta cheese", "olive oil"],
+            benefits: "Balanced nutrients with healthy fats and complete proteins for sustained energy"
+          },
+          {
+            mealType: "dinner" as const,
+            name: "Baked Salmon with Sweet Potato",
+            description: "Omega-3 rich salmon with roasted vegetables and complex carbs",
+            calories: 480,
+            protein: 35,
+            carbs: 32,
+            fat: 22,
+            ingredients: ["salmon fillet", "sweet potato", "broccoli", "olive oil", "herbs"],
+            benefits: "Rich in omega-3s and antioxidants to support heart health and recovery"
+          },
+          {
+            mealType: "snack" as const,
+            name: "Apple with Almond Butter",
+            description: "Simple, satisfying snack with natural sweetness and healthy fats",
+            calories: 200,
+            protein: 8,
+            carbs: 20,
+            fat: 12,
+            ingredients: ["apple", "almond butter"],
+            benefits: "Combines fiber and healthy fats for stable blood sugar and lasting satiety"
+          }
         ]
       }
     };
