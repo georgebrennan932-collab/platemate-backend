@@ -130,11 +130,11 @@ export function CameraInterface({
         </div>
         
         {/* PlateMate Logo */}
-        <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2">
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
           <img 
             src={plateMateLogoUrl} 
             alt="PlateMate Logo" 
-            className="w-24 h-24 opacity-70"
+            className="w-40 h-40 opacity-80"
             data-testid="platemate-logo"
           />
         </div>
