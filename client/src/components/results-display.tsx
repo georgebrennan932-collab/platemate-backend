@@ -7,8 +7,13 @@ interface ResultsDisplayProps {
 }
 
 export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
-  const formatTime = (date: Date | string) => {
+  const formatTime = (date: Date | string | null | undefined) => {
     try {
+      // Handle null, undefined, or invalid inputs
+      if (!date) {
+        return 'Unknown time';
+      }
+      
       const now = new Date();
       let dateObj: Date;
       
