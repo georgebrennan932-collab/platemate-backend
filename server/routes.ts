@@ -213,9 +213,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/diet-advice/generate", async (req, res) => {
+  app.post("/api/diet-advice/generate", isAuthenticated, async (req: any, res) => {
     try {
-      const entries = await storage.getDiaryEntries(30);
+      const userId = req.user.claims.sub;
+      const entries = await storage.getDiaryEntries(userId, 30);
       if (!entries || entries.length === 0) {
         return res.json({
           personalizedAdvice: ["Start tracking your meals to get personalized advice!"],
@@ -233,10 +234,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Drink routes
-  app.post("/api/drinks", async (req, res) => {
+  // Drink routes (protected)
+  app.post("/api/drinks", isAuthenticated, async (req: any, res) => {
     try {
-      const validatedEntry = insertDrinkEntrySchema.parse(req.body);
+      const userId = req.user.claims.sub;
+      const validatedEntry = insertDrinkEntrySchema.parse({
+        ...req.body,
+        userId
+      });
       const drinkEntry = await storage.createDrinkEntry(validatedEntry);
       res.json(drinkEntry);
     } catch (error) {
@@ -245,10 +250,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/drinks", async (req, res) => {
+  app.get("/api/drinks", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const entries = await storage.getDrinkEntries(limit);
+      const entries = await storage.getDrinkEntries(userId, limit);
       res.json(entries);
     } catch (error) {
       console.error("Get drink entries error:", error);
@@ -256,12 +262,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/drinks/:id", async (req, res) => {
+  app.get("/api/drinks/:id", isAuthenticated, async (req: any, res) => {
     try {
       const entry = await storage.getDrinkEntry(req.params.id);
       if (!entry) {
         return res.status(404).json({ error: "Drink entry not found" });
       }
+      
+      // Verify the entry belongs to the authenticated user
+      const userId = req.user.claims.sub;
+      if (entry.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       res.json(entry);
     } catch (error) {
       console.error("Get drink entry error:", error);
@@ -269,8 +282,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/drinks/:id", async (req, res) => {
+  app.delete("/api/drinks/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      const entry = await storage.getDrinkEntry(req.params.id);
+      
+      if (!entry) {
+        return res.status(404).json({ error: "Drink entry not found" });
+      }
+      
+      // Verify the entry belongs to the authenticated user
+      if (entry.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const deleted = await storage.deleteDrinkEntry(req.params.id);
       if (!deleted) {
         return res.status(404).json({ error: "Drink entry not found" });
