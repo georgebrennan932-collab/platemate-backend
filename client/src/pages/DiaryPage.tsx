@@ -2,9 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Utensils, Calendar, Clock, Trash2, ArrowLeft } from "lucide-react";
+import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine } from "lucide-react";
 import { Link } from "wouter";
-import type { DiaryEntryWithAnalysis } from "@shared/schema";
+import type { DiaryEntryWithAnalysis, DrinkEntry } from "@shared/schema";
 
 export function DiaryPage() {
   const { toast } = useToast();
@@ -12,6 +12,10 @@ export function DiaryPage() {
 
   const { data: diaryEntries, isLoading } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
+  });
+
+  const { data: drinkEntries, isLoading: drinksLoading } = useQuery<DrinkEntry[]>({
+    queryKey: ['/api/drinks'],
   });
 
   const deleteMutation = useMutation({
@@ -35,6 +39,27 @@ export function DiaryPage() {
     },
   });
 
+  const deleteDrinkMutation = useMutation({
+    mutationFn: async (drinkId: string) => {
+      await apiRequest('DELETE', `/api/drinks/${drinkId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Drink Deleted",
+        description: "Drink has been removed from your diary.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete drink. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error deleting drink entry:", error);
+    },
+  });
+
   const groupedEntries = diaryEntries?.reduce((groups, entry) => {
     const date = new Date(entry.mealDate).toDateString();
     if (!groups[date]) {
@@ -44,11 +69,21 @@ export function DiaryPage() {
     return groups;
   }, {} as Record<string, DiaryEntryWithAnalysis[]>) || {};
 
-  const sortedDates = Object.keys(groupedEntries).sort((a, b) => 
+  const groupedDrinks = drinkEntries?.reduce((groups, drink) => {
+    const date = new Date(drink.loggedAt).toDateString();
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(drink);
+    return groups;
+  }, {} as Record<string, DrinkEntry[]>) || {};
+
+  const allDates = new Set([...Object.keys(groupedEntries), ...Object.keys(groupedDrinks)]);
+  const sortedDates = Array.from(allDates).sort((a, b) => 
     new Date(b).getTime() - new Date(a).getTime()
   );
 
-  if (isLoading) {
+  if (isLoading || drinksLoading) {
     return (
       <div className="min-h-screen bg-background p-4">
         <div className="max-w-md mx-auto">
@@ -82,9 +117,15 @@ export function DiaryPage() {
               </Link>
               <h1 className="text-xl font-bold">Food Diary</h1>
             </div>
-            <div className="flex items-center space-x-1 text-muted-foreground">
-              <Utensils className="h-4 w-4" />
-              <span className="text-sm">{diaryEntries?.length || 0} meals</span>
+            <div className="flex items-center space-x-4 text-muted-foreground">
+              <div className="flex items-center space-x-1">
+                <Utensils className="h-4 w-4" />
+                <span className="text-sm">{diaryEntries?.length || 0} meals</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Droplets className="h-4 w-4" />
+                <span className="text-sm">{drinkEntries?.length || 0} drinks</span>
+              </div>
             </div>
           </div>
         </div>
@@ -95,16 +136,16 @@ export function DiaryPage() {
         {sortedDates.length === 0 ? (
           <div className="text-center py-12">
             <Utensils className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">No meals yet</h3>
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">No entries yet</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Start scanning food to build your nutrition diary
+              Start scanning food and logging drinks to build your nutrition diary
             </p>
-            <Link href="/">
+            <Link href="/scan">
               <button 
                 className="bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
                 data-testid="button-start-scanning"
               >
-                Start Scanning
+                Start Tracking
               </button>
             </Link>
           </div>
@@ -117,7 +158,8 @@ export function DiaryPage() {
                   <span>{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
                 </div>
                 <div className="space-y-2">
-                  {groupedEntries[date].map((entry) => (
+                  {/* Food entries */}
+                  {groupedEntries[date]?.map((entry) => (
                     <div key={entry.id} className="bg-card border rounded-lg p-4" data-testid={`diary-entry-${entry.id}`}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -167,7 +209,54 @@ export function DiaryPage() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                  )) || []}
+                  
+                  {/* Drink entries */}
+                  {groupedDrinks[date]?.map((drink) => (
+                    <div key={drink.id} className="bg-card border rounded-lg p-4 border-blue-200 dark:border-blue-800" data-testid={`drink-entry-${drink.id}`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <div className="flex items-center space-x-2">
+                              {(drink.alcoholContent || 0) > 0 ? (
+                                <Wine className="h-4 w-4 text-amber-500" />
+                              ) : (
+                                <Droplets className="h-4 w-4 text-blue-500" />
+                              )}
+                              <span className="font-medium">{drink.drinkName}</span>
+                              <span className="text-sm text-muted-foreground">{drink.amount}ml</span>
+                            </div>
+                            <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span>{format(new Date(drink.loggedAt), 'HH:mm')}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                            <span>{drink.calories || 0}kcal</span>
+                            <span>{drink.caffeine || 0}mg caffeine</span>
+                            {(drink.alcoholContent || 0) > 0 ? (
+                              <>
+                                <span className="text-amber-600">{drink.alcoholContent}% ABV</span>
+                                <span className="text-amber-600">{drink.alcoholUnits || 0} units</span>
+                              </>
+                            ) : (
+                              <span className="col-span-2">{drink.sugar || 0}g sugar</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <button
+                          onClick={() => deleteDrinkMutation.mutate(drink.id)}
+                          disabled={deleteDrinkMutation.isPending}
+                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
+                          data-testid={`button-delete-drink-${drink.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )) || []}
                 </div>
               </div>
             ))}

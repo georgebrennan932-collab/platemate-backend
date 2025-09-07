@@ -33,6 +33,8 @@ export const drinkEntries = pgTable("drink_entries", {
   calories: integer("calories").default(0),
   caffeine: integer("caffeine").default(0), // in mg
   sugar: integer("sugar").default(0), // in grams
+  alcoholContent: integer("alcohol_content").default(0), // alcohol by volume percentage (e.g., 5 for 5%)
+  alcoholUnits: integer("alcohol_units").default(0), // calculated alcohol units (ml * abv / 1000)
   loggedAt: timestamp("logged_at").notNull(), // when the drink was consumed
   notes: text("notes"), // optional user notes
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -71,7 +73,7 @@ export const insertDrinkEntrySchema = createInsertSchema(drinkEntries).omit({
   id: true,
   createdAt: true,
 }).extend({
-  drinkType: z.enum(["water", "coffee", "tea", "juice", "soda", "sports_drink", "alcohol", "other"]),
+  drinkType: z.enum(["water", "coffee", "tea", "juice", "soda", "sports_drink", "beer", "wine", "spirits", "cocktail", "other"]),
   loggedAt: z.string().or(z.date()), // Accept string or Date
   notes: z.string().optional(),
 });

@@ -10,14 +10,17 @@ import { Droplets, Coffee, Wine, Plus, Check } from "lucide-react";
 import type { InsertDrinkEntry } from "@shared/schema";
 
 const drinkPresets = {
-  water: { name: "Water", calories: 0, caffeine: 0, sugar: 0, icon: Droplets, defaultAmount: 250 },
-  coffee: { name: "Coffee", calories: 5, caffeine: 95, sugar: 0, icon: Coffee, defaultAmount: 240 },
-  tea: { name: "Tea", calories: 2, caffeine: 40, sugar: 0, icon: Coffee, defaultAmount: 240 },
-  juice: { name: "Orange Juice", calories: 112, caffeine: 0, sugar: 21, icon: Wine, defaultAmount: 240 },
-  soda: { name: "Soda", calories: 150, caffeine: 34, sugar: 39, icon: Wine, defaultAmount: 355 },
-  sports_drink: { name: "Sports Drink", calories: 80, caffeine: 0, sugar: 21, icon: Droplets, defaultAmount: 355 },
-  alcohol: { name: "Beer", calories: 150, caffeine: 0, sugar: 13, icon: Wine, defaultAmount: 355 },
-  other: { name: "Custom Drink", calories: 0, caffeine: 0, sugar: 0, icon: Plus, defaultAmount: 250 }
+  water: { name: "Water", calories: 0, caffeine: 0, sugar: 0, alcoholContent: 0, icon: Droplets, defaultAmount: 250 },
+  coffee: { name: "Coffee", calories: 5, caffeine: 95, sugar: 0, alcoholContent: 0, icon: Coffee, defaultAmount: 240 },
+  tea: { name: "Tea", calories: 2, caffeine: 40, sugar: 0, alcoholContent: 0, icon: Coffee, defaultAmount: 240 },
+  juice: { name: "Orange Juice", calories: 112, caffeine: 0, sugar: 21, alcoholContent: 0, icon: Wine, defaultAmount: 240 },
+  soda: { name: "Soda", calories: 150, caffeine: 34, sugar: 39, alcoholContent: 0, icon: Wine, defaultAmount: 355 },
+  sports_drink: { name: "Sports Drink", calories: 80, caffeine: 0, sugar: 21, alcoholContent: 0, icon: Droplets, defaultAmount: 355 },
+  beer: { name: "Beer", calories: 150, caffeine: 0, sugar: 13, alcoholContent: 5, icon: Wine, defaultAmount: 355 },
+  wine: { name: "Wine", calories: 125, caffeine: 0, sugar: 4, alcoholContent: 12, icon: Wine, defaultAmount: 150 },
+  spirits: { name: "Spirits", calories: 97, caffeine: 0, sugar: 0, alcoholContent: 40, icon: Wine, defaultAmount: 44 },
+  cocktail: { name: "Cocktail", calories: 200, caffeine: 0, sugar: 15, alcoholContent: 15, icon: Wine, defaultAmount: 150 },
+  other: { name: "Custom Drink", calories: 0, caffeine: 0, sugar: 0, alcoholContent: 0, icon: Plus, defaultAmount: 250 }
 };
 
 export function DrinksBar() {
@@ -54,8 +57,15 @@ export function DrinksBar() {
     },
   });
 
+  const calculateAlcoholUnits = (amount: number, alcoholContent: number): number => {
+    // Formula: (amount in ml × alcohol content %) / 1000 = units of alcohol
+    return Math.round((amount * alcoholContent) / 1000);
+  };
+
   const handleQuickAdd = (drinkType: keyof typeof drinkPresets) => {
     const preset = drinkPresets[drinkType];
+    const alcoholUnits = calculateAlcoholUnits(preset.defaultAmount, preset.alcoholContent);
+    
     const drink: InsertDrinkEntry = {
       drinkName: preset.name,
       drinkType,
@@ -63,6 +73,8 @@ export function DrinksBar() {
       calories: preset.calories,
       caffeine: preset.caffeine,
       sugar: preset.sugar,
+      alcoholContent: preset.alcoholContent,
+      alcoholUnits,
       loggedAt: new Date().toISOString(),
     };
     addDrinkMutation.mutate(drink);
@@ -76,6 +88,7 @@ export function DrinksBar() {
     
     // Calculate nutrition values based on amount ratio
     const ratio = amountNum / preset.defaultAmount;
+    const alcoholUnits = calculateAlcoholUnits(amountNum, preset.alcoholContent);
     
     const drink: InsertDrinkEntry = {
       drinkName: selectedDrink === 'other' ? customName : preset.name,
@@ -84,6 +97,8 @@ export function DrinksBar() {
       calories: Math.round(preset.calories * ratio),
       caffeine: Math.round(preset.caffeine * ratio),
       sugar: Math.round(preset.sugar * ratio),
+      alcoholContent: preset.alcoholContent,
+      alcoholUnits,
       loggedAt: new Date().toISOString(),
     };
     
@@ -124,6 +139,28 @@ export function DrinksBar() {
               <Coffee className="h-4 w-4" />
               <span>Coffee</span>
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('beer')}
+              disabled={addDrinkMutation.isPending}
+              className="flex items-center space-x-2 text-amber-600 border-amber-300 hover:bg-amber-50"
+              data-testid="button-quick-beer"
+            >
+              <Wine className="h-4 w-4" />
+              <span>Beer</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('wine')}
+              disabled={addDrinkMutation.isPending}
+              className="flex items-center space-x-2 text-purple-600 border-purple-300 hover:bg-purple-50"
+              data-testid="button-quick-wine"
+            >
+              <Wine className="h-4 w-4" />
+              <span>Wine</span>
+            </Button>
           </div>
           <Button
             variant="ghost"
@@ -160,7 +197,7 @@ export function DrinksBar() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Quick buttons */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2 mb-3">
           <Button
             variant="outline"
             size="sm"
@@ -207,6 +244,57 @@ export function DrinksBar() {
           </Button>
         </div>
 
+        {/* Alcohol Section */}
+        <div className="border-t pt-3 mb-3">
+          <h4 className="font-medium text-sm mb-2 text-amber-700 dark:text-amber-300">Alcohol</h4>
+          <div className="grid grid-cols-4 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('beer')}
+              disabled={addDrinkMutation.isPending}
+              className="flex flex-col items-center space-y-1 h-auto py-2 text-amber-600 border-amber-300 hover:bg-amber-50"
+              data-testid="button-quick-beer-expanded"
+            >
+              <Wine className="h-4 w-4" />
+              <span className="text-xs">Beer</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('wine')}
+              disabled={addDrinkMutation.isPending}
+              className="flex flex-col items-center space-y-1 h-auto py-2 text-purple-600 border-purple-300 hover:bg-purple-50"
+              data-testid="button-quick-wine-expanded"
+            >
+              <Wine className="h-4 w-4" />
+              <span className="text-xs">Wine</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('spirits')}
+              disabled={addDrinkMutation.isPending}
+              className="flex flex-col items-center space-y-1 h-auto py-2 text-red-600 border-red-300 hover:bg-red-50"
+              data-testid="button-quick-spirits"
+            >
+              <Wine className="h-4 w-4" />
+              <span className="text-xs">Spirits</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAdd('cocktail')}
+              disabled={addDrinkMutation.isPending}
+              className="flex flex-col items-center space-y-1 h-auto py-2 text-pink-600 border-pink-300 hover:bg-pink-50"
+              data-testid="button-quick-cocktail"
+            >
+              <Wine className="h-4 w-4" />
+              <span className="text-xs">Cocktail</span>
+            </Button>
+          </div>
+        </div>
+
         {/* Custom drink form */}
         <div className="border-t pt-4 space-y-3">
           <h4 className="font-medium text-sm">Custom Amount</h4>
@@ -222,7 +310,10 @@ export function DrinksBar() {
                 <SelectItem value="juice">Juice</SelectItem>
                 <SelectItem value="soda">Soda</SelectItem>
                 <SelectItem value="sports_drink">Sports Drink</SelectItem>
-                <SelectItem value="alcohol">Alcohol</SelectItem>
+                <SelectItem value="beer">Beer</SelectItem>
+                <SelectItem value="wine">Wine</SelectItem>
+                <SelectItem value="spirits">Spirits</SelectItem>
+                <SelectItem value="cocktail">Cocktail</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
