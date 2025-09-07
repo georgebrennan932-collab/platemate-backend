@@ -4,13 +4,13 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Utensils, Calendar, Clock, Trash2, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import type { DiaryEntry } from "@shared/schema";
+import type { DiaryEntryWithAnalysis } from "@shared/schema";
 
 export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: diaryEntries, isLoading } = useQuery<DiaryEntry[]>({
+  const { data: diaryEntries, isLoading } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
   });
 
@@ -42,7 +42,7 @@ export function DiaryPage() {
     }
     groups[date].push(entry);
     return groups;
-  }, {} as Record<string, DiaryEntry[]>) || {};
+  }, {} as Record<string, DiaryEntryWithAnalysis[]>) || {};
 
   const sortedDates = Object.keys(groupedEntries).sort((a, b) => 
     new Date(b).getTime() - new Date(a).getTime()
@@ -143,7 +143,7 @@ export function DiaryPage() {
                               </div>
                               {entry.analysis.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
-                                  {entry.analysis.detectedFoods.map((food, index) => (
+                                  {entry.analysis.detectedFoods.map((food: any, index: number) => (
                                     <span 
                                       key={index}
                                       className="inline-block px-2 py-1 bg-muted rounded text-xs"

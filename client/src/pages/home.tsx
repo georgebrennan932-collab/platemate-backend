@@ -4,6 +4,8 @@ import { CameraInterface } from "@/components/camera-interface";
 import { ProcessingState } from "@/components/processing-state";
 import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
+import { Link } from "wouter";
+import { Book, Utensils } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
@@ -41,6 +43,21 @@ export default function Home() {
   return (
     <div className="bg-background text-foreground min-h-screen">
       <AppHeader />
+      
+      {/* Diary Navigation */}
+      {currentState === 'camera' && (
+        <div className="max-w-md mx-auto px-4 py-2">
+          <Link href="/diary">
+            <button 
+              className="w-full bg-secondary text-secondary-foreground py-3 px-4 rounded-lg font-medium hover:bg-secondary/80 transition-colors flex items-center justify-center space-x-2"
+              data-testid="button-view-diary"
+            >
+              <Book className="h-4 w-4" />
+              <span>View Food Diary</span>
+            </button>
+          </Link>
+        </div>
+      )}
       
       <div className="max-w-md mx-auto">
         {currentState === 'camera' && (
