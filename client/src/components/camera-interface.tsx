@@ -70,7 +70,7 @@ export function CameraInterface({
   return (
     <div className="relative">
       {/* Camera View */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-gray-900 to-black aspect-square overflow-hidden rounded-2xl shadow-2xl border border-slate-800">
+      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/20 to-black aspect-square overflow-hidden rounded-3xl shadow-2xl border border-slate-700/50 modern-card">
         {previewUrl ? (
           <img 
             src={previewUrl} 
