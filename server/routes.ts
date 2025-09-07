@@ -28,15 +28,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No image file provided" });
       }
 
-      // Process image with Sharp for optimization
+      // Validate and process image with Sharp for optimization
       const processedImagePath = `uploads/processed_${req.file.filename}.jpg`;
-      await sharp(req.file.path)
-        .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-        .jpeg({ quality: 85 })
-        .toFile(processedImagePath);
+      
+      try {
+        // First validate the image by attempting to get metadata
+        await sharp(req.file.path).metadata();
+        
+        // If validation passes, process the image
+        await sharp(req.file.path)
+          .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toFile(processedImagePath);
+      } catch (sharpError) {
+        console.error("Image processing error:", sharpError);
+        
+        // Clean up the original file before returning error
+        try {
+          await fs.unlink(req.file.path);
+        } catch (unlinkError) {
+          console.error("Error cleaning up original file:", unlinkError);
+        }
+        
+        return res.status(400).json({ 
+          error: "Invalid image file. Please upload a valid JPEG or PNG image." 
+        });
+      }
 
-      // Clean up original file
-      await fs.unlink(req.file.path);
+      // Clean up original file after successful processing
+      try {
+        await fs.unlink(req.file.path);
+      } catch (unlinkError) {
+        console.error("Error cleaning up original file:", unlinkError);
+        // Don't fail the request if cleanup fails
+      }
 
       // Mock food recognition and nutrition analysis
       // In production, this would call external APIs like Clarifai, Google Vision, or Edamam
