@@ -5,19 +5,22 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0 0% 100%);
+  --background: linear-gradient(135deg, hsl(330 80% 98%) 0%, hsl(280 60% 96%) 100%);
+  --background-solid: hsl(330 80% 98%);
   --foreground: hsl(222.2 84% 4.9%);
   --card: hsl(0 0% 100%);
   --card-foreground: hsl(222.2 84% 4.9%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(222.2 84% 4.9%);
-  --primary: hsl(276 100% 54%);
+  --primary: linear-gradient(135deg, hsl(276 100% 54%) 0%, hsl(330 100% 60%) 100%);
+  --primary-solid: hsl(276 100% 54%);
   --primary-foreground: hsl(0 0% 98%);
   --secondary: hsl(330 100% 95%);
   --secondary-foreground: hsl(276 100% 54%);
   --muted: hsl(330 100% 96%);
   --muted-foreground: hsl(276 30% 50%);
-  --accent: hsl(330 100% 95%);
+  --accent: linear-gradient(135deg, hsl(330 100% 95%) 0%, hsl(300 100% 92%) 100%);
+  --accent-solid: hsl(330 100% 95%);
   --accent-foreground: hsl(276 100% 54%);
   --destructive: hsl(0 84% 60%);
   --destructive-foreground: hsl(0 0% 98%);
@@ -40,23 +43,29 @@
   --font-sans: 'Roboto', sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: 'Courier New', monospace;
-  --radius: 0.5rem;
+  --radius: 0.75rem;
+  --shadow-soft: 0 4px 16px rgba(147, 51, 234, 0.08);
+  --shadow-medium: 0 8px 32px rgba(147, 51, 234, 0.12);
+  --shadow-strong: 0 16px 48px rgba(147, 51, 234, 0.16);
 }
 
 .dark {
-  --background: hsl(222.2 84% 4.9%);
+  --background: linear-gradient(135deg, hsl(222.2 84% 4.9%) 0%, hsl(276 50% 8%) 100%);
+  --background-solid: hsl(222.2 84% 4.9%);
   --foreground: hsl(210 40% 98%);
-  --card: hsl(222.2 84% 4.9%);
+  --card: linear-gradient(135deg, hsl(222.2 84% 4.9%) 0%, hsl(276 40% 8%) 100%);
   --card-foreground: hsl(210 40% 98%);
   --popover: hsl(222.2 84% 4.9%);
   --popover-foreground: hsl(210 40% 98%);
-  --primary: hsl(276 100% 54%);
+  --primary: linear-gradient(135deg, hsl(276 100% 54%) 0%, hsl(330 100% 60%) 100%);
+  --primary-solid: hsl(276 100% 54%);
   --primary-foreground: hsl(0 0% 98%);
   --secondary: hsl(276 20% 25%);
   --secondary-foreground: hsl(330 80% 85%);
   --muted: hsl(276 20% 25%);
   --muted-foreground: hsl(276 15% 65%);
-  --accent: hsl(276 20% 25%);
+  --accent: linear-gradient(135deg, hsl(276 20% 25%) 0%, hsl(330 30% 20%) 100%);
+  --accent-solid: hsl(276 20% 25%);
   --accent-foreground: hsl(330 80% 85%);
   --destructive: hsl(0 62.8% 30.6%);
   --destructive-foreground: hsl(210 40% 98%);
@@ -76,6 +85,9 @@
   --sidebar-accent-foreground: hsl(330 80% 85%);
   --sidebar-border: hsl(276 20% 25%);
   --sidebar-ring: hsl(276 100% 54%);
+  --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.45);
 }
 
 @layer base {
@@ -84,7 +96,69 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased text-foreground;
+    background: var(--background);
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium;
+    letter-spacing: -0.025em;
+  }
+
+  .gradient-text {
+    background: var(--primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .dark .glass-card {
+    background: rgba(30, 30, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .gradient-button {
+    background: var(--primary);
+    border: none;
+    color: var(--primary-foreground);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .gradient-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+  }
+
+  .gradient-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .modern-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .modern-card:hover {
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-2px);
+  }
+
+  .smooth-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
