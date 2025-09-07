@@ -10,7 +10,15 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const formatTime = (date: Date | string) => {
     try {
       const now = new Date();
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      let dateObj: Date;
+      
+      if (typeof date === 'string') {
+        dateObj = new Date(date);
+      } else if (date instanceof Date) {
+        dateObj = date;
+      } else {
+        return 'Unknown time';
+      }
       
       // Check if dateObj is valid
       if (isNaN(dateObj.getTime())) {
