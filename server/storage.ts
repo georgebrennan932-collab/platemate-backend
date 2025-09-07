@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, foodAnalyses, diaryEntries, drinkEntries } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type User, type UpsertUser, foodAnalyses, diaryEntries, drinkEntries, users } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
@@ -7,15 +7,19 @@ export interface IStorage {
   createFoodAnalysis(analysis: InsertFoodAnalysis): Promise<FoodAnalysis>;
   getAllFoodAnalyses(): Promise<FoodAnalysis[]>;
   
+  // User methods (for authentication)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
   // Diary methods
   createDiaryEntry(entry: InsertDiaryEntry): Promise<DiaryEntry>;
-  getDiaryEntries(limit?: number): Promise<DiaryEntryWithAnalysis[]>;
+  getDiaryEntries(userId?: string, limit?: number): Promise<DiaryEntryWithAnalysis[]>;
   getDiaryEntry(id: string): Promise<DiaryEntryWithAnalysis | undefined>;
   deleteDiaryEntry(id: string): Promise<boolean>;
   
   // Drink methods
   createDrinkEntry(entry: InsertDrinkEntry): Promise<DrinkEntry>;
-  getDrinkEntries(limit?: number): Promise<DrinkEntry[]>;
+  getDrinkEntries(userId?: string, limit?: number): Promise<DrinkEntry[]>;
   getDrinkEntry(id: string): Promise<DrinkEntry | undefined>;
   deleteDrinkEntry(id: string): Promise<boolean>;
 }
@@ -49,6 +53,27 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(foodAnalyses.createdAt));
   }
 
+  // User methods for authentication
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   async createDiaryEntry(entry: InsertDiaryEntry): Promise<DiaryEntry> {
     const [diaryEntry] = await db
       .insert(diaryEntries)
@@ -60,14 +85,25 @@ export class DatabaseStorage implements IStorage {
     return diaryEntry;
   }
 
-  async getDiaryEntries(limit = 50): Promise<DiaryEntryWithAnalysis[]> {
-    return await db.query.diaryEntries.findMany({
-      limit,
-      orderBy: desc(diaryEntries.mealDate),
-      with: {
-        analysis: true,
-      },
-    });
+  async getDiaryEntries(userId?: string, limit = 50): Promise<DiaryEntryWithAnalysis[]> {
+    if (userId) {
+      return await db.query.diaryEntries.findMany({
+        where: eq(diaryEntries.userId, userId),
+        limit,
+        orderBy: desc(diaryEntries.mealDate),
+        with: {
+          analysis: true,
+        },
+      });
+    } else {
+      return await db.query.diaryEntries.findMany({
+        limit,
+        orderBy: desc(diaryEntries.mealDate),
+        with: {
+          analysis: true,
+        },
+      });
+    }
   }
 
   async getDiaryEntry(id: string): Promise<DiaryEntryWithAnalysis | undefined> {
@@ -95,12 +131,21 @@ export class DatabaseStorage implements IStorage {
     return drinkEntry;
   }
 
-  async getDrinkEntries(limit = 50): Promise<DrinkEntry[]> {
-    return await db
-      .select()
-      .from(drinkEntries)
-      .orderBy(desc(drinkEntries.loggedAt))
-      .limit(limit);
+  async getDrinkEntries(userId?: string, limit = 50): Promise<DrinkEntry[]> {
+    if (userId) {
+      return await db
+        .select()
+        .from(drinkEntries)
+        .where(eq(drinkEntries.userId, userId))
+        .orderBy(desc(drinkEntries.loggedAt))
+        .limit(limit);
+    } else {
+      return await db
+        .select()
+        .from(drinkEntries)
+        .orderBy(desc(drinkEntries.loggedAt))
+        .limit(limit);
+    }
   }
 
   async getDrinkEntry(id: string): Promise<DrinkEntry | undefined> {

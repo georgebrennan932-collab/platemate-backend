@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertFoodAnalysisSchema, insertDiaryEntrySchema, insertDrinkEntrySchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
@@ -22,6 +23,21 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Analyze food image
   app.post("/api/analyze", upload.single('image'), async (req, res) => {
     try {
@@ -101,10 +117,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Diary routes
-  app.post("/api/diary", async (req, res) => {
+  // Diary routes (protected)
+  app.post("/api/diary", isAuthenticated, async (req: any, res) => {
     try {
-      const validatedEntry = insertDiaryEntrySchema.parse(req.body);
+      const userId = req.user.claims.sub;
+      const validatedEntry = insertDiaryEntrySchema.parse({
+        ...req.body,
+        userId
+      });
       const diaryEntry = await storage.createDiaryEntry(validatedEntry);
       res.json(diaryEntry);
     } catch (error) {
@@ -113,10 +133,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/diary", async (req, res) => {
+  app.get("/api/diary", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const entries = await storage.getDiaryEntries(limit);
+      const entries = await storage.getDiaryEntries(userId, limit);
       res.json(entries);
     } catch (error) {
       console.error("Get diary entries error:", error);
@@ -124,12 +145,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/diary/:id", async (req, res) => {
+  app.get("/api/diary/:id", isAuthenticated, async (req: any, res) => {
     try {
       const entry = await storage.getDiaryEntry(req.params.id);
       if (!entry) {
         return res.status(404).json({ error: "Diary entry not found" });
       }
+      
+      // Verify the entry belongs to the authenticated user
+      const userId = req.user.claims.sub;
+      if (entry.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       res.json(entry);
     } catch (error) {
       console.error("Get diary entry error:", error);
@@ -137,8 +165,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/diary/:id", async (req, res) => {
+  app.delete("/api/diary/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      const entry = await storage.getDiaryEntry(req.params.id);
+      
+      if (!entry) {
+        return res.status(404).json({ error: "Diary entry not found" });
+      }
+      
+      // Verify the entry belongs to the authenticated user
+      if (entry.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const deleted = await storage.deleteDiaryEntry(req.params.id);
       if (!deleted) {
         return res.status(404).json({ error: "Diary entry not found" });
@@ -150,10 +190,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Diet advice routes
-  app.get("/api/diet-advice", async (req, res) => {
+  // Diet advice routes (protected)
+  app.get("/api/diet-advice", isAuthenticated, async (req: any, res) => {
     try {
-      const entries = await storage.getDiaryEntries(30); // Get last 30 entries
+      const userId = req.user.claims.sub;
+      const entries = await storage.getDiaryEntries(userId, 30); // Get last 30 entries for this user
       if (!entries || entries.length === 0) {
         return res.json({
           personalizedAdvice: [],
