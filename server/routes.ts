@@ -6,6 +6,7 @@ import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
 import path from "path";
+import OpenAI from "openai";
 
 // Configure multer for image uploads
 const upload = multer({ 
