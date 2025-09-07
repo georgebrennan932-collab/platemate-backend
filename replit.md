@@ -1,6 +1,6 @@
 # Overview
 
-NutriScan is a full-stack web application that allows users to analyze food images using AI to automatically identify food items and calculate their nutritional information. Users can upload or capture photos of their meals, and the app provides detailed breakdowns of calories, macronutrients (protein, carbs, fat), and identified food items with portion estimates.
+PlateMate is a full-stack web application that allows users to analyze food images using AI to automatically identify food items and calculate their nutritional information. Users can upload or capture photos of their meals, and the app provides detailed breakdowns of calories, macronutrients (protein, carbs, fat), and identified food items with portion estimates.
 
 The application features a mobile-first design with a clean, intuitive interface for food scanning and nutrition tracking. It's built as a Progressive Web App (PWA) suitable for both mobile and desktop use.
 

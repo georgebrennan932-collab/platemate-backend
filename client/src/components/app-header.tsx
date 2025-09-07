@@ -6,7 +6,7 @@ export function AppHeader() {
       <div className="max-w-md mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Leaf className="text-2xl h-6 w-6" />
-          <h1 className="text-xl font-bold">NutriScan</h1>
+          <h1 className="text-xl font-bold">PlateMate</h1>
         </div>
         <button 
           className="p-2 rounded-full hover:bg-primary/80 transition-colors"
