@@ -172,8 +172,16 @@ Be as accurate as possible with portion estimates and nutritional values. If you
       throw new Error("No response from OpenAI");
     }
 
+    // Clean the response text by removing markdown formatting
+    const cleanedText = responseText
+      .replace(/```json\s*/g, '')
+      .replace(/```\s*/g, '')
+      .trim();
+    
+    console.log("Cleaned response text:", cleanedText);
+
     // Parse the JSON response
-    const parsed = JSON.parse(responseText);
+    const parsed = JSON.parse(cleanedText);
     console.log("Parsed response:", parsed);
     
     // Validate the response structure
