@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -28,7 +28,7 @@ export class MemStorage implements IStorage {
       totalProtein: insertAnalysis.totalProtein,
       totalCarbs: insertAnalysis.totalCarbs,
       totalFat: insertAnalysis.totalFat,
-      detectedFoods: insertAnalysis.detectedFoods,
+      detectedFoods: insertAnalysis.detectedFoods as DetectedFood[],
       createdAt: new Date()
     };
     this.analyses.set(id, analysis);
