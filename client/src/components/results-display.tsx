@@ -7,16 +7,17 @@ interface ResultsDisplayProps {
 }
 
 export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
-  const formatTime = (date: Date) => {
+  const formatTime = (date: Date | string) => {
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const diff = now.getTime() - dateObj.getTime();
     const minutes = Math.floor(diff / 60000);
     
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h ago`;
-    return date.toLocaleDateString();
+    return dateObj.toLocaleDateString();
   };
 
   const getNutrientIcon = (type: string) => {
