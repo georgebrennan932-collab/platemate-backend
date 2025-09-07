@@ -2,14 +2,27 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw } from "lucide-react";
+import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users } from "lucide-react";
 import { useState } from "react";
+
+interface MealIdea {
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  name: string;
+  description: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  ingredients: string[];
+  benefits: string;
+}
 
 interface DietAdvice {
   personalizedAdvice: string[];
   nutritionGoals: string[];
   improvements: string[];
   generalTips: string[];
+  mealIdeas?: MealIdea[];
 }
 
 export function DietAdvicePage() {
@@ -183,6 +196,70 @@ export function DietAdvicePage() {
                       {advice.improvements.map((improvement, index) => (
                         <div key={index} className="text-sm text-muted-foreground">
                           • {improvement}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {advice.mealIdeas && advice.mealIdeas.length > 0 && (
+                  <div className="bg-card border rounded-lg p-4">
+                    <h3 className="font-semibold text-primary mb-3 flex items-center">
+                      <Utensils className="h-4 w-4 mr-2" />
+                      Personalized Meal Ideas
+                    </h3>
+                    <div className="space-y-4">
+                      {advice.mealIdeas.map((meal, index) => (
+                        <div key={index} className="border rounded-lg p-4 bg-muted/30" data-testid={`card-meal-${index}`}>
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  meal.mealType === 'breakfast' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                  meal.mealType === 'lunch' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                  meal.mealType === 'dinner' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                  'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                }`}>
+                                  {meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}
+                                </span>
+                              </div>
+                              <h4 className="font-semibold" data-testid={`text-meal-name-${index}`}>
+                                {meal.name}
+                              </h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {meal.description}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-medium">
+                                {meal.calories} cal
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center mb-3 text-xs text-muted-foreground">
+                            <span>Protein: {meal.protein}g</span>
+                            <span>Carbs: {meal.carbs}g</span>
+                            <span>Fat: {meal.fat}g</span>
+                          </div>
+
+                          <div className="mb-3">
+                            <h5 className="text-sm font-medium mb-1">Ingredients:</h5>
+                            <div className="flex flex-wrap gap-1">
+                              {meal.ingredients.map((ingredient, idx) => (
+                                <span key={idx} className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
+                                  {ingredient}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="bg-primary/10 rounded p-3">
+                            <h5 className="text-sm font-medium mb-1">Why this meal?</h5>
+                            <p className="text-sm text-muted-foreground">
+                              {meal.benefits}
+                            </p>
+                          </div>
                         </div>
                       ))}
                     </div>
