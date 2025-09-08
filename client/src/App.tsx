@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { notificationService } from "@/lib/notification-service";
 import { soundService } from "@/lib/sound-service";
+import { GestureNavigation } from "@/components/gesture-navigation";
+import { GestureOverlay } from "@/components/gesture-overlay";
 import { useEffect } from "react";
 import LandingPage from "@/pages/LandingPage";
 import Home from "@/pages/home";
@@ -62,6 +64,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
+        <GestureNavigation />
+        <GestureOverlay />
         <Router />
       </TooltipProvider>
     </QueryClientProvider>
