@@ -94,8 +94,12 @@ export const insertFoodAnalysisSchema = createInsertSchema(foodAnalyses).omit({
   createdAt: true,
 });
 
-export type InsertFoodAnalysis = z.infer<typeof insertFoodAnalysisSchema>;
-export type FoodAnalysis = typeof foodAnalyses.$inferSelect;
+export type InsertFoodAnalysis = z.infer<typeof insertFoodAnalysisSchema> & {
+  isAITemporarilyUnavailable?: boolean;
+};
+export type FoodAnalysis = typeof foodAnalyses.$inferSelect & {
+  isAITemporarilyUnavailable?: boolean;
+};
 
 export const insertDiaryEntrySchema = createInsertSchema(diaryEntries).omit({
   id: true,
