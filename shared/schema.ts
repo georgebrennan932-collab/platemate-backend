@@ -26,6 +26,22 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User profile table for physical stats and goals
+export const userProfiles = pgTable("user_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique().references(() => users.id),
+  age: integer("age"),
+  sex: varchar("sex"), // 'male' or 'female'
+  heightCm: integer("height_cm"), // height in centimeters
+  currentWeightKg: integer("current_weight_kg"), // current weight in kg
+  goalWeightKg: integer("goal_weight_kg"), // goal weight in kg
+  activityLevel: varchar("activity_level"), // sedentary, lightly_active, moderately_active, very_active, extra_active
+  weightGoal: varchar("weight_goal"), // lose_weight, maintain_weight, gain_weight
+  weeklyWeightChangeKg: integer("weekly_weight_change_kg"), // target kg per week (can be negative for loss)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const nutritionGoals = pgTable("nutrition_goals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().unique().references(() => users.id),
@@ -130,6 +146,16 @@ export const insertNutritionGoalsSchema = createInsertSchema(nutritionGoals).omi
   updatedAt: true,
 });
 
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  sex: z.enum(["male", "female"]).optional(),
+  activityLevel: z.enum(["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"]).optional(),
+  weightGoal: z.enum(["lose_weight", "maintain_weight", "gain_weight"]).optional(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertDiaryEntry = z.infer<typeof insertDiaryEntrySchema>;
@@ -139,12 +165,22 @@ export type InsertDrinkEntry = z.infer<typeof insertDrinkEntrySchema>;
 export type DrinkEntry = typeof drinkEntries.$inferSelect;
 export type InsertNutritionGoals = z.infer<typeof insertNutritionGoalsSchema>;
 export type NutritionGoals = typeof nutritionGoals.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+export type UserProfile = typeof userProfiles.$inferSelect;
 
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   diaryEntries: many(diaryEntries),
   drinkEntries: many(drinkEntries),
   nutritionGoals: one(nutritionGoals),
+  profile: one(userProfiles),
+}));
+
+export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [userProfiles.userId],
+    references: [users.id],
+  }),
 }));
 
 export const nutritionGoalsRelations = relations(nutritionGoals, ({ one }) => ({
