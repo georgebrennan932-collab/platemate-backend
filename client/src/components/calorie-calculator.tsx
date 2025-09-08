@@ -456,9 +456,11 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                   control={form.control}
                   name="goalWeightKg"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Target className="h-4 w-4" />
+                    <FormItem className="space-y-3">
+                      <FormLabel className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                          <Target className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        </div>
                         Goal Weight (kg)
                       </FormLabel>
                       <FormControl>
@@ -476,6 +478,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           }}
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-goal-weight"
+                          className="border-2 border-gray-200 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
                         />
                       </FormControl>
                       <FormMessage />
@@ -487,14 +490,16 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                   control={form.control}
                   name="activityLevel"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Activity className="h-4 w-4" />
+                    <FormItem className="space-y-3">
+                      <FormLabel className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                          <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        </div>
                         Activity Level
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-activity">
+                          <SelectTrigger data-testid="select-activity" className="border-2 border-gray-200 hover:border-emerald-300 focus:border-emerald-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base">
                             <SelectValue placeholder="Select activity level" />
                           </SelectTrigger>
                         </FormControl>
@@ -513,16 +518,18 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
               </div>
 
               {/* Weight Goal */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="weightGoal"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Weight Goal</FormLabel>
+                    <FormItem className="space-y-3">
+                      <FormLabel className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        🎯 Weight Goal
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-weight-goal">
+                          <SelectTrigger data-testid="select-weight-goal" className="border-2 border-gray-200 hover:border-pink-300 focus:border-pink-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base">
                             <SelectValue placeholder="Select weight goal" />
                           </SelectTrigger>
                         </FormControl>
@@ -541,8 +548,13 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                   control={form.control}
                   name="weeklyWeightChangeKg"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Weekly Change (kg)</FormLabel>
+                    <FormItem className="space-y-3">
+                      <FormLabel className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <div className="p-1.5 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                          📈
+                        </div>
+                        Target Weekly Change (kg)
+                      </FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -560,6 +572,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-weekly-change"
                           placeholder="0.5"
+                          className="border-2 border-gray-200 hover:border-indigo-300 focus:border-indigo-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
                         />
                       </FormControl>
                       <FormMessage />
@@ -573,14 +586,16 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                 control={form.control}
                 name="medication"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
+                  <FormItem className="space-y-3">
+                    <FormLabel className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <div className="p-1.5 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+                        <Activity className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                      </div>
                       Weight Loss Medication
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-medication">
+                        <SelectTrigger data-testid="select-medication" className="border-2 border-gray-200 hover:border-teal-300 focus:border-teal-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base">
                           <SelectValue placeholder="Select medication (if any)" />
                         </SelectTrigger>
                       </FormControl>
@@ -597,24 +612,24 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                 )}
               />
 
-              <div className="space-y-3">
+              <div className="space-y-4 pt-4">
                 <Button 
                   type="button"
                   onClick={handleCalculateOnly}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
                   data-testid="button-calculate-only"
                 >
-                  Calculate Daily Calories
+                  ✨ Calculate Daily Calories
                 </Button>
                 
                 <Button 
                   type="submit" 
                   variant="outline"
-                  className="w-full" 
+                  className="w-full border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 font-medium py-4 rounded-xl transition-all duration-300" 
                   disabled={saveProfileMutation.isPending}
                   data-testid="button-save-profile"
                 >
-                  {saveProfileMutation.isPending ? 'Saving...' : 'Save Profile & Calculate'}
+                  {saveProfileMutation.isPending ? '💾 Saving...' : '💾 Save Profile & Calculate'}
                 </Button>
               </div>
             </form>
