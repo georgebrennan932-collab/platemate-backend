@@ -27,6 +27,7 @@ const profileFormSchema = insertUserProfileSchema.extend({
   goalWeightKg: z.number().min(30).max(300),
   activityLevel: z.enum(["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"]),
   weightGoal: z.enum(["lose_weight", "maintain_weight", "gain_weight"]),
+  medication: z.enum(["none", "ozempic", "wegovy", "mounjaro", "other_glp1"]).optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
@@ -54,6 +55,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
       activityLevel: profile?.activityLevel as any || "moderately_active",
       weightGoal: profile?.weightGoal as any || "maintain_weight",
       weeklyWeightChangeKg: profile?.weeklyWeightChangeKg || 0,
+      medication: profile?.medication as any || "none",
     },
   });
 
@@ -69,6 +71,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
         activityLevel: profile.activityLevel as any || "moderately_active",
         weightGoal: profile.weightGoal as any || "maintain_weight",
         weeklyWeightChangeKg: profile.weeklyWeightChangeKg || 0,
+        medication: profile.medication as any || "none",
       });
     }
   }, [profile, form]);
@@ -142,27 +145,81 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     return bmr * activityMultipliers[activityLevel as keyof typeof activityMultipliers];
   };
 
-  // Calculate daily calories needed for weight goal
-  const calculateTargetCalories = (tdee: number, weightGoal: string, weeklyChange: number = 0.5) => {
+  // Calculate daily calories needed for weight goal with medication considerations
+  const calculateTargetCalories = (tdee: number, weightGoal: string, weeklyChange: number = 0.5, bmr: number, medication: string = 'none') => {
     // 1 kg of fat ≈ 7700 calories
     const caloriesPerKg = 7700;
     const dailyCalorieChange = (weeklyChange * caloriesPerKg) / 7;
     
+    let targetCalories: number;
     switch (weightGoal) {
       case 'lose_weight':
-        return Math.round(tdee - Math.abs(dailyCalorieChange));
+        targetCalories = tdee - Math.abs(dailyCalorieChange);
+        break;
       case 'gain_weight':
-        return Math.round(tdee + Math.abs(dailyCalorieChange));
+        targetCalories = tdee + Math.abs(dailyCalorieChange);
+        break;
       case 'maintain_weight':
       default:
-        return Math.round(tdee);
+        targetCalories = tdee;
+        break;
+    }
+    
+    // Apply medication adjustments
+    if (medication && medication !== 'none' && weightGoal === 'lose_weight') {
+      const medicationAdjustment = getMedicationAdjustment(medication);
+      
+      // Higher minimum calories for people on GLP-1 medications
+      const minCalories = bmr * medicationAdjustment.minMultiplier;
+      
+      // Limit maximum deficit to prevent too rapid weight loss
+      const maxDeficit = medicationAdjustment.maxDeficit;
+      const actualDeficit = Math.min(tdee - targetCalories, maxDeficit);
+      
+      targetCalories = Math.max(tdee - actualDeficit, minCalories);
+    } else if (weightGoal === 'lose_weight') {
+      // Standard safety floor for non-medicated individuals
+      targetCalories = Math.max(targetCalories, bmr * 1.2);
+    }
+    
+    return Math.round(targetCalories);
+  };
+
+  // Get medication-specific adjustments
+  const getMedicationAdjustment = (medication: string) => {
+    switch (medication) {
+      case 'ozempic':
+      case 'wegovy':
+        return {
+          minMultiplier: 1.3, // 130% of BMR minimum
+          maxDeficit: 800, // Max 800 calorie deficit per day
+          name: 'Semaglutide (Ozempic/Wegovy)'
+        };
+      case 'mounjaro':
+        return {
+          minMultiplier: 1.35, // 135% of BMR minimum (stronger appetite suppression)
+          maxDeficit: 750, // Max 750 calorie deficit per day
+          name: 'Tirzepatide (Mounjaro)'
+        };
+      case 'other_glp1':
+        return {
+          minMultiplier: 1.3, // 130% of BMR minimum
+          maxDeficit: 800, // Max 800 calorie deficit per day
+          name: 'GLP-1 Medication'
+        };
+      default:
+        return {
+          minMultiplier: 1.2,
+          maxDeficit: 1000,
+          name: 'None'
+        };
     }
   };
 
   const handleCalculate = (data: ProfileFormData) => {
     const bmr = calculateBMR(data);
     const tdee = calculateTDEE(bmr, data.activityLevel);
-    const targetCalories = calculateTargetCalories(tdee, data.weightGoal, Math.abs(data.weeklyWeightChangeKg || 0.5));
+    const targetCalories = calculateTargetCalories(tdee, data.weightGoal, Math.abs(data.weeklyWeightChangeKg || 0.5), bmr, data.medication);
     
     const calculationData = {
       bmr: Math.round(bmr),
@@ -170,6 +227,8 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
       targetCalories,
       weightChange: data.goalWeightKg - data.currentWeightKg,
       timeToGoal: Math.abs(data.goalWeightKg - data.currentWeightKg) / (Math.abs(data.weeklyWeightChangeKg || 0.5) / 7),
+      medication: data.medication,
+      medicationAdjustment: data.medication !== 'none' ? getMedicationAdjustment(data.medication || 'none') : null,
     };
     
     setCalculatedCalories(targetCalories);
@@ -220,7 +279,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     
     // Validate required fields
     if (!formData.age || !formData.sex || !formData.heightCm || !formData.currentWeightKg || 
-        !formData.goalWeightKg || !formData.activityLevel || !formData.weightGoal) {
+        !formData.goalWeightKg || !formData.activityLevel || !formData.weightGoal || !formData.medication) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields to calculate your calories.",
@@ -448,6 +507,35 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                 />
               </div>
 
+              {/* Medication Field */}
+              <FormField
+                control={form.control}
+                name="medication"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      Weight Loss Medication
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-medication">
+                          <SelectValue placeholder="Select medication (if any)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No medication</SelectItem>
+                        <SelectItem value="ozempic">Ozempic (Semaglutide)</SelectItem>
+                        <SelectItem value="wegovy">Wegovy (Semaglutide)</SelectItem>
+                        <SelectItem value="mounjaro">Mounjaro (Tirzepatide)</SelectItem>
+                        <SelectItem value="other_glp1">Other GLP-1 medication</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="space-y-3">
                 <Button 
                   type="button"
@@ -521,9 +609,30 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                 <li>• <strong>BMR:</strong> Mifflin-St Jeor equation based on your age, sex, height, and weight</li>
                 <li>• <strong>TDEE:</strong> BMR × activity level multiplier</li>
                 <li>• <strong>Target:</strong> TDEE adjusted for your weight goal (±{Math.abs(form.getValues('weeklyWeightChangeKg') || 0.5)}kg/week)</li>
+                {bmrData.medicationAdjustment && (
+                  <li>• <strong>Medication adjustment:</strong> Increased minimum calories for {bmrData.medicationAdjustment.name} to prevent malnutrition</li>
+                )}
                 <li>• <strong>Timeline:</strong> Based on safe weight change rate</li>
               </ul>
             </div>
+
+            {/* Medication-Specific Advice */}
+            {bmrData.medication && bmrData.medication !== 'none' && (
+              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  GLP-1 Medication Considerations
+                </h4>
+                <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+                  <p><strong>Higher calorie floor:</strong> Your minimum daily calories are set higher due to appetite suppression effects.</p>
+                  <p><strong>Slower weight loss:</strong> Calorie deficit is limited to prevent too rapid weight loss and nutrient deficiencies.</p>
+                  <p><strong>Important:</strong> Monitor your food intake closely and ensure you're getting adequate nutrition despite reduced appetite.</p>
+                  <div className="mt-3 p-2 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded text-yellow-800 dark:text-yellow-200">
+                    <strong>Medical reminder:</strong> Always follow your healthcare provider's guidance on diet and medication management.
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Update Goals Button */}
             <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
