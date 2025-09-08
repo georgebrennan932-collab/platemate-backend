@@ -362,12 +362,12 @@ export function DiaryPage() {
                               {entry.analysis.imageUrl && (
                                 <div className="relative">
                                   <img 
-                                    src={`/${entry.analysis.imageUrl}`} 
+                                    src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`} 
                                     alt="Original food photo" 
                                     className="w-full h-32 object-cover rounded-lg border"
                                     data-testid={`food-image-${entry.id}`}
                                     onError={(e) => {
-                                      // Hide image if it fails to load
+                                      console.log('Diary image failed to load:', entry.analysis.imageUrl);
                                       e.currentTarget.style.display = 'none';
                                     }}
                                   />

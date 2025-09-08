@@ -127,12 +127,22 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       <div className="modern-card glass-card p-6">
         <div className="flex items-center space-x-4">
           <div className="w-24 h-24 rounded-2xl overflow-hidden bg-muted relative">
-            <img 
-              src={`/${data.imageUrl}`}
-              alt="Analyzed food plate thumbnail" 
-              className="w-full h-full object-cover"
-              data-testid="img-thumbnail"
-            />
+            {data.imageUrl ? (
+              <img 
+                src={data.imageUrl.startsWith('/') ? data.imageUrl : `/${data.imageUrl}`}
+                alt="Analyzed food plate thumbnail" 
+                className="w-full h-full object-cover"
+                data-testid="img-thumbnail"
+                onError={(e) => {
+                  console.log('Image failed to load:', data.imageUrl);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 flex items-center justify-center">
+                <Camera className="h-8 w-8 text-muted-foreground" />
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
           </div>
           <div className="flex-1">
@@ -425,7 +435,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             <div className="flex space-x-3 mt-6">
               <button
                 onClick={() => setShowDiaryDialog(false)}
-                className="flex-1 py-2 px-4 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+                className="flex-1 py-2 px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 data-testid="button-cancel-diary"
               >
                 Cancel
@@ -433,10 +443,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               <button
                 onClick={() => addToDiaryMutation.mutate()}
                 disabled={addToDiaryMutation.isPending}
-                className="flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="button-save-diary"
               >
-                {addToDiaryMutation.isPending ? 'Saving...' : 'Save to Diary'}
+                <Plus className="h-4 w-4 mr-2 inline" />
+                {addToDiaryMutation.isPending ? 'Adding...' : 'Add to Diary'}
               </button>
             </div>
           </div>
