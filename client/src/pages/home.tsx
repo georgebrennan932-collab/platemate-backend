@@ -6,8 +6,9 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
+import { BottomNavigation } from "@/components/bottom-navigation";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
 
@@ -45,63 +46,50 @@ export default function Home() {
     <div className="bg-background text-foreground min-h-screen">
       <AppHeader />
       
-      {/* Navigation */}
+      {/* Quick Actions - Only show when camera is ready */}
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 py-2 space-y-4">
-          <Link href="/diary">
-            <button 
-              className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200/50 dark:border-blue-700/30 py-4 px-6 rounded-xl font-medium smooth-transition flex items-center justify-center space-x-3 group"
-              data-testid="button-view-diary"
-            >
-              <Book className="h-5 w-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 smooth-transition" />
-              <span className="text-blue-700 dark:text-blue-300">View Food Diary</span>
-            </button>
-          </Link>
-          <Link href="/advice">
-            <button 
-              className="w-full gradient-button hover:scale-[1.02] py-4 px-6 rounded-xl font-medium flex items-center justify-center space-x-3 group"
-              data-testid="button-diet-advice"
-            >
-              <Lightbulb className="h-5 w-5 group-hover:scale-110 smooth-transition" />
-              <span>Get Diet Advice</span>
-            </button>
-          </Link>
-          <Link href="/calculator">
-            <button 
-              className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200/50 dark:border-orange-700/30 py-4 px-6 rounded-xl font-medium smooth-transition flex items-center justify-center space-x-3 group"
-              data-testid="button-nutrition-calculator"
-            >
-              <Calculator className="h-5 w-5 text-orange-600 dark:text-orange-400 group-hover:scale-110 smooth-transition" />
-              <span className="text-orange-700 dark:text-orange-300">Nutrition Calculator</span>
-            </button>
-          </Link>
-          <Link href="/goals">
-            <button 
-              className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200/50 dark:border-emerald-700/30 py-4 px-6 rounded-xl font-medium smooth-transition flex items-center justify-center space-x-3 group"
-              data-testid="button-nutrition-goals"
-            >
-              <Target className="h-5 w-5 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 smooth-transition" />
-              <span className="text-emerald-700 dark:text-emerald-300">Set Nutrition Goals</span>
-            </button>
-          </Link>
-          <Link href="/injection-advice">
-            <button 
-              className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-purple-200/50 dark:border-purple-700/30 py-4 px-6 rounded-xl font-medium smooth-transition flex items-center justify-center space-x-3 group"
-              data-testid="button-injection-advice"
-            >
-              <Syringe className="h-5 w-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 smooth-transition" />
-              <span className="text-purple-700 dark:text-purple-300">Weight Loss Injection Guide</span>
-            </button>
-          </Link>
-          <Link href="/help">
-            <button 
-              className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 border-gray-200/50 dark:border-gray-700/30 py-4 px-6 rounded-xl font-medium smooth-transition flex items-center justify-center space-x-3 group"
-              data-testid="button-help"
-            >
-              <HelpCircle className="h-5 w-5 text-gray-600 dark:text-gray-400 group-hover:scale-110 smooth-transition" />
-              <span className="text-gray-700 dark:text-gray-300">Help & Support</span>
-            </button>
-          </Link>
+          {/* Primary Actions */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <Link href="/advice">
+              <button 
+                className="w-full gradient-button hover:scale-[1.02] py-4 px-4 rounded-xl font-medium flex flex-col items-center justify-center space-y-2 group min-h-[80px]"
+                data-testid="button-diet-advice"
+              >
+                <Lightbulb className="h-6 w-6 group-hover:scale-110 smooth-transition" />
+                <span className="text-sm">AI Advice</span>
+              </button>
+            </Link>
+            <Link href="/help">
+              <button 
+                className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-indigo-200/50 dark:border-indigo-700/30 py-4 px-4 rounded-xl font-medium smooth-transition flex flex-col items-center justify-center space-y-2 group min-h-[80px]"
+                data-testid="button-help"
+              >
+                <HelpCircle className="h-6 w-6 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 smooth-transition" />
+                <span className="text-sm text-indigo-700 dark:text-indigo-300">Help</span>
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Persistent Quick Actions Bar */}
+      {(currentState === 'processing' || currentState === 'results' || currentState === 'error') && (
+        <div className="max-w-md mx-auto px-4 py-2 mb-4">
+          <div className="flex justify-center space-x-4">
+            <Link href="/diary">
+              <button className="flex items-center space-x-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors" data-testid="quick-diary">
+                <Book className="h-4 w-4" />
+                <span className="text-sm font-medium">Diary</span>
+              </button>
+            </Link>
+            <Link href="/advice">
+              <button className="flex items-center space-x-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors" data-testid="quick-advice">
+                <Lightbulb className="h-4 w-4" />
+                <span className="text-sm font-medium">Advice</span>
+              </button>
+            </Link>
+          </div>
         </div>
       )}
 
@@ -137,6 +125,12 @@ export default function Home() {
           <DrinksBar />
         </div>
       )}
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation />
+      
+      {/* Bottom padding to prevent content from being hidden behind bottom nav */}
+      <div className="h-20"></div>
     </div>
   );
 }
