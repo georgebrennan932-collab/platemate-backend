@@ -483,19 +483,41 @@ export function DiaryPage() {
                   )}
                 <div className="space-y-2">
                   {/* Food entries */}
-                  {filteredGroupedEntries[date]?.map((entry) => (
-                    <div key={entry.id} className="bg-card border rounded-lg p-4" data-testid={`diary-entry-${entry.id}`}>
+                  {filteredGroupedEntries[date]?.map((entry) => {
+                    const getMealTypeColor = (mealType: string) => {
+                      switch (mealType) {
+                        case 'breakfast': return 'from-orange-400 to-yellow-500 text-white';
+                        case 'lunch': return 'from-green-400 to-emerald-500 text-white';
+                        case 'dinner': return 'from-purple-400 to-indigo-500 text-white';
+                        case 'snack': return 'from-pink-400 to-rose-500 text-white';
+                        default: return 'from-blue-400 to-cyan-500 text-white';
+                      }
+                    };
+                    
+                    const getMealTypeIcon = (mealType: string) => {
+                      switch (mealType) {
+                        case 'breakfast': return '🌅';
+                        case 'lunch': return '☀️';
+                        case 'dinner': return '🌙';
+                        case 'snack': return '🍎';
+                        default: return '🍽️';
+                      }
+                    };
+                    
+                    return (
+                    <div key={entry.id} className="bg-gradient-to-br from-card to-muted/20 border-0 shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" data-testid={`diary-entry-${entry.id}`}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                          <div className="flex items-center space-x-3 mb-4">
+                            <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r ${getMealTypeColor(entry.mealType)} shadow-md`}>
+                              <span className="mr-2 text-base">{getMealTypeIcon(entry.mealType)}</span>
                               {entry.mealType === 'custom' && entry.customMealName 
                                 ? entry.customMealName 
                                 : entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1)
                               }
-                            </span>
-                            <div className="flex items-center text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
-                              <Clock className="h-3 w-3 mr-1" />
+                            </div>
+                            <div className="flex items-center text-xs text-muted-foreground bg-white/50 dark:bg-black/30 px-3 py-1.5 rounded-full border border-muted/50">
+                              <Clock className="h-3 w-3 mr-1.5" />
                               {format(new Date(entry.mealDate), 'h:mm a')}
                             </div>
                           </div>
@@ -504,22 +526,29 @@ export function DiaryPage() {
                             <div className="space-y-3">
                               {/* Food photo or voice thumbnail */}
                               {entry.analysis.imageUrl && (
-                                <div className="relative">
+                                <div className="relative mb-4">
                                   {entry.analysis.imageUrl.includes('voice-input') ? (
-                                    /* Voice input thumbnail */
-                                    <div className="w-full h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg border-2 border-blue-300 flex items-center justify-center">
-                                      <div className="text-center text-white">
-                                        <Mic className="h-12 w-12 mx-auto mb-2 animate-pulse" />
-                                        <div className="text-sm font-medium">Voice Added</div>
-                                        <div className="text-xs opacity-80">Audio Recognition</div>
+                                    /* Enhanced Voice input thumbnail */
+                                    <div className="w-full h-40 bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 rounded-xl border-2 border-blue-300/50 shadow-lg flex items-center justify-center relative overflow-hidden">
+                                      {/* Background pattern */}
+                                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                                      <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+                                      <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-purple-400/20 rounded-full blur-lg"></div>
+                                      
+                                      <div className="text-center text-white relative z-10">
+                                        <div className="bg-white/20 rounded-full p-4 mb-3 mx-auto w-fit backdrop-blur-sm">
+                                          <Mic className="h-8 w-8 mx-auto animate-pulse" />
+                                        </div>
+                                        <div className="text-lg font-bold mb-1">Voice Added</div>
+                                        <div className="text-sm opacity-90 font-medium">🎤 Audio Recognition</div>
                                       </div>
                                     </div>
                                   ) : (
-                                    /* Regular food photo */
+                                    /* Enhanced Regular food photo */
                                     <img 
                                       src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`} 
                                       alt="Original food photo" 
-                                      className="w-full h-32 object-cover rounded-lg border"
+                                      className="w-full h-40 object-cover rounded-xl border-2 border-muted/30 shadow-lg hover:shadow-xl transition-shadow"
                                       data-testid={`food-image-${entry.id}`}
                                       onError={(e) => {
                                         console.log('Diary image failed to load:', entry.analysis.imageUrl);
@@ -527,34 +556,91 @@ export function DiaryPage() {
                                       }}
                                     />
                                   )}
-                                  <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                                    {entry.analysis.confidence}% confident
+                                  <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium border border-white/20">
+                                    ✨ {entry.analysis.confidence}% confident
                                   </div>
                                 </div>
                               )}
                               
-                              <div className="text-sm font-medium">
-                                {entry.analysis.totalCalories} calories
-                              </div>
-                              <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-                                <div>Protein: {entry.analysis.totalProtein}g</div>
-                                <div>Carbs: {entry.analysis.totalCarbs}g</div>
-                                <div>Fat: {entry.analysis.totalFat}g</div>
+                              {/* Enhanced nutrition display */}
+                              <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-4 border border-orange-200/50 dark:border-orange-700/30 mb-4">
+                                <div className="flex items-center justify-center mb-3">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="p-2 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg shadow-sm">
+                                      <Flame className="h-4 w-4 text-white" />
+                                    </div>
+                                    <div>
+                                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                                        {entry.analysis.totalCalories}
+                                      </div>
+                                      <div className="text-xs font-medium text-orange-700 dark:text-orange-300 -mt-1">
+                                        calories
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-3 gap-3">
+                                  <div className="text-center">
+                                    <div className="bg-blue-100 dark:bg-blue-900/30 rounded-lg p-2">
+                                      <div className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                                        {entry.analysis.totalProtein}g
+                                      </div>
+                                      <div className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium">
+                                        🥩 Protein
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="bg-green-100 dark:bg-green-900/30 rounded-lg p-2">
+                                      <div className="text-sm font-bold text-green-600 dark:text-green-400">
+                                        {entry.analysis.totalCarbs}g
+                                      </div>
+                                      <div className="text-xs text-green-600/70 dark:text-green-400/70 font-medium">
+                                        🍞 Carbs
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="bg-yellow-100 dark:bg-yellow-900/30 rounded-lg p-2">
+                                      <div className="text-sm font-bold text-yellow-600 dark:text-yellow-400">
+                                        {entry.analysis.totalFat}g
+                                      </div>
+                                      <div className="text-xs text-yellow-600/70 dark:text-yellow-400/70 font-medium">
+                                        🥑 Fat
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                               
-                              {/* Detected foods with portions */}
+                              {/* Enhanced detected foods */}
                               {entry.analysis.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                                <div className="space-y-1">
-                                  <div className="text-xs font-medium text-muted-foreground">Detected Foods:</div>
-                                  <div className="grid gap-1">
+                                <div className="space-y-3">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <div className="text-sm font-semibold text-foreground">Detected Foods</div>
+                                  </div>
+                                  <div className="grid gap-2">
                                     {entry.analysis.detectedFoods.map((food: any, index: number) => (
-                                      <div key={index} className="flex items-center justify-between bg-muted/50 rounded px-2 py-1">
-                                        <span className="flex items-center gap-1 text-xs">
-                                          <span>{food.icon || '🍽️'}</span>
-                                          <span className="font-medium">{food.name}</span>
-                                        </span>
-                                        <div className="text-xs text-muted-foreground">
-                                          {food.portion} • {food.calories}cal
+                                      <div key={index} className="flex items-center justify-between bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-lg px-4 py-3 border border-muted/50 hover:shadow-sm transition-shadow">
+                                        <div className="flex items-center gap-3">
+                                          <div className="text-lg bg-white dark:bg-gray-600 rounded-full w-8 h-8 flex items-center justify-center shadow-sm">
+                                            {food.icon || '🍽️'}
+                                          </div>
+                                          <span className="font-medium text-foreground text-sm">{food.name}</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          <div className="bg-primary/10 text-primary px-3 py-1 rounded-full">
+                                            <span className="text-xs font-semibold">
+                                              {food.portion}
+                                            </span>
+                                          </div>
+                                          <div className="bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-full">
+                                            <span className="text-xs font-semibold">
+                                              {food.calories}cal
+                                            </span>
+                                          </div>
                                         </div>
                                       </div>
                                     ))}
@@ -562,10 +648,18 @@ export function DiaryPage() {
                                 </div>
                               )}
                               
-                              {/* Notes */}
+                              {/* Enhanced notes section */}
                               {entry.notes && (
-                                <div className="text-xs text-muted-foreground italic bg-muted/30 p-2 rounded">
-                                  📝 {entry.notes}
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-3 border border-blue-200/50 dark:border-blue-700/30 mt-4">
+                                  <div className="flex items-start space-x-2">
+                                    <div className="p-1 bg-blue-100 dark:bg-blue-800 rounded">
+                                      <span className="text-xs">📝</span>
+                                    </div>
+                                    <div>
+                                      <div className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">Notes</div>
+                                      <div className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">{entry.notes}</div>
+                                    </div>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -613,7 +707,8 @@ export function DiaryPage() {
                         </div>
                       </div>
                     </div>
-                  )) || []}
+                    );
+                  })}
                   
                   {/* Drink entries */}
                   {groupedDrinks[date]?.map((drink) => (
