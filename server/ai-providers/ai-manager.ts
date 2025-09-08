@@ -1,4 +1,4 @@
-import { AIProvider, FoodAnalysisResult, DietAdviceResult, DiaryEntry, ProviderError, ProviderStatus } from "./types";
+import { AIProvider, FoodAnalysisResult, DietAdviceResult, DiaryEntry, ProviderError, ProviderStatus, DailyCoaching, EducationalTip } from "./types";
 import { OpenAIProvider } from "./openai-provider";
 import { GeminiProvider } from "./gemini-provider";
 
@@ -7,6 +7,8 @@ export class AIManager {
   private fallbackData: {
     foodAnalysis: FoodAnalysisResult;
     dietAdvice: DietAdviceResult;
+    dailyCoaching: DailyCoaching;
+    educationalTips: EducationalTip[];
   };
 
   constructor() {
@@ -100,7 +102,38 @@ export class AIManager {
             benefits: "Combines fiber and healthy fats for stable blood sugar and lasting satiety"
           }
         ]
-      }
+      },
+      dailyCoaching: {
+        motivation: "You're on a great journey toward better health! Every food choice you track helps you understand your body better.",
+        nutritionTip: "Try to include protein, healthy fats, and fiber in every meal to keep you satisfied longer.",
+        encouragement: "Remember, progress isn't always perfect, but consistency is key. You're doing great!",
+        todaysFocus: "Focus on staying hydrated and eating mindfully today.",
+        streak: 0,
+        medicationTip: "If you're using GLP-1 medications, eat slowly and stop when you feel satisfied."
+      },
+      educationalTips: [
+        {
+          id: "tip-1",
+          title: "Protein Power",
+          content: "Including protein in every meal helps maintain stable blood sugar levels and keeps you feeling full longer. Aim for 20-30 grams per meal.",
+          category: "nutrition",
+          importance: "high"
+        },
+        {
+          id: "tip-2", 
+          title: "Meal Timing with GLP-1",
+          content: "Take your GLP-1 medication at the same time each day and eat slowly during meals to help your body recognize fullness signals.",
+          category: "medication",
+          importance: "high"
+        },
+        {
+          id: "tip-3",
+          title: "Building Healthy Habits",
+          content: "Start small with one healthy change at a time. Consistency beats perfection when building lasting habits.",
+          category: "motivation",
+          importance: "medium"
+        }
+      ]
     };
   }
 
@@ -266,6 +299,125 @@ export class AIManager {
     // All providers failed, return a helpful fallback response
     console.log("⚠️ All AI providers failed for custom question, returning fallback response");
     return "I'm sorry, I'm having trouble accessing my AI services right now. Please try asking your question again in a moment, or consult with a healthcare professional for personalized nutrition advice.";
+  }
+
+  /**
+   * Generate daily coaching content using the best available provider
+   */
+  async generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching> {
+    const availableProviders = this.getAvailableProviders();
+    
+    // Try each available provider
+    for (const provider of availableProviders) {
+      for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
+        try {
+          console.log(`Attempting daily coaching with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
+          
+          const result = await provider.generateDailyCoaching(entries, userProfile);
+          
+          console.log(`✓ Daily coaching successful with ${provider.name}`);
+          return result;
+
+        } catch (error: any) {
+          const isLastAttempt = attempt === provider.maxRetries;
+          const isLastProvider = provider === availableProviders[availableProviders.length - 1];
+          
+          console.log(`✗ Daily coaching failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
+          
+          // If it's a rate limit error, try next provider immediately
+          if (error.isRateLimit) {
+            console.log(`${provider.name} hit rate limit, trying next provider`);
+            break;
+          }
+          
+          // If it's the last attempt with this provider but not the last provider, try next
+          if (isLastAttempt && !isLastProvider) {
+            console.log(`Max retries reached for ${provider.name}, trying next provider`);
+            break;
+          }
+          
+          // If it's a temporary error and not the last attempt, retry with delay
+          if (error.isTemporary && !isLastAttempt) {
+            const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Exponential backoff
+            console.log(`Retrying ${provider.name} in ${delay}ms...`);
+            await this.sleep(delay);
+            continue;
+          }
+          
+          // If this is the last provider and last attempt, return fallback
+          if (isLastProvider && isLastAttempt) {
+            console.log('All providers failed for daily coaching, returning fallback data');
+            return this.fallbackData.dailyCoaching;
+          }
+        }
+      }
+    }
+
+    // Fallback data (should not reach here due to logic above, but just in case)
+    return this.fallbackData.dailyCoaching;
+  }
+
+  /**
+   * Generate educational tips using the best available provider
+   */
+  async generateEducationalTips(category: 'all' | 'nutrition' | 'medication' | 'motivation'): Promise<EducationalTip[]> {
+    const availableProviders = this.getAvailableProviders();
+    
+    // Try each available provider
+    for (const provider of availableProviders) {
+      for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
+        try {
+          console.log(`Attempting educational tips with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
+          
+          const result = await provider.generateEducationalTips(category);
+          
+          console.log(`✓ Educational tips successful with ${provider.name}`);
+          return result;
+
+        } catch (error: any) {
+          const isLastAttempt = attempt === provider.maxRetries;
+          const isLastProvider = provider === availableProviders[availableProviders.length - 1];
+          
+          console.log(`✗ Educational tips failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
+          
+          // If it's a rate limit error, try next provider immediately
+          if (error.isRateLimit) {
+            console.log(`${provider.name} hit rate limit, trying next provider`);
+            break;
+          }
+          
+          // If it's the last attempt with this provider but not the last provider, try next
+          if (isLastAttempt && !isLastProvider) {
+            console.log(`Max retries reached for ${provider.name}, trying next provider`);
+            break;
+          }
+          
+          // If it's a temporary error and not the last attempt, retry with delay
+          if (error.isTemporary && !isLastAttempt) {
+            const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Exponential backoff
+            console.log(`Retrying ${provider.name} in ${delay}ms...`);
+            await this.sleep(delay);
+            continue;
+          }
+          
+          // If this is the last provider and last attempt, return fallback
+          if (isLastProvider && isLastAttempt) {
+            console.log('All providers failed for educational tips, returning fallback data');
+            // Filter fallback tips by category
+            const filteredTips = category === 'all' 
+              ? this.fallbackData.educationalTips 
+              : this.fallbackData.educationalTips.filter(tip => tip.category === category);
+            return filteredTips;
+          }
+        }
+      }
+    }
+
+    // Fallback data (should not reach here due to logic above, but just in case)
+    const filteredTips = category === 'all' 
+      ? this.fallbackData.educationalTips 
+      : this.fallbackData.educationalTips.filter(tip => tip.category === category);
+    return filteredTips;
   }
 
   /**

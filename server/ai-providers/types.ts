@@ -48,6 +48,24 @@ export interface DiaryEntry {
   createdAt: Date;
 }
 
+export interface DailyCoaching {
+  motivation: string;
+  nutritionTip: string;
+  medicationTip?: string;
+  encouragement: string;
+  todaysFocus: string;
+  streak: number;
+  achievement?: string;
+}
+
+export interface EducationalTip {
+  id: string;
+  title: string;
+  content: string;
+  category: 'nutrition' | 'medication' | 'motivation';
+  importance: 'high' | 'medium' | 'low';
+}
+
 export interface ProviderError {
   code: string;
   message: string;
@@ -78,6 +96,8 @@ export abstract class AIProvider {
   abstract analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult>;
   abstract generateDietAdvice(entries: DiaryEntry[]): Promise<DietAdviceResult>;
   abstract answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string>;
+  abstract generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching>;
+  abstract generateEducationalTips(category: 'all' | 'nutrition' | 'medication' | 'motivation'): Promise<EducationalTip[]>;
 
   public getStatus(): ProviderStatus {
     return {

@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { promises as fs } from "fs";
-import { AIProvider, FoodAnalysisResult, DietAdviceResult, DiaryEntry, ProviderError } from "./types";
+import { AIProvider, FoodAnalysisResult, DietAdviceResult, DiaryEntry, ProviderError, DailyCoaching, EducationalTip } from "./types";
 
 export class OpenAIProvider extends AIProvider {
   public readonly name = "OpenAI";
@@ -354,5 +354,221 @@ Guidelines:
       this.recordError(providerError);
       throw providerError;
     }
+  }
+
+  async generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching> {
+    try {
+      // Prepare context from user's nutrition data
+      const contextData = this.prepareNutritionContextData(entries);
+      
+      const systemPrompt = `You are PlateMate's AI wellness coach. Generate daily coaching content that's motivational, educational, and personalized. Be encouraging, supportive, and provide actionable advice.
+
+User's Recent Nutrition Data:
+${contextData}
+
+Generate coaching content with:
+- Motivation: Uplifting, personal message (30-50 words)
+- Nutrition Tip: Practical, actionable advice based on their eating patterns (30-50 words)
+- Medication Tip: If relevant, gentle reminder about GLP-1 medications and nutrition (20-40 words, optional)
+- Encouragement: Supportive message acknowledging their efforts (20-40 words)
+- Today's Focus: One specific, achievable goal for today (15-30 words)
+- Streak: Calculate their consistency streak (days of food logging)
+- Achievement: If they've hit a milestone, acknowledge it (optional)
+
+Respond in JSON format with these exact keys.`;
+
+      const response = await this.client.chat.completions.create({
+        model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt
+          },
+          {
+            role: "user",
+            content: "Generate my daily coaching content based on my nutrition data."
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 600,
+        temperature: 0.8,
+      });
+
+      const responseText = response.choices[0].message.content;
+      
+      if (!responseText) {
+        throw new Error("No response from OpenAI");
+      }
+
+      const parsed = JSON.parse(responseText);
+      
+      // Calculate actual streak from entries
+      const actualStreak = this.calculateStreak(entries);
+      
+      const coaching: DailyCoaching = {
+        motivation: parsed.motivation || "You're doing great! Every healthy choice you make is an investment in your future self.",
+        nutritionTip: parsed.nutritionTip || "Try to include a variety of colorful vegetables in your meals for optimal nutrition.",
+        medicationTip: parsed.medicationTip,
+        encouragement: parsed.encouragement || "Remember, progress isn't always perfect, but consistency is key. You've got this!",
+        todaysFocus: parsed.todaysFocus || "Focus on staying hydrated and eating mindfully today.",
+        streak: actualStreak,
+        achievement: actualStreak >= 7 ? `${actualStreak} day logging streak!` : parsed.achievement
+      };
+
+      this.recordSuccess();
+      return coaching;
+
+    } catch (error: any) {
+      console.error("OpenAI coaching generation error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.status === 429 || error?.code === 'rate_limit_exceeded') {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'OpenAI rate limit exceeded',
+          true,
+          true,
+          60
+        );
+      } else if (error?.status >= 500) {
+        providerError = this.createError(
+          'SERVER_ERROR',
+          `OpenAI server error: ${error.message}`,
+          false,
+          true,
+          30
+        );
+      } else {
+        providerError = this.createError(
+          'COACHING_ERROR',
+          `OpenAI coaching generation failed: ${error.message}`,
+          false,
+          false
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
+
+  async generateEducationalTips(category: 'all' | 'nutrition' | 'medication' | 'motivation'): Promise<EducationalTip[]> {
+    try {
+      const categoryFilter = category === 'all' ? 'nutrition, medication, and motivation' : category;
+      
+      const systemPrompt = `You are a certified nutritionist and wellness expert. Generate 6-8 educational tips about ${categoryFilter}. 
+
+Each tip should be:
+- Practical and actionable
+- Evidence-based
+- Easy to understand
+- Relevant to people using nutrition tracking apps
+- Include proper importance level (high/medium/low)
+
+Focus areas:
+- Nutrition: Macro/micronutrients, meal timing, food combinations, healthy eating habits
+- Medication: GLP-1 medications, timing with meals, side effects management, interactions
+- Motivation: Habit formation, goal setting, overcoming challenges, mindset
+
+Respond with JSON array of tip objects with: id, title, content, category, importance.`;
+
+      const response = await this.client.chat.completions.create({
+        model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt
+          },
+          {
+            role: "user",
+            content: `Generate educational tips for: ${categoryFilter}`
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 1000,
+        temperature: 0.7,
+      });
+
+      const responseText = response.choices[0].message.content;
+      
+      if (!responseText) {
+        throw new Error("No response from OpenAI");
+      }
+
+      const parsed = JSON.parse(responseText);
+      const tips = parsed.tips || [];
+      
+      // Filter by category if specific category requested
+      const filteredTips = category === 'all' ? tips : tips.filter((tip: any) => tip.category === category);
+      
+      this.recordSuccess();
+      return filteredTips;
+
+    } catch (error: any) {
+      console.error("OpenAI tips generation error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.status === 429 || error?.code === 'rate_limit_exceeded') {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'OpenAI rate limit exceeded',
+          true,
+          true,
+          60
+        );
+      } else if (error?.status >= 500) {
+        providerError = this.createError(
+          'SERVER_ERROR',
+          `OpenAI server error: ${error.message}`,
+          false,
+          true,
+          30
+        );
+      } else {
+        providerError = this.createError(
+          'TIPS_ERROR',
+          `OpenAI tips generation failed: ${error.message}`,
+          false,
+          false
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
+
+  private calculateStreak(entries: DiaryEntry[]): number {
+    if (!entries || entries.length === 0) return 0;
+    
+    // Sort entries by date (most recent first)
+    const sortedEntries = entries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    let streak = 0;
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    
+    // Check each day going backwards
+    for (let i = 0; i < 30; i++) { // Check last 30 days max
+      const checkDate = new Date(currentDate);
+      checkDate.setDate(checkDate.getDate() - i);
+      
+      // Find if there's an entry for this date
+      const hasEntryForDate = sortedEntries.some(entry => {
+        const entryDate = new Date(entry.createdAt);
+        entryDate.setHours(0, 0, 0, 0);
+        return entryDate.getTime() === checkDate.getTime();
+      });
+      
+      if (hasEntryForDate) {
+        streak++;
+      } else {
+        break; // Streak is broken
+      }
+    }
+    
+    return streak;
   }
 }

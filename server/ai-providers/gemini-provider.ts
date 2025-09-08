@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { promises as fs } from "fs";
-import { AIProvider, FoodAnalysisResult, DietAdviceResult, DiaryEntry, ProviderError } from "./types";
+import { AIProvider, FoodAnalysisResult, DietAdviceResult, DiaryEntry, ProviderError, DailyCoaching, EducationalTip } from "./types";
 
 export class GeminiProvider extends AIProvider {
   public readonly name = "Gemini";
@@ -379,5 +379,236 @@ Guidelines:
       this.recordError(providerError);
       throw providerError;
     }
+  }
+
+  async generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching> {
+    try {
+      // Prepare context from user's nutrition data
+      const contextData = this.prepareNutritionContextData(entries);
+      
+      const systemPrompt = `You are PlateMate's AI wellness coach. Generate daily coaching content that's motivational, educational, and personalized. Be encouraging, supportive, and provide actionable advice.
+
+User's Recent Nutrition Data:
+${contextData}
+
+Generate coaching content with these exact JSON keys:
+- motivation: Uplifting, personal message (30-50 words)
+- nutritionTip: Practical, actionable advice based on their eating patterns (30-50 words)
+- medicationTip: If relevant, gentle reminder about GLP-1 medications and nutrition (20-40 words, optional)
+- encouragement: Supportive message acknowledging their efforts (20-40 words)
+- todaysFocus: One specific, achievable goal for today (15-30 words)
+- achievement: If they've hit a milestone, acknowledge it (optional)
+
+Respond with valid JSON object only.`;
+
+      const response = await this.client.models.generateContent({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: systemPrompt,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "object",
+            properties: {
+              motivation: { type: "string" },
+              nutritionTip: { type: "string" },
+              medicationTip: { type: "string" },
+              encouragement: { type: "string" },
+              todaysFocus: { type: "string" },
+              achievement: { type: "string" }
+            },
+            required: ["motivation", "nutritionTip", "encouragement", "todaysFocus"]
+          }
+        },
+        contents: "Generate my daily coaching content based on my nutrition data.",
+      });
+
+      const responseText = response.text;
+      
+      if (!responseText) {
+        throw new Error("No response from Gemini");
+      }
+
+      const parsed = JSON.parse(responseText);
+      
+      // Calculate actual streak from entries
+      const actualStreak = this.calculateStreak(entries);
+      
+      const coaching: DailyCoaching = {
+        motivation: parsed.motivation || "You're doing great! Every healthy choice you make is an investment in your future self.",
+        nutritionTip: parsed.nutritionTip || "Try to include a variety of colorful vegetables in your meals for optimal nutrition.",
+        medicationTip: parsed.medicationTip,
+        encouragement: parsed.encouragement || "Remember, progress isn't always perfect, but consistency is key. You've got this!",
+        todaysFocus: parsed.todaysFocus || "Focus on staying hydrated and eating mindfully today.",
+        streak: actualStreak,
+        achievement: actualStreak >= 7 ? `${actualStreak} day logging streak!` : parsed.achievement
+      };
+
+      this.recordSuccess();
+      return coaching;
+
+    } catch (error: any) {
+      console.error("Gemini coaching generation error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.message?.includes('quota') || error?.message?.includes('rate')) {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'Gemini rate limit exceeded',
+          true,
+          true,
+          120
+        );
+      } else if (error?.message?.includes('GEMINI_API_KEY')) {
+        providerError = this.createError(
+          'CONFIG_ERROR',
+          'Gemini API key not configured',
+          false,
+          false
+        );
+      } else {
+        providerError = this.createError(
+          'COACHING_ERROR',
+          `Gemini coaching generation failed: ${error.message}`,
+          false,
+          true,
+          60
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
+
+  async generateEducationalTips(category: 'all' | 'nutrition' | 'medication' | 'motivation'): Promise<EducationalTip[]> {
+    try {
+      const categoryFilter = category === 'all' ? 'nutrition, medication, and motivation' : category;
+      
+      const systemPrompt = `You are a certified nutritionist and wellness expert. Generate 6-8 educational tips about ${categoryFilter}. 
+
+Each tip should be:
+- Practical and actionable
+- Evidence-based
+- Easy to understand
+- Relevant to people using nutrition tracking apps
+- Include proper importance level (high/medium/low)
+
+Focus areas:
+- Nutrition: Macro/micronutrients, meal timing, food combinations, healthy eating habits
+- Medication: GLP-1 medications, timing with meals, side effects management, interactions
+- Motivation: Habit formation, goal setting, overcoming challenges, mindset
+
+Respond with JSON object containing 'tips' array.`;
+
+      const response = await this.client.models.generateContent({
+        model: "gemini-2.5-pro",
+        config: {
+          systemInstruction: systemPrompt,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "object",
+            properties: {
+              tips: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    title: { type: "string" },
+                    content: { type: "string" },
+                    category: { type: "string", enum: ["nutrition", "medication", "motivation"] },
+                    importance: { type: "string", enum: ["high", "medium", "low"] }
+                  },
+                  required: ["id", "title", "content", "category", "importance"]
+                }
+              }
+            },
+            required: ["tips"]
+          }
+        },
+        contents: `Generate educational tips for: ${categoryFilter}`,
+      });
+
+      const responseText = response.text;
+      
+      if (!responseText) {
+        throw new Error("No response from Gemini");
+      }
+
+      const parsed = JSON.parse(responseText);
+      const tips = parsed.tips || [];
+      
+      // Filter by category if specific category requested
+      const filteredTips = category === 'all' ? tips : tips.filter((tip: any) => tip.category === category);
+      
+      this.recordSuccess();
+      return filteredTips;
+
+    } catch (error: any) {
+      console.error("Gemini tips generation error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.message?.includes('quota') || error?.message?.includes('rate')) {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'Gemini rate limit exceeded',
+          true,
+          true,
+          120
+        );
+      } else if (error?.message?.includes('GEMINI_API_KEY')) {
+        providerError = this.createError(
+          'CONFIG_ERROR',
+          'Gemini API key not configured',
+          false,
+          false
+        );
+      } else {
+        providerError = this.createError(
+          'TIPS_ERROR',
+          `Gemini tips generation failed: ${error.message}`,
+          false,
+          true,
+          60
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
+
+  private calculateStreak(entries: DiaryEntry[]): number {
+    if (!entries || entries.length === 0) return 0;
+    
+    // Sort entries by date (most recent first)
+    const sortedEntries = entries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    let streak = 0;
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    
+    // Check each day going backwards
+    for (let i = 0; i < 30; i++) { // Check last 30 days max
+      const checkDate = new Date(currentDate);
+      checkDate.setDate(checkDate.getDate() - i);
+      
+      // Find if there's an entry for this date
+      const hasEntryForDate = sortedEntries.some(entry => {
+        const entryDate = new Date(entry.createdAt);
+        entryDate.setHours(0, 0, 0, 0);
+        return entryDate.getTime() === checkDate.getTime();
+      });
+      
+      if (hasEntryForDate) {
+        streak++;
+      } else {
+        break; // Streak is broken
+      }
+    }
+    
+    return streak;
   }
 }
