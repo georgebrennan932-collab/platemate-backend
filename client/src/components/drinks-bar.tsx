@@ -6,17 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Droplets, Coffee, Wine, Plus, Check } from "lucide-react";
+import { Droplets, Coffee, Wine, Plus, Check, GlassWater, Beer } from "lucide-react";
 import type { InsertDrinkEntry } from "@shared/schema";
 
 const drinkPresets = {
-  water: { name: "Water", calories: 0, caffeine: 0, sugar: 0, alcoholContent: 0, icon: Droplets, defaultAmount: 250 },
+  water: { name: "Water", calories: 0, caffeine: 0, sugar: 0, alcoholContent: 0, icon: GlassWater, defaultAmount: 250 },
   coffee: { name: "Coffee", calories: 5, caffeine: 95, sugar: 0, alcoholContent: 0, icon: Coffee, defaultAmount: 240 },
   tea: { name: "Tea", calories: 2, caffeine: 40, sugar: 0, alcoholContent: 0, icon: Coffee, defaultAmount: 240 },
   juice: { name: "Orange Juice", calories: 112, caffeine: 0, sugar: 21, alcoholContent: 0, icon: Wine, defaultAmount: 240 },
   soda: { name: "Soda", calories: 150, caffeine: 34, sugar: 39, alcoholContent: 0, icon: Wine, defaultAmount: 355 },
   sports_drink: { name: "Sports Drink", calories: 80, caffeine: 0, sugar: 21, alcoholContent: 0, icon: Droplets, defaultAmount: 355 },
-  beer: { name: "Beer", calories: 150, caffeine: 0, sugar: 13, alcoholContent: 5, icon: Wine, defaultAmount: 355 },
+  beer: { name: "Beer", calories: 150, caffeine: 0, sugar: 13, alcoholContent: 5, icon: Beer, defaultAmount: 355 },
   wine: { name: "Wine", calories: 125, caffeine: 0, sugar: 4, alcoholContent: 12, icon: Wine, defaultAmount: 150 },
   spirits: { name: "Spirits", calories: 97, caffeine: 0, sugar: 0, alcoholContent: 40, icon: Wine, defaultAmount: 44 },
   cocktail: { name: "Cocktail", calories: 200, caffeine: 0, sugar: 15, alcoholContent: 15, icon: Wine, defaultAmount: 150 },
@@ -30,6 +30,9 @@ export function DrinksBar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // This would normally come from authentication context
+  const userId = "current-user"; // This will be replaced with actual user ID from auth
 
   const addDrinkMutation = useMutation({
     mutationFn: async (drink: InsertDrinkEntry) => {
@@ -67,6 +70,7 @@ export function DrinksBar() {
     const alcoholUnits = calculateAlcoholUnits(preset.defaultAmount, preset.alcoholContent);
     
     const drink: InsertDrinkEntry = {
+      userId,
       drinkName: preset.name,
       drinkType,
       amount: preset.defaultAmount,
@@ -91,6 +95,7 @@ export function DrinksBar() {
     const alcoholUnits = calculateAlcoholUnits(amountNum, preset.alcoholContent);
     
     const drink: InsertDrinkEntry = {
+      userId,
       drinkName: selectedDrink === 'other' ? customName : preset.name,
       drinkType: selectedDrink as any,
       amount: amountNum,
@@ -127,7 +132,7 @@ export function DrinksBar() {
               className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-300 hover:from-blue-200 hover:to-cyan-200 hover:shadow-md transition-all duration-200 text-blue-700 dark:text-blue-300"
               data-testid="button-quick-water"
             >
-              <Droplets className="h-6 w-6" />
+              <GlassWater className="h-6 w-6" />
               <span className="text-sm font-medium">Water</span>
             </Button>
             
@@ -153,7 +158,7 @@ export function DrinksBar() {
               className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 border-yellow-300 hover:from-yellow-200 hover:to-amber-200 hover:shadow-md transition-all duration-200 text-yellow-700 dark:text-yellow-300"
               data-testid="button-quick-beer"
             >
-              <Wine className="h-6 w-6" />
+              <Beer className="h-6 w-6" />
               <span className="text-sm font-medium">Beer</span>
             </Button>
             
@@ -223,7 +228,7 @@ export function DrinksBar() {
               className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-300 hover:from-blue-200 hover:to-cyan-200 hover:shadow-md transition-all duration-200 text-blue-700 dark:text-blue-300"
               data-testid="button-quick-water-expanded"
             >
-              <Droplets className="h-4 w-4" />
+              <GlassWater className="h-4 w-4" />
               <span className="text-xs font-medium">Water</span>
             </Button>
             <Button
@@ -277,7 +282,7 @@ export function DrinksBar() {
               className="flex flex-col items-center space-y-1 h-16 bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/40 dark:to-amber-900/40 border-yellow-300 hover:from-yellow-200 hover:to-amber-200 hover:shadow-md transition-all duration-200 text-yellow-700 dark:text-yellow-300"
               data-testid="button-quick-beer-expanded"
             >
-              <Wine className="h-4 w-4" />
+              <Beer className="h-4 w-4" />
               <span className="text-xs font-medium">Beer</span>
             </Button>
             <Button
