@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn } from "lucide-react";
+import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syringe, Target, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,8 +33,8 @@ export default function LandingPage() {
             Your AI-powered nutrition companion
           </p>
           <p className="text-lg opacity-80 max-w-2xl mx-auto animate-fade-in-up animation-delay-600">
-            Instantly analyze your meals with advanced AI technology. Get detailed nutritional breakdowns, 
-            track your eating habits, and receive personalized diet advice.
+            Instantly analyze your meals with advanced AI technology. Get personalized calorie calculations, 
+            track your eating habits, and receive specialized guidance for weight loss medications.
           </p>
         </div>
       </header>
@@ -76,7 +76,7 @@ export default function LandingPage() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           <Card className="border-purple-200 dark:border-purple-800 hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 hover:scale-105 hover:-rotate-1 animate-fade-in-left animation-delay-1500 group">
             <CardHeader className="text-center">
               <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float group-hover:animate-bounce">
@@ -105,16 +105,30 @@ export default function LandingPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-blue-200 dark:border-blue-800 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-500 hover:scale-105 hover:rotate-1 animate-fade-in-right animation-delay-2100 group">
+          <Card className="border-green-200 dark:border-green-800 hover:shadow-2xl hover:shadow-green-500/25 transition-all duration-500 hover:scale-105 animate-fade-in-right animation-delay-2100 group">
             <CardHeader className="text-center">
-              <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-1000 group-hover:animate-bounce">
-                <Brain className="h-8 w-8 text-blue-600 dark:text-blue-400 group-hover:animate-pulse" />
+              <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-1000 group-hover:animate-bounce">
+                <Calculator className="h-8 w-8 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
               </div>
-              <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">Personalized Advice</CardTitle>
+              <CardTitle className="text-xl group-hover:text-green-600 transition-colors">Personal Calculator</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center">
-                Receive AI-powered diet recommendations based on your eating habits, goals, and nutritional needs.
+                Calculate your personalized daily calorie needs based on your BMR, activity level, and weight goals.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="border-indigo-200 dark:border-indigo-800 hover:shadow-2xl hover:shadow-indigo-500/25 transition-all duration-500 hover:scale-105 hover:rotate-1 animate-fade-in-up animation-delay-2400 group">
+            <CardHeader className="text-center">
+              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-1500 group-hover:animate-bounce">
+                <Syringe className="h-8 w-8 text-indigo-600 dark:text-indigo-400 group-hover:animate-pulse" />
+              </div>
+              <CardTitle className="text-xl group-hover:text-indigo-600 transition-colors">Injection Support</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-center">
+                Specialized guidance for people using weight loss medications like Ozempic, Wegovy, and Mounjaro.
               </CardDescription>
             </CardContent>
           </Card>
@@ -156,6 +170,54 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Advanced Features */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-8 animate-fade-in-up">Advanced Nutrition Tools</h2>
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <Card className="border-orange-200 dark:border-orange-800 hover:shadow-xl transition-all duration-300 group">
+              <CardHeader className="text-center">
+                <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full w-fit mx-auto mb-4 group-hover:animate-bounce">
+                  <Target className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                </div>
+                <CardTitle className="text-lg group-hover:text-orange-600 transition-colors">Smart Goals</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-center text-sm">
+                  Set and track personalized nutrition goals with automatic updates from your calorie calculations.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card className="border-purple-200 dark:border-purple-800 hover:shadow-xl transition-all duration-300 group">
+              <CardHeader className="text-center">
+                <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full w-fit mx-auto mb-4 group-hover:animate-bounce">
+                  <Activity className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                </div>
+                <CardTitle className="text-lg group-hover:text-purple-600 transition-colors">Medication-Aware</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-center text-sm">
+                  Specialized calorie calculations that account for appetite suppression from GLP-1 medications.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card className="border-blue-200 dark:border-blue-800 hover:shadow-xl transition-all duration-300 group">
+              <CardHeader className="text-center">
+                <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full w-fit mx-auto mb-4 group-hover:animate-bounce">
+                  <Brain className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">AI Advice</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-center text-sm">
+                  Personalized diet recommendations based on your eating patterns, health goals, and preferences.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
         {/* Key Features */}
         <section className="bg-muted/50 rounded-lg p-8 mb-16">
           <h2 className="text-3xl font-bold text-center mb-8">Why Choose PlateMate?</h2>
@@ -177,18 +239,18 @@ export default function LandingPage() {
             </div>
             
             <div className="flex items-start space-x-3">
-              <BookOpen className="h-6 w-6 text-blue-500 mt-1 flex-shrink-0" />
+              <Calculator className="h-6 w-6 text-blue-500 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-semibold mb-1">Comprehensive Tracking</h3>
-                <p className="text-muted-foreground">Monitor calories, macronutrients, and eating patterns with detailed insights.</p>
+                <h3 className="text-lg font-semibold mb-1">Personalized Calculations</h3>
+                <p className="text-muted-foreground">Get precise BMR and TDEE calculations with medication-aware adjustments for safe weight management.</p>
               </div>
             </div>
             
             <div className="flex items-start space-x-3">
-              <Brain className="h-6 w-6 text-purple-500 mt-1 flex-shrink-0" />
+              <Syringe className="h-6 w-6 text-purple-500 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-semibold mb-1">Smart Recommendations</h3>
-                <p className="text-muted-foreground">Get personalized diet advice based on your unique eating patterns and goals.</p>
+                <h3 className="text-lg font-semibold mb-1">Injection Medicine Support</h3>
+                <p className="text-muted-foreground">Specialized guidance and safety tips for users of GLP-1 weight loss medications like Ozempic and Wegovy.</p>
               </div>
             </div>
           </div>
@@ -201,7 +263,7 @@ export default function LandingPage() {
           
           <h2 className="text-3xl font-bold mb-4 animate-fade-in-up animation-delay-4800 relative z-10">Ready to Transform Your Nutrition?</h2>
           <p className="text-xl opacity-90 mb-6 animate-fade-in-up animation-delay-5100 relative z-10">
-            Join thousands of users who are already making healthier choices with PlateMate.
+            Join users who are achieving their weight goals with personalized calorie calculations and medication-aware guidance.
           </p>
           {isAuthenticated ? (
             <Link href="/scan">
