@@ -308,29 +308,33 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
+    <div className="space-y-8">
+      <Card className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30 border-0 shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-t-lg">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Calculator className="h-6 w-6" />
+            </div>
             Personal Calorie Calculator
           </CardTitle>
-          <CardDescription>
-            Calculate your daily calorie needs based on your physical stats and weight goals
+          <CardDescription className="text-blue-100 text-base">
+            ✨ Calculate your daily calorie needs based on your physical stats and weight goals
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Basic Info */}
                 <FormField
                   control={form.control}
                   name="age"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
+                    <FormItem className="space-y-3">
+                      <FormLabel className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                          <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
                         Age (years)
                       </FormLabel>
                       <FormControl>
@@ -348,6 +352,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           }}
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-age"
+                          className="border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
                         />
                       </FormControl>
                       <FormMessage />
@@ -359,11 +364,13 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                   control={form.control}
                   name="sex"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sex</FormLabel>
+                    <FormItem className="space-y-3">
+                      <FormLabel className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <span>👤</span> Sex
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-sex">
+                          <SelectTrigger data-testid="select-sex" className="border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base">
                             <SelectValue placeholder="Select sex" />
                           </SelectTrigger>
                         </FormControl>
@@ -381,8 +388,13 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                   control={form.control}
                   name="heightCm"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Height (cm)</FormLabel>
+                    <FormItem className="space-y-3">
+                      <FormLabel className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                          📏
+                        </div>
+                        Height (cm)
+                      </FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -398,6 +410,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           }}
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-height"
+                          className="border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
                         />
                       </FormControl>
                       <FormMessage />
@@ -410,8 +423,10 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                   name="currentWeightKg"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Scale className="h-4 w-4" />
+                      <FormLabel className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                          <Scale className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                        </div>
                         Current Weight (kg)
                       </FormLabel>
                       <FormControl>
@@ -429,6 +444,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           }}
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-current-weight"
+                          className="border-2 border-gray-200 hover:border-orange-300 focus:border-orange-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
                         />
                       </FormControl>
                       <FormMessage />
