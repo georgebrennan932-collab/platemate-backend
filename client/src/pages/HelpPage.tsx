@@ -1,10 +1,11 @@
 import React from "react";
-import { ArrowLeft, Camera, Droplets, Target, TrendingUp, Book, Lightbulb, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, Camera, Droplets, Target, TrendingUp, Book, Lightbulb, ChevronDown, ChevronRight, Zap } from "lucide-react";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { GestureSettings } from "@/components/gesture-settings";
 
 export function HelpPage() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -79,6 +80,33 @@ export function HelpPage() {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Gesture Navigation Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Zap className="h-5 w-5 text-primary" />
+              <span>Gesture Navigation</span>
+            </CardTitle>
+            <CardDescription>
+              Configure intuitive gesture controls for hands-free navigation
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Collapsible open={openSections.gestures} onOpenChange={() => toggleSection('gestures')}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors" data-testid="help-gesture-navigation">
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-4 w-4" />
+                  <span className="font-medium">Gesture Controls & Settings</span>
+                </div>
+                {openSections.gestures ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-4">
+                <GestureSettings />
+              </CollapsibleContent>
+            </Collapsible>
           </CardContent>
         </Card>
 

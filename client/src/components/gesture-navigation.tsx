@@ -85,7 +85,7 @@ export function GestureNavigation() {
     if (currentIndex !== -1 && currentIndex < NAVIGATION_ROUTES.length - 1) {
       const nextRoute = NAVIGATION_ROUTES[currentIndex + 1];
       setLocation(nextRoute);
-      showGestureOl('Swiped to next page', 'swipe-left');
+      showGestureOverlay('Swiped to next page', 'swipe-left');
       playGestureSound('swipe');
     }
   };
@@ -196,14 +196,14 @@ export function GestureNavigation() {
   return null;
 }
 
-// Helper function to correct the typo in showGestureOl
-const showGestureOl = (message: string, gestureType: string) => {
+// Helper function to show gesture overlay (fixes typo)
+const showGestureOverlay = (message: string, gestureType: string) => {
   // Show overlay notification
   if ((window as any).showGestureOverlay) {
     (window as any).showGestureOverlay(gestureType as any, 1);
   }
   
-  // Show toast notification
+  // Show toast notification  
   if ((window as any).showToast) {
     (window as any).showToast({
       title: 'Gesture Navigation',
