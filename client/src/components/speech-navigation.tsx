@@ -40,10 +40,12 @@ export function SpeechNavigation() {
     speechService.registerCommand('navigate-home', {
       command: 'navigate-home',
       phrases: [
+        'home',
         'go home',
         'go to home',
         'home page',
         'take me home',
+        'scan',
         'scan food',
         'go to scan',
         'scan page'
@@ -61,6 +63,7 @@ export function SpeechNavigation() {
     speechService.registerCommand('navigate-diary', {
       command: 'navigate-diary',
       phrases: [
+        'diary',
         'go to diary',
         'open diary',
         'show diary',
@@ -81,6 +84,7 @@ export function SpeechNavigation() {
     speechService.registerCommand('navigate-calculator', {
       command: 'navigate-calculator',
       phrases: [
+        'calculator',
         'go to calculator',
         'open calculator',
         'nutrition calculator',
@@ -100,6 +104,7 @@ export function SpeechNavigation() {
     speechService.registerCommand('navigate-goals', {
       command: 'navigate-goals',
       phrases: [
+        'goals',
         'go to goals',
         'open goals',
         'nutrition goals',
@@ -120,6 +125,8 @@ export function SpeechNavigation() {
     speechService.registerCommand('navigate-coaching', {
       command: 'navigate-coaching',
       phrases: [
+        'coaching',
+        'coach',
         'go to coaching',
         'open coaching',
         'coach me',
@@ -140,6 +147,7 @@ export function SpeechNavigation() {
     speechService.registerCommand('navigate-help', {
       command: 'navigate-help',
       phrases: [
+        'help',
         'go to help',
         'open help',
         'help page',
@@ -160,6 +168,7 @@ export function SpeechNavigation() {
     speechService.registerCommand('navigate-advice', {
       command: 'navigate-advice',
       phrases: [
+        'advice',
         'ai advice',
         'get advice',
         'diet advice',
