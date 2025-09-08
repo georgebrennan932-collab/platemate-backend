@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users, Send, Bot } from "lucide-react";
+import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users, Send, Bot, ChefHat, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ interface MealIdea {
   fat: number;
   ingredients: string[];
   benefits: string;
+  recipeLink?: string;
+  cookingInstructions?: string[];
 }
 
 interface DietAdvice {
@@ -362,12 +364,44 @@ export function DietAdvicePage() {
                             </div>
                           </div>
 
-                          <div className="bg-primary/10 rounded p-3">
+                          <div className="bg-primary/10 rounded p-3 mb-3">
                             <h5 className="text-sm font-medium mb-1">Why this meal?</h5>
                             <p className="text-sm text-muted-foreground">
                               {meal.benefits}
                             </p>
                           </div>
+
+                          {meal.cookingInstructions && meal.cookingInstructions.length > 0 && (
+                            <div className="bg-muted/50 rounded p-3 mb-3">
+                              <h5 className="text-sm font-medium mb-2 flex items-center">
+                                <ChefHat className="h-4 w-4 mr-1" />
+                                How to Make It:
+                              </h5>
+                              <ol className="text-sm text-muted-foreground space-y-1">
+                                {meal.cookingInstructions.map((instruction, idx) => (
+                                  <li key={idx} className="flex items-start">
+                                    <span className="text-primary font-medium mr-2 flex-shrink-0">{idx + 1}.</span>
+                                    <span>{instruction}</span>
+                                  </li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+
+                          {meal.recipeLink && (
+                            <div className="flex justify-center">
+                              <a 
+                                href={meal.recipeLink} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                                data-testid={`button-recipe-link-${index}`}
+                              >
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                View Full Recipe
+                              </a>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
