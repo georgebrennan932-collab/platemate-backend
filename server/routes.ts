@@ -420,6 +420,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Daily coaching endpoints
+  app.get('/api/coaching/daily', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get user's diary entries for personalized coaching
+      const entries = await storage.getDiaryEntries(userId, 30);
+      
+      // Use AI manager to generate daily coaching
+      const coaching = await aiManager.generateDailyCoaching(entries);
+      
+      res.json(coaching);
+    } catch (error: any) {
+      console.error("Error generating daily coaching:", error);
+      res.status(500).json({ 
+        error: "Failed to generate daily coaching",
+        details: error.message 
+      });
+    }
+  });
+
+  app.post('/api/coaching/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get user's diary entries for personalized coaching
+      const entries = await storage.getDiaryEntries(userId, 30);
+      
+      // Use AI manager to generate fresh daily coaching
+      const coaching = await aiManager.generateDailyCoaching(entries);
+      
+      res.json(coaching);
+    } catch (error: any) {
+      console.error("Error generating fresh daily coaching:", error);
+      res.status(500).json({ 
+        error: "Failed to generate fresh daily coaching",
+        details: error.message 
+      });
+    }
+  });
+
+  app.get('/api/coaching/tips', async (req, res) => {
+    try {
+      const { category = 'all' } = req.query;
+      
+      // Validate category
+      const validCategories = ['all', 'nutrition', 'medication', 'motivation'];
+      if (!validCategories.includes(category as string)) {
+        return res.status(400).json({ 
+          error: 'Invalid category. Must be one of: all, nutrition, medication, motivation' 
+        });
+      }
+
+      // Use AI manager to generate educational tips
+      const tips = await aiManager.generateEducationalTips(category as any);
+      
+      res.json(tips);
+    } catch (error: any) {
+      console.error("Error generating educational tips:", error);
+      res.status(500).json({ 
+        error: "Failed to generate educational tips",
+        details: error.message 
+      });
+    }
+  });
+
   // AI Provider monitoring routes
   app.get("/api/ai/status", async (req, res) => {
     try {
