@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertNutritionGoalsSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -363,6 +363,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Set nutrition goals error:", error);
       res.status(400).json({ error: "Invalid nutrition goals data" });
+    }
+  });
+
+  // User profile routes
+  app.get("/api/user-profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.getUserProfile(userId);
+      res.json(profile);
+    } catch (error) {
+      console.error("Get user profile error:", error);
+      res.status(500).json({ error: "Failed to fetch user profile" });
+    }
+  });
+
+  app.post("/api/user-profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedProfile = insertUserProfileSchema.parse({
+        ...req.body,
+        userId
+      });
+      const profile = await storage.upsertUserProfile(validatedProfile);
+      res.json(profile);
+    } catch (error) {
+      console.error("Set user profile error:", error);
+      res.status(400).json({ error: "Invalid user profile data" });
     }
   });
 

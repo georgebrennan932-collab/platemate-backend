@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, foodAnalyses, diaryEntries, drinkEntries, users, nutritionGoals } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, foodAnalyses, diaryEntries, drinkEntries, users, nutritionGoals, userProfiles } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
@@ -31,6 +31,10 @@ export interface IStorage {
   // Nutrition goals methods
   getNutritionGoals(userId: string): Promise<NutritionGoals | undefined>;
   upsertNutritionGoals(goals: InsertNutritionGoals): Promise<NutritionGoals>;
+  
+  // User profile methods
+  getUserProfile(userId: string): Promise<UserProfile | undefined>;
+  upsertUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -224,6 +228,27 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return goals;
+  }
+
+  // User profile methods
+  async getUserProfile(userId: string): Promise<UserProfile | undefined> {
+    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
+    return profile || undefined;
+  }
+
+  async upsertUserProfile(profileData: InsertUserProfile): Promise<UserProfile> {
+    const [profile] = await db
+      .insert(userProfiles)
+      .values(profileData)
+      .onConflictDoUpdate({
+        target: userProfiles.userId,
+        set: {
+          ...profileData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return profile;
   }
 }
 
