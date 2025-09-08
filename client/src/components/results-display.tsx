@@ -1,9 +1,10 @@
-import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock } from "lucide-react";
+import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ResultsDisplayProps {
   data: FoodAnalysis;
@@ -112,6 +113,16 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   return (
     <div className="p-4 space-y-4">
+      {/* AI Unavailable Warning */}
+      {data.isAITemporarilyUnavailable && (
+        <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-700 dark:text-amber-300">
+            <strong>AI services temporarily unavailable</strong><br />
+            We've provided estimated values based on typical portions. You can still save this entry and edit the details later when our AI services are back online.
+          </AlertDescription>
+        </Alert>
+      )}
       {/* Photo thumbnail and actions */}
       <div className="modern-card glass-card p-6">
         <div className="flex items-center space-x-4">
@@ -130,7 +141,16 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </h3>
             <p className="text-muted-foreground text-sm space-x-2">
               <span data-testid="text-timestamp">{formatTime(data.createdAt)}</span> • 
-              <span data-testid="text-confidence" className="ml-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded-full font-medium">{data.confidence}% confidence</span>
+              <span 
+                data-testid="text-confidence" 
+                className={`ml-1 px-2 py-1 rounded-full font-medium ${
+                  data.isAITemporarilyUnavailable 
+                    ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                    : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                }`}
+              >
+                {data.isAITemporarilyUnavailable ? 'Estimated values' : `${data.confidence}% confidence`}
+              </span>
             </p>
           </div>
           <div className="flex flex-col space-y-2">

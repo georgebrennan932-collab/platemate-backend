@@ -8,6 +8,7 @@ export interface FoodAnalysisResult {
   totalCarbs: number;
   totalFat: number;
   detectedFoods: DetectedFood[];
+  isAITemporarilyUnavailable?: boolean; // Flag for when AI services are down
 }
 
 export interface DetectedFood {
