@@ -3,7 +3,8 @@ import { NutritionCalculator } from '@/components/nutrition-calculator';
 import { CalorieCalculator } from '@/components/calorie-calculator';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, Target } from 'lucide-react';
+import { Calculator, Target, ArrowLeft } from 'lucide-react';
+import { Link } from 'wouter';
 import type { DiaryEntry, DrinkEntry, FoodAnalysis, DiaryEntryWithAnalysis } from '@shared/schema';
 
 export default function CalculatorPage() {
@@ -88,34 +89,51 @@ export default function CalculatorPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-2">Smart Nutrition Calculator</h1>
-        <p className="text-muted-foreground">
-          Calculate your personalized calorie needs and plan optimal meals
-        </p>
+    <div className="min-h-screen bg-background">
+      {/* Header with back button */}
+      <div className="bg-card border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center space-x-3">
+            <Link href="/">
+              <button 
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                data-testid="button-back-to-home"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold">Smart Nutrition Calculator</h1>
+              <p className="text-sm text-muted-foreground">
+                Calculate your personalized calorie needs and plan optimal meals
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="personal" className="flex items-center gap-2" data-testid="tab-personal-calculator">
-            <Target className="h-4 w-4" />
-            Personal Calculator
-          </TabsTrigger>
-          <TabsTrigger value="nutrition" className="flex items-center gap-2" data-testid="tab-nutrition-planner">
-            <Calculator className="h-4 w-4" />
-            Nutrition Planner
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="personal" data-testid="content-personal-calculator">
-          <CalorieCalculator />
-        </TabsContent>
-        
-        <TabsContent value="nutrition" data-testid="content-nutrition-planner">
-          <NutritionCalculator goals={goals} consumed={consumed} />
-        </TabsContent>
-      </Tabs>
+      <div className="container mx-auto p-4 space-y-6">
+        <Tabs defaultValue="personal" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="personal" className="flex items-center gap-2" data-testid="tab-personal-calculator">
+              <Target className="h-4 w-4" />
+              Personal Calculator
+            </TabsTrigger>
+            <TabsTrigger value="nutrition" className="flex items-center gap-2" data-testid="tab-nutrition-planner">
+              <Calculator className="h-4 w-4" />
+              Nutrition Planner
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="personal" data-testid="content-personal-calculator">
+            <CalorieCalculator />
+          </TabsContent>
+          
+          <TabsContent value="nutrition" data-testid="content-nutrition-planner">
+            <NutritionCalculator goals={goals} consumed={consumed} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
