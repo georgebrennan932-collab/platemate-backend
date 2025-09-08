@@ -66,7 +66,7 @@ export function CoachingPage() {
   });
 
   const { data: tips, isLoading: tipsLoading } = useQuery<EducationalTip[]>({
-    queryKey: ['/api/coaching/tips', selectedCategory],
+    queryKey: [`/api/coaching/tips?category=${selectedCategory}`],
   });
 
   const generateCoachingMutation = useMutation({
