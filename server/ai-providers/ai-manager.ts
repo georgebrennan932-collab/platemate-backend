@@ -225,6 +225,50 @@ export class AIManager {
   }
 
   /**
+   * Answer a custom nutrition question based on user's diary data
+   */
+  async answerNutritionQuestion(question: string, userEntries: DiaryEntry[]): Promise<string> {
+    const availableProviders = this.getAvailableProviders();
+    
+    // Try each available provider
+    for (const provider of availableProviders) {
+      for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
+        try {
+          console.log(`🤖 Attempting custom question with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
+          
+          const response = await provider.answerNutritionQuestion(question, userEntries);
+          
+          console.log(`✓ Custom question successful with ${provider.name}`);
+          return response;
+          
+        } catch (error: any) {
+          console.log(`✗ Custom question failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
+          
+          // If it's a rate limit error, try next provider immediately
+          if (error.isRateLimit) {
+            console.log(`${provider.name} hit rate limit, trying next provider`);
+            break;
+          }
+          
+          // If it's the last attempt with this provider, continue to next provider
+          if (attempt === provider.maxRetries) {
+            console.log(`${provider.name} exhausted all retries, trying next provider`);
+            break;
+          }
+          
+          // Wait before retry (exponential backoff)
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          await this.sleep(waitTime);
+        }
+      }
+    }
+
+    // All providers failed, return a helpful fallback response
+    console.log("⚠️ All AI providers failed for custom question, returning fallback response");
+    return "I'm sorry, I'm having trouble accessing my AI services right now. Please try asking your question again in a moment, or consult with a healthcare professional for personalized nutrition advice.";
+  }
+
+  /**
    * Get list of available providers sorted by priority
    */
   private getAvailableProviders(): AIProvider[] {

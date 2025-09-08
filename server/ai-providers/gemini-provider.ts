@@ -287,4 +287,70 @@ ${JSON.stringify(analysisData, null, 2)}`;
       throw providerError;
     }
   }
+
+  async answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string> {
+    try {
+      // Prepare context from user's nutrition data
+      const contextData = this.prepareAnalysisData(entries);
+      
+      const systemPrompt = `You are PlateMate's AI nutrition assistant. Answer the user's nutrition question based on their eating patterns and provide personalized, helpful advice. Be conversational but informative.
+
+User's Recent Nutrition Data:
+${JSON.stringify(contextData, null, 2)}
+
+Guidelines:
+- Provide personalized advice based on their actual eating patterns
+- Be encouraging and supportive
+- Give practical, actionable recommendations
+- If the question requires medical advice, recommend consulting a healthcare professional
+- Keep responses focused and helpful (200-300 words max)
+- Use a friendly, conversational tone`;
+
+      const response = await this.client.models.generateContent({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: systemPrompt,
+        },
+        contents: question,
+      });
+
+      const answer = response.text || "I'm sorry, I couldn't generate a response to your question right now.";
+      
+      this.recordSuccess();
+      return answer;
+
+    } catch (error: any) {
+      console.error("Gemini question answering error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.message?.includes('quota') || error?.message?.includes('rate')) {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'Gemini rate limit exceeded',
+          true,
+          true,
+          120
+        );
+      } else if (error?.message?.includes('GEMINI_API_KEY')) {
+        providerError = this.createError(
+          'CONFIG_ERROR',
+          'Gemini API key not configured',
+          false,
+          false
+        );
+      } else {
+        providerError = this.createError(
+          'QUESTION_ERROR',
+          `Gemini question answering failed: ${error.message}`,
+          false,
+          true,
+          60
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
 }

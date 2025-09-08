@@ -256,4 +256,76 @@ Generate 4-6 meal ideas that address the user's specific nutritional needs, defi
       throw providerError;
     }
   }
+
+  async answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string> {
+    try {
+      // Prepare context from user's nutrition data
+      const contextData = this.prepareAnalysisData(entries);
+      
+      const response = await this.client.chat.completions.create({
+        model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: `You are PlateMate's AI nutrition assistant. Answer the user's nutrition question based on their eating patterns and provide personalized, helpful advice. Be conversational but informative.
+
+User's Recent Nutrition Data:
+${contextData}
+
+Guidelines:
+- Provide personalized advice based on their actual eating patterns
+- Be encouraging and supportive
+- Give practical, actionable recommendations
+- If the question requires medical advice, recommend consulting a healthcare professional
+- Keep responses focused and helpful (200-300 words max)
+- Use a friendly, conversational tone`
+          },
+          {
+            role: "user",
+            content: question
+          }
+        ],
+        max_tokens: 400,
+        temperature: 0.7,
+      });
+
+      const answer = response.choices[0].message.content || "I'm sorry, I couldn't generate a response to your question right now.";
+      
+      this.recordSuccess();
+      return answer;
+
+    } catch (error: any) {
+      console.error("OpenAI question answering error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.status === 429 || error?.code === 'rate_limit_exceeded') {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'OpenAI rate limit exceeded',
+          true,
+          true,
+          60
+        );
+      } else if (error?.status >= 500) {
+        providerError = this.createError(
+          'SERVER_ERROR',
+          `OpenAI server error: ${error.message}`,
+          false,
+          true,
+          30
+        );
+      } else {
+        providerError = this.createError(
+          'QUESTION_ERROR',
+          `OpenAI question answering failed: ${error.message}`,
+          false,
+          false
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
 }

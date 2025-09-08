@@ -77,6 +77,7 @@ export abstract class AIProvider {
 
   abstract analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult>;
   abstract generateDietAdvice(entries: DiaryEntry[]): Promise<DietAdviceResult>;
+  abstract answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string>;
 
   public getStatus(): ProviderStatus {
     return {

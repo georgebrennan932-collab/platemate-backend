@@ -266,6 +266,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Custom AI question endpoint
+  app.post("/api/ai/ask", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { question } = req.body;
+      
+      if (!question || typeof question !== 'string' || question.trim().length === 0) {
+        return res.status(400).json({ error: "Question is required" });
+      }
+
+      // Get user's recent diary entries for context
+      const entries = await storage.getDiaryEntries(userId, 14); // Last 2 weeks for context
+      
+      // Generate personalized response based on user's nutrition data
+      const response = await aiManager.answerNutritionQuestion(question, entries);
+      
+      res.json({ 
+        question: question.trim(),
+        answer: response,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("AI question error:", error);
+      res.status(500).json({ error: "Failed to get AI response" });
+    }
+  });
+
   // Drink routes (protected)
   app.post("/api/drinks", isAuthenticated, async (req: any, res) => {
     try {
