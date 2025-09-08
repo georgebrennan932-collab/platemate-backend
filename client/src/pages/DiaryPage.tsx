@@ -731,16 +731,16 @@ export function DiaryPage() {
       )}
       
       {/* Voice Input Floating Button */}
-      <div className="fixed bottom-20 right-4 z-40">
+      <div className="fixed bottom-24 right-4 z-50">
         <button
           onClick={handleVoiceInput}
           disabled={!speechSupported}
-          className={`w-14 h-14 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center ${
+          className={`w-16 h-16 rounded-full shadow-xl border-2 border-white dark:border-gray-800 transition-all duration-200 flex items-center justify-center ${
             isListening
-              ? 'bg-red-500 text-white animate-pulse scale-110'
+              ? 'bg-red-500 text-white animate-pulse scale-110 shadow-red-200'
               : speechSupported
-              ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105'
-              : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+              ? 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-105 shadow-blue-200'
+              : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
           }`}
           data-testid="button-voice-input"
           title={
@@ -752,11 +752,16 @@ export function DiaryPage() {
           }
         >
           {isListening ? (
-            <MicOff className="h-6 w-6" />
+            <MicOff className="h-7 w-7" />
           ) : (
-            <Mic className="h-6 w-6" />
+            <Mic className="h-7 w-7" />
           )}
         </button>
+        
+        {/* Voice button label */}
+        <div className="absolute -left-20 top-1/2 transform -translate-y-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
+          Voice Input
+        </div>
       </div>
 
       {/* Bottom Navigation */}
