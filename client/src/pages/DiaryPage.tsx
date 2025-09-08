@@ -502,19 +502,31 @@ export function DiaryPage() {
                           
                           {entry.analysis && (
                             <div className="space-y-3">
-                              {/* Original food photo */}
+                              {/* Food photo or voice thumbnail */}
                               {entry.analysis.imageUrl && (
                                 <div className="relative">
-                                  <img 
-                                    src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`} 
-                                    alt="Original food photo" 
-                                    className="w-full h-32 object-cover rounded-lg border"
-                                    data-testid={`food-image-${entry.id}`}
-                                    onError={(e) => {
-                                      console.log('Diary image failed to load:', entry.analysis.imageUrl);
-                                      e.currentTarget.style.display = 'none';
-                                    }}
-                                  />
+                                  {entry.analysis.imageUrl.includes('voice-input') ? (
+                                    /* Voice input thumbnail */
+                                    <div className="w-full h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg border-2 border-blue-300 flex items-center justify-center">
+                                      <div className="text-center text-white">
+                                        <Mic className="h-12 w-12 mx-auto mb-2 animate-pulse" />
+                                        <div className="text-sm font-medium">Voice Added</div>
+                                        <div className="text-xs opacity-80">Audio Recognition</div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    /* Regular food photo */
+                                    <img 
+                                      src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`} 
+                                      alt="Original food photo" 
+                                      className="w-full h-32 object-cover rounded-lg border"
+                                      data-testid={`food-image-${entry.id}`}
+                                      onError={(e) => {
+                                        console.log('Diary image failed to load:', entry.analysis.imageUrl);
+                                        e.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  )}
                                   <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
                                     {entry.analysis.confidence}% confident
                                   </div>
