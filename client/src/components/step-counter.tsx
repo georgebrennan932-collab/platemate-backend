@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Footprints, Plus, Minus } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Footprints, Plus, Minus, Play, Pause } from 'lucide-react';
+import { Motion } from '@capacitor/motion';
+import { Capacitor } from '@capacitor/core';
 
 interface StepData {
   count: number;
@@ -11,15 +13,50 @@ export function StepCounter() {
   const [steps, setSteps] = useState<number>(0);
   const [goal, setGoal] = useState<number>(10000);
   const [isOpen, setIsOpen] = useState(false);
+  const [isAutoTracking, setIsAutoTracking] = useState<boolean>(false);
+  const [hasMotionPermission, setHasMotionPermission] = useState<boolean>(false);
+  
+  // Motion detection variables
+  const lastAcceleration = useRef({ x: 0, y: 0, z: 0 });
+  const stepBuffer = useRef<number[]>([]);
+  const lastStepTime = useRef<number>(0);
+  const motionListener = useRef<any>(null);
 
   // Get today's date in YYYY-MM-DD format
   const getTodayKey = () => new Date().toISOString().split('T')[0];
+
+  // Initialize motion sensors and check permissions
+  useEffect(() => {
+    const initializeMotion = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          // Motion API doesn't require explicit permissions on mobile
+          setHasMotionPermission(true);
+          console.log('✓ Motion sensor access available on native');
+        } catch (error) {
+          console.log('✗ Motion sensor access denied:', error);
+          setHasMotionPermission(false);
+        }
+      } else {
+        // Check if DeviceMotionEvent is available on web
+        if ('DeviceMotionEvent' in window) {
+          setHasMotionPermission(true);
+          console.log('✓ Device motion available on web');
+        } else {
+          console.log('✗ Device motion not available on web');
+        }
+      }
+    };
+
+    initializeMotion();
+  }, []);
 
   // Load today's steps from localStorage
   useEffect(() => {
     const todayKey = getTodayKey();
     const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
     const goalStored = localStorage.getItem('platemate-step-goal');
+    const autoTrackingStored = localStorage.getItem('platemate-auto-tracking');
     
     if (stored) {
       const stepData: StepData = JSON.parse(stored);
@@ -30,7 +67,99 @@ export function StepCounter() {
     if (goalStored) {
       setGoal(parseInt(goalStored));
     }
+
+    if (autoTrackingStored === 'true') {
+      setIsAutoTracking(true);
+    }
   }, []);
+
+  // Step detection algorithm
+  const detectStep = (acceleration: { x: number; y: number; z: number }) => {
+    const now = Date.now();
+    const timeSinceLastStep = now - lastStepTime.current;
+    
+    // Calculate magnitude of acceleration
+    const magnitude = Math.sqrt(
+      acceleration.x * acceleration.x +
+      acceleration.y * acceleration.y +
+      acceleration.z * acceleration.z
+    );
+    
+    // Add to buffer for smoothing
+    stepBuffer.current.push(magnitude);
+    if (stepBuffer.current.length > 10) {
+      stepBuffer.current.shift();
+    }
+    
+    // Calculate average and detect peaks
+    const average = stepBuffer.current.reduce((a, b) => a + b, 0) / stepBuffer.current.length;
+    const threshold = average + 2; // Adjust sensitivity
+    
+    // Detect step if magnitude exceeds threshold and enough time has passed
+    if (magnitude > threshold && timeSinceLastStep > 300) { // Min 300ms between steps
+      lastStepTime.current = now;
+      addSteps(1);
+    }
+    
+    lastAcceleration.current = acceleration;
+  };
+
+  // Start/stop automatic step tracking
+  const toggleAutoTracking = async () => {
+    if (!hasMotionPermission) {
+      alert('Motion sensor permission is required for automatic step tracking');
+      return;
+    }
+
+    if (isAutoTracking) {
+      // Stop tracking
+      if (motionListener.current) {
+        if (Capacitor.isNativePlatform()) {
+          motionListener.current.remove();
+        } else {
+          window.removeEventListener('devicemotion', motionListener.current);
+        }
+        motionListener.current = null;
+      }
+      setIsAutoTracking(false);
+      localStorage.setItem('platemate-auto-tracking', 'false');
+    } else {
+      // Start tracking
+      try {
+        if (Capacitor.isNativePlatform()) {
+          // Use Capacitor Motion API for native apps
+          const listener = await Motion.addListener('accel', (event: any) => {
+            detectStep({
+              x: event.accelerationIncludingGravity?.x || 0,
+              y: event.accelerationIncludingGravity?.y || 0,
+              z: event.accelerationIncludingGravity?.z || 0
+            });
+          });
+          motionListener.current = listener;
+        } else {
+          // Use DeviceMotionEvent for web
+          const handleMotion = (event: DeviceMotionEvent) => {
+            if (event.accelerationIncludingGravity) {
+              detectStep({
+                x: event.accelerationIncludingGravity.x || 0,
+                y: event.accelerationIncludingGravity.y || 0,
+                z: event.accelerationIncludingGravity.z || 0
+              });
+            }
+          };
+          
+          window.addEventListener('devicemotion', handleMotion);
+          motionListener.current = handleMotion;
+        }
+        
+        setIsAutoTracking(true);
+        localStorage.setItem('platemate-auto-tracking', 'true');
+      } catch (error) {
+        console.error('Failed to start motion tracking:', error);
+        alert('Failed to start automatic step tracking');
+      }
+    }
+  };
 
   // Save steps to localStorage whenever they change
   const saveSteps = (newSteps: number, newGoal?: number) => {
@@ -103,6 +232,9 @@ export function StepCounter() {
           }`}>
             {steps >= 1000 ? `${(steps/1000).toFixed(1)}k` : steps}
           </span>
+          {isAutoTracking && (
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          )}
         </div>
       </button>
       
@@ -138,8 +270,33 @@ export function StepCounter() {
             </div>
 
             {/* Quick add buttons */}
+            {/* Auto-tracking toggle */}
+            {hasMotionPermission && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Automatic Tracking</div>
+                <button
+                  onClick={toggleAutoTracking}
+                  className={`w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg border transition-colors ${
+                    isAutoTracking
+                      ? 'bg-green-50 border-green-300 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300'
+                      : 'bg-gray-50 border-gray-300 text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  {isAutoTracking ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  <span className="text-sm font-medium">
+                    {isAutoTracking ? 'Stop Auto Count' : 'Start Auto Count'}
+                  </span>
+                </button>
+                {isAutoTracking && (
+                  <div className="text-xs text-green-600 dark:text-green-400 text-center">
+                    📱 Automatically counting your steps
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="space-y-3">
-              <div className="text-sm font-medium">Quick Add</div>
+              <div className="text-sm font-medium">Manual Add</div>
               <div className="grid grid-cols-3 gap-2">
                 <button 
                   onClick={() => addSteps(100)}
