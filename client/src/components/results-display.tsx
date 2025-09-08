@@ -180,7 +180,47 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         </div>
       </div>
 
-      {/* Nutrition Summary Cards */}
+      {/* Detected Foods - Now First */}
+      <div className="bg-card rounded-xl shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <Utensils className="text-primary mr-2 h-5 w-5" />
+          Food Items Detected
+        </h3>
+        
+        <div className="space-y-4">
+          {data.detectedFoods.map((food, index) => (
+            <div 
+              key={index}
+              className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+              data-testid={`card-food-${index}`}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                  <i className={`${getFoodIcon(food.icon)} text-primary`}></i>
+                </div>
+                <div>
+                  <p className="font-medium" data-testid={`text-food-name-${index}`}>
+                    {food.name}
+                  </p>
+                  <p className="text-sm text-muted-foreground" data-testid={`text-food-portion-${index}`}>
+                    {food.portion}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold" data-testid={`text-food-calories-${index}`}>
+                  {food.calories} cal
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {food.protein}g protein
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Nutrition Summary Cards - Now Second */}
       <div className="grid grid-cols-2 gap-4">
         {/* Calories */}
         <div className="modern-card bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/10 dark:to-orange-900/10 p-5 border-0 relative overflow-hidden">
@@ -248,46 +288,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <p className="text-xs text-yellow-600/70 dark:text-yellow-400/70 font-medium">
             {Math.round((data.totalFat / 65) * 100)}% daily value
           </p>
-        </div>
-      </div>
-
-      {/* Detailed Breakdown */}
-      <div className="bg-card rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Utensils className="text-primary mr-2 h-5 w-5" />
-          Food Items Detected
-        </h3>
-        
-        <div className="space-y-4">
-          {data.detectedFoods.map((food, index) => (
-            <div 
-              key={index}
-              className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
-              data-testid={`card-food-${index}`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                  <i className={`${getFoodIcon(food.icon)} text-primary`}></i>
-                </div>
-                <div>
-                  <p className="font-medium" data-testid={`text-food-name-${index}`}>
-                    {food.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground" data-testid={`text-food-portion-${index}`}>
-                    {food.portion}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold" data-testid={`text-food-calories-${index}`}>
-                  {food.calories} cal
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {food.protein}g protein
-                </p>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 
