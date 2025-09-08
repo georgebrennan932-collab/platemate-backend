@@ -731,7 +731,7 @@ export function DiaryPage() {
       )}
       
       {/* Voice Input Floating Button */}
-      <div className="fixed bottom-24 right-4 z-50">
+      <div className="fixed bottom-24 left-4 z-50">
         <button
           onClick={handleVoiceInput}
           disabled={!speechSupported}
