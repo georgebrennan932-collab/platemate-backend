@@ -639,48 +639,79 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
 
       {/* Results */}
       {calculatedCalories && bmrData && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Personalized Calorie Targets</CardTitle>
-            <CardDescription>
-              Based on your physical stats and weight goals
+        <Card className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/30 dark:via-emerald-950/30 dark:to-teal-950/30 border-0 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white rounded-t-lg">
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-white/20 rounded-lg">
+                🎯
+              </div>
+              Your Personalized Calorie Targets
+            </CardTitle>
+            <CardDescription className="text-green-100 text-base">
+              ✨ Based on your physical stats and weight goals
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{bmrData.bmr}</div>
-                <div className="text-sm text-muted-foreground">BMR (calories/day)</div>
-                <div className="text-xs text-muted-foreground mt-1">Base metabolic rate</div>
+          <CardContent className="p-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {/* BMR Card */}
+              <div className="text-center p-6 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-blue-200/50">
+                <div className="mb-3">
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-md">
+                    <span className="text-white text-xl">⚡</span>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-blue-700 dark:text-blue-300 mb-1">{bmrData.bmr}</div>
+                <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">BMR (calories/day)</div>
+                <div className="text-xs text-blue-500 dark:text-blue-400/80 mt-1">Base metabolic rate</div>
               </div>
               
-              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{bmrData.tdee}</div>
-                <div className="text-sm text-muted-foreground">TDEE (calories/day)</div>
-                <div className="text-xs text-muted-foreground mt-1">Including activity</div>
+              {/* TDEE Card */}
+              <div className="text-center p-6 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-green-200/50">
+                <div className="mb-3">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-md">
+                    <span className="text-white text-xl">🏃</span>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-green-700 dark:text-green-300 mb-1">{bmrData.tdee}</div>
+                <div className="text-sm font-semibold text-green-600 dark:text-green-400">TDEE (calories/day)</div>
+                <div className="text-xs text-green-500 dark:text-green-400/80 mt-1">Including activity</div>
               </div>
               
-              <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{calculatedCalories}</div>
-                <div className="text-sm text-muted-foreground">Target (calories/day)</div>
-                <div className="text-xs text-muted-foreground mt-1">To reach goal</div>
+              {/* Target Card */}
+              <div className="text-center p-6 bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/40 dark:to-orange-800/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-orange-200/50">
+                <div className="mb-3">
+                  <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-md">
+                    <span className="text-white text-xl">🎯</span>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-orange-700 dark:text-orange-300 mb-1">{calculatedCalories}</div>
+                <div className="text-sm font-semibold text-orange-600 dark:text-orange-400">Target (calories/day)</div>
+                <div className="text-xs text-orange-500 dark:text-orange-400/80 mt-1">To reach goal</div>
               </div>
               
-              <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">
+              {/* Weight Change Card */}
+              <div className="text-center p-6 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/40 dark:to-purple-800/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-purple-200/50">
+                <div className="mb-3">
+                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-md">
+                    <span className="text-white text-xl">⏱️</span>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-purple-700 dark:text-purple-300 mb-1">
                   {Math.round(Math.abs(bmrData.weightChange))}kg
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm font-semibold text-purple-600 dark:text-purple-400">
                   {bmrData.weightChange > 0 ? 'To gain' : bmrData.weightChange < 0 ? 'To lose' : 'Maintain'}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">
+                <div className="text-xs text-purple-500 dark:text-purple-400/80 mt-1">
                   {Math.round(bmrData.timeToGoal)} days to goal
                 </div>
               </div>
             </div>
             
-            <div className="mt-6 p-4 bg-muted rounded-lg">
-              <h4 className="font-medium mb-2">How we calculated this:</h4>
+            <div className="mt-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50 rounded-xl border border-gray-200/50 dark:border-gray-600/30">
+              <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <span className="text-xl">📊</span> How we calculated this:
+              </h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• <strong>BMR:</strong> Mifflin-St Jeor equation based on your age, sex, height, and weight</li>
                 <li>• <strong>TDEE:</strong> BMR × activity level multiplier</li>
@@ -711,41 +742,41 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
             )}
 
             {/* Update Goals Button */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 via-indigo-50 to-green-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-green-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl shadow-lg">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                    Update Your Nutrition Goals
+                  <h4 className="font-semibold text-lg text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+                    🎯 Update Your Nutrition Goals
                   </h4>
-                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                  <p className="text-blue-700 dark:text-blue-300 mb-4">
                     Set your daily targets to {calculatedCalories} calories with balanced macronutrients:
                   </p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    <div className="text-center">
-                      <div className="font-medium">{calculateMacroTargets(calculatedCalories).dailyCalories}</div>
-                      <div className="text-muted-foreground">Calories</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="text-center p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                      <div className="font-bold text-orange-600 dark:text-orange-400">{calculateMacroTargets(calculatedCalories).dailyCalories}</div>
+                      <div className="text-xs text-orange-600/70 dark:text-orange-400/70 font-medium">🔥 Calories</div>
                     </div>
-                    <div className="text-center">
-                      <div className="font-medium">{calculateMacroTargets(calculatedCalories).dailyProtein}g</div>
-                      <div className="text-muted-foreground">Protein</div>
+                    <div className="text-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <div className="font-bold text-blue-600 dark:text-blue-400">{calculateMacroTargets(calculatedCalories).dailyProtein}g</div>
+                      <div className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium">🥩 Protein</div>
                     </div>
-                    <div className="text-center">
-                      <div className="font-medium">{calculateMacroTargets(calculatedCalories).dailyCarbs}g</div>
-                      <div className="text-muted-foreground">Carbs</div>
+                    <div className="text-center p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                      <div className="font-bold text-green-600 dark:text-green-400">{calculateMacroTargets(calculatedCalories).dailyCarbs}g</div>
+                      <div className="text-xs text-green-600/70 dark:text-green-400/70 font-medium">🍞 Carbs</div>
                     </div>
-                    <div className="text-center">
-                      <div className="font-medium">{calculateMacroTargets(calculatedCalories).dailyFat}g</div>
-                      <div className="text-muted-foreground">Fat</div>
+                    <div className="text-center p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                      <div className="font-bold text-yellow-600 dark:text-yellow-400">{calculateMacroTargets(calculatedCalories).dailyFat}g</div>
+                      <div className="text-xs text-yellow-600/70 dark:text-yellow-400/70 font-medium">🥑 Fat</div>
                     </div>
                   </div>
                 </div>
                 <Button 
                   onClick={handleUpdateGoals}
                   disabled={updateGoalsMutation.isPending}
-                  className="ml-4 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                  className="ml-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-green-600 hover:from-blue-700 hover:via-indigo-700 hover:to-green-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   data-testid="button-update-goals"
                 >
-                  {updateGoalsMutation.isPending ? 'Updating...' : 'Update Goals'}
+                  {updateGoalsMutation.isPending ? '⏳ Updating...' : '🎯 Update Goals'}
                 </Button>
               </div>
             </div>

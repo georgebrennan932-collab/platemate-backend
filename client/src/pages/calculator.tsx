@@ -91,36 +91,41 @@ export default function CalculatorPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with back button */}
-      <div className="bg-card border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center space-x-3">
+      {/* Enhanced Header with back button */}
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white sticky top-0 z-10 shadow-lg">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center space-x-4">
             <Link href="/">
               <button 
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                className="p-3 hover:bg-white/20 rounded-xl transition-all duration-200 hover:scale-110"
                 data-testid="button-back-to-home"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
             </Link>
             <div>
-              <h1 className="text-xl font-bold">Smart Nutrition Calculator</h1>
-              <p className="text-sm text-muted-foreground">
-                Calculate your personalized calorie needs and plan optimal meals
+              <h1 className="text-2xl font-bold flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  🎨
+                </div>
+                Smart Nutrition Calculator
+              </h1>
+              <p className="text-indigo-100 mt-1">
+                ✨ Calculate your personalized calorie needs and plan optimal meals
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto p-4 space-y-6">
+      <div className="container mx-auto p-6 space-y-8">
         <Tabs defaultValue="personal" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="personal" className="flex items-center gap-2" data-testid="tab-personal-calculator">
+          <TabsList className="grid w-full grid-cols-2 p-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-xl">
+            <TabsTrigger value="personal" className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg" data-testid="tab-personal-calculator">
               <Target className="h-4 w-4" />
               Personal Calculator
             </TabsTrigger>
-            <TabsTrigger value="nutrition" className="flex items-center gap-2" data-testid="tab-nutrition-planner">
+            <TabsTrigger value="nutrition" className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg" data-testid="tab-nutrition-planner">
               <Calculator className="h-4 w-4" />
               Nutrition Planner
             </TabsTrigger>
