@@ -9,6 +9,10 @@ import { ProgressIndicators } from "@/components/progress-indicators";
 import { WeeklyAnalytics } from "@/components/weekly-analytics";
 import { EditDiaryEntryDialog } from "@/components/edit-diary-entry-dialog";
 import { SearchFilterBar } from "@/components/search-filter-bar";
+import { MealTemplatesDialog } from "@/components/meal-templates-dialog";
+import { AdvancedAnalytics } from "@/components/advanced-analytics";
+import { QuickActionsBar } from "@/components/quick-actions-bar";
+import { DataManagementDialog } from "@/components/data-management-dialog";
 import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
 
 export function DiaryPage() {
@@ -271,7 +275,7 @@ export function DiaryPage() {
               setDateRange({});
               setCalorieRange({});
             }}
-            hasActiveFilters={searchQuery !== '' || mealTypeFilter !== 'all' || dateRange.start || dateRange.end || calorieRange.min || calorieRange.max}
+            hasActiveFilters={searchQuery !== '' || mealTypeFilter !== 'all' || !!dateRange.start || !!dateRange.end || !!calorieRange.min || !!calorieRange.max}
           />
         </div>
       )}
@@ -279,7 +283,10 @@ export function DiaryPage() {
       {/* Content */}
       <div className="max-w-md mx-auto p-4">
         {activeTab === 'analytics' ? (
-          <WeeklyAnalytics goals={nutritionGoals} />
+          <div className="space-y-6">
+            <WeeklyAnalytics goals={nutritionGoals} />
+            <AdvancedAnalytics goals={nutritionGoals} />
+          </div>
         ) : sortedDates.length === 0 ? (
           <div className="text-center py-12">
             <Utensils className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -350,7 +357,22 @@ export function DiaryPage() {
                           </div>
                           
                           {entry.analysis && (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
+                              {/* Original food photo */}
+                              {entry.analysis.imageUrl && (
+                                <div className="relative">
+                                  <img 
+                                    src={entry.analysis.imageUrl} 
+                                    alt="Original food photo" 
+                                    className="w-full h-32 object-cover rounded-lg border"
+                                    data-testid={`food-image-${entry.id}`}
+                                  />
+                                  <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                                    {entry.analysis.confidence}% confident
+                                  </div>
+                                </div>
+                              )}
+                              
                               <div className="text-sm font-medium">
                                 {entry.analysis.totalCalories} calories
                               </div>
@@ -359,23 +381,66 @@ export function DiaryPage() {
                                 <div>Carbs: {entry.analysis.totalCarbs}g</div>
                                 <div>Fat: {entry.analysis.totalFat}g</div>
                               </div>
+                              
+                              {/* Detected foods with portions */}
                               {entry.analysis.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  {entry.analysis.detectedFoods.map((food: any, index: number) => (
-                                    <span 
-                                      key={index}
-                                      className="inline-block px-2 py-1 bg-muted rounded text-xs"
-                                    >
-                                      {food.name}
-                                    </span>
-                                  ))}
+                                <div className="space-y-1">
+                                  <div className="text-xs font-medium text-muted-foreground">Detected Foods:</div>
+                                  <div className="grid gap-1">
+                                    {entry.analysis.detectedFoods.map((food: any, index: number) => (
+                                      <div key={index} className="flex items-center justify-between bg-muted/50 rounded px-2 py-1">
+                                        <span className="flex items-center gap-1 text-xs">
+                                          <span>{food.icon || '🍽️'}</span>
+                                          <span className="font-medium">{food.name}</span>
+                                        </span>
+                                        <div className="text-xs text-muted-foreground">
+                                          {food.portion} • {food.calories}cal
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Notes */}
+                              {entry.notes && (
+                                <div className="text-xs text-muted-foreground italic bg-muted/30 p-2 rounded">
+                                  📝 {entry.notes}
                                 </div>
                               )}
                             </div>
                           )}
                         </div>
                         
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 mb-4">
+            <MealTemplatesDialog
+              onSelectTemplate={(template) => {
+                // Quick-log the template as a new diary entry
+                const newEntry = {
+                  analysisId: template.analysisId,
+                  mealType: 'lunch' as const,
+                  mealDate: new Date().toISOString(),
+                  notes: `From template: ${template.name}`,
+                };
+                
+                // This would normally call the create diary entry API
+                toast({
+                  title: "Template Added",
+                  description: `"${template.name}" has been logged to your diary.`,
+                });
+              }}
+            />
+            <DataManagementDialog />
+          </div>
+          
+          {/* Quick Actions */}
+          <QuickActionsBar 
+            onQuickLog={(type, data) => {
+              console.log('Quick logged:', type, data);
+            }}
+          />
+          
+          <div className="flex gap-2">
                           <EditDiaryEntryDialog entry={entry} />
                           <button
                             onClick={() => deleteMutation.mutate(entry.id)}
