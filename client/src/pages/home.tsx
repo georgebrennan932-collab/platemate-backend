@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/app-header";
 import { soundService } from "@/lib/sound-service";
 import { CameraInterface } from "@/components/camera-interface";
@@ -7,16 +10,34 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
 
 export default function Home() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  
+  // Voice input state
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [voiceInput, setVoiceInput] = useState('');
+  const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
+  
+  // Initialize speech recognition
+  useEffect(() => {
+    const checkSpeechSupport = () => {
+      const supported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+      setSpeechSupported(supported);
+    };
+    checkSpeechSupport();
+  }, []);
 
   const handleAnalysisStart = () => {
     soundService.playScan();
@@ -46,6 +67,113 @@ export default function Home() {
     setAnalysisData(null);
   };
 
+  const handleVoiceInput = async () => {
+    if (!speechSupported) {
+      toast({
+        title: "Speech Not Supported",
+        description: "Speech recognition is not supported in this browser",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new (window.SpeechRecognition || (window as any).webkitSpeechRecognition)();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        toast({
+          title: "Listening...",
+          description: "Say your food item and quantity (e.g., '100g salmon')",
+        });
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setVoiceInput(transcript);
+        setShowVoiceMealDialog(true);
+        toast({
+          title: "Voice captured!",
+          description: `Heard: "${transcript}"`,
+        });
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        toast({
+          title: "Speech Error",
+          description: "Could not recognize speech. Please try again.",
+          variant: "destructive",
+        });
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (error) {
+      toast({
+        title: "Speech Error",
+        description: "Failed to start speech recognition",
+        variant: "destructive",
+      });
+      setIsListening(false);
+    }
+  };
+
+  const handleConfirmVoiceMeal = () => {
+    if (!voiceInput.trim()) return;
+    addVoiceMealMutation.mutate({
+      foodDescription: voiceInput.trim(),
+      mealType: selectedMealType
+    });
+  };
+
+  const addVoiceMealMutation = useMutation({
+    mutationFn: async ({ foodDescription, mealType }: { foodDescription: string, mealType: string }) => {
+      // First analyze the text-based food description
+      const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
+      const analysis = await analysisResponse.json();
+      
+      // Then create the diary entry with current date/time
+      const now = new Date();
+      const diaryResponse = await apiRequest('POST', '/api/diary', {
+        analysisId: analysis.id,
+        mealType,
+        mealDate: now.toISOString(),
+        notes: `Added via voice: "${foodDescription}"`
+      });
+      return await diaryResponse.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Meal Added!",
+        description: "Your voice meal has been added to your diary.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      setShowVoiceMealDialog(false);
+      setVoiceInput('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add meal from voice. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error adding voice meal:", error);
+    },
+  });
+
   return (
     <div className="bg-background text-foreground min-h-screen">
       <AppHeader />
@@ -54,7 +182,29 @@ export default function Home() {
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 py-2 space-y-4">
           {/* Primary Actions */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <button
+              onClick={handleVoiceInput}
+              disabled={!speechSupported}
+              className={`w-full py-4 px-4 rounded-xl font-medium flex flex-col items-center justify-center space-y-2 group min-h-[80px] transition-all duration-200 ${
+                isListening
+                  ? 'bg-red-500 text-white animate-pulse scale-105'
+                  : speechSupported
+                  ? 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-[1.02]'
+                  : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+              }`}
+              data-testid="button-voice-input"
+            >
+              {isListening ? (
+                <MicOff className="h-6 w-6 group-hover:scale-110 smooth-transition" />
+              ) : (
+                <Mic className="h-6 w-6 group-hover:scale-110 smooth-transition" />
+              )}
+              <span className="text-sm">
+                {isListening ? 'Listening...' : 'Voice Add'}
+              </span>
+            </button>
+            
             <Link href="/advice">
               <button 
                 className="w-full gradient-button hover:scale-[1.02] py-4 px-4 rounded-xl font-medium flex flex-col items-center justify-center space-y-2 group min-h-[80px]"
@@ -130,6 +280,79 @@ export default function Home() {
         </div>
       )}
       
+      {/* Voice Meal Confirmation Dialog */}
+      {showVoiceMealDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Mic className="h-5 w-5 text-primary" />
+              Add Voice Meal
+            </h3>
+            
+            <div className="space-y-4">
+              {/* Voice Input Display */}
+              <div className="bg-muted/50 rounded-lg p-3">
+                <label className="block text-sm font-medium mb-2">What you said:</label>
+                <p className="text-sm font-mono bg-background p-2 rounded border">
+                  "{voiceInput}"
+                </p>
+              </div>
+
+              {/* Meal Type Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Meal Type</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => (
+                    <button
+                      key={meal}
+                      onClick={() => setSelectedMealType(meal)}
+                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                        selectedMealType === meal
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      }`}
+                      data-testid={`button-voice-meal-${meal}`}
+                    >
+                      {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Dialog Actions */}
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowVoiceMealDialog(false)}
+                disabled={addVoiceMealMutation.isPending}
+                className="flex-1 py-2 px-4 border border-input rounded-lg font-medium hover:bg-muted transition-colors disabled:opacity-50"
+                data-testid="button-cancel-voice-meal"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmVoiceMeal}
+                disabled={addVoiceMealMutation.isPending}
+                className="flex-1 gradient-button py-2 px-4 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                data-testid="button-confirm-voice-meal"
+              >
+                {addVoiceMealMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Add to Diary
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bottom Navigation */}
       <BottomNavigation />
       
