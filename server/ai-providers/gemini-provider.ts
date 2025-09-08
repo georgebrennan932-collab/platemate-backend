@@ -236,9 +236,11 @@ ${JSON.stringify(analysisData, null, 2)}`;
                     carbs: { type: "number" },
                     fat: { type: "number" },
                     ingredients: { type: "array", items: { type: "string" } },
-                    benefits: { type: "string" }
+                    benefits: { type: "string" },
+                    recipeLink: { type: "string" },
+                    cookingInstructions: { type: "array", items: { type: "string" } }
                   },
-                  required: ["mealType", "name", "description", "calories", "protein", "carbs", "fat", "ingredients", "benefits"]
+                  required: ["mealType", "name", "description", "calories", "protein", "carbs", "fat", "ingredients", "benefits", "recipeLink", "cookingInstructions"]
                 }
               }
             },

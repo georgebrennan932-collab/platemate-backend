@@ -371,11 +371,6 @@ export function DietAdvicePage() {
                             </p>
                           </div>
 
-                          {/* Debug info */}
-                          <div className="bg-yellow-100 dark:bg-yellow-900 rounded p-2 mb-3 text-xs">
-                            <p>Debug: cookingInstructions = {meal.cookingInstructions ? JSON.stringify(meal.cookingInstructions) : 'undefined'}</p>
-                            <p>Debug: recipeLink = {meal.recipeLink || 'undefined'}</p>
-                          </div>
 
                           {meal.cookingInstructions && meal.cookingInstructions.length > 0 && (
                             <div className="bg-muted/50 rounded p-3 mb-3">
