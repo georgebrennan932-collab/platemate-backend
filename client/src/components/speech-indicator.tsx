@@ -112,6 +112,19 @@ function SpeechControlButton() {
     // Import speech service dynamically to avoid SSR issues
     import('@/lib/speech-service').then(({ speechService }) => {
       setIsEnabled(speechService.isSupported());
+      
+      // Update listening state when speech service changes
+      const updateState = () => {
+        setIsListening(speechService.isCurrentlyListening());
+      };
+      
+      // Check state periodically
+      const interval = setInterval(updateState, 500);
+      
+      // Update immediately
+      updateState();
+      
+      return () => clearInterval(interval);
     });
   }, []);
 
@@ -122,7 +135,8 @@ function SpeechControlButton() {
       speechService.stopListening();
       setIsListening(false);
     } else {
-      const started = await speechService.startListening(true);
+      // Start listening without continuous mode (single command)
+      const started = await speechService.startListening(false);
       if (started) {
         setIsListening(true);
       }

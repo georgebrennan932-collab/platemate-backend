@@ -68,8 +68,9 @@ class SpeechService {
 
       this.recognition.onresult = (event: any) => {
         const results = Array.from(event.results);
-        const transcript = results[results.length - 1]?.[0]?.transcript?.toLowerCase() || '';
-        const confidence = results[results.length - 1]?.[0]?.confidence || 0;
+        const lastResult = results[results.length - 1] as any;
+        const transcript = lastResult?.[0]?.transcript?.toLowerCase() || '';
+        const confidence = lastResult?.[0]?.confidence || 0;
 
         console.log(`🎤 Speech recognized: "${transcript}" (confidence: ${confidence.toFixed(2)})`);
         
@@ -129,6 +130,13 @@ class SpeechService {
         try {
           voiceCommand.action();
           this.lastCommandTime = now;
+          
+          // Stop listening after successful command execution (unless in continuous mode)
+          if (!this.continuousMode) {
+            setTimeout(() => {
+              this.stopListening();
+            }, 100); // Small delay to ensure feedback is shown
+          }
         } catch (error) {
           console.error(`Error executing voice command ${commandId}:`, error);
         }
