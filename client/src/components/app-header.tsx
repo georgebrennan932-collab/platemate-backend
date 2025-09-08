@@ -19,7 +19,10 @@ export function AppHeader() {
               data-testid="logo-platemate"
             />
           </div>
-          <h1 className="text-2xl font-bold gradient-text">PlateMate</h1>
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold gradient-text">PlateMate</h1>
+            {isAuthenticated && <StepCounter />}
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           {isAuthenticated && user ? (
@@ -32,7 +35,6 @@ export function AppHeader() {
               </div>
             </div>
           ) : null}
-          {isAuthenticated && <StepCounter />}
           <button 
             className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 dark:from-gray-800/50 dark:to-gray-700/30 backdrop-blur-sm hover:scale-110 smooth-transition border border-white/10 dark:border-gray-700/30"
             data-testid="button-history"
