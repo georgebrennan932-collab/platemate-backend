@@ -244,7 +244,7 @@ export class AIManager {
   /**
    * Generate diet advice using the best available provider with intelligent fallback
    */
-  async generateDietAdvice(entries: DiaryEntry[]): Promise<DietAdviceResult> {
+  async generateDietAdvice(entries: DiaryEntry[], userProfile?: any): Promise<DietAdviceResult> {
     const availableProviders = this.getAvailableProviders();
     
     // Try each available provider
@@ -253,7 +253,7 @@ export class AIManager {
         try {
           console.log(`Attempting diet advice with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
           
-          const result = await provider.generateDietAdvice(entries);
+          const result = await provider.generateDietAdvice(entries, userProfile);
           
           console.log(`✓ Diet advice successful with ${provider.name}`);
           return result;

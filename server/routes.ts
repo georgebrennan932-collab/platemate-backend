@@ -236,8 +236,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Get user profile for enhanced personalization
+      const userProfile = await storage.getUserProfile(userId);
+      
       // Analyze the data and provide advice using multi-AI provider system
-      const advice = await aiManager.generateDietAdvice(entries);
+      const advice = await aiManager.generateDietAdvice(entries, userProfile);
       res.json(advice);
     } catch (error) {
       console.error("Get diet advice error:", error);
@@ -258,7 +261,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const advice = await aiManager.generateDietAdvice(entries);
+      // Get user profile for enhanced personalization
+      const userProfile = await storage.getUserProfile(userId);
+      
+      const advice = await aiManager.generateDietAdvice(entries, userProfile);
       res.json(advice);
     } catch (error) {
       console.error("Generate diet advice error:", error);

@@ -31,6 +31,8 @@ export interface MealIdea {
   fat: number;
   ingredients: string[];
   benefits: string;
+  recipeLink?: string;
+  cookingInstructions?: string[];
 }
 
 export interface DietAdviceResult {
@@ -94,7 +96,7 @@ export abstract class AIProvider {
   protected lastSuccess?: Date;
 
   abstract analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult>;
-  abstract generateDietAdvice(entries: DiaryEntry[]): Promise<DietAdviceResult>;
+  abstract generateDietAdvice(entries: DiaryEntry[], userProfile?: any): Promise<DietAdviceResult>;
   abstract answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string>;
   abstract generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching>;
   abstract generateEducationalTips(category: 'all' | 'nutrition' | 'medication' | 'motivation'): Promise<EducationalTip[]>;

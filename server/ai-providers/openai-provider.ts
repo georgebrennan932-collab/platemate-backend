@@ -146,7 +146,7 @@ Be as accurate as possible with portion estimates and nutritional values. If you
     }
   }
 
-  async generateDietAdvice(entries: DiaryEntry[]): Promise<DietAdviceResult> {
+  async generateDietAdvice(entries: DiaryEntry[], userProfile?: any): Promise<DietAdviceResult> {
     try {
       // Analyze eating patterns
       const totalEntries = entries.length;
@@ -174,7 +174,18 @@ Be as accurate as possible with portion estimates and nutritional values. If you
         mealPattern: mealTypeCounts,
         recentFoods: entries.slice(0, 10).map(entry => 
           entry.analysis?.detectedFoods?.map((food: any) => food.name).join(', ') || 'Unknown'
-        ).filter(Boolean)
+        ).filter(Boolean),
+        userProfile: userProfile ? {
+          age: userProfile.age,
+          sex: userProfile.sex,
+          heightCm: userProfile.heightCm,
+          currentWeightKg: userProfile.currentWeightKg,
+          goalWeightKg: userProfile.goalWeightKg,
+          activityLevel: userProfile.activityLevel,
+          weightGoal: userProfile.weightGoal,
+          weeklyWeightChangeKg: userProfile.weeklyWeightChangeKg,
+          medication: userProfile.medication
+        } : null
       };
 
       const response = await this.client.chat.completions.create({
@@ -182,11 +193,11 @@ Be as accurate as possible with portion estimates and nutritional values. If you
         messages: [
           {
             role: "system",
-            content: "You are a certified nutritionist and diet advisor. Analyze the user's eating patterns and provide helpful, personalized advice including specific meal ideas tailored to their individual needs."
+            content: "You are a certified nutritionist and diet advisor. Analyze the user's eating patterns and personal profile to provide highly personalized advice including specific meal ideas tailored to their individual needs, goals, and health considerations."
           },
           {
             role: "user",
-            content: `Analyze my eating patterns and provide diet advice with personalized meal ideas. Here's my data from the last 30 days:
+            content: `Analyze my eating patterns and personal profile to provide highly personalized diet advice with meal ideas tailored specifically to my goals, health status, and lifestyle. Here's my comprehensive data from the last 30 days:
 
 ${JSON.stringify(analysisData, null, 2)}
 
@@ -217,7 +228,7 @@ Please provide advice in the following JSON format:
   ]
 }
 
-Generate 4-6 meal ideas that address the user's specific nutritional needs, deficiencies, or goals based on their eating patterns. Include a variety of meal types (breakfast, lunch, dinner, snacks). For each meal idea, include a realistic recipe link (use popular cooking websites like allrecipes.com, foodnetwork.com, or BBC Good Food) and provide 3-4 simple cooking instructions. Keep advice items to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice.`
+Generate 4-6 meal ideas that address the user's specific nutritional needs, deficiencies, and goals based on their eating patterns AND personal profile (age, sex, weight goals, activity level, medication). Consider their current vs goal weight, activity level, and any weight loss medication when recommending portions and meal types. Include a variety of meal types (breakfast, lunch, dinner, snacks). For each meal idea, include a realistic recipe link (use popular cooking websites like allrecipes.com, foodnetwork.com, or BBC Good Food) and provide 3-4 simple cooking instructions. Keep advice items to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice that considers their personal goals and health status.`
           }
         ],
         response_format: { type: "json_object" },
