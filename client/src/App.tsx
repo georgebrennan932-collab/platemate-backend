@@ -8,6 +8,7 @@ import LandingPage from "@/pages/LandingPage";
 import Home from "@/pages/home";
 import { DiaryPage } from "@/pages/DiaryPage";
 import { DietAdvicePage } from "@/pages/DietAdvicePage";
+import { CoachingPage } from "@/pages/CoachingPage";
 import { GoalsPage } from "@/pages/GoalsPage";
 import { HelpPage } from "@/pages/HelpPage";
 import CalculatorPage from "@/pages/calculator";
@@ -28,6 +29,7 @@ function Router() {
           <Route path="/diary" component={DiaryPage} />
           <Route path="/calculator" component={CalculatorPage} />
           <Route path="/advice" component={DietAdvicePage} />
+          <Route path="/coaching" component={CoachingPage} />
           <Route path="/goals" component={GoalsPage} />
           <Route path="/injection-advice" component={InjectionAdvicePage} />
           <Route path="/help" component={HelpPage} />

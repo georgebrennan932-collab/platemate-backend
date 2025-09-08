@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Camera, Book, Calculator, Target, Syringe } from "lucide-react";
+import { Camera, Book, Calculator, Target, Syringe, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNavigation() {
@@ -19,10 +19,10 @@ export function BottomNavigation() {
       isActive: location === "/diary"
     },
     {
-      href: "/calculator",
-      icon: Calculator,
-      label: "Calculator",
-      isActive: location === "/calculator"
+      href: "/coaching",
+      icon: Brain,
+      label: "Coach",
+      isActive: location === "/coaching"
     },
     {
       href: "/goals",
