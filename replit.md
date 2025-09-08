@@ -1,8 +1,8 @@
 # Overview
 
-PlateMate is a full-stack web application that allows users to analyze food images using AI to automatically identify food items and calculate their nutritional information. Users can upload or capture photos of their meals, and the app provides detailed breakdowns of calories, macronutrients (protein, carbs, fat), and identified food items with portion estimates.
+PlateMate is a full-stack web and native mobile application that allows users to analyze food images using AI to automatically identify food items and calculate their nutritional information. Users can upload or capture photos of their meals, and the app provides detailed breakdowns of calories, macronutrients (protein, carbs, fat), and identified food items with portion estimates.
 
-The application features a mobile-first design with a clean, intuitive interface for food scanning and nutrition tracking. It's built as a Progressive Web App (PWA) suitable for both mobile and desktop use.
+The application features a mobile-first design with a clean, intuitive interface for food scanning and nutrition tracking. It's built as both a Progressive Web App (PWA) and native iOS/Android apps using Capacitor for the best mobile experience.
 
 # User Preferences
 
@@ -52,6 +52,7 @@ Preferred communication style: Simple, everyday language.
 - **UI Icons**: Lucide React for consistent iconography
 - **Development**: Replit-specific tooling for development environment integration
 - **Font Loading**: Google Fonts (Roboto family) and Font Awesome for icons
+- **Mobile Platform**: Capacitor for native iOS and Android app deployment
 
 ## Key Design Decisions
 - **Mobile-First**: Responsive design optimized for mobile food scanning use cases
@@ -61,3 +62,11 @@ Preferred communication style: Simple, everyday language.
 - **Mock AI Integration**: Prepared architecture for external food recognition APIs (Clarifai, Google Vision, etc.)
 - **Progressive Enhancement**: Works without JavaScript for basic functionality
 - **Development Experience**: Hot reloading, TypeScript checking, and integrated error overlays
+- **Native Mobile Features**: Enhanced camera integration, native file access, and platform-specific optimizations
+
+## Mobile App Architecture (Capacitor)
+- **Platform Support**: Native iOS and Android apps with web fallback
+- **Camera Integration**: Native camera API with web camera fallback for better food photography
+- **App Configuration**: Custom app icons, splash screens, and native app settings
+- **Build Process**: Unified build system that generates web and native mobile apps
+- **Plugins**: Camera, Filesystem, Status Bar, Splash Screen, and App plugins integrated
