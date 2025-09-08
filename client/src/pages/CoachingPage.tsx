@@ -355,23 +355,41 @@ export function CoachingPage() {
                         data-testid="switch-reminders"
                       />
                     </div>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setShowReminderSetup(true)}
-                      className="w-full"
-                      data-testid="button-change-time"
-                    >
-                      Change Time
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowReminderSetup(true)}
+                        className="flex-1"
+                        data-testid="button-change-time"
+                      >
+                        Change Time
+                      </Button>
+                      <Button 
+                        onClick={setupReminders}
+                        className="flex-1"
+                        data-testid="button-set-reminder"
+                      >
+                        Set
+                      </Button>
+                    </div>
                   </div>
                 ) : (
-                  <Button 
-                    onClick={setupReminders}
-                    className="w-full" 
-                    data-testid="button-setup-reminders"
-                  >
-                    Set Up Reminders
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="time"
+                      value={reminderTime}
+                      onChange={(e) => setReminderTime(e.target.value)}
+                      className="flex-1"
+                      data-testid="input-quick-time"
+                    />
+                    <Button 
+                      onClick={setupReminders}
+                      className="px-6"
+                      data-testid="button-set-reminders"
+                    >
+                      Set
+                    </Button>
+                  </div>
                 )}
               </>
             ) : (
