@@ -78,27 +78,36 @@ export function StepCounter() {
     const now = Date.now();
     const timeSinceLastStep = now - lastStepTime.current;
     
-    // Calculate magnitude of acceleration
-    const magnitude = Math.sqrt(
-      acceleration.x * acceleration.x +
-      acceleration.y * acceleration.y +
-      acceleration.z * acceleration.z
-    );
+    // Calculate magnitude of acceleration change (more reliable for step detection)
+    const deltaX = acceleration.x - lastAcceleration.current.x;
+    const deltaY = acceleration.y - lastAcceleration.current.y;
+    const deltaZ = acceleration.z - lastAcceleration.current.z;
+    
+    const magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
     
     // Add to buffer for smoothing
     stepBuffer.current.push(magnitude);
-    if (stepBuffer.current.length > 10) {
+    if (stepBuffer.current.length > 20) {
       stepBuffer.current.shift();
     }
     
-    // Calculate average and detect peaks
-    const average = stepBuffer.current.reduce((a, b) => a + b, 0) / stepBuffer.current.length;
-    const threshold = average + 2; // Adjust sensitivity
-    
-    // Detect step if magnitude exceeds threshold and enough time has passed
-    if (magnitude > threshold && timeSinceLastStep > 300) { // Min 300ms between steps
-      lastStepTime.current = now;
-      addSteps(1);
+    // Only start detecting after we have enough data
+    if (stepBuffer.current.length >= 5) {
+      // Calculate average and detect significant changes
+      const average = stepBuffer.current.reduce((a, b) => a + b, 0) / stepBuffer.current.length;
+      const threshold = Math.max(0.5, average + 0.3); // Dynamic threshold with minimum
+      
+      // Debug logging (remove in production)
+      if (magnitude > 0.1) {
+        console.log(`Motion: ${magnitude.toFixed(2)}, Threshold: ${threshold.toFixed(2)}, Time: ${timeSinceLastStep}`);
+      }
+      
+      // Detect step if magnitude exceeds threshold and enough time has passed
+      if (magnitude > threshold && timeSinceLastStep > 400) { // Min 400ms between steps
+        console.log('🚶 Step detected!');
+        lastStepTime.current = now;
+        addSteps(1);
+      }
     }
     
     lastAcceleration.current = acceleration;
@@ -107,7 +116,7 @@ export function StepCounter() {
   // Start/stop automatic step tracking
   const toggleAutoTracking = async () => {
     if (!hasMotionPermission) {
-      alert('Motion sensor permission is required for automatic step tracking');
+      alert('Motion sensor permission is required for automatic step tracking. On mobile devices, you may need to enable motion access in your browser settings.');
       return;
     }
 
@@ -123,9 +132,15 @@ export function StepCounter() {
       }
       setIsAutoTracking(false);
       localStorage.setItem('platemate-auto-tracking', 'false');
+      console.log('Step tracking stopped');
     } else {
       // Start tracking
       try {
+        // Reset detection variables
+        stepBuffer.current = [];
+        lastStepTime.current = 0;
+        lastAcceleration.current = { x: 0, y: 0, z: 0 };
+        
         if (Capacitor.isNativePlatform()) {
           // Use Capacitor Motion API for native apps
           const listener = await Motion.addListener('accel', (event: any) => {
@@ -136,6 +151,7 @@ export function StepCounter() {
             });
           });
           motionListener.current = listener;
+          console.log('Capacitor motion listener started');
         } else {
           // Use DeviceMotionEvent for web
           const handleMotion = (event: DeviceMotionEvent) => {
@@ -150,13 +166,14 @@ export function StepCounter() {
           
           window.addEventListener('devicemotion', handleMotion);
           motionListener.current = handleMotion;
+          console.log('Device motion listener started - try walking with your device!');
         }
         
         setIsAutoTracking(true);
         localStorage.setItem('platemate-auto-tracking', 'true');
       } catch (error) {
         console.error('Failed to start motion tracking:', error);
-        alert('Failed to start automatic step tracking');
+        alert('Failed to start automatic step tracking. Make sure your device supports motion sensors and you\'re using HTTPS.');
       }
     }
   };
@@ -289,7 +306,8 @@ export function StepCounter() {
                 </button>
                 {isAutoTracking && (
                   <div className="text-xs text-green-600 dark:text-green-400 text-center">
-                    📱 Automatically counting your steps
+                    📱 Automatically counting your steps<br/>
+                    <span className="text-xs opacity-75">Try walking around with your device</span>
                   </div>
                 )}
               </div>
@@ -341,6 +359,22 @@ export function StepCounter() {
                 </button>
               </div>
             </div>
+
+            {/* Test button for debugging */}
+            {isAutoTracking && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Test Detection</div>
+                <button
+                  onClick={() => {
+                    console.log('Test step added');
+                    addSteps(1);
+                  }}
+                  className="w-full px-3 py-1 text-xs border border-blue-300 text-blue-600 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                >
+                  Add Test Step
+                </button>
+              </div>
+            )}
 
             {/* Goal setting */}
             <div className="space-y-2">
