@@ -3,7 +3,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen, Clock, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +36,30 @@ export function CoachingPage() {
   const [showReminderSetup, setShowReminderSetup] = useState(false);
   const [reminderTime, setReminderTime] = useState('09:00');
   const [reminderEnabled, setReminderEnabled] = useState(false);
+
+  // Load reminder settings from localStorage on component mount
+  useEffect(() => {
+    const savedTime = localStorage.getItem('platemate-reminder-time');
+    const savedEnabled = localStorage.getItem('platemate-reminder-enabled');
+    
+    if (savedTime) {
+      setReminderTime(savedTime);
+    }
+    if (savedEnabled === 'true') {
+      setReminderEnabled(true);
+    }
+  }, []);
+
+  // Save reminder settings to localStorage whenever they change
+  const saveReminderTime = (time: string) => {
+    setReminderTime(time);
+    localStorage.setItem('platemate-reminder-time', time);
+  };
+
+  const saveReminderEnabled = (enabled: boolean) => {
+    setReminderEnabled(enabled);
+    localStorage.setItem('platemate-reminder-enabled', enabled.toString());
+  };
 
   const { data: coaching, isLoading: coachingLoading, refetch: refetchCoaching } = useQuery<DailyCoaching>({
     queryKey: ['/api/coaching/daily'],
@@ -70,7 +94,7 @@ export function CoachingPage() {
   const setupReminders = () => {
     if (showReminderSetup) {
       // Save reminder settings
-      setReminderEnabled(true);
+      saveReminderEnabled(true);
       setShowReminderSetup(false);
       toast({
         title: "Reminders Set!",
@@ -82,7 +106,7 @@ export function CoachingPage() {
   };
 
   const toggleReminders = (enabled: boolean) => {
-    setReminderEnabled(enabled);
+    saveReminderEnabled(enabled);
     if (enabled) {
       toast({
         title: "Reminders Enabled",
@@ -378,7 +402,7 @@ export function CoachingPage() {
                     <Input
                       type="time"
                       value={reminderTime}
-                      onChange={(e) => setReminderTime(e.target.value)}
+                      onChange={(e) => saveReminderTime(e.target.value)}
                       className="flex-1"
                       data-testid="input-quick-time"
                     />
@@ -400,7 +424,7 @@ export function CoachingPage() {
                     id="reminder-time"
                     type="time"
                     value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
+                    onChange={(e) => saveReminderTime(e.target.value)}
                     data-testid="input-reminder-time"
                   />
                 </div>
