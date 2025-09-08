@@ -2,8 +2,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users, Send, Bot, ChefHat, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users, Send, Bot, ChefHat, ExternalLink, Mic, MicOff } from "lucide-react";
+import { useState, useEffect } from "react";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,49 @@ export function DietAdvicePage() {
   const [adviceType, setAdviceType] = useState<"personalized" | "general">("personalized");
   const [question, setQuestion] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [speechService, setSpeechService] = useState<any>(null);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    const initSpeech = async () => {
+      try {
+        const { speechService: service } = await import('@/lib/speech-service');
+        setSpeechService(service);
+        setSpeechSupported(service.isSupported());
+        
+        // Register a temporary command for capturing questions
+        service.registerCommand('capture-question', {
+          command: 'capture-question',
+          phrases: [], // We'll use this differently
+          action: () => {}, // Won't be used
+          description: 'Capture nutrition question',
+          category: 'action' as any
+        });
+
+        // Set up speech event handler
+        const handleSpeechEvent = (event: any) => {
+          if (event.type === 'listening-start') {
+            setIsListening(true);
+          } else if (event.type === 'listening-end') {
+            setIsListening(false);
+          }
+        };
+
+        service.on(handleSpeechEvent);
+
+        return () => {
+          service.off(handleSpeechEvent);
+        };
+      } catch (error) {
+        console.log('Speech recognition not available');
+        setSpeechSupported(false);
+      }
+    };
+
+    initSpeech();
+  }, []);
 
   const { data: advice, isLoading, refetch } = useQuery<DietAdvice>({
     queryKey: ['/api/diet-advice'],
@@ -106,6 +149,62 @@ export function DietAdvicePage() {
     askAIMutation.mutate(question.trim());
   };
 
+  const handleVoiceInput = async () => {
+    if (!speechService || !speechSupported) return;
+
+    if (isListening) {
+      speechService.stopListening();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      // Create a custom recognition instance for question capture
+      const recognition = new (window.SpeechRecognition || (window as any).webkitSpeechRecognition)();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        toast({
+          title: "Listening...",
+          description: "Ask your nutrition question now",
+        });
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setQuestion(transcript);
+        toast({
+          title: "Question captured!",
+          description: "Your voice question has been converted to text",
+        });
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        toast({
+          title: "Speech Error",
+          description: "Could not recognize speech. Please try again.",
+          variant: "destructive",
+        });
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (error) {
+      toast({
+        title: "Speech Not Available",
+        description: "Speech recognition is not supported in this browser",
+        variant: "destructive",
+      });
+    }
+  };
+
   const generalTips = [
     {
       icon: <Heart className="h-5 w-5 text-red-500" />,
@@ -163,13 +262,31 @@ export function DietAdvicePage() {
           <CardContent className="space-y-4">
             <form onSubmit={handleAskAI} className="flex gap-2">
               <Input
-                placeholder="Ask me anything about nutrition..."
+                placeholder={isListening ? "Listening..." : "Ask me anything about nutrition..."}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                disabled={askAIMutation.isPending}
+                disabled={askAIMutation.isPending || isListening}
                 data-testid="input-ai-question"
                 className="flex-1"
               />
+              
+              {speechSupported && (
+                <Button
+                  type="button"
+                  onClick={handleVoiceInput}
+                  disabled={askAIMutation.isPending}
+                  variant={isListening ? "destructive" : "outline"}
+                  className={isListening ? "animate-pulse" : ""}
+                  data-testid="button-voice-input"
+                >
+                  {isListening ? (
+                    <MicOff className="h-4 w-4" />
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+              
               <Button 
                 type="submit" 
                 disabled={askAIMutation.isPending || !question.trim()}
