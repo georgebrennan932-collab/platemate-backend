@@ -336,8 +336,17 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                       <FormControl>
                         <Input 
                           type="number" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow user to clear field completely
+                            if (value === '') {
+                              field.onChange(0);
+                              return;
+                            }
+                            const parsed = parseInt(value);
+                            field.onChange(isNaN(parsed) ? 0 : parsed);
+                          }}
+                          value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-age"
                         />
                       </FormControl>
@@ -377,8 +386,17 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                       <FormControl>
                         <Input 
                           type="number" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow user to clear field completely
+                            if (value === '') {
+                              field.onChange(0);
+                              return;
+                            }
+                            const parsed = parseInt(value);
+                            field.onChange(isNaN(parsed) ? 0 : parsed);
+                          }}
+                          value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-height"
                         />
                       </FormControl>
@@ -399,8 +417,17 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                       <FormControl>
                         <Input 
                           type="number" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow user to clear field completely
+                            if (value === '') {
+                              field.onChange(0);
+                              return;
+                            }
+                            const parsed = parseInt(value);
+                            field.onChange(isNaN(parsed) ? 0 : parsed);
+                          }}
+                          value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-current-weight"
                         />
                       </FormControl>
@@ -421,8 +448,17 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                       <FormControl>
                         <Input 
                           type="number" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow user to clear field completely
+                            if (value === '') {
+                              field.onChange(0);
+                              return;
+                            }
+                            const parsed = parseInt(value);
+                            field.onChange(isNaN(parsed) ? 0 : parsed);
+                          }}
+                          value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-goal-weight"
                         />
                       </FormControl>
@@ -495,8 +531,17 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                         <Input 
                           type="number" 
                           step="0.1"
-                          {...field} 
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow user to clear field completely
+                            if (value === '') {
+                              field.onChange(0);
+                              return;
+                            }
+                            const parsed = parseFloat(value);
+                            field.onChange(isNaN(parsed) ? 0 : parsed);
+                          }}
+                          value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-weekly-change"
                           placeholder="0.5"
                         />
