@@ -66,7 +66,14 @@ export class AIManager {
             carbs: 42,
             fat: 12,
             ingredients: ["rolled oats", "Greek yogurt", "mixed berries", "almonds", "chia seeds"],
-            benefits: "High in protein and fiber to keep you full and energized throughout the morning"
+            benefits: "High in protein and fiber to keep you full and energized throughout the morning",
+            recipeLink: "https://www.allrecipes.com/recipe/276934/overnight-oats/",
+            cookingInstructions: [
+              "Mix 1/2 cup rolled oats with 1/2 cup Greek yogurt in a jar",
+              "Add 1 tbsp chia seeds and 1/4 cup milk, stir well",
+              "Refrigerate overnight or at least 4 hours",
+              "Top with berries and chopped almonds before serving"
+            ]
           },
           {
             mealType: "lunch" as const,
@@ -77,7 +84,14 @@ export class AIManager {
             carbs: 48,
             fat: 15,
             ingredients: ["quinoa", "grilled chicken", "cucumber", "tomatoes", "feta cheese", "olive oil"],
-            benefits: "Balanced nutrients with healthy fats and complete proteins for sustained energy"
+            benefits: "Balanced nutrients with healthy fats and complete proteins for sustained energy",
+            recipeLink: "https://www.bbcgoodfood.com/recipes/mediterranean-quinoa-salad",
+            cookingInstructions: [
+              "Cook 1/2 cup quinoa according to package directions and let cool",
+              "Grill 4oz chicken breast and slice into strips",
+              "Dice cucumber and tomatoes, crumble feta cheese",
+              "Combine all ingredients and drizzle with olive oil and lemon"
+            ]
           },
           {
             mealType: "dinner" as const,
@@ -88,7 +102,14 @@ export class AIManager {
             carbs: 32,
             fat: 22,
             ingredients: ["salmon fillet", "sweet potato", "broccoli", "olive oil", "herbs"],
-            benefits: "Rich in omega-3s and antioxidants to support heart health and recovery"
+            benefits: "Rich in omega-3s and antioxidants to support heart health and recovery",
+            recipeLink: "https://www.foodnetwork.com/recipes/baked-salmon-with-sweet-potato",
+            cookingInstructions: [
+              "Preheat oven to 400°F and line baking sheet with parchment",
+              "Cut sweet potato into cubes and toss with olive oil, roast 20 minutes",
+              "Season salmon with herbs and bake alongside vegetables for 12-15 minutes",
+              "Steam broccoli for 4-5 minutes and serve everything together"
+            ]
           },
           {
             mealType: "snack" as const,
@@ -99,7 +120,14 @@ export class AIManager {
             carbs: 20,
             fat: 12,
             ingredients: ["apple", "almond butter"],
-            benefits: "Combines fiber and healthy fats for stable blood sugar and lasting satiety"
+            benefits: "Combines fiber and healthy fats for stable blood sugar and lasting satiety",
+            recipeLink: "https://www.eatingwell.com/recipe/276009/apple-with-almond-butter/",
+            cookingInstructions: [
+              "Wash and core a medium apple, slice into 8 wedges",
+              "Measure 2 tablespoons natural almond butter",
+              "Arrange apple slices on plate with almond butter for dipping",
+              "Sprinkle with cinnamon for extra flavor (optional)"
+            ]
           }
         ]
       },

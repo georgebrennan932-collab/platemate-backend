@@ -206,12 +206,18 @@ Please provide advice in the following JSON format:
       "carbs": 35,
       "fat": 15,
       "ingredients": ["ingredient1", "ingredient2", "ingredient3"],
-      "benefits": "Why this meal is good for the user based on their patterns"
+      "benefits": "Why this meal is good for the user based on their patterns",
+      "recipeLink": "https://www.example.com/recipe-name",
+      "cookingInstructions": [
+        "Step 1: Brief cooking instruction",
+        "Step 2: Next step in preparation",
+        "Step 3: Final cooking steps"
+      ]
     }
   ]
 }
 
-Generate 4-6 meal ideas that address the user's specific nutritional needs, deficiencies, or goals based on their eating patterns. Include a variety of meal types (breakfast, lunch, dinner, snacks). Keep advice items to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice.`
+Generate 4-6 meal ideas that address the user's specific nutritional needs, deficiencies, or goals based on their eating patterns. Include a variety of meal types (breakfast, lunch, dinner, snacks). For each meal idea, include a realistic recipe link (use popular cooking websites like allrecipes.com, foodnetwork.com, or BBC Good Food) and provide 3-4 simple cooking instructions. Keep advice items to 1-2 sentences. Be encouraging and specific. Focus on practical, actionable advice.`
           }
         ],
         response_format: { type: "json_object" },
