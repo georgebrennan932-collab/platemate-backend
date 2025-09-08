@@ -2,9 +2,12 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users } from "lucide-react";
+import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users, Send, Bot } from "lucide-react";
 import { useState } from "react";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MealIdea {
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -26,9 +29,18 @@ interface DietAdvice {
   mealIdeas?: MealIdea[];
 }
 
+interface ChatMessage {
+  id: string;
+  question: string;
+  answer: string;
+  timestamp: string;
+}
+
 export function DietAdvicePage() {
   const { toast } = useToast();
   const [adviceType, setAdviceType] = useState<"personalized" | "general">("personalized");
+  const [question, setQuestion] = useState("");
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
   const { data: advice, isLoading, refetch } = useQuery<DietAdvice>({
     queryKey: ['/api/diet-advice'],
@@ -56,6 +68,41 @@ export function DietAdvicePage() {
       console.error("Error generating advice:", error);
     },
   });
+
+  const askAIMutation = useMutation({
+    mutationFn: async (question: string) => {
+      const response = await apiRequest('POST', '/api/ai/ask', { question });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      const newMessage: ChatMessage = {
+        id: Date.now().toString(),
+        question: data.question,
+        answer: data.answer,
+        timestamp: data.timestamp
+      };
+      setChatHistory(prev => [newMessage, ...prev]);
+      setQuestion("");
+      toast({
+        title: "AI Response Received!",
+        description: "Your nutrition question has been answered.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to get AI response. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error asking AI:", error);
+    },
+  });
+
+  const handleAskAI = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!question.trim()) return;
+    askAIMutation.mutate(question.trim());
+  };
 
   const generalTips = [
     {
@@ -103,6 +150,66 @@ export function DietAdvicePage() {
       </div>
 
       <div className="max-w-md mx-auto p-4">
+        {/* Ask AI Section */}
+        <Card className="health-card mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5 text-primary" />
+              Ask AI Nutrition Assistant
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleAskAI} className="flex gap-2">
+              <Input
+                placeholder="Ask me anything about nutrition..."
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                disabled={askAIMutation.isPending}
+                data-testid="input-ai-question"
+                className="flex-1"
+              />
+              <Button 
+                type="submit" 
+                disabled={askAIMutation.isPending || !question.trim()}
+                className="vibrant-button"
+                data-testid="button-ask-ai"
+              >
+                {askAIMutation.isPending ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </form>
+
+            {/* Chat History */}
+            {chatHistory.length > 0 && (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {chatHistory.map((message) => (
+                  <div key={message.id} className="space-y-2 p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Bot className="h-3 w-3 text-primary" />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="text-sm font-medium text-primary">
+                          Q: {message.question}
+                        </div>
+                        <div className="text-sm text-muted-foreground leading-relaxed">
+                          {message.answer}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(message.timestamp).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Tab Navigation */}
         <div className="flex space-x-2 mb-6">
           <button

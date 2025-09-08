@@ -257,10 +257,37 @@ Generate 4-6 meal ideas that address the user's specific nutritional needs, defi
     }
   }
 
+  private prepareNutritionContextData(entries: DiaryEntry[]) {
+    if (!entries || entries.length === 0) {
+      return "No recent meal data available.";
+    }
+
+    const summary = {
+      totalMeals: entries.length,
+      recentMeals: entries.slice(0, 10).map(entry => ({
+        date: entry.createdAt.toISOString().split('T')[0],
+        mealType: entry.mealType,
+        calories: entry.analysis?.totalCalories || 0,
+        protein: entry.analysis?.totalProtein || 0,
+        carbs: entry.analysis?.totalCarbs || 0,
+        fat: entry.analysis?.totalFat || 0,
+        foods: entry.analysis?.detectedFoods?.map(f => f.name).join(', ') || 'Unknown'
+      })),
+      averageDaily: {
+        calories: Math.round(entries.reduce((sum, e) => sum + (e.analysis?.totalCalories || 0), 0) / Math.max(entries.length, 1)),
+        protein: Math.round(entries.reduce((sum, e) => sum + (e.analysis?.totalProtein || 0), 0) / Math.max(entries.length, 1)),
+        carbs: Math.round(entries.reduce((sum, e) => sum + (e.analysis?.totalCarbs || 0), 0) / Math.max(entries.length, 1)),
+        fat: Math.round(entries.reduce((sum, e) => sum + (e.analysis?.totalFat || 0), 0) / Math.max(entries.length, 1))
+      }
+    };
+
+    return JSON.stringify(summary, null, 2);
+  }
+
   async answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string> {
     try {
       // Prepare context from user's nutrition data
-      const contextData = this.prepareAnalysisData(entries);
+      const contextData = this.prepareNutritionContextData(entries);
       
       const response = await this.client.chat.completions.create({
         model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
