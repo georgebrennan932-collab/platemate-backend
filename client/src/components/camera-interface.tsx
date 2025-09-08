@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
 import { Images, Zap, Camera, CloudUpload } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -59,12 +61,70 @@ export function CameraInterface({
     }
   };
 
-  const handleCameraCapture = () => {
-    cameraInputRef.current?.click();
+  const handleCameraCapture = async () => {
+    // Use Capacitor Camera API if available (native app)
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const image = await CapacitorCamera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.Base64,
+          source: CameraSource.Camera,
+        });
+        
+        // Convert base64 to File object
+        const response = await fetch(`data:image/jpeg;base64,${image.base64String}`);
+        const blob = await response.blob();
+        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+        
+        setSelectedFile(file);
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+        
+        // Auto-analyze the captured photo
+        analysisMutation.mutate(file);
+      } catch (error) {
+        console.error('Error taking photo:', error);
+        // Fall back to web camera input
+        cameraInputRef.current?.click();
+      }
+    } else {
+      // Use web camera input for browsers
+      cameraInputRef.current?.click();
+    }
   };
 
-  const handleGallerySelect = () => {
-    fileInputRef.current?.click();
+  const handleGallerySelect = async () => {
+    // Use Capacitor Camera API for gallery selection if available (native app)
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const image = await CapacitorCamera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.Base64,
+          source: CameraSource.Photos,
+        });
+        
+        // Convert base64 to File object
+        const response = await fetch(`data:image/jpeg;base64,${image.base64String}`);
+        const blob = await response.blob();
+        const file = new File([blob], 'gallery-photo.jpg', { type: 'image/jpeg' });
+        
+        setSelectedFile(file);
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+        
+        // Auto-analyze the selected photo
+        analysisMutation.mutate(file);
+      } catch (error) {
+        console.error('Error selecting photo:', error);
+        // Fall back to file input
+        fileInputRef.current?.click();
+      }
+    } else {
+      // Use file input for browsers
+      fileInputRef.current?.click();
+    }
   };
 
   return (
