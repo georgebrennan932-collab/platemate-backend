@@ -203,19 +203,35 @@ export default function LandingPage() {
           <p className="text-xl opacity-90 mb-6 animate-fade-in-up animation-delay-5100 relative z-10">
             Join thousands of users who are already making healthier choices with PlateMate.
           </p>
-          <Link href="/scan">
-            <Button 
-              size="lg" 
-              variant="secondary"
-              className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-2 transition-all duration-300 animate-bounce relative z-10 group/button overflow-hidden"
-              data-testid="button-start-now"
-            >
-              {/* Button shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-              <Camera className="h-6 w-6 mr-2 animate-pulse" />
-              Start Your Journey Now
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <Link href="/scan">
+              <Button 
+                size="lg" 
+                variant="secondary"
+                className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-2 transition-all duration-300 animate-bounce relative z-10 group/button overflow-hidden"
+                data-testid="button-start-now"
+              >
+                {/* Button shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
+                <Camera className="h-6 w-6 mr-2 animate-pulse" />
+                Start Your Journey Now
+              </Button>
+            </Link>
+          ) : (
+            <a href="/api/login">
+              <Button 
+                size="lg" 
+                variant="secondary"
+                className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-2 transition-all duration-300 animate-bounce relative z-10 group/button overflow-hidden"
+                data-testid="button-start-now"
+              >
+                {/* Button shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
+                <Camera className="h-6 w-6 mr-2 animate-pulse" />
+                Start Your Journey Now
+              </Button>
+            </a>
+          )}
         </div>
       </main>
 
