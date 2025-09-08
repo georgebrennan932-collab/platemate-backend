@@ -17,7 +17,7 @@ export interface SpeechEvent {
 export type SpeechHandler = (event: SpeechEvent) => void;
 
 class SpeechService {
-  private recognition: SpeechRecognition | null = null;
+  private recognition: any = null;
   private isListening = false;
   private isEnabled = false;
   private handlers: SpeechHandler[] = [];
@@ -66,7 +66,7 @@ class SpeechService {
         }
       };
 
-      this.recognition.onresult = (event) => {
+      this.recognition.onresult = (event: any) => {
         const results = Array.from(event.results);
         const transcript = results[results.length - 1]?.[0]?.transcript?.toLowerCase() || '';
         const confidence = results[results.length - 1]?.[0]?.confidence || 0;
@@ -78,7 +78,7 @@ class SpeechService {
         }
       };
 
-      this.recognition.onerror = (event) => {
+      this.recognition.onerror = (event: any) => {
         console.error('🎤 Speech recognition error:', event.error);
         this.triggerEvent({ 
           type: 'error', 
@@ -109,10 +109,10 @@ class SpeechService {
     }
 
     // Find matching command
-    for (const [commandId, voiceCommand] of this.voiceCommands) {
-      const matched = voiceCommand.phrases.find(phrase => {
+    for (const [commandId, voiceCommand] of Array.from(this.voiceCommands.entries())) {
+      const matched = voiceCommand.phrases.find((phrase: string) => {
         const words = phrase.toLowerCase().split(' ');
-        return words.every(word => transcript.includes(word));
+        return words.every((word: string) => transcript.includes(word));
       });
 
       if (matched && confidence > 0.6) {
@@ -242,8 +242,18 @@ class SpeechService {
 // Extend window interface for TypeScript
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+  
+  interface SpeechRecognitionEvent extends Event {
+    results: SpeechRecognitionResultList;
+    resultIndex: number;
+  }
+  
+  interface SpeechRecognitionErrorEvent extends Event {
+    error: string;
+    message?: string;
   }
 }
 

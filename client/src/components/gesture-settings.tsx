@@ -14,8 +14,11 @@ import {
   Settings, 
   TestTube2,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Mic
 } from 'lucide-react';
+import { SpeechSettings } from '@/components/speech-settings';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function GestureSettings() {
   const [settings, setSettings] = useState(gestureService.getSettings());
@@ -73,7 +76,19 @@ export function GestureSettings() {
   };
 
   return (
-    <div className="space-y-6">
+    <Tabs defaultValue="gestures" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="gestures" className="flex items-center space-x-2">
+          <Zap className="h-4 w-4" />
+          <span>Gestures</span>
+        </TabsTrigger>
+        <TabsTrigger value="speech" className="flex items-center space-x-2">
+          <Mic className="h-4 w-4" />
+          <span>Speech</span>
+        </TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="gestures" className="space-y-6">
       {/* Main Toggle */}
       <Card>
         <CardHeader>
@@ -326,6 +341,11 @@ export function GestureSettings() {
           </Card>
         </>
       )}
-    </div>
+      </TabsContent>
+      
+      <TabsContent value="speech" className="space-y-6">
+        <SpeechSettings />
+      </TabsContent>
+    </Tabs>
   );
 }
