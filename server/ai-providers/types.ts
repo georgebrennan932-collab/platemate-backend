@@ -96,6 +96,7 @@ export abstract class AIProvider {
   protected lastSuccess?: Date;
 
   abstract analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult>;
+  abstract analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult>;
   abstract generateDietAdvice(entries: DiaryEntry[], userProfile?: any): Promise<DietAdviceResult>;
   abstract answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string>;
   abstract generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching>;

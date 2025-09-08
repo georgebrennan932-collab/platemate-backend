@@ -96,6 +96,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Text-based food analysis for voice input
+  app.post("/api/analyze-text", async (req, res) => {
+    try {
+      const { foodDescription } = req.body;
+      
+      if (!foodDescription || typeof foodDescription !== 'string') {
+        return res.status(400).json({ error: "Food description is required" });
+      }
+
+      // Use AI manager to analyze text-based food description
+      const foodAnalysisData = await aiManager.analyzeFoodText(foodDescription.trim());
+
+      // Create food analysis record
+      const analysis = await storage.createFoodAnalysis(foodAnalysisData);
+
+      res.json(analysis);
+    } catch (error) {
+      console.error("Text analysis error:", error);
+      res.status(500).json({ error: "Failed to analyze food description" });
+    }
+  });
+
   // Get analysis history
   app.get("/api/analyses", async (req, res) => {
     try {

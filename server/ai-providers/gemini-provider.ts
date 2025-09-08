@@ -141,6 +141,127 @@ Be as accurate as possible with portion estimates and nutritional values. If you
     }
   }
 
+  async analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
+    try {
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error("GEMINI_API_KEY not configured");
+      }
+
+      const prompt = `Analyze this food description and extract nutritional information. Parse the quantity, unit, and food name from: "${foodDescription}"
+
+For example:
+- "100g salmon" → 100 grams of salmon
+- "one apple" → 1 medium apple (about 150g)
+- "two slices of bread" → 2 slices (about 56g)
+- "half cup rice" → 0.5 cups cooked rice
+
+Provide accurate nutritional information based on standard USDA values. Return the response as a JSON object with this exact structure:
+
+{
+  "confidence": number (0-100),
+  "detectedFoods": [
+    {
+      "name": "Food Name",
+      "portion": "interpreted portion size with units",
+      "calories": number,
+      "protein": number,
+      "carbs": number,
+      "fat": number,
+      "icon": "🍽️"
+    }
+  ]
+}
+
+Be as accurate as possible with portion estimates and nutritional values. Use standard USDA nutritional values. Only return the JSON object, no additional text.`;
+
+      const response = await this.client.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      const responseText = response.text;
+      
+      if (!responseText) {
+        throw new Error("No response from Gemini");
+      }
+
+      // Clean the response text by removing markdown formatting
+      const cleanedText = responseText
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .trim();
+
+      // Parse the JSON response
+      const parsed = JSON.parse(cleanedText);
+      
+      // Validate the response structure
+      if (!parsed.detectedFoods || !Array.isArray(parsed.detectedFoods)) {
+        throw new Error("Invalid response format from Gemini");
+      }
+
+      // Calculate totals and round to integers for database compatibility
+      const totalCalories = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.calories || 0), 0));
+      const totalProtein = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.protein || 0), 0));
+      const totalCarbs = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.carbs || 0), 0));
+      const totalFat = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.fat || 0), 0));
+
+      // Round nutritional values in detected foods
+      const roundedDetectedFoods = parsed.detectedFoods.map((food: any) => ({
+        ...food,
+        calories: Math.round(food.calories || 0),
+        protein: Math.round(food.protein || 0),
+        carbs: Math.round(food.carbs || 0),
+        fat: Math.round(food.fat || 0),
+        icon: food.icon || '🍽️'
+      }));
+
+      const result: FoodAnalysisResult = {
+        imageUrl: `voice-input-${Date.now()}.txt`, // Placeholder for voice input
+        confidence: Math.round(parsed.confidence || 85),
+        totalCalories,
+        totalProtein,
+        totalCarbs,
+        totalFat,
+        detectedFoods: roundedDetectedFoods
+      };
+
+      this.recordSuccess();
+      return result;
+
+    } catch (error: any) {
+      console.error("Gemini text analysis error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.message?.includes('quota') || error?.message?.includes('rate')) {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'Gemini rate limit exceeded',
+          true,
+          true,
+          120 // Retry after 2 minutes
+        );
+      } else if (error?.message?.includes('GEMINI_API_KEY')) {
+        providerError = this.createError(
+          'CONFIG_ERROR',
+          'Gemini API key not configured',
+          false,
+          false
+        );
+      } else {
+        providerError = this.createError(
+          'ANALYSIS_ERROR',
+          `Gemini text analysis failed: ${error.message}`,
+          false,
+          false
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
+
   async generateDietAdvice(entries: DiaryEntry[], userProfile?: any): Promise<DietAdviceResult> {
     try {
       if (!process.env.GEMINI_API_KEY) {

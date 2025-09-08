@@ -242,6 +242,120 @@ export class AIManager {
   }
 
   /**
+   * Analyze food from text description using the best available provider with intelligent fallback
+   */
+  async analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
+    const availableProviders = this.getAvailableProviders();
+    
+    // Try each available provider in priority order
+    for (const provider of availableProviders) {
+      for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
+        try {
+          console.log(`Attempting text analysis with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
+          
+          const result = await provider.analyzeFoodText(foodDescription);
+          
+          console.log(`✓ Text analysis successful with ${provider.name}`);
+          return {
+            ...result,
+            imageUrl: `voice-input-${Date.now()}.txt` // Placeholder for text input
+          };
+          
+        } catch (error: any) {
+          console.log(`✗ Text analysis failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
+          
+          // If it's a rate limit error, mark provider as temporarily unavailable
+          if (error.isRateLimit) {
+            console.log(`${provider.name} hit rate limit, trying next provider`);
+            break; // Move to next provider immediately
+          }
+          
+          // If it's the last attempt with this provider, continue to next provider
+          if (attempt === provider.maxRetries) {
+            console.log(`${provider.name} exhausted all retries, trying next provider`);
+            break;
+          }
+          
+          // Wait before retry (exponential backoff)
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          await this.sleep(waitTime);
+        }
+      }
+    }
+
+    // All providers failed, return helpful fallback data based on the food description
+    console.log("All AI providers failed for text analysis, returning fallback data");
+    
+    // Try to extract basic info from the input for a more helpful fallback
+    const lowerDesc = foodDescription.toLowerCase();
+    let fallbackFood = "Mixed Food";
+    let fallbackCalories = 200;
+    let fallbackProtein = 10;
+    let fallbackCarbs = 20;
+    let fallbackFat = 8;
+    let fallbackIcon = "🍽️";
+
+    // Simple keyword matching for better fallbacks
+    if (lowerDesc.includes('apple')) {
+      fallbackFood = "Apple";
+      fallbackCalories = 80;
+      fallbackProtein = 0;
+      fallbackCarbs = 21;
+      fallbackFat = 0;
+      fallbackIcon = "🍎";
+    } else if (lowerDesc.includes('banana')) {
+      fallbackFood = "Banana";
+      fallbackCalories = 105;
+      fallbackProtein = 1;
+      fallbackCarbs = 27;
+      fallbackFat = 0;
+      fallbackIcon = "🍌";
+    } else if (lowerDesc.includes('salmon') || lowerDesc.includes('fish')) {
+      fallbackFood = "Fish/Salmon";
+      fallbackCalories = 200;
+      fallbackProtein = 25;
+      fallbackCarbs = 0;
+      fallbackFat = 12;
+      fallbackIcon = "🐟";
+    } else if (lowerDesc.includes('chicken')) {
+      fallbackFood = "Chicken";
+      fallbackCalories = 165;
+      fallbackProtein = 31;
+      fallbackCarbs = 0;
+      fallbackFat = 4;
+      fallbackIcon = "🍗";
+    } else if (lowerDesc.includes('rice')) {
+      fallbackFood = "Rice";
+      fallbackCalories = 130;
+      fallbackProtein = 3;
+      fallbackCarbs = 28;
+      fallbackFat = 0;
+      fallbackIcon = "🍚";
+    }
+
+    return {
+      imageUrl: `voice-input-${Date.now()}.txt`,
+      confidence: 0,
+      detectedFoods: [
+        {
+          name: fallbackFood,
+          portion: "estimated portion",
+          calories: fallbackCalories,
+          protein: fallbackProtein,
+          carbs: fallbackCarbs,
+          fat: fallbackFat,
+          icon: fallbackIcon
+        }
+      ],
+      totalCalories: fallbackCalories,
+      totalProtein: fallbackProtein,
+      totalCarbs: fallbackCarbs,
+      totalFat: fallbackFat,
+      isAITemporarilyUnavailable: true // Add this flag for frontend to show message
+    };
+  }
+
+  /**
    * Generate diet advice using the best available provider with intelligent fallback
    */
   async generateDietAdvice(entries: DiaryEntry[], userProfile?: any): Promise<DietAdviceResult> {
