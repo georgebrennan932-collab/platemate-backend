@@ -94,6 +94,27 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     },
   });
 
+  const updateGoalsMutation = useMutation({
+    mutationFn: async (goals: { dailyCalories: number; dailyProtein: number; dailyCarbs: number; dailyFat: number; dailyWater: number }) => {
+      await apiRequest('POST', '/api/nutrition-goals', goals);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Goals Updated! 🎯",
+        description: "Your nutrition goals have been updated with the calculated values.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update goals. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error updating goals:", error);
+    },
+  });
+
   // Calculate BMR using Mifflin-St Jeor Equation (more accurate than Harris-Benedict)
   const calculateBMR = (data: ProfileFormData) => {
     const { sex, heightCm, currentWeightKg, age } = data;
@@ -156,6 +177,33 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     
     if (onCaloriesCalculated) {
       onCaloriesCalculated(targetCalories);
+    }
+  };
+
+  // Calculate recommended macronutrient targets based on calculated calories
+  const calculateMacroTargets = (calories: number) => {
+    // Standard macronutrient distribution for balanced diet
+    const proteinCaloriesPercent = 0.25; // 25% protein
+    const carbsCaloriesPercent = 0.45;   // 45% carbs  
+    const fatCaloriesPercent = 0.30;     // 30% fat
+    
+    const proteinGrams = Math.round((calories * proteinCaloriesPercent) / 4); // 4 calories per gram protein
+    const carbsGrams = Math.round((calories * carbsCaloriesPercent) / 4);     // 4 calories per gram carbs
+    const fatGrams = Math.round((calories * fatCaloriesPercent) / 9);         // 9 calories per gram fat
+    
+    return {
+      dailyCalories: calories,
+      dailyProtein: proteinGrams,
+      dailyCarbs: carbsGrams,
+      dailyFat: fatGrams,
+      dailyWater: 2500, // Standard 2.5L water recommendation
+    };
+  };
+
+  const handleUpdateGoals = () => {
+    if (calculatedCalories) {
+      const goals = calculateMacroTargets(calculatedCalories);
+      updateGoalsMutation.mutate(goals);
     }
   };
 
@@ -443,6 +491,46 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                 <li>• <strong>Target:</strong> TDEE adjusted for your weight goal (±{Math.abs(form.getValues('weeklyWeightChangeKg') || 0.5)}kg/week)</li>
                 <li>• <strong>Timeline:</strong> Based on safe weight change rate</li>
               </ul>
+            </div>
+
+            {/* Update Goals Button */}
+            <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                    Update Your Nutrition Goals
+                  </h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                    Set your daily targets to {calculatedCalories} calories with balanced macronutrients:
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div className="text-center">
+                      <div className="font-medium">{calculateMacroTargets(calculatedCalories).dailyCalories}</div>
+                      <div className="text-muted-foreground">Calories</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium">{calculateMacroTargets(calculatedCalories).dailyProtein}g</div>
+                      <div className="text-muted-foreground">Protein</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium">{calculateMacroTargets(calculatedCalories).dailyCarbs}g</div>
+                      <div className="text-muted-foreground">Carbs</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium">{calculateMacroTargets(calculatedCalories).dailyFat}g</div>
+                      <div className="text-muted-foreground">Fat</div>
+                    </div>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleUpdateGoals}
+                  disabled={updateGoalsMutation.isPending}
+                  className="ml-4 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                  data-testid="button-update-goals"
+                >
+                  {updateGoalsMutation.isPending ? 'Updating...' : 'Update Goals'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
