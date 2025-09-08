@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syringe, Target, Activity } from "lucide-react";
+import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syringe, Target, Activity, Mic, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,11 +30,11 @@ export default function LandingPage() {
             <h1 className="text-4xl font-bold animate-fade-in-right">PlateMate</h1>
           </div>
           <p className="text-xl opacity-90 mb-6 animate-fade-in-up animation-delay-300">
-            Your AI-powered nutrition companion
+            Your voice-powered AI nutrition companion
           </p>
           <p className="text-lg opacity-80 max-w-2xl mx-auto animate-fade-in-up animation-delay-600">
-            Instantly analyze your meals with advanced AI technology. Get personalized calorie calculations, 
-            track your eating habits, and receive specialized guidance for weight loss medications.
+            Just speak your meals aloud and watch them automatically appear in your food diary! 
+            Or snap photos for instant AI analysis. Get personalized nutrition guidance with the power of your voice.
           </p>
         </div>
       </header>
@@ -52,8 +52,8 @@ export default function LandingPage() {
               >
                 {/* Animated shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                <Camera className="h-6 w-6 mr-2 animate-bounce" />
-                Start Scanning Food
+                <Mic className="h-6 w-6 mr-2 animate-bounce" />
+                Start Voice Logging
               </Button>
             </Link>
           ) : (
@@ -71,12 +71,25 @@ export default function LandingPage() {
             </a>
           )}
           <p className="text-sm text-muted-foreground mt-3 animate-fade-in animation-delay-1200">
-            Take a photo of your meal to get instant nutrition analysis
+            Say "100g salmon" or "one apple" - your voice becomes your food diary
           </p>
         </div>
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          <Card className="border-blue-200 dark:border-blue-800 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-500 hover:scale-105 animate-fade-in-left animation-delay-1200 group">
+            <CardHeader className="text-center">
+              <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float group-hover:animate-bounce">
+                <Mic className="h-8 w-8 text-blue-600 dark:text-blue-400 group-hover:animate-pulse" />
+              </div>
+              <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">Voice Input</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-center">
+                Simply speak your meals! Say "100g chicken" or "one banana" and watch it automatically appear in your food diary.
+              </CardDescription>
+            </CardContent>
+          </Card>
           <Card className="border-purple-200 dark:border-purple-800 hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 hover:scale-105 hover:-rotate-1 animate-fade-in-left animation-delay-1500 group">
             <CardHeader className="text-center">
               <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float group-hover:animate-bounce">
@@ -139,32 +152,32 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold text-center mb-8 animate-fade-in-up animation-delay-2700">How It Works</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center animate-fade-in-left animation-delay-3000 hover:scale-105 transition-transform duration-300 group">
-              <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-6 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-bounce hover:animate-spin group-hover:shadow-lg">
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">1</span>
+              <div className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 p-6 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-bounce hover:animate-spin group-hover:shadow-lg">
+                <Mic className="h-8 w-8 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-purple-600 transition-colors">Snap a Photo</h3>
+              <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-600 transition-colors">Speak Your Meal</h3>
               <p className="text-muted-foreground">
-                Simply take a picture of your meal using your camera or upload an existing photo.
+                Just say what you ate! "Two slices of pizza" or "100g salmon" - your voice becomes your food diary.
               </p>
             </div>
             
             <div className="text-center animate-fade-in-up animation-delay-3300 hover:scale-105 transition-transform duration-300 group">
               <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-6 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-bounce animation-delay-500 hover:animate-spin group-hover:shadow-lg">
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">2</span>
+                <Brain className="h-8 w-8 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-pink-600 transition-colors">AI Analysis</h3>
+              <h3 className="text-xl font-semibold mb-2 group-hover:text-pink-600 transition-colors">Smart AI Analysis</h3>
               <p className="text-muted-foreground">
-                Our AI instantly identifies food items and calculates detailed nutritional information.
+                Our AI understands your voice and instantly calculates calories, protein, carbs, and fat from what you said.
               </p>
             </div>
             
             <div className="text-center animate-fade-in-right animation-delay-3600 hover:scale-105 transition-transform duration-300 group">
-              <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-6 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-bounce animation-delay-1000 hover:animate-spin group-hover:shadow-lg">
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">3</span>
+              <div className="bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 p-6 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-bounce animation-delay-1000 hover:animate-spin group-hover:shadow-lg">
+                <BookOpen className="h-8 w-8 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-600 transition-colors">Track & Improve</h3>
+              <h3 className="text-xl font-semibold mb-2 group-hover:text-green-600 transition-colors">Auto-Track & Improve</h3>
               <p className="text-muted-foreground">
-                Save to your diary, track your progress, and get personalized nutrition advice.
+                Meals are automatically saved to your diary with beautiful voice thumbnails. Track progress effortlessly.
               </p>
             </div>
           </div>
@@ -223,10 +236,10 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold text-center mb-8">Why Choose PlateMate?</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="flex items-start space-x-3">
-              <Zap className="h-6 w-6 text-yellow-500 mt-1 flex-shrink-0" />
+              <Volume2 className="h-6 w-6 text-blue-500 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-semibold mb-1">Lightning Fast</h3>
-                <p className="text-muted-foreground">Get instant nutrition analysis in seconds with our optimized AI system.</p>
+                <h3 className="text-lg font-semibold mb-1">Voice-Powered Logging</h3>
+                <p className="text-muted-foreground">Speak your meals naturally - "100g salmon" or "one apple" - and watch them appear instantly in your diary.</p>
               </div>
             </div>
             
@@ -261,9 +274,9 @@ export default function LandingPage() {
           {/* Animated background gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-pink-400/50 via-purple-400/50 to-pink-600/50 animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
           
-          <h2 className="text-3xl font-bold mb-4 animate-fade-in-up animation-delay-4800 relative z-10">Ready to Transform Your Nutrition?</h2>
+          <h2 className="text-3xl font-bold mb-4 animate-fade-in-up animation-delay-4800 relative z-10">Ready to Speak Your Way to Better Nutrition?</h2>
           <p className="text-xl opacity-90 mb-6 animate-fade-in-up animation-delay-5100 relative z-10">
-            Join users who are achieving their weight goals with personalized calorie calculations and medication-aware guidance.
+            Join users who are effortlessly tracking meals with voice input and achieving their weight goals with hands-free food logging.
           </p>
           {isAuthenticated ? (
             <Link href="/scan">
@@ -275,8 +288,8 @@ export default function LandingPage() {
               >
                 {/* Button shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-                <Camera className="h-6 w-6 mr-2 animate-pulse" />
-                Start Your Journey Now
+                <Mic className="h-6 w-6 mr-2 animate-pulse" />
+                Start Voice Logging Now
               </Button>
             </Link>
           ) : (
@@ -289,8 +302,8 @@ export default function LandingPage() {
               >
                 {/* Button shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-                <Camera className="h-6 w-6 mr-2 animate-pulse" />
-                Start Your Journey Now
+                <Mic className="h-6 w-6 mr-2 animate-pulse" />
+                Start Voice Logging Now
               </Button>
             </a>
           )}
@@ -305,7 +318,7 @@ export default function LandingPage() {
             <span className="font-semibold hover:text-purple-600 transition-colors cursor-default">PlateMate</span>
           </div>
           <p className="text-sm text-muted-foreground animate-fade-in animation-delay-6300">
-            Your AI-powered nutrition companion for a healthier lifestyle.
+            Your voice-powered AI nutrition companion for effortless meal tracking.
           </p>
         </div>
       </footer>
