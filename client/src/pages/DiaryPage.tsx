@@ -8,12 +8,19 @@ import { Link } from "wouter";
 import { ProgressIndicators } from "@/components/progress-indicators";
 import { WeeklyAnalytics } from "@/components/weekly-analytics";
 import { EditDiaryEntryDialog } from "@/components/edit-diary-entry-dialog";
+import { SearchFilterBar } from "@/components/search-filter-bar";
 import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
 
 export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'diary' | 'analytics'>('diary');
+  
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mealTypeFilter, setMealTypeFilter] = useState('all');
+  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({});
+  const [calorieRange, setCalorieRange] = useState<{ min?: number; max?: number }>({});
 
   const { data: diaryEntries, isLoading } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
@@ -118,7 +125,56 @@ export function DiaryPage() {
   };
 
   const allDates = new Set([...Object.keys(groupedEntries), ...Object.keys(groupedDrinks)]);
-  const sortedDates = Array.from(allDates).sort((a, b) => 
+  // Filter entries based on search and filters
+  const filteredEntries = diaryEntries?.filter(entry => {
+    // Text search
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesFood = entry.analysis?.detectedFoods?.some(food => 
+        food.name.toLowerCase().includes(searchLower)
+      );
+      const matchesNotes = entry.notes?.toLowerCase().includes(searchLower);
+      const matchesMealType = entry.mealType.toLowerCase().includes(searchLower);
+      const matchesCustomName = entry.customMealName?.toLowerCase().includes(searchLower);
+      
+      if (!matchesFood && !matchesNotes && !matchesMealType && !matchesCustomName) {
+        return false;
+      }
+    }
+    
+    // Meal type filter
+    if (mealTypeFilter !== 'all' && entry.mealType !== mealTypeFilter) {
+      return false;
+    }
+    
+    // Date range filter
+    if (dateRange.start || dateRange.end) {
+      const entryDate = new Date(entry.mealDate);
+      if (dateRange.start && entryDate < dateRange.start) return false;
+      if (dateRange.end && entryDate > dateRange.end) return false;
+    }
+    
+    // Calorie range filter
+    if (calorieRange.min || calorieRange.max) {
+      const calories = entry.analysis?.totalCalories || 0;
+      if (calorieRange.min && calories < calorieRange.min) return false;
+      if (calorieRange.max && calories > calorieRange.max) return false;
+    }
+    
+    return true;
+  }) || [];
+  
+  const filteredGroupedEntries = filteredEntries.reduce((groups, entry) => {
+    const date = new Date(entry.mealDate).toDateString();
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(entry);
+    return groups;
+  }, {} as Record<string, DiaryEntryWithAnalysis[]>);
+  
+  const allFilteredDates = new Set([...Object.keys(filteredGroupedEntries), ...Object.keys(groupedDrinks)]);
+  const sortedDates = Array.from(allFilteredDates).sort((a, b) => 
     new Date(b).getTime() - new Date(a).getTime()
   );
 
@@ -197,6 +253,29 @@ export function DiaryPage() {
         </div>
       </div>
 
+      {/* Search and Filter Bar */}
+      {activeTab === 'diary' && (
+        <div className="max-w-md mx-auto px-4 pb-2">
+          <SearchFilterBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            mealTypeFilter={mealTypeFilter}
+            onMealTypeChange={setMealTypeFilter}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            calorieRange={calorieRange}
+            onCalorieRangeChange={setCalorieRange}
+            onClearFilters={() => {
+              setSearchQuery('');
+              setMealTypeFilter('all');
+              setDateRange({});
+              setCalorieRange({});
+            }}
+            hasActiveFilters={searchQuery !== '' || mealTypeFilter !== 'all' || dateRange.start || dateRange.end || calorieRange.min || calorieRange.max}
+          />
+        </div>
+      )}
+      
       {/* Content */}
       <div className="max-w-md mx-auto p-4">
         {activeTab === 'analytics' ? (
@@ -253,15 +332,18 @@ export function DiaryPage() {
                   )}
                 <div className="space-y-2">
                   {/* Food entries */}
-                  {groupedEntries[date]?.map((entry) => (
+                  {filteredGroupedEntries[date]?.map((entry) => (
                     <div key={entry.id} className="bg-card border rounded-lg p-4" data-testid={`diary-entry-${entry.id}`}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                              {entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1)}
+                              {entry.mealType === 'custom' && entry.customMealName 
+                                ? entry.customMealName 
+                                : entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1)
+                              }
                             </span>
-                            <div className="flex items-center text-xs text-muted-foreground">
+                            <div className="flex items-center text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
                               <Clock className="h-3 w-3 mr-1" />
                               {format(new Date(entry.mealDate), 'h:mm a')}
                             </div>

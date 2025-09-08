@@ -54,7 +54,8 @@ export const diaryEntries = pgTable("diary_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   analysisId: varchar("analysis_id").notNull().references(() => foodAnalyses.id),
-  mealType: varchar("meal_type").notNull(), // breakfast, lunch, dinner, snack
+  mealType: varchar("meal_type").notNull(), // breakfast, lunch, dinner, snack, custom
+  customMealName: text("custom_meal_name"), // for custom meal types
   mealDate: timestamp("meal_date").notNull(), // when the meal was eaten
   notes: text("notes"), // optional user notes
   createdAt: timestamp("created_at").notNull().defaultNow(),
