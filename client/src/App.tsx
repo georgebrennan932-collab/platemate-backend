@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { notificationService } from "@/lib/notification-service";
+import { useEffect } from "react";
 import LandingPage from "@/pages/LandingPage";
 import Home from "@/pages/home";
 import { DiaryPage } from "@/pages/DiaryPage";
@@ -41,6 +43,15 @@ function Router() {
 }
 
 function App() {
+  // Initialize notification service when app loads
+  useEffect(() => {
+    notificationService.initialize().then((hasPermission) => {
+      if (hasPermission) {
+        notificationService.resumeWebNotifications();
+      }
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

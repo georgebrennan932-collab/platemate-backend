@@ -2,8 +2,9 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen, Clock, Check } from "lucide-react";
+import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen, Clock, Check, TestTube2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { notificationService } from "@/lib/notification-service";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +49,13 @@ export function CoachingPage() {
     if (savedEnabled === 'true') {
       setReminderEnabled(true);
     }
+
+    // Initialize notification service and resume web notifications
+    notificationService.initialize().then((hasPermission) => {
+      if (hasPermission) {
+        notificationService.resumeWebNotifications();
+      }
+    });
   }, []);
 
   // Save reminder settings to localStorage whenever they change
@@ -56,9 +64,26 @@ export function CoachingPage() {
     localStorage.setItem('platemate-reminder-time', time);
   };
 
-  const saveReminderEnabled = (enabled: boolean) => {
+  const saveReminderEnabled = async (enabled: boolean) => {
     setReminderEnabled(enabled);
     localStorage.setItem('platemate-reminder-enabled', enabled.toString());
+
+    // Schedule or cancel notifications
+    try {
+      await notificationService.scheduleDaily({
+        title: 'PlateMate Daily Coaching',
+        body: '🌟 Your daily motivation and nutrition tips are ready!',
+        time: reminderTime,
+        enabled
+      });
+    } catch (error) {
+      console.error('Failed to schedule notification:', error);
+      toast({
+        title: "Notification Error",
+        description: "Failed to set up notifications. Please check your browser permissions.",
+        variant: "destructive",
+      });
+    }
   };
 
   const { data: coaching, isLoading: coachingLoading, refetch: refetchCoaching } = useQuery<DailyCoaching>({
@@ -91,31 +116,64 @@ export function CoachingPage() {
     },
   });
 
-  const setupReminders = () => {
+  const setupReminders = async () => {
     if (showReminderSetup) {
-      // Save reminder settings
-      saveReminderEnabled(true);
-      setShowReminderSetup(false);
-      toast({
-        title: "Reminders Set!",
-        description: `Daily coaching reminders will be sent at ${reminderTime}`,
-      });
+      try {
+        // Save reminder settings and schedule notifications
+        await saveReminderEnabled(true);
+        setShowReminderSetup(false);
+        toast({
+          title: "Reminders Set!",
+          description: `Daily coaching reminders will be sent at ${reminderTime}`,
+        });
+      } catch (error) {
+        console.error('Failed to setup reminders:', error);
+        toast({
+          title: "Setup Failed",
+          description: "Could not set up reminders. Please check notification permissions.",
+          variant: "destructive",
+        });
+      }
     } else {
       setShowReminderSetup(true);
     }
   };
 
-  const toggleReminders = (enabled: boolean) => {
-    saveReminderEnabled(enabled);
-    if (enabled) {
+  const toggleReminders = async (enabled: boolean) => {
+    try {
+      await saveReminderEnabled(enabled);
+      if (enabled) {
+        toast({
+          title: "Reminders Enabled",
+          description: "You'll receive daily coaching notifications",
+        });
+      } else {
+        toast({
+          title: "Reminders Disabled",
+          description: "Daily coaching notifications turned off",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Reminders Enabled",
-        description: "You'll receive daily coaching notifications",
+        title: "Error",
+        description: "Failed to update reminder settings",
+        variant: "destructive",
       });
-    } else {
+    }
+  };
+
+  const testNotification = async () => {
+    try {
+      await notificationService.testNotification();
       toast({
-        title: "Reminders Disabled",
-        description: "Daily coaching notifications turned off",
+        title: "Test Notification Sent!",
+        description: "Check if you received the notification",
+      });
+    } catch (error) {
+      toast({
+        title: "Test Failed",
+        description: "Could not send test notification. Check permissions.",
+        variant: "destructive",
       });
     }
   };
@@ -412,6 +470,15 @@ export function CoachingPage() {
                       data-testid="button-set-reminders"
                     >
                       Set
+                    </Button>
+                    <Button 
+                      onClick={testNotification}
+                      variant="outline"
+                      size="sm"
+                      className="px-3"
+                      data-testid="button-test-notification"
+                    >
+                      <TestTube2 className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
