@@ -1,5 +1,7 @@
-import { Leaf, History, LogOut, User } from "lucide-react";
+import { History, LogOut, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import type { User as UserType } from "@shared/schema";
+import platemateLogo from "@/assets/platemate-logo.png";
 
 export function AppHeader() {
   const { user, isAuthenticated } = useAuth();
@@ -8,8 +10,13 @@ export function AppHeader() {
     <header className="modern-card glass-enhanced border-b border-border/50 p-4 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-md mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-            <Leaf className="h-6 w-6 text-white" />
+          <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg">
+            <img 
+              src={platemateLogo} 
+              alt="PlateMate Logo" 
+              className="w-full h-full object-contain"
+              data-testid="logo-platemate"
+            />
           </div>
           <h1 className="text-2xl font-bold gradient-text">PlateMate</h1>
         </div>
@@ -19,7 +26,7 @@ export function AppHeader() {
               <div className="flex items-center space-x-2 bg-gradient-to-r from-white/10 to-white/5 dark:from-gray-800/50 dark:to-gray-700/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
                 <User className="h-4 w-4 text-foreground/80" />
                 <span className="text-sm font-medium text-foreground/90">
-                  {(user as any)?.firstName || (user as any)?.email || 'User'}
+                  {(user as UserType)?.firstName || (user as UserType)?.email || 'User'}
                 </span>
               </div>
             </div>
