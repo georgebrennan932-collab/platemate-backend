@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
+import { BottomNavigation } from "@/components/bottom-navigation";
 
 export function HelpPage() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -428,6 +429,12 @@ export function HelpPage() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation />
+      
+      {/* Bottom padding */}
+      <div className="h-20"></div>
     </div>
   );
 }

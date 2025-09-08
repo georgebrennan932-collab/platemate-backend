@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users } from "lucide-react";
 import { useState } from "react";
+import { BottomNavigation } from "@/components/bottom-navigation";
 
 interface MealIdea {
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -310,6 +311,12 @@ export function DietAdvicePage() {
           </div>
         )}
       </div>
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation />
+      
+      {/* Bottom padding */}
+      <div className="h-20"></div>
     </div>
   );
 }

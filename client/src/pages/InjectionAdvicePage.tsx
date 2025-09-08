@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { BottomNavigation } from "@/components/bottom-navigation";
 
 export default function InjectionAdvicePage() {
   return (
@@ -312,8 +313,11 @@ export default function InjectionAdvicePage() {
         </CardContent>
       </Card>
 
-      {/* Bottom spacing */}
-      <div className="h-8"></div>
+      {/* Bottom Navigation */}
+      <BottomNavigation />
+      
+      {/* Bottom padding */}
+      <div className="h-20"></div>
     </div>
   );
 }

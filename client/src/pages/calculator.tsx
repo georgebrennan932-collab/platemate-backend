@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, Target, ArrowLeft } from 'lucide-react';
 import { Link } from 'wouter';
 import type { DiaryEntry, DrinkEntry, FoodAnalysis, DiaryEntryWithAnalysis } from '@shared/schema';
+import { BottomNavigation } from '@/components/bottom-navigation';
 
 export default function CalculatorPage() {
   // Fetch nutrition goals
@@ -134,6 +135,12 @@ export default function CalculatorPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation />
+      
+      {/* Bottom padding */}
+      <div className="h-20"></div>
     </div>
   );
 }

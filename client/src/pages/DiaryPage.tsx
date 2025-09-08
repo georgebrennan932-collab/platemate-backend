@@ -14,6 +14,7 @@ import { AdvancedAnalytics } from "@/components/advanced-analytics";
 import { QuickActionsBar } from "@/components/quick-actions-bar";
 import { DataManagementDialog } from "@/components/data-management-dialog";
 import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
+import { BottomNavigation } from "@/components/bottom-navigation";
 
 export function DiaryPage() {
   const { toast } = useToast();
@@ -512,6 +513,12 @@ export function DiaryPage() {
           </div>
         )}
       </div>
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation />
+      
+      {/* Bottom padding */}
+      <div className="h-20"></div>
     </div>
   );
 }
