@@ -10,6 +10,7 @@ import { DiaryPage } from "@/pages/DiaryPage";
 import { DietAdvicePage } from "@/pages/DietAdvicePage";
 import { GoalsPage } from "@/pages/GoalsPage";
 import { HelpPage } from "@/pages/HelpPage";
+import CalculatorPage from "@/pages/calculator";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/scan" component={Home} />
           <Route path="/diary" component={DiaryPage} />
+          <Route path="/calculator" component={CalculatorPage} />
           <Route path="/advice" component={DietAdvicePage} />
           <Route path="/goals" component={GoalsPage} />
           <Route path="/help" component={HelpPage} />

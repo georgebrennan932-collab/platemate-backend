@@ -118,29 +118,36 @@ export function NutritionCalculator({ goals, consumed }: NutritionCalculatorProp
   };
 
   // Smart food suggestions based on remaining nutrients
-  const getSmartSuggestions = () => {
-    const suggestions = [];
+  const getSmartSuggestions = (): FoodSuggestion[] => {
+    const suggestions: FoodSuggestion[] = [];
     
     if (remaining.protein > 20) {
-      suggestions.push(commonFoods.find(f => f.name === "Grilled Chicken Breast"));
-      suggestions.push(commonFoods.find(f => f.name === "Greek Yogurt"));
+      const chicken = commonFoods.find(f => f.name === "Grilled Chicken Breast");
+      const yogurt = commonFoods.find(f => f.name === "Greek Yogurt");
+      if (chicken) suggestions.push(chicken);
+      if (yogurt) suggestions.push(yogurt);
     }
     
     if (remaining.carbs > 30) {
-      suggestions.push(commonFoods.find(f => f.name === "Brown Rice"));
-      suggestions.push(commonFoods.find(f => f.name === "Sweet Potato"));
+      const rice = commonFoods.find(f => f.name === "Brown Rice");
+      const potato = commonFoods.find(f => f.name === "Sweet Potato");
+      if (rice) suggestions.push(rice);
+      if (potato) suggestions.push(potato);
     }
     
     if (remaining.fat > 10) {
-      suggestions.push(commonFoods.find(f => f.name === "Almonds"));
-      suggestions.push(commonFoods.find(f => f.name === "Salmon Fillet"));
+      const almonds = commonFoods.find(f => f.name === "Almonds");
+      const salmon = commonFoods.find(f => f.name === "Salmon Fillet");
+      if (almonds) suggestions.push(almonds);
+      if (salmon) suggestions.push(salmon);
     }
     
     if (remaining.calories > 200) {
-      suggestions.push(commonFoods.find(f => f.name === "Oatmeal"));
+      const oatmeal = commonFoods.find(f => f.name === "Oatmeal");
+      if (oatmeal) suggestions.push(oatmeal);
     }
     
-    return suggestions.filter(Boolean).slice(0, 4);
+    return suggestions.slice(0, 4);
   };
 
   const calculateProgress = (current: number, target: number) => {

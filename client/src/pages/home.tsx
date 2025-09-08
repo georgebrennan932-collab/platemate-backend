@@ -6,7 +6,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
@@ -64,6 +64,15 @@ export default function Home() {
             >
               <Lightbulb className="h-5 w-5 group-hover:scale-110 smooth-transition" />
               <span>Get Diet Advice</span>
+            </button>
+          </Link>
+          <Link href="/calculator">
+            <button 
+              className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200/50 dark:border-orange-700/30 py-4 px-6 rounded-xl font-medium smooth-transition flex items-center justify-center space-x-3 group"
+              data-testid="button-nutrition-calculator"
+            >
+              <Calculator className="h-5 w-5 text-orange-600 dark:text-orange-400 group-hover:scale-110 smooth-transition" />
+              <span className="text-orange-700 dark:text-orange-300">Nutrition Calculator</span>
             </button>
           </Link>
           <Link href="/goals">
