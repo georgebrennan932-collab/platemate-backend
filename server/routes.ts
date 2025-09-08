@@ -7,6 +7,7 @@ import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
 import path from "path";
+import express from "express";
 import { aiManager } from "./ai-providers/ai-manager";
 
 // Configure multer for image uploads
@@ -23,6 +24,9 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve uploaded images as static files
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  
   // Setup authentication
   await setupAuth(app);
 

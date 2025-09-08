@@ -362,10 +362,14 @@ export function DiaryPage() {
                               {entry.analysis.imageUrl && (
                                 <div className="relative">
                                   <img 
-                                    src={entry.analysis.imageUrl} 
+                                    src={`/${entry.analysis.imageUrl}`} 
                                     alt="Original food photo" 
                                     className="w-full h-32 object-cover rounded-lg border"
                                     data-testid={`food-image-${entry.id}`}
+                                    onError={(e) => {
+                                      // Hide image if it fails to load
+                                      e.currentTarget.style.display = 'none';
+                                    }}
                                   />
                                   <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
                                     {entry.analysis.confidence}% confident
