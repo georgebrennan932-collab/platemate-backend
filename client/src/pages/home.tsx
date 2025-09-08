@@ -6,7 +6,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe } from "lucide-react";
 import type { FoodAnalysis } from "@shared/schema";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
@@ -82,6 +82,15 @@ export default function Home() {
             >
               <Target className="h-5 w-5 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 smooth-transition" />
               <span className="text-emerald-700 dark:text-emerald-300">Set Nutrition Goals</span>
+            </button>
+          </Link>
+          <Link href="/injection-advice">
+            <button 
+              className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-purple-200/50 dark:border-purple-700/30 py-4 px-6 rounded-xl font-medium smooth-transition flex items-center justify-center space-x-3 group"
+              data-testid="button-injection-advice"
+            >
+              <Syringe className="h-5 w-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 smooth-transition" />
+              <span className="text-purple-700 dark:text-purple-300">Weight Loss Injection Guide</span>
             </button>
           </Link>
           <Link href="/help">

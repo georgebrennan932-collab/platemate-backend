@@ -11,6 +11,7 @@ import { DietAdvicePage } from "@/pages/DietAdvicePage";
 import { GoalsPage } from "@/pages/GoalsPage";
 import { HelpPage } from "@/pages/HelpPage";
 import CalculatorPage from "@/pages/calculator";
+import InjectionAdvicePage from "@/pages/InjectionAdvicePage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +29,7 @@ function Router() {
           <Route path="/calculator" component={CalculatorPage} />
           <Route path="/advice" component={DietAdvicePage} />
           <Route path="/goals" component={GoalsPage} />
+          <Route path="/injection-advice" component={InjectionAdvicePage} />
           <Route path="/help" component={HelpPage} />
         </>
       )}
