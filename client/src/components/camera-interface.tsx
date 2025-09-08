@@ -208,26 +208,6 @@ export function CameraInterface({
       </div>
       
       {/* Enhanced Upload alternative */}
-      <div className="p-6 bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
-        <div className="border-2 border-dashed border-gradient-to-r from-blue-300 to-purple-400 dark:from-blue-600 dark:to-purple-500 rounded-2xl p-8 text-center bg-gradient-to-br from-white/80 to-blue-50/80 dark:from-slate-800/80 dark:to-slate-700/80 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-            <CloudUpload className="h-8 w-8 text-white" />
-          </div>
-          <p className="text-slate-700 dark:text-slate-300 mb-4 font-medium" data-testid="text-upload-prompt">
-            Or upload a photo from your gallery
-          </p>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-            Drag & drop or choose a file to analyze your food
-          </p>
-          <button 
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-            onClick={handleGallerySelect}
-            data-testid="button-upload"
-          >
-            Choose File
-          </button>
-        </div>
-      </div>
 
       {/* Hidden file inputs */}
       <input
