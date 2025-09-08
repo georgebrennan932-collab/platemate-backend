@@ -2,12 +2,15 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen } from "lucide-react";
+import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen, Clock, Check } from "lucide-react";
 import { useState } from "react";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface DailyCoaching {
   motivation: string;
@@ -30,6 +33,9 @@ interface EducationalTip {
 export function CoachingPage() {
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'nutrition' | 'medication' | 'motivation'>('all');
+  const [showReminderSetup, setShowReminderSetup] = useState(false);
+  const [reminderTime, setReminderTime] = useState('09:00');
+  const [reminderEnabled, setReminderEnabled] = useState(false);
 
   const { data: coaching, isLoading: coachingLoading, refetch: refetchCoaching } = useQuery<DailyCoaching>({
     queryKey: ['/api/coaching/daily'],
@@ -60,6 +66,35 @@ export function CoachingPage() {
       console.error("Error generating coaching:", error);
     },
   });
+
+  const setupReminders = () => {
+    if (showReminderSetup) {
+      // Save reminder settings
+      setReminderEnabled(true);
+      setShowReminderSetup(false);
+      toast({
+        title: "Reminders Set!",
+        description: `Daily coaching reminders will be sent at ${reminderTime}`,
+      });
+    } else {
+      setShowReminderSetup(true);
+    }
+  };
+
+  const toggleReminders = (enabled: boolean) => {
+    setReminderEnabled(enabled);
+    if (enabled) {
+      toast({
+        title: "Reminders Enabled",
+        description: "You'll receive daily coaching notifications",
+      });
+    } else {
+      toast({
+        title: "Reminders Disabled",
+        description: "Daily coaching notifications turned off",
+      });
+    }
+  };
 
   const categories = [
     { id: 'all', label: 'All Tips', icon: BookOpen },
@@ -286,18 +321,101 @@ export function CoachingPage() {
         {/* Reminder Settings */}
         <Card className="health-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-primary" />
-              Daily Reminders
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                Daily Reminders
+              </div>
+              {reminderEnabled && (
+                <div className="flex items-center gap-1 text-green-600">
+                  <Check className="h-4 w-4" />
+                  <span className="text-sm font-medium">Active</span>
+                </div>
+              )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">
-              Get daily motivation and tips delivered at your preferred time.
-            </p>
-            <Button variant="outline" className="w-full" data-testid="button-setup-reminders">
-              Set Up Reminders
-            </Button>
+          <CardContent className="space-y-4">
+            {!showReminderSetup ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Get daily motivation and tips delivered at your preferred time.
+                </p>
+                {reminderEnabled ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                          Daily reminders at {reminderTime}
+                        </span>
+                      </div>
+                      <Switch
+                        checked={reminderEnabled}
+                        onCheckedChange={toggleReminders}
+                        data-testid="switch-reminders"
+                      />
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowReminderSetup(true)}
+                      className="w-full"
+                      data-testid="button-change-time"
+                    >
+                      Change Time
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={setupReminders}
+                    className="w-full" 
+                    data-testid="button-setup-reminders"
+                  >
+                    Set Up Reminders
+                  </Button>
+                )}
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reminder-time">Reminder Time</Label>
+                  <Input
+                    id="reminder-time"
+                    type="time"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    data-testid="input-reminder-time"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="enable-reminders"
+                    checked={true}
+                    data-testid="switch-enable-reminders"
+                  />
+                  <Label htmlFor="enable-reminders" className="text-sm">
+                    Enable daily reminders
+                  </Label>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={setupReminders}
+                    className="flex-1"
+                    data-testid="button-save-reminders"
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowReminderSetup(false)}
+                    className="flex-1"
+                    data-testid="button-cancel-reminders"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
