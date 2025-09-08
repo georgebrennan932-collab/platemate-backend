@@ -19,6 +19,12 @@ export function BottomNavigation() {
       isActive: location === "/diary"
     },
     {
+      href: "/calculator",
+      icon: Calculator,
+      label: "Calc",
+      isActive: location === "/calculator"
+    },
+    {
       href: "/coaching",
       icon: Brain,
       label: "Coach",
