@@ -30,7 +30,6 @@ export function StepCounter() {
     const initializeMotion = async () => {
       if (Capacitor.isNativePlatform()) {
         try {
-          // Motion API doesn't require explicit permissions on mobile
           setHasMotionPermission(true);
           console.log('✓ Motion sensor access available on native');
         } catch (error) {
@@ -38,12 +37,57 @@ export function StepCounter() {
           setHasMotionPermission(false);
         }
       } else {
-        // Check if DeviceMotionEvent is available on web
+        // Check if DeviceMotionEvent is available and test it
         if ('DeviceMotionEvent' in window) {
-          setHasMotionPermission(true);
-          console.log('✓ Device motion available on web');
+          // Test if motion events actually fire
+          const testMotion = () => {
+            let motionDetected = false;
+            
+            const testHandler = (event: DeviceMotionEvent) => {
+              if (event.accelerationIncludingGravity) {
+                motionDetected = true;
+                console.log('✓ Motion events are working');
+                setHasMotionPermission(true);
+                window.removeEventListener('devicemotion', testHandler);
+              }
+            };
+            
+            window.addEventListener('devicemotion', testHandler);
+            
+            // If no motion after 3 seconds, assume motion isn't available
+            setTimeout(() => {
+              if (!motionDetected) {
+                console.log('✗ Device motion events not firing - motion sensors may not be available');
+                setHasMotionPermission(false);
+                window.removeEventListener('devicemotion', testHandler);
+              }
+            }, 3000);
+          };
+
+          // Request permission for motion on iOS 13+
+          if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+            (DeviceMotionEvent as any).requestPermission()
+              .then((response: string) => {
+                if (response === 'granted') {
+                  console.log('✓ Device motion permission granted');
+                  testMotion();
+                } else {
+                  console.log('✗ Device motion permission denied');
+                  setHasMotionPermission(false);
+                }
+              })
+              .catch(() => {
+                console.log('✗ Error requesting motion permission');
+                setHasMotionPermission(false);
+              });
+          } else {
+            // For non-iOS devices, just test directly
+            console.log('✓ Device motion available on web - testing...');
+            testMotion();
+          }
         } else {
           console.log('✗ Device motion not available on web');
+          setHasMotionPermission(false);
         }
       }
     };
@@ -156,17 +200,23 @@ export function StepCounter() {
           // Use DeviceMotionEvent for web
           const handleMotion = (event: DeviceMotionEvent) => {
             if (event.accelerationIncludingGravity) {
+              // Log raw motion data for debugging
+              const acc = event.accelerationIncludingGravity;
+              console.log(`Raw motion: x=${acc.x?.toFixed(2)}, y=${acc.y?.toFixed(2)}, z=${acc.z?.toFixed(2)}`);
+              
               detectStep({
-                x: event.accelerationIncludingGravity.x || 0,
-                y: event.accelerationIncludingGravity.y || 0,
-                z: event.accelerationIncludingGravity.z || 0
+                x: acc.x || 0,
+                y: acc.y || 0,
+                z: acc.z || 0
               });
+            } else {
+              console.log('No acceleration data in motion event');
             }
           };
           
           window.addEventListener('devicemotion', handleMotion);
           motionListener.current = handleMotion;
-          console.log('Device motion listener started - try walking with your device!');
+          console.log('Device motion listener started - shake or walk with your device!');
         }
         
         setIsAutoTracking(true);
@@ -288,30 +338,41 @@ export function StepCounter() {
 
             {/* Quick add buttons */}
             {/* Auto-tracking toggle */}
-            {hasMotionPermission && (
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Automatic Tracking</div>
-                <button
-                  onClick={toggleAutoTracking}
-                  className={`w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg border transition-colors ${
-                    isAutoTracking
-                      ? 'bg-green-50 border-green-300 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300'
-                      : 'bg-gray-50 border-gray-300 text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400'
-                  }`}
-                >
-                  {isAutoTracking ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  <span className="text-sm font-medium">
-                    {isAutoTracking ? 'Stop Auto Count' : 'Start Auto Count'}
-                  </span>
-                </button>
-                {isAutoTracking && (
-                  <div className="text-xs text-green-600 dark:text-green-400 text-center">
-                    📱 Automatically counting your steps<br/>
-                    <span className="text-xs opacity-75">Try walking around with your device</span>
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Automatic Tracking</div>
+              {hasMotionPermission ? (
+                <>
+                  <button
+                    onClick={toggleAutoTracking}
+                    className={`w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg border transition-colors ${
+                      isAutoTracking
+                        ? 'bg-green-50 border-green-300 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300'
+                        : 'bg-gray-50 border-gray-300 text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    {isAutoTracking ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    <span className="text-sm font-medium">
+                      {isAutoTracking ? 'Stop Auto Count' : 'Start Auto Count'}
+                    </span>
+                  </button>
+                  {isAutoTracking && (
+                    <div className="text-xs text-green-600 dark:text-green-400 text-center">
+                      📱 Automatically counting your steps<br/>
+                      <span className="text-xs opacity-75">Shake or walk with your device - check console for motion data</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    ⚠️ Motion sensors not available
                   </div>
-                )}
-              </div>
-            )}
+                  <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    Use manual step tracking instead
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-3">
               <div className="text-sm font-medium">Manual Add</div>
