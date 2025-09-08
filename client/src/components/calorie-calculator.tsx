@@ -208,8 +208,28 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
   };
 
   const onSubmit = (data: ProfileFormData) => {
+    // Always calculate first
     handleCalculate(data);
+    // Then save profile
     saveProfileMutation.mutate(data);
+  };
+
+  // Add a calculate-only function that doesn't save profile
+  const handleCalculateOnly = () => {
+    const formData = form.getValues();
+    
+    // Validate required fields
+    if (!formData.age || !formData.sex || !formData.heightCm || !formData.currentWeightKg || 
+        !formData.goalWeightKg || !formData.activityLevel || !formData.weightGoal) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields to calculate your calories.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    handleCalculate(formData as ProfileFormData);
   };
 
   if (isLoading) {
@@ -428,14 +448,26 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={saveProfileMutation.isPending}
-                data-testid="button-calculate-calories"
-              >
-                {saveProfileMutation.isPending ? 'Calculating...' : 'Calculate My Daily Calories'}
-              </Button>
+              <div className="space-y-3">
+                <Button 
+                  type="button"
+                  onClick={handleCalculateOnly}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  data-testid="button-calculate-only"
+                >
+                  Calculate Daily Calories
+                </Button>
+                
+                <Button 
+                  type="submit" 
+                  variant="outline"
+                  className="w-full" 
+                  disabled={saveProfileMutation.isPending}
+                  data-testid="button-save-profile"
+                >
+                  {saveProfileMutation.isPending ? 'Saving...' : 'Save Profile & Calculate'}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
