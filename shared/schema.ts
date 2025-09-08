@@ -38,6 +38,7 @@ export const userProfiles = pgTable("user_profiles", {
   activityLevel: varchar("activity_level"), // sedentary, lightly_active, moderately_active, very_active, extra_active
   weightGoal: varchar("weight_goal"), // lose_weight, maintain_weight, gain_weight
   weeklyWeightChangeKg: integer("weekly_weight_change_kg"), // target kg per week (can be negative for loss)
+  medication: varchar("medication"), // weight loss medication if any
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -154,6 +155,7 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   sex: z.enum(["male", "female"]).optional(),
   activityLevel: z.enum(["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"]).optional(),
   weightGoal: z.enum(["lose_weight", "maintain_weight", "gain_weight"]).optional(),
+  medication: z.enum(["none", "ozempic", "wegovy", "mounjaro", "other_glp1"]).optional(),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
