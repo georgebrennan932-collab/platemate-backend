@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, insertDrinkEntrySchema, insertNutritionGoalsSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertNutritionGoalsSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -162,6 +162,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get diary entry error:", error);
       res.status(500).json({ error: "Failed to retrieve diary entry" });
+    }
+  });
+
+  app.patch("/api/diary/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const entry = await storage.getDiaryEntry(req.params.id);
+      
+      if (!entry) {
+        return res.status(404).json({ error: "Diary entry not found" });
+      }
+      
+      // Verify the entry belongs to the authenticated user
+      if (entry.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const validatedUpdate = updateDiaryEntrySchema.parse(req.body);
+      const updatedEntry = await storage.updateDiaryEntry(req.params.id, validatedUpdate);
+      
+      if (!updatedEntry) {
+        return res.status(404).json({ error: "Diary entry not found" });
+      }
+      
+      res.json(updatedEntry);
+    } catch (error) {
+      console.error("Update diary entry error:", error);
+      res.status(400).json({ error: "Invalid diary entry data" });
     }
   });
 

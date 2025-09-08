@@ -7,6 +7,7 @@ import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Ta
 import { Link } from "wouter";
 import { ProgressIndicators } from "@/components/progress-indicators";
 import { WeeklyAnalytics } from "@/components/weekly-analytics";
+import { EditDiaryEntryDialog } from "@/components/edit-diary-entry-dialog";
 import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
 
 export function DiaryPage() {
@@ -292,14 +293,17 @@ export function DiaryPage() {
                           )}
                         </div>
                         
-                        <button
-                          onClick={() => deleteMutation.mutate(entry.id)}
-                          disabled={deleteMutation.isPending}
-                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
-                          data-testid={`button-delete-${entry.id}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex gap-2">
+                          <EditDiaryEntryDialog entry={entry} />
+                          <button
+                            onClick={() => deleteMutation.mutate(entry.id)}
+                            disabled={deleteMutation.isPending}
+                            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
+                            data-testid={`button-delete-${entry.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )) || []}

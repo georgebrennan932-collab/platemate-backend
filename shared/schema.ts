@@ -100,9 +100,14 @@ export const insertDiaryEntrySchema = createInsertSchema(diaryEntries).omit({
   id: true,
   createdAt: true,
 }).extend({
-  mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]),
+  mealType: z.enum(["breakfast", "lunch", "dinner", "snack", "custom"]),
   mealDate: z.string().or(z.date()), // Accept string or Date
   notes: z.string().optional(),
+});
+
+export const updateDiaryEntrySchema = insertDiaryEntrySchema.partial().extend({
+  customMealName: z.string().optional(), // For custom meal types
+  portionMultiplier: z.number().min(0.1).max(10).optional(), // For portion adjustments
 });
 
 export const insertDrinkEntrySchema = createInsertSchema(drinkEntries).omit({
@@ -123,6 +128,7 @@ export const insertNutritionGoalsSchema = createInsertSchema(nutritionGoals).omi
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertDiaryEntry = z.infer<typeof insertDiaryEntrySchema>;
+export type UpdateDiaryEntry = z.infer<typeof updateDiaryEntrySchema>;
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
 export type InsertDrinkEntry = z.infer<typeof insertDrinkEntrySchema>;
 export type DrinkEntry = typeof drinkEntries.$inferSelect;
