@@ -27,7 +27,7 @@ export function AppHeader() {
               <div className="flex items-center space-x-2 bg-gradient-to-r from-white/10 to-white/5 dark:from-gray-800/50 dark:to-gray-700/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
                 <User className="h-4 w-4 text-foreground/80" />
                 <span className="text-sm font-medium text-foreground/90">
-                  {(user as UserType)?.firstName || (user as UserType)?.email || 'User'}
+                  {((user as UserType)?.firstName || (user as UserType)?.email || 'User') as string}
                 </span>
               </div>
             </div>

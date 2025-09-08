@@ -32,6 +32,7 @@ function Router() {
           <Route path="/diary" component={DiaryPage} />
           <Route path="/calculator" component={CalculatorPage} />
           <Route path="/advice" component={DietAdvicePage} />
+          <Route path="/diet-advice" component={DietAdvicePage} />
           <Route path="/coaching" component={CoachingPage} />
           <Route path="/goals" component={GoalsPage} />
           <Route path="/injection-advice" component={InjectionAdvicePage} />
