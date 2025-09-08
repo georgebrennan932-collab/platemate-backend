@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen, Clock, Check, TestTube2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { notificationService } from "@/lib/notification-service";
+import { soundService } from "@/lib/sound-service";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { SoundSettings } from "@/components/sound-settings";
 
 interface DailyCoaching {
   motivation: string;
@@ -100,6 +102,7 @@ export function CoachingPage() {
       return await response.json();
     },
     onSuccess: () => {
+      soundService.playSuccess();
       toast({
         title: "New Coaching Generated!",
         description: "Your daily motivation and tips have been updated.",
@@ -107,6 +110,7 @@ export function CoachingPage() {
       refetchCoaching();
     },
     onError: (error: Error) => {
+      soundService.playError();
       toast({
         title: "Error",
         description: "Failed to generate new coaching content. Please try again.",
@@ -122,12 +126,14 @@ export function CoachingPage() {
         // Save reminder settings and schedule notifications
         await saveReminderEnabled(true);
         setShowReminderSetup(false);
+        await soundService.playSuccess();
         toast({
           title: "Reminders Set!",
           description: `Daily coaching reminders will be sent at ${reminderTime}`,
         });
       } catch (error) {
         console.error('Failed to setup reminders:', error);
+        await soundService.playError();
         toast({
           title: "Setup Failed",
           description: "Could not set up reminders. Please check notification permissions.",
@@ -165,11 +171,13 @@ export function CoachingPage() {
   const testNotification = async () => {
     try {
       await notificationService.testNotification();
+      await soundService.playSuccess();
       toast({
         title: "Test Notification Sent!",
         description: "Check if you received the notification",
       });
     } catch (error) {
+      await soundService.playError();
       toast({
         title: "Test Failed",
         description: "Could not send test notification. Check permissions.",
@@ -325,6 +333,9 @@ export function CoachingPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Sound Settings */}
+        <SoundSettings />
 
         {/* Educational Tips Section */}
         <Card className="health-card">

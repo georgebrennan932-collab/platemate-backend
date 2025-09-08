@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppHeader } from "@/components/app-header";
+import { soundService } from "@/lib/sound-service";
 import { CameraInterface } from "@/components/camera-interface";
 import { ProcessingState } from "@/components/processing-state";
 import { ResultsDisplay } from "@/components/results-display";
@@ -18,15 +19,18 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleAnalysisStart = () => {
+    soundService.playScan();
     setCurrentState('processing');
   };
 
   const handleAnalysisSuccess = (data: FoodAnalysis) => {
+    soundService.playSuccess();
     setAnalysisData(data);
     setCurrentState('results');
   };
 
   const handleAnalysisError = (error: string) => {
+    soundService.playError();
     setErrorMessage(error);
     setCurrentState('error');
   };

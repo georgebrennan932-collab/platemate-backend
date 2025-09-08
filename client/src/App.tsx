@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { notificationService } from "@/lib/notification-service";
+import { soundService } from "@/lib/sound-service";
 import { useEffect } from "react";
 import LandingPage from "@/pages/LandingPage";
 import Home from "@/pages/home";
@@ -43,8 +44,12 @@ function Router() {
 }
 
 function App() {
-  // Initialize notification service when app loads
+  // Initialize services when app loads
   useEffect(() => {
+    // Initialize sound service
+    soundService.initialize();
+    
+    // Initialize notification service
     notificationService.initialize().then((hasPermission) => {
       if (hasPermission) {
         notificationService.resumeWebNotifications();

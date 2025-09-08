@@ -1,5 +1,6 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
+import { soundService } from './sound-service';
 
 export interface NotificationConfig {
   title: string;
@@ -174,6 +175,9 @@ class NotificationService {
 
   private showWebNotification(config: NotificationConfig): void {
     if (this.hasPermission && 'Notification' in window) {
+      // Play notification sound
+      soundService.playReminder();
+
       const notification = new Notification(config.title, {
         body: config.body,
         icon: '/favicon.ico',
@@ -244,6 +248,8 @@ class NotificationService {
         ]
       });
     } else {
+      // Play test notification sound immediately
+      await soundService.playNotification();
       this.showWebNotification(config);
     }
   }

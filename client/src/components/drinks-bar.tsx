@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { soundService } from "@/lib/sound-service";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ export function DrinksBar() {
       await apiRequest('POST', '/api/drinks', drink);
     },
     onSuccess: () => {
+      soundService.playSuccess();
       toast({
         title: "Drink Logged!",
         description: "Your drink has been added to your records.",
@@ -51,6 +53,7 @@ export function DrinksBar() {
       setIsExpanded(false);
     },
     onError: (error: Error) => {
+      soundService.playError();
       toast({
         title: "Error",
         description: "Failed to log drink. Please try again.",
