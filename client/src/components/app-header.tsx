@@ -2,6 +2,7 @@ import { History, LogOut, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
 import platemateLogo from "@/assets/platemate-logo.png";
+import { StepCounter } from "./step-counter";
 
 export function AppHeader() {
   const { user, isAuthenticated } = useAuth();
@@ -31,6 +32,7 @@ export function AppHeader() {
               </div>
             </div>
           )}
+          {isAuthenticated && <StepCounter />}
           <button 
             className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 dark:from-gray-800/50 dark:to-gray-700/30 backdrop-blur-sm hover:scale-110 smooth-transition border border-white/10 dark:border-gray-700/30"
             data-testid="button-history"
