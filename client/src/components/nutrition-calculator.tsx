@@ -11,11 +11,11 @@ import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
 
 interface NutritionGoals {
-  dailyCalories: number;
-  dailyProtein: number;
-  dailyCarbs: number;
-  dailyFat: number;
-  dailyWater: number;
+  dailyCalories: number | null;
+  dailyProtein: number | null;
+  dailyCarbs: number | null;
+  dailyFat: number | null;
+  dailyWater: number | null;
 }
 
 interface ConsumedNutrition {
@@ -64,6 +64,11 @@ export function NutritionCalculator({ goals, consumed }: NutritionCalculatorProp
     fat: 0,
   });
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Calculator received data:', { goals, consumed });
+  }, [goals, consumed]);
+
   const defaultGoals = {
     dailyCalories: 2000,
     dailyProtein: 150,
@@ -72,7 +77,13 @@ export function NutritionCalculator({ goals, consumed }: NutritionCalculatorProp
     dailyWater: 2000,
   };
 
-  const currentGoals = goals || defaultGoals;
+  const currentGoals = goals ? {
+    dailyCalories: goals.dailyCalories || defaultGoals.dailyCalories,
+    dailyProtein: goals.dailyProtein || defaultGoals.dailyProtein,
+    dailyCarbs: goals.dailyCarbs || defaultGoals.dailyCarbs,
+    dailyFat: goals.dailyFat || defaultGoals.dailyFat,
+    dailyWater: goals.dailyWater || defaultGoals.dailyWater,
+  } : defaultGoals;
 
   // Calculate remaining nutrients needed
   const remaining = {
@@ -210,10 +221,16 @@ export function NutritionCalculator({ goals, consumed }: NutritionCalculatorProp
                 </div>
               </div>
               
-              {remaining.calories === 0 && remaining.protein === 0 && remaining.carbs === 0 && remaining.fat === 0 && (
+              {remaining.calories <= 0 && remaining.protein <= 0 && remaining.carbs <= 0 && remaining.fat <= 0 ? (
                 <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-center">
                   <div className="text-green-800 dark:text-green-200 font-medium">
                     🎉 Congratulations! You've reached all your nutrition goals for today!
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-center">
+                  <div className="text-blue-800 dark:text-blue-200 font-medium">
+                    💡 You have <span className="font-bold">{Math.round(remaining.calories + remaining.protein*4 + remaining.carbs*4 + remaining.fat*9)}</span> total calories remaining across all nutrients
                   </div>
                 </div>
               )}
