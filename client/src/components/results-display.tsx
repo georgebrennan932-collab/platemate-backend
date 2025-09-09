@@ -374,68 +374,93 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
       {/* Add to Diary Dialog */}
       {showDiaryDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Add to Food Diary</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 rounded-2xl p-8 w-full max-w-md shadow-2xl border border-white/20 dark:border-gray-700/50 animate-in slide-in-from-bottom-4 duration-300">
             
-            <div className="space-y-4">
-              {/* Meal Type Selection */}
+            {/* Beautiful Header */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
+                <Plus className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Add to Food Diary
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Track your delicious meal</p>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Enhanced Meal Type Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2">Meal Type</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => (
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  🍽️ Meal Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { type: 'breakfast', icon: '🌅', gradient: 'from-orange-400 to-yellow-400' },
+                    { type: 'lunch', icon: '☀️', gradient: 'from-green-400 to-blue-400' },
+                    { type: 'dinner', icon: '🌙', gradient: 'from-purple-400 to-pink-400' },
+                    { type: 'snack', icon: '🍿', gradient: 'from-pink-400 to-red-400' }
+                  ].map((meal) => (
                     <button
-                      key={meal}
-                      onClick={() => setSelectedMealType(meal)}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                        selectedMealType === meal
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      key={meal.type}
+                      onClick={() => setSelectedMealType(meal.type as any)}
+                      className={`relative p-4 rounded-xl text-sm font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                        selectedMealType === meal.type
+                          ? `bg-gradient-to-r ${meal.gradient} text-white shadow-xl scale-105`
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
                       }`}
-                      data-testid={`button-meal-${meal}`}
+                      data-testid={`button-meal-${meal.type}`}
                     >
-                      {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                      <div className="text-2xl mb-1">{meal.icon}</div>
+                      <div className="capitalize font-semibold">{meal.type}</div>
+                      {selectedMealType === meal.type && (
+                        <div className="absolute inset-0 rounded-xl ring-2 ring-white ring-offset-2 ring-offset-transparent"></div>
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Date Selection */}
+              {/* Enhanced Date Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  <Calendar className="inline h-4 w-4 mr-1" />
-                  Date
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  📅 Date
                 </label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full p-2 border rounded-lg bg-background"
-                  data-testid="input-meal-date"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    data-testid="input-meal-date"
+                  />
+                </div>
               </div>
 
-              {/* Time Selection */}
+              {/* Enhanced Time Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  <Clock className="inline h-4 w-4 mr-1" />
-                  Time
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  ⏰ Time
                 </label>
-                <input
-                  type="time"
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                  className="w-full p-2 border rounded-lg bg-background"
-                  data-testid="input-meal-time"
-                />
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="time"
+                    value={selectedTime}
+                    onChange={(e) => setSelectedTime(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    data-testid="input-meal-time"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Dialog Actions */}
-            <div className="flex space-x-3 mt-6">
+            {/* Enhanced Dialog Actions */}
+            <div className="flex space-x-4 mt-8">
               <button
                 onClick={() => setShowDiaryDialog(false)}
-                className="flex-1 py-2 px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="flex-1 py-3 px-6 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md"
                 data-testid="button-cancel-diary"
               >
                 Cancel
@@ -443,11 +468,18 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               <button
                 onClick={() => addToDiaryMutation.mutate()}
                 disabled={addToDiaryMutation.isPending}
-                className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 data-testid="button-save-diary"
               >
-                <Plus className="h-4 w-4 mr-2 inline" />
-                {addToDiaryMutation.isPending ? 'Adding...' : 'Add to Diary'}
+                <Plus className="h-5 w-5 mr-2 inline" />
+                {addToDiaryMutation.isPending ? (
+                  <span className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Adding...
+                  </span>
+                ) : (
+                  'Add to Diary'
+                )}
               </button>
             </div>
           </div>
