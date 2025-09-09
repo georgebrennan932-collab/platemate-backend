@@ -10,7 +10,8 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Activity } from "lucide-react";
+import { googleFitService } from "@/lib/google-fit-service";
 import type { FoodAnalysis } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 
@@ -30,13 +31,27 @@ export default function Home() {
   const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   
-  // Initialize speech recognition
+  // Google Fit state
+  const [isGoogleFitConnected, setIsGoogleFitConnected] = useState(false);
+  const [lastGoogleFitSync, setLastGoogleFitSync] = useState<Date | null>(null);
+  
+  // Initialize speech recognition and Google Fit
   useEffect(() => {
     const checkSpeechSupport = () => {
       const supported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
       setSpeechSupported(supported);
     };
     checkSpeechSupport();
+    
+    // Initialize Google Fit
+    const initGoogleFit = async () => {
+      const connected = await googleFitService.initialize();
+      setIsGoogleFitConnected(connected);
+      if (connected) {
+        setLastGoogleFitSync(googleFitService.getLastSyncTime());
+      }
+    };
+    initGoogleFit();
   }, []);
 
   const handleAnalysisStart = () => {
@@ -139,6 +154,49 @@ export default function Home() {
     });
   };
 
+  // Google Fit sync handler
+  const handleGoogleFitSync = async () => {
+    if (!isGoogleFitConnected) {
+      try {
+        const connected = await googleFitService.authenticate();
+        if (connected) {
+          setIsGoogleFitConnected(true);
+          const result = await googleFitService.syncWithLocalSteps();
+          if (result.synced) {
+            setLastGoogleFitSync(new Date());
+            toast({
+              title: "Google Fit Connected!",
+              description: `Synced ${result.steps} steps from Google Fit`,
+            });
+          }
+        }
+      } catch (error) {
+        toast({
+          title: "Connection Failed",
+          description: "Could not connect to Google Fit. Check your settings.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      try {
+        const result = await googleFitService.syncWithLocalSteps();
+        if (result.synced) {
+          setLastGoogleFitSync(new Date());
+          toast({
+            title: "Sync Complete!",
+            description: `Synced ${result.steps} steps from Google Fit`,
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Sync Failed",
+          description: "Could not sync with Google Fit. Try again later.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const addVoiceMealMutation = useMutation({
     mutationFn: async ({ foodDescription, mealType }: { foodDescription: string, mealType: string }) => {
       // First analyze the text-based food description
@@ -182,11 +240,11 @@ export default function Home() {
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 py-2 space-y-4">
           {/* Primary Actions */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-4 gap-2 mb-6">
             <button
               onClick={handleVoiceInput}
               disabled={!speechSupported}
-              className={`w-full py-4 px-4 rounded-xl font-medium flex flex-col items-center justify-center space-y-2 group min-h-[80px] transition-all duration-200 ${
+              className={`w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 ${
                 isListening
                   ? 'bg-red-500 text-white animate-pulse scale-105'
                   : speechSupported
@@ -196,31 +254,51 @@ export default function Home() {
               data-testid="button-voice-input"
             >
               {isListening ? (
-                <MicOff className="h-6 w-6 group-hover:scale-110 smooth-transition" />
+                <MicOff className="h-5 w-5 group-hover:scale-110 smooth-transition" />
               ) : (
-                <Mic className="h-6 w-6 group-hover:scale-110 smooth-transition" />
+                <Mic className="h-5 w-5 group-hover:scale-110 smooth-transition" />
               )}
-              <span className="text-sm">
+              <span className="text-xs">
                 {isListening ? 'Listening...' : 'Voice Add'}
               </span>
             </button>
             
+            <button
+              onClick={handleGoogleFitSync}
+              className={`w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 ${
+                isGoogleFitConnected
+                  ? 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]'
+                  : 'bg-orange-500 text-white hover:bg-orange-600 hover:scale-[1.02]'
+              }`}
+              data-testid="button-google-fit"
+            >
+              <Activity className="h-5 w-5 group-hover:scale-110 smooth-transition" />
+              <span className="text-xs">
+                {isGoogleFitConnected ? 'Sync Fit' : 'Connect Fit'}
+              </span>
+              {lastGoogleFitSync && (
+                <div className="text-xs opacity-75">
+                  {lastGoogleFitSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              )}
+            </button>
+            
             <Link href="/advice">
               <button 
-                className="w-full gradient-button hover:scale-[1.02] py-4 px-4 rounded-xl font-medium flex flex-col items-center justify-center space-y-2 group min-h-[80px]"
+                className="w-full gradient-button hover:scale-[1.02] py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px]"
                 data-testid="button-diet-advice"
               >
-                <Lightbulb className="h-6 w-6 group-hover:scale-110 smooth-transition" />
-                <span className="text-sm">AI Advice</span>
+                <Lightbulb className="h-5 w-5 group-hover:scale-110 smooth-transition" />
+                <span className="text-xs">AI Advice</span>
               </button>
             </Link>
             <Link href="/help">
               <button 
-                className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-indigo-200/50 dark:border-indigo-700/30 py-4 px-4 rounded-xl font-medium smooth-transition flex flex-col items-center justify-center space-y-2 group min-h-[80px]"
+                className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-indigo-200/50 dark:border-indigo-700/30 py-4 px-2 rounded-xl font-medium smooth-transition flex flex-col items-center justify-center space-y-1 group min-h-[80px]"
                 data-testid="button-help"
               >
-                <HelpCircle className="h-6 w-6 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 smooth-transition" />
-                <span className="text-sm text-indigo-700 dark:text-indigo-300">Help</span>
+                <HelpCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 smooth-transition" />
+                <span className="text-xs text-indigo-700 dark:text-indigo-300">Help</span>
               </button>
             </Link>
           </div>
