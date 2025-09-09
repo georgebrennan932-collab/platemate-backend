@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Footprints, Plus, Minus, Play, Pause, Activity } from 'lucide-react';
 import { Motion } from '@capacitor/motion';
 import { Capacitor } from '@capacitor/core';
-import { googleFitService } from '@/lib/google-fit-service';
+import { healthConnectService } from '@/lib/health-connect-service';
 
 interface StepData {
   count: number;
@@ -16,8 +16,8 @@ export function StepCounter() {
   const [isOpen, setIsOpen] = useState(false);
   const [isAutoTracking, setIsAutoTracking] = useState<boolean>(false);
   const [hasMotionPermission, setHasMotionPermission] = useState<boolean>(false);
-  const [isGoogleFitConnected, setIsGoogleFitConnected] = useState<boolean>(false);
-  const [lastGoogleFitSync, setLastGoogleFitSync] = useState<Date | null>(null);
+  const [isHealthConnectConnected, setIsHealthConnectConnected] = useState<boolean>(false);
+  const [lastHealthConnectSync, setLastHealthConnectSync] = useState<Date | null>(null);
   
   // Motion detection variables
   const lastAcceleration = useRef({ x: 0, y: 0, z: 0 });
@@ -120,21 +120,21 @@ export function StepCounter() {
     }
   }, []);
 
-  // Initialize Google Fit integration
+  // Initialize Health Connect integration
   useEffect(() => {
-    const initGoogleFit = async () => {
-      const connected = await googleFitService.initialize();
-      setIsGoogleFitConnected(connected);
+    const initHealthConnect = async () => {
+      const connected = await healthConnectService.initialize();
+      setIsHealthConnectConnected(connected);
       if (connected) {
-        setLastGoogleFitSync(googleFitService.getLastSyncTime());
+        setLastHealthConnectSync(new Date());
         // Auto-sync if connected and it's been more than 30 minutes
-        const lastSync = googleFitService.getLastSyncTime();
+        const lastSync = lastHealthConnectSync;
         if (!lastSync || Date.now() - lastSync.getTime() > 30 * 60 * 1000) {
-          syncWithGoogleFit();
+          syncWithHealthConnect();
         }
       }
     };
-    initGoogleFit();
+    initHealthConnect();
   }, []);
 
   // Step detection algorithm
@@ -263,19 +263,19 @@ export function StepCounter() {
     }
   };
 
-  // Sync with Google Fit
-  const syncWithGoogleFit = async () => {
-    if (!isGoogleFitConnected) return;
+  // Sync with Health Connect
+  const syncWithHealthConnect = async () => {
+    if (!isHealthConnectConnected) return;
     
     try {
-      const result = await googleFitService.syncWithLocalSteps();
+      const result = await healthConnectService.syncWithLocalSteps();
       if (result.synced) {
         setSteps(result.steps);
-        setLastGoogleFitSync(new Date());
-        console.log('✓ Google Fit sync completed:', result.steps);
+        setLastHealthConnectSync(new Date());
+        console.log('✓ Health Connect sync completed:', result.steps);
       }
     } catch (error) {
-      console.error('Google Fit sync failed:', error);
+      console.error('Health Connect sync failed:', error);
     }
   };
 

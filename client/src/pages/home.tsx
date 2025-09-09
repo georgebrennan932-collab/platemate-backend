@@ -294,7 +294,7 @@ export default function Home() {
                   ? 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]'
                   : 'bg-orange-500 text-white hover:bg-orange-600 hover:scale-[1.02]'
               }`}
-              data-testid="button-google-fit"
+              data-testid="button-health-connect"
             >
               <Activity className="h-5 w-5 group-hover:scale-110 smooth-transition" />
               <span className="text-xs">
