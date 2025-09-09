@@ -166,9 +166,9 @@ export function StepCounter() {
         console.log(`Motion: ${magnitude.toFixed(2)}, Threshold: ${threshold.toFixed(2)}, Time: ${timeSinceLastStep}`);
       }
       
-      // Detect step if magnitude exceeds threshold and enough time has passed
-      if (magnitude > threshold && timeSinceLastStep > 400) { // Min 400ms between steps
-        console.log('🚶 Step detected!');
+      // Detect step if magnitude exceeds threshold and enough time has passed (more sensitive)
+      if (magnitude > Math.max(0.3, threshold * 0.7) && timeSinceLastStep > 300) { // Min 300ms between steps, lower threshold
+        console.log('🚶 Step detected!', magnitude.toFixed(2));
         lastStepTime.current = now;
         addSteps(1);
       }

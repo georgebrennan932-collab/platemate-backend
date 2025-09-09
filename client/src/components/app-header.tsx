@@ -64,7 +64,30 @@ export function AppHeader() {
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold gradient-text">PlateMate</h1>
             {isAuthenticated && (
-              <div className="flex items-center space-x-1 mt-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border border-blue-200/30 dark:border-blue-700/30">
+              <div 
+                className="flex items-center space-x-1 mt-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border border-blue-200/30 dark:border-blue-700/30 cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => {
+                  // Test function - manually add steps
+                  const todayKey = new Date().toISOString().split('T')[0];
+                  const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
+                  let currentSteps = 0;
+                  if (stored) {
+                    try {
+                      const stepData = JSON.parse(stored);
+                      currentSteps = stepData.count || 0;
+                    } catch {}
+                  }
+                  const newSteps = currentSteps + 50; // Add 50 steps when clicked
+                  const stepData = {
+                    count: newSteps,
+                    date: todayKey,
+                    goal: 10000
+                  };
+                  localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
+                  setSteps(newSteps);
+                }}
+                title="Click to add 50 test steps"
+              >
                 <Footprints className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                 <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
                   {steps >= 1000 ? `${(steps/1000).toFixed(1)}k` : steps} steps
