@@ -84,31 +84,108 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
   }, [progressData, triggerConfetti]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {progressData.map(({ icon: Icon, label, consumed, target, unit, testId }) => {
         const progress = calculateProgress(consumed, target);
+        const progressColor = getProgressColor(progress);
+        const isAchieved = progress >= 100;
+        
+        // Define color schemes for each nutrient
+        const colorSchemes = {
+          'Calories': {
+            bg: 'from-red-50 to-orange-50 dark:from-red-900/10 dark:to-orange-900/10',
+            icon: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+            text: 'text-red-700 dark:text-red-300',
+            accent: 'text-red-600 dark:text-red-400'
+          },
+          'Protein': {
+            bg: 'from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10',
+            icon: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+            text: 'text-blue-700 dark:text-blue-300',
+            accent: 'text-blue-600 dark:text-blue-400'
+          },
+          'Carbs': {
+            bg: 'from-orange-50 to-amber-50 dark:from-orange-900/10 dark:to-amber-900/10',
+            icon: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
+            text: 'text-orange-700 dark:text-orange-300',
+            accent: 'text-orange-600 dark:text-orange-400'
+          },
+          'Fat': {
+            bg: 'from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10',
+            icon: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
+            text: 'text-yellow-700 dark:text-yellow-300',
+            accent: 'text-yellow-600 dark:text-yellow-400'
+          }
+        };
+        
+        const colors = colorSchemes[label as keyof typeof colorSchemes];
         
         return (
-          <div key={label} className="space-y-2" data-testid={testId}>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-2">
-                <Icon className="h-4 w-4" />
-                <span className="font-medium">{label}</span>
+          <div 
+            key={label} 
+            className={`relative bg-gradient-to-br ${colors.bg} rounded-2xl p-6 shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden`}
+            data-testid={testId}
+          >
+            {/* Decorative background element */}
+            <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 dark:bg-black/10 rounded-full"></div>
+            
+            {/* Header with icon and label */}
+            <div className="flex items-center justify-between mb-4 relative z-10">
+              <div className="flex items-center space-x-3">
+                <div className={`w-12 h-12 ${colors.icon} rounded-xl flex items-center justify-center shadow-md`}>
+                  <Icon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className={`text-lg font-bold ${colors.text}`}>{label}</h3>
+                  <p className="text-sm text-muted-foreground">Daily Progress</p>
+                </div>
               </div>
-              <span className="text-muted-foreground">
-                {Math.round(consumed)}{unit} / {target}{unit}
-              </span>
-            </div>
-            <Progress 
-              value={progress} 
-              className="h-2"
-              data-testid={`${testId}-bar`}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{Math.round(progress)}% of goal</span>
-              {progress >= 100 && (
-                <span className="text-green-600 font-medium">Goal achieved! 🎯</span>
+              
+              {isAchieved && (
+                <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
+                  <span>🎯</span>
+                  <span>Goal achieved!</span>
+                </div>
               )}
+            </div>
+            
+            {/* Large consumption numbers */}
+            <div className="mb-4 relative z-10">
+              <div className={`text-4xl font-bold ${colors.accent} mb-1`}>
+                {Math.round(consumed)}{unit}
+                <span className="text-2xl text-muted-foreground font-normal"> / {target}{unit}</span>
+              </div>
+              <div className={`text-lg font-semibold ${colors.text}`}>
+                {Math.round(progress)}% of goal
+              </div>
+            </div>
+            
+            {/* Enhanced progress bar */}
+            <div className="relative z-10 space-y-2">
+              <div className="w-full bg-white/30 dark:bg-black/20 rounded-full h-4 shadow-inner">
+                <div 
+                  className={`h-4 rounded-full transition-all duration-1000 ease-out ${
+                    isAchieved 
+                      ? 'bg-gradient-to-r from-green-400 to-emerald-500' 
+                      : `${progressColor.replace('bg-', 'bg-gradient-to-r from-')} to-opacity-80`
+                  } shadow-lg`}
+                  style={{width: `${Math.min(progress, 100)}%`}}
+                />
+              </div>
+              
+              {/* Progress indicator */}
+              <div className="flex justify-between items-center">
+                <div className={`text-sm font-medium ${colors.text}`}>
+                  {progress < 50 ? 'Keep going! 💪' : 
+                   progress < 90 ? 'Almost there! 🚀' : 
+                   isAchieved ? 'Excellent! ✨' : 'So close! 🎯'}
+                </div>
+                {!isAchieved && (
+                  <div className="text-sm text-muted-foreground">
+                    {Math.round(target - consumed)}{unit} remaining
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         );
