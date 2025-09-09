@@ -43,27 +43,62 @@ export function ConfettiCelebration({
   ];
 
   const createConfettiPiece = (id: number): ConfettiPiece => {
-    // Create multiple spawn zones across entire screen
-    const zones = [
-      // Top row (multiple spawn points)
-      { x: Math.random() * window.innerWidth, y: -20, vx: (Math.random() - 0.5) * 6, vy: Math.random() * 5 + 3 },
-      { x: Math.random() * window.innerWidth, y: -50, vx: (Math.random() - 0.5) * 6, vy: Math.random() * 5 + 4 },
-      // Bottom row (shooting up)
-      { x: Math.random() * window.innerWidth, y: window.innerHeight + 20, vx: (Math.random() - 0.5) * 6, vy: -(Math.random() * 6 + 3) },
-      { x: Math.random() * window.innerWidth, y: window.innerHeight + 50, vx: (Math.random() - 0.5) * 6, vy: -(Math.random() * 6 + 4) },
-      // Left side (moving right)
-      { x: -30, y: Math.random() * window.innerHeight, vx: Math.random() * 6 + 3, vy: (Math.random() - 0.5) * 6 },
-      { x: -60, y: Math.random() * window.innerHeight, vx: Math.random() * 6 + 4, vy: (Math.random() - 0.5) * 6 },
-      // Right side (moving left)
-      { x: window.innerWidth + 30, y: Math.random() * window.innerHeight, vx: -(Math.random() * 6 + 3), vy: (Math.random() - 0.5) * 6 },
-      { x: window.innerWidth + 60, y: Math.random() * window.innerHeight, vx: -(Math.random() * 6 + 4), vy: (Math.random() - 0.5) * 6 },
-      // Center bursts (exploding outward)
-      { x: window.innerWidth * 0.25, y: window.innerHeight * 0.3, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8 },
-      { x: window.innerWidth * 0.75, y: window.innerHeight * 0.3, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8 },
-      { x: window.innerWidth * 0.5, y: window.innerHeight * 0.7, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8 },
-    ];
+    // Get actual viewport dimensions for mobile
+    const viewWidth = window.innerWidth;
+    const viewHeight = window.innerHeight;
     
-    const zone = zones[Math.floor(Math.random() * zones.length)];
+    // Create spawn zones that truly cover the entire screen including mobile
+    const spawnType = Math.floor(Math.random() * 5);
+    let zone;
+    
+    switch (spawnType) {
+      case 0: // Top edge - rain down
+        zone = {
+          x: Math.random() * viewWidth,
+          y: -50 - Math.random() * 100, // Start well above screen
+          vx: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 6 + 4 // Fall down
+        };
+        break;
+      case 1: // Bottom edge - shoot up
+        zone = {
+          x: Math.random() * viewWidth,
+          y: viewHeight + 50 + Math.random() * 100, // Start well below screen
+          vx: (Math.random() - 0.5) * 4,
+          vy: -(Math.random() * 6 + 4) // Shoot up
+        };
+        break;
+      case 2: // Left edge - sweep right
+        zone = {
+          x: -50 - Math.random() * 100, // Start well left of screen
+          y: Math.random() * viewHeight,
+          vx: Math.random() * 6 + 4, // Move right
+          vy: (Math.random() - 0.5) * 4
+        };
+        break;
+      case 3: // Right edge - sweep left
+        zone = {
+          x: viewWidth + 50 + Math.random() * 100, // Start well right of screen
+          y: Math.random() * viewHeight,
+          vx: -(Math.random() * 6 + 4), // Move left
+          vy: (Math.random() - 0.5) * 4
+        };
+        break;
+      case 4: // Center explosion - burst outward
+        const centerX = viewWidth * (0.3 + Math.random() * 0.4); // Random center area
+        const centerY = viewHeight * (0.3 + Math.random() * 0.4);
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 8 + 6;
+        zone = {
+          x: centerX,
+          y: centerY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed
+        };
+        break;
+      default:
+        zone = { x: 0, y: 0, vx: 0, vy: 0 };
+    }
     
     return {
       id,
@@ -121,11 +156,11 @@ export function ConfettiCelebration({
           rotation: piece.rotation + piece.rotationSpeed,
           velocityY: piece.velocityY + 0.1, // gravity
         })).filter(piece => 
-          piece.y < window.innerHeight + 100 && 
-          piece.y > -100 && 
-          piece.x < window.innerWidth + 100 && 
-          piece.x > -100
-        ) // Remove pieces that go off any edge
+          piece.y < window.innerHeight + 200 && 
+          piece.y > -200 && 
+          piece.x < window.innerWidth + 200 && 
+          piece.x > -200
+        ) // Remove pieces that go far off any edge
       );
 
       animationId = requestAnimationFrame(animate);
@@ -143,12 +178,29 @@ export function ConfettiCelebration({
   if (!isActive || confetti.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+    <div 
+      className="fixed pointer-events-none z-50 overflow-hidden"
+      style={{
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed'
+      }}
+    >
       {/* Screen Flash Effect */}
       {screenFlash.opacity > 0 && (
         <div 
-          className="absolute inset-0 transition-opacity duration-100"
+          className="absolute transition-opacity duration-100"
           style={{
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            height: '100%',
             backgroundColor: screenFlash.color,
             opacity: screenFlash.opacity,
             mixBlendMode: 'screen'
@@ -158,12 +210,22 @@ export function ConfettiCelebration({
       
       {/* Achievement Text */}
       {showText && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div 
+          className="absolute flex items-center justify-center"
+          style={{
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            height: '100%'
+          }}
+        >
           <div className="text-center animate-bounce">
-            <div className="text-6xl font-bold text-white mb-4 drop-shadow-2xl animate-pulse">
+            <div className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-2xl animate-pulse">
               🎉 GOAL ACHIEVED! 🎉
             </div>
-            <div className="text-2xl font-semibold text-yellow-300 drop-shadow-lg">
+            <div className="text-lg md:text-2xl font-semibold text-yellow-300 drop-shadow-lg">
               Keep up the amazing work!
             </div>
           </div>
