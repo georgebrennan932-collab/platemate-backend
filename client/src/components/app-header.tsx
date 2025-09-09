@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
 import platemateLogo from "@/assets/platemate-logo.png";
 import { useState, useRef, useEffect } from "react";
+import { ConfettiCelebration, useConfetti } from "@/components/confetti-celebration";
 
 export function AppHeader() {
   const { user, isAuthenticated } = useAuth();
@@ -19,6 +20,9 @@ export function AppHeader() {
   const stepBuffer = useRef<number[]>([]);
   const lastStepTime = useRef<number>(0);
   const motionListener = useRef<any>(null);
+  
+  // Confetti celebration hook
+  const { shouldTrigger, triggerConfetti, resetTrigger } = useConfetti();
 
   // Load current steps from localStorage
   useEffect(() => {
@@ -189,6 +193,12 @@ export function AppHeader() {
         localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
         setSteps(newSteps);
         
+        // Check if goal is reached and trigger confetti
+        if (newSteps >= goal && currentSteps < goal) {
+          console.log('🎉 Step goal achieved! Triggering confetti');
+          triggerConfetti();
+        }
+        
         // Trigger custom event for real-time updates
         window.dispatchEvent(new CustomEvent('platemate-steps-updated'));
       }
@@ -298,6 +308,12 @@ export function AppHeader() {
                     localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
                     setSteps(newSteps);
                     
+                    // Check if goal is reached and trigger confetti
+                    if (newSteps >= goal && currentSteps < goal) {
+                      console.log('🎉 Step goal achieved! Triggering confetti');
+                      triggerConfetti();
+                    }
+                    
                     // Trigger custom event for real-time updates
                     window.dispatchEvent(new CustomEvent('platemate-steps-updated'));
                     console.log(`Added 50 steps, total: ${newSteps}`);
@@ -394,6 +410,14 @@ export function AppHeader() {
           )}
         </div>
       </div>
+      
+      {/* Confetti Celebration */}
+      <ConfettiCelebration 
+        trigger={shouldTrigger} 
+        onComplete={resetTrigger}
+        duration={4000}
+        particleCount={80}
+      />
     </header>
   );
 }
