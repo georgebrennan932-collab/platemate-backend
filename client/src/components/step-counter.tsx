@@ -3,6 +3,7 @@ import { Footprints, Plus, Minus, Play, Pause, Activity } from 'lucide-react';
 import { Motion } from '@capacitor/motion';
 import { Capacitor } from '@capacitor/core';
 import { healthConnectService } from '@/lib/health-connect-service';
+import { ConfettiCelebration, useConfetti } from '@/components/confetti-celebration';
 
 interface StepData {
   count: number;
@@ -18,6 +19,10 @@ export function StepCounter() {
   const [hasMotionPermission, setHasMotionPermission] = useState<boolean>(false);
   const [isHealthConnectConnected, setIsHealthConnectConnected] = useState<boolean>(false);
   const [lastHealthConnectSync, setLastHealthConnectSync] = useState<Date | null>(null);
+  const [wasGoalReached, setWasGoalReached] = useState<boolean>(false);
+  
+  // Confetti celebration hook
+  const { shouldTrigger, triggerConfetti, resetTrigger } = useConfetti();
   
   // Motion detection variables
   const lastAcceleration = useRef({ x: 0, y: 0, z: 0 });
@@ -299,6 +304,15 @@ export function StepCounter() {
   const percentage = Math.min((steps / goal) * 100, 100);
   const isGoalReached = steps >= goal;
 
+  // Trigger confetti when goal is newly achieved
+  useEffect(() => {
+    if (isGoalReached && !wasGoalReached) {
+      triggerConfetti();
+      console.log('🎉 Step goal achieved! Triggering confetti celebration');
+    }
+    setWasGoalReached(isGoalReached);
+  }, [isGoalReached, wasGoalReached, triggerConfetti]);
+
   return (
     <div className="relative">
       <button 
@@ -521,6 +535,14 @@ export function StepCounter() {
           </div>
         </div>
       )}
+      
+      {/* Confetti celebration */}
+      <ConfettiCelebration 
+        trigger={shouldTrigger} 
+        onComplete={resetTrigger}
+        duration={3000}
+        particleCount={60}
+      />
     </div>
   );
 }

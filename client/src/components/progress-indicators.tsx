@@ -1,6 +1,8 @@
+import React, { useEffect, useRef } from "react";
 import { Flame, Beef, Wheat, Droplets } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import type { NutritionGoals } from "@shared/schema";
+import { ConfettiCelebration, useConfetti } from "@/components/confetti-celebration";
 
 interface ProgressIndicatorsProps {
   goals: NutritionGoals | undefined;
@@ -15,6 +17,10 @@ interface ProgressIndicatorsProps {
 
 export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps) {
   if (!goals) return null;
+
+  // Track previous achievement status to trigger confetti only on new achievements
+  const previousAchievements = useRef<Record<string, boolean>>({});
+  const { shouldTrigger, triggerConfetti, resetTrigger } = useConfetti();
 
   const calculateProgress = (consumed: number, target: number) => {
     return Math.min((consumed / target) * 100, 100);
@@ -61,6 +67,22 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
     }
   ];
 
+  // Check for newly achieved goals and trigger confetti
+  useEffect(() => {
+    progressData.forEach(({ label, consumed, target }) => {
+      const progress = calculateProgress(consumed, target);
+      const isAchieved = progress >= 100;
+      const wasAchieved = previousAchievements.current[label] || false;
+      
+      if (isAchieved && !wasAchieved) {
+        triggerConfetti();
+        console.log(`🎉 ${label} goal achieved! Triggering confetti celebration`);
+      }
+      
+      previousAchievements.current[label] = isAchieved;
+    });
+  }, [progressData, triggerConfetti]);
+
   return (
     <div className="space-y-4">
       {progressData.map(({ icon: Icon, label, consumed, target, unit, testId }) => {
@@ -91,6 +113,14 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
           </div>
         );
       })}
+      
+      {/* Confetti celebration */}
+      <ConfettiCelebration 
+        trigger={shouldTrigger} 
+        onComplete={resetTrigger}
+        duration={2500}
+        particleCount={40}
+      />
     </div>
   );
 }
