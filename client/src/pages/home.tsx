@@ -454,34 +454,38 @@ export default function Home() {
       
       {/* Voice Meal Confirmation Dialog */}
       {showVoiceMealDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Mic className="h-5 w-5 text-primary" />
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Mic className="h-6 w-6 text-primary" />
+              </div>
               Add Voice Meal
             </h3>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Voice Input Display */}
-              <div className="bg-muted/50 rounded-lg p-3">
-                <label className="block text-sm font-medium mb-2">What you said:</label>
-                <p className="text-sm font-mono bg-background p-2 rounded border">
-                  "{voiceInput}"
-                </p>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 border border-blue-200/30 dark:border-blue-700/30">
+                <label className="block text-sm font-semibold mb-3 text-blue-700 dark:text-blue-300">What you said:</label>
+                <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-700 shadow-inner">
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-relaxed">
+                    "{voiceInput}"
+                  </p>
+                </div>
               </div>
 
               {/* Meal Type Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2">Meal Type</label>
-                <div className="grid grid-cols-4 gap-2">
+                <label className="block text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">Meal Type</label>
+                <div className="grid grid-cols-2 gap-3">
                   {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => (
                     <button
                       key={meal}
                       onClick={() => setSelectedMealType(meal)}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                      className={`py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
                         selectedMealType === meal
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg transform scale-105 border-2 border-green-400'
+                          : 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-500'
                       }`}
                       data-testid={`button-voice-meal-${meal}`}
                     >
@@ -493,11 +497,11 @@ export default function Home() {
             </div>
 
             {/* Dialog Actions */}
-            <div className="flex space-x-3 mt-6">
+            <div className="flex space-x-4 mt-6">
               <button
                 onClick={() => setShowVoiceMealDialog(false)}
                 disabled={addVoiceMealMutation.isPending}
-                className="flex-1 py-2 px-4 border border-input rounded-lg font-medium hover:bg-muted transition-colors disabled:opacity-50"
+                className="flex-1 py-3 px-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 disabled:opacity-50"
                 data-testid="button-cancel-voice-meal"
               >
                 Cancel
@@ -505,17 +509,17 @@ export default function Home() {
               <button
                 onClick={handleConfirmVoiceMeal}
                 disabled={addVoiceMealMutation.isPending}
-                className="flex-1 gradient-button py-2 px-4 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
                 data-testid="button-confirm-voice-meal"
               >
                 {addVoiceMealMutation.isPending ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     Adding...
                   </>
                 ) : (
                   <>
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-5 w-5" />
                     Add to Diary
                   </>
                 )}
