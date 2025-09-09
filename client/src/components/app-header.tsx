@@ -72,7 +72,7 @@ export function AppHeader() {
                   const timeSinceLastClick = now - lastClickTime;
                   
                   if (timeSinceLastClick < 500) {
-                    // Double click detected - reset steps
+                    // Double click detected - reset steps and stop motion tracking
                     const todayKey = new Date().toISOString().split('T')[0];
                     const stepData = {
                       count: 0,
@@ -81,7 +81,14 @@ export function AppHeader() {
                     };
                     localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
                     setSteps(0);
-                    console.log('Steps reset to 0');
+                    
+                    // Also clear any motion listeners to prevent old counts coming back
+                    if ((window as any).currentMotionHandler) {
+                      window.removeEventListener('devicemotion', (window as any).currentMotionHandler);
+                      (window as any).currentMotionHandler = null;
+                    }
+                    
+                    console.log('Steps reset to 0 and all motion tracking cleared');
                   } else {
                     // Single click - add test steps
                     const todayKey = new Date().toISOString().split('T')[0];

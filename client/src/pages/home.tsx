@@ -159,50 +159,75 @@ export default function Home() {
     if (!isHealthConnectConnected) {
       // Use built-in step counter with motion sensors
       try {
-        // Get current steps from local storage (using same keys as step counter)
         const todayKey = new Date().toISOString().split('T')[0];
-        const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
-        let currentSteps = 0;
-        if (stored) {
-          try {
-            const stepData = JSON.parse(stored);
-            currentSteps = stepData.count || 0;
-          } catch {}
-        }
+        
+        // Clear any existing motion listeners first
+        const existingListeners = document.querySelectorAll('[data-motion-listener]');
+        existingListeners.forEach(() => {
+          window.removeEventListener('devicemotion', (window as any).currentMotionHandler);
+        });
         
         // Start motion tracking
         if ('DeviceMotionEvent' in window) {
-          console.log('Starting motion detection...');
-          let lastMotionTime = 0;
-          let motionCount = 0;
+          console.log('Starting realistic step detection...');
+          let lastStepTime = 0;
+          let stepDetectionBuffer: number[] = [];
           
           const handleMotion = (event: DeviceMotionEvent) => {
             const now = Date.now();
-            if (now - lastMotionTime > 800) { // Detect movement every 800ms
-              const acc = event.accelerationIncludingGravity;
-              if (acc && (Math.abs(acc.x || 0) > 2 || Math.abs(acc.y || 0) > 2 || Math.abs(acc.z || 0) > 2)) {
-                motionCount++;
-                console.log(`Motion detected! Count: ${motionCount}`);
+            const acc = event.accelerationIncludingGravity;
+            
+            if (acc) {
+              // Calculate total acceleration magnitude
+              const magnitude = Math.sqrt((acc.x || 0)**2 + (acc.y || 0)**2 + (acc.z || 0)**2);
+              
+              // Add to buffer for smoothing
+              stepDetectionBuffer.push(magnitude);
+              if (stepDetectionBuffer.length > 20) {
+                stepDetectionBuffer.shift();
+              }
+              
+              // Only detect steps if we have enough data and enough time has passed
+              if (stepDetectionBuffer.length >= 10 && now - lastStepTime > 600) {
+                const avgMagnitude = stepDetectionBuffer.reduce((a, b) => a + b, 0) / stepDetectionBuffer.length;
+                const currentVariation = Math.abs(magnitude - avgMagnitude);
                 
-                // Add a step
-                const newSteps = currentSteps + 1;
-                const stepData = {
-                  count: newSteps,
-                  date: todayKey,
-                  goal: 10000
-                };
-                localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
-                currentSteps = newSteps;
-                lastMotionTime = now;
+                // Detect significant movement (like a step)
+                if (currentVariation > 2.5) {
+                  console.log(`Step detected! Magnitude: ${magnitude.toFixed(2)}, Variation: ${currentVariation.toFixed(2)}`);
+                  
+                  // Get current steps from localStorage and add one
+                  const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
+                  let currentSteps = 0;
+                  if (stored) {
+                    try {
+                      const stepData = JSON.parse(stored);
+                      currentSteps = stepData.count || 0;
+                    } catch {}
+                  }
+                  
+                  const newSteps = currentSteps + 1;
+                  const stepData = {
+                    count: newSteps,
+                    date: todayKey,
+                    goal: 10000
+                  };
+                  localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
+                  lastStepTime = now;
+                  
+                  console.log(`Total steps: ${newSteps}`);
+                }
               }
             }
           };
           
+          // Store reference to remove later
+          (window as any).currentMotionHandler = handleMotion;
           window.addEventListener('devicemotion', handleMotion);
           
           toast({
-            title: "Motion Tracking Started!",
-            description: "Shake or move your device to test step detection. Check console for debug info.",
+            title: "Step Detection Started!",
+            description: "Walk normally to track your steps. Double-click step counter to reset and stop tracking.",
           });
         } else {
           toast({
