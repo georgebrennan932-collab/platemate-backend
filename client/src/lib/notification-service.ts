@@ -82,10 +82,8 @@ class NotificationService {
       return true;
     }
 
-    const hasPermission = await this.initialize();
-    if (!hasPermission) {
-      throw new Error('Notification permission not granted');
-    }
+    // Try to initialize notifications but continue even if not supported
+    await this.initialize();
 
     try {
       if (Capacitor.isNativePlatform()) {
@@ -94,10 +92,10 @@ class NotificationService {
         await this.scheduleDailyWeb(config);
       }
       
-      console.log(`✓ Daily reminder scheduled for ${config.time}`);
+      console.log(`✓ Daily motivation scheduled for ${config.time} (will work with or without browser notifications)`);
       return true;
     } catch (error) {
-      console.error('Failed to schedule daily reminder:', error);
+      console.error('Failed to schedule daily motivation:', error);
       throw error;
     }
   }
@@ -174,35 +172,40 @@ class NotificationService {
   }
 
   private async showWebNotification(config: NotificationConfig): Promise<void> {
+    // Always fetch and show motivational content, regardless of notification support
+    const motivationalContent = await this.getMotivationalContent();
+    
+    // Play notification sound
+    soundService.playReminder();
+    
+    // Always show in-app motivation (works without browser permission)
+    this.showInAppMotivation(motivationalContent);
+    
+    // Try browser notification if available (but don't require it)
     if (this.hasPermission && 'Notification' in window) {
-      // Fetch fresh motivational content
-      const motivationalContent = await this.getMotivationalContent();
-      
-      // Play notification sound
-      soundService.playReminder();
+      try {
+        const notification = new Notification(motivationalContent.title, {
+          body: motivationalContent.body,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          tag: 'daily-motivation',
+          requireInteraction: true,
+          silent: false
+        });
 
-      const notification = new Notification(motivationalContent.title, {
-        body: motivationalContent.body,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        tag: 'daily-motivation',
-        requireInteraction: true, // Make it more prominent
-        silent: false
-      });
+        notification.onclick = () => {
+          window.focus();
+          window.location.href = '/';
+          notification.close();
+        };
 
-      notification.onclick = () => {
-        window.focus();
-        // Navigate to home page to show full motivation
-        window.location.href = '/';
-        notification.close();
-      };
-
-      // Keep open longer for motivation - 15 seconds
-      setTimeout(() => notification.close(), 15000);
-      
-      // Also show in-app toast for immediate visibility
-      this.showInAppMotivation(motivationalContent);
+        setTimeout(() => notification.close(), 15000);
+      } catch (error) {
+        console.log('Browser notification failed, but in-app motivation still works:', error);
+      }
     }
+    
+    console.log('🌟 Daily motivation delivered:', motivationalContent.body);
   }
 
   async cancelDaily(): Promise<void> {
@@ -227,14 +230,12 @@ class NotificationService {
   }
 
   async testNotification(): Promise<void> {
-    const hasPermission = await this.initialize();
-    if (!hasPermission) {
-      throw new Error('Notification permission not granted');
-    }
+    // Initialize but don't require permission for test
+    await this.initialize();
 
     const config: NotificationConfig = {
       title: 'PlateMate Coaching',
-      body: 'Test notification - your daily coaching is ready!',
+      body: 'Test notification - your daily motivation is ready! 🌟',
       time: '00:00',
       enabled: true
     };
@@ -246,15 +247,15 @@ class NotificationService {
             id: 999,
             title: config.title,
             body: config.body,
-            schedule: { at: new Date(Date.now() + 1000) }, // 1 second from now
+            schedule: { at: new Date(Date.now() + 1000) },
             sound: 'default'
           }
         ]
       });
     } else {
-      // Play test notification sound immediately
+      // Show in-app motivation immediately (works without permissions)
       await soundService.playNotification();
-      this.showWebNotification(config);
+      await this.showWebNotification(config);
     }
   }
 
