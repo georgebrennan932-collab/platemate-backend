@@ -347,7 +347,7 @@ export function StepCounter() {
               ? 'text-green-700 dark:text-emerald-300' 
               : 'text-blue-700 dark:text-blue-300'
           }`}>
-            {steps >= 1000 ? `${(steps/1000).toFixed(1)}k` : steps}
+            {steps >= 1000 ? `${(steps/1000).toFixed(1)}k` : steps}/{goal >= 1000 ? `${(goal/1000).toFixed(1)}k` : goal}
           </span>
           {isAutoTracking && (
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
