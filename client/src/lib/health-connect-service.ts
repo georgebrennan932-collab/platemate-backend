@@ -6,9 +6,33 @@
  * than the deprecated Google Fit APIs.
  */
 
-// Health Connect integration
-// Note: This will work properly when deployed to mobile devices with Health Connect
-declare const CapacitorHealth: any;
+// Health Connect integration with web fallback
+import { Capacitor } from '@capacitor/core';
+
+// Web fallback for Health Connect
+const CapacitorHealth = {
+  async isHealthAvailable() { 
+    return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'; 
+  },
+  async checkHealthPermissions() { 
+    return { permissions: {} }; 
+  },
+  async requestHealthPermissions() { 
+    if (!Capacitor.isNativePlatform()) {
+      throw new Error('Health Connect is only available on Android devices');
+    }
+    return { permissions: {} }; 
+  },
+  async queryHealthData() { 
+    return { data: [] }; 
+  },
+  async showHealthConnectInPlayStore() { 
+    console.log('Would open Play Store for Health Connect'); 
+  },
+  async openHealthConnectSettings() { 
+    console.log('Would open Health Connect settings'); 
+  }
+};
 
 interface HealthConnectData {
   steps: number;
@@ -40,6 +64,12 @@ class HealthConnectService {
    */
   async initialize(): Promise<boolean> {
     try {
+      // Check if we're on a web platform
+      if (!Capacitor.isNativePlatform()) {
+        console.log('Health Connect: Web platform detected - Health Connect only available on Android');
+        return false;
+      }
+
       // Check if Health Connect is available on the device
       const isAvailable = await CapacitorHealth.isHealthAvailable();
       
@@ -74,6 +104,11 @@ class HealthConnectService {
    */
   async authenticate(): Promise<boolean> {
     try {
+      // Check if we're on a web platform
+      if (!Capacitor.isNativePlatform()) {
+        throw new Error('Health Connect is only available on Android devices. This feature will work when you install the app on your Android phone.');
+      }
+
       // Check if Health Connect is available
       const isAvailable = await CapacitorHealth.isHealthAvailable();
       

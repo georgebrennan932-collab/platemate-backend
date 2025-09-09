@@ -158,11 +158,6 @@ export default function Home() {
   const handleHealthConnectSync = async () => {
     if (!isHealthConnectConnected) {
       try {
-        toast({
-          title: "Connecting to Health Connect...",
-          description: "Please authorize access to your fitness data",
-        });
-        
         const connected = await healthConnectService.authenticate();
         if (connected) {
           setIsHealthConnectConnected(true);
@@ -188,10 +183,11 @@ export default function Home() {
         }
       } catch (error) {
         console.error('Health Connect connection error:', error);
+        const errorMessage = error instanceof Error ? error.message : "Failed to connect to Health Connect. Please ensure the app is installed and try again.";
         toast({
-          title: "Connection Error",
-          description: "Failed to connect to Health Connect. Please ensure the app is installed and try again.",
-          variant: "destructive",
+          title: "Platform Notice",
+          description: errorMessage,
+          variant: "default",
         });
       }
     } else {
@@ -298,7 +294,7 @@ export default function Home() {
             >
               <Activity className="h-5 w-5 group-hover:scale-110 smooth-transition" />
               <span className="text-xs">
-                {isHealthConnectConnected ? 'Sync Health' : 'Connect Health'}
+                {isHealthConnectConnected ? 'Sync Health' : 'Health Connect'}
               </span>
               {lastHealthConnectSync && (
                 <div className="text-xs opacity-75">
