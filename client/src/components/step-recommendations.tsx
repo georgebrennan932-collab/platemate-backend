@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Footprints, Target, TrendingUp, Users, Edit } from "lucide-react";
+import { Footprints, Target, TrendingUp, Users, Edit, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { UserProfile } from "@shared/schema";
 
 export function StepRecommendations() {
@@ -11,10 +13,22 @@ export function StepRecommendations() {
     retry: false,
   });
 
+  const [customGoal, setCustomGoal] = useState<string>('');
+
   // Function to apply recommended steps to step counter
   const applyStepsToCounter = (recommendedSteps: number) => {
     localStorage.setItem('platemate-step-goal', recommendedSteps.toString());
-    window.location.reload(); // Refresh to update step counter
+    window.dispatchEvent(new CustomEvent('platemate-steps-updated'));
+  };
+
+  // Function to apply custom goal
+  const applyCustomGoal = () => {
+    const goal = parseInt(customGoal);
+    if (goal && goal > 0 && goal <= 50000) {
+      localStorage.setItem('platemate-step-goal', goal.toString());
+      window.dispatchEvent(new CustomEvent('platemate-steps-updated'));
+      setCustomGoal('');
+    }
   };
 
   const calculateRecommendedSteps = (profile: UserProfile): { 
@@ -189,6 +203,39 @@ export function StepRecommendations() {
             <span className="font-medium">📊 Using default values:</span> Complete your profile in the Calculator page for more accurate recommendations.
           </div>
         )}
+
+        {/* Manual Goal Setting */}
+        <div className="space-y-3 pt-4 border-t border-border/50">
+          <div className="flex items-center space-x-2">
+            <Plus className="h-4 w-4 text-purple-600" />
+            <Label htmlFor="customGoal" className="text-sm font-medium text-purple-700 dark:text-purple-300">
+              Set Custom Step Goal
+            </Label>
+          </div>
+          <div className="flex space-x-2">
+            <Input
+              id="customGoal"
+              type="number"
+              placeholder="Enter steps (1000-50000)"
+              value={customGoal}
+              onChange={(e) => setCustomGoal(e.target.value)}
+              min="1000"
+              max="50000"
+              className="flex-1"
+            />
+            <Button 
+              onClick={applyCustomGoal}
+              disabled={!customGoal || parseInt(customGoal) < 1000 || parseInt(customGoal) > 50000}
+              variant="outline"
+              className="px-4"
+            >
+              Apply
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Enter a custom daily step goal between 1,000 and 50,000 steps
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
