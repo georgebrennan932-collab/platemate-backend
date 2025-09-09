@@ -415,8 +415,8 @@ export function AppHeader() {
       <ConfettiCelebration 
         trigger={shouldTrigger} 
         onComplete={resetTrigger}
-        duration={4000}
-        particleCount={80}
+        duration={5000}
+        particleCount={120}
       />
     </header>
   );

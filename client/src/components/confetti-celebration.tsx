@@ -34,8 +34,41 @@ export function ConfettiCelebration({
   ];
 
   const createConfettiPiece = (id: number): ConfettiPiece => {
-    const startX = Math.random() * window.innerWidth;
-    const startY = -10;
+    // Random spawn position from all edges of the screen
+    const spawnEdge = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
+    let startX, startY, velocityX, velocityY;
+    
+    switch (spawnEdge) {
+      case 0: // Top edge
+        startX = Math.random() * window.innerWidth;
+        startY = -10;
+        velocityX = (Math.random() - 0.5) * 4;
+        velocityY = Math.random() * 4 + 3; // Falling down
+        break;
+      case 1: // Right edge
+        startX = window.innerWidth + 10;
+        startY = Math.random() * window.innerHeight;
+        velocityX = -(Math.random() * 4 + 2); // Moving left
+        velocityY = (Math.random() - 0.5) * 4;
+        break;
+      case 2: // Bottom edge
+        startX = Math.random() * window.innerWidth;
+        startY = window.innerHeight + 10;
+        velocityX = (Math.random() - 0.5) * 4;
+        velocityY = -(Math.random() * 4 + 2); // Moving up
+        break;
+      case 3: // Left edge
+        startX = -10;
+        startY = Math.random() * window.innerHeight;
+        velocityX = Math.random() * 4 + 2; // Moving right
+        velocityY = (Math.random() - 0.5) * 4;
+        break;
+      default:
+        startX = Math.random() * window.innerWidth;
+        startY = -10;
+        velocityX = (Math.random() - 0.5) * 4;
+        velocityY = Math.random() * 3 + 2;
+    }
     
     return {
       id,
@@ -43,10 +76,10 @@ export function ConfettiCelebration({
       y: startY,
       rotation: Math.random() * 360,
       color: colors[Math.floor(Math.random() * colors.length)],
-      size: Math.random() * 8 + 4, // 4-12px
-      velocityX: (Math.random() - 0.5) * 4, // -2 to 2
-      velocityY: Math.random() * 3 + 2, // 2-5 (falling speed)
-      rotationSpeed: (Math.random() - 0.5) * 10, // -5 to 5 degrees per frame
+      size: Math.random() * 10 + 6, // 6-16px (bigger pieces)
+      velocityX,
+      velocityY,
+      rotationSpeed: (Math.random() - 0.5) * 15, // Faster rotation
     };
   };
 
@@ -80,7 +113,12 @@ export function ConfettiCelebration({
           y: piece.y + piece.velocityY,
           rotation: piece.rotation + piece.rotationSpeed,
           velocityY: piece.velocityY + 0.1, // gravity
-        })).filter(piece => piece.y < window.innerHeight + 50) // Remove pieces that fall off screen
+        })).filter(piece => 
+          piece.y < window.innerHeight + 100 && 
+          piece.y > -100 && 
+          piece.x < window.innerWidth + 100 && 
+          piece.x > -100
+        ) // Remove pieces that go off any edge
       );
 
       animationId = requestAnimationFrame(animate);
