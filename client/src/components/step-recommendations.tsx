@@ -85,37 +85,27 @@ export function StepRecommendations() {
     return { recommended, min, optimal, reasoning };
   };
 
-  // Check if profile has required data
-  const hasValidProfile = profile && 
-    profile.age && 
-    profile.activityLevel && 
-    profile.currentWeightKg && 
-    profile.heightCm;
+  // Use default profile if no data available  
+  const effectiveProfile = profile || {
+    id: "default",
+    userId: "default", 
+    age: 30,
+    sex: "male",
+    heightCm: 170,
+    currentWeightKg: 70,
+    goalWeightKg: null,
+    activityLevel: "moderately_active",
+    weightGoal: "maintain_weight",
+    weeklyWeightChangeKg: null,
+    medication: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
 
-  if (!hasValidProfile) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Footprints className="h-5 w-5 text-blue-600" />
-            <span>Daily Step Recommendations</span>
-          </CardTitle>
-          <CardDescription>
-            Complete your profile in the calculator to get personalized step targets
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <Target className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p>No profile data available</p>
-            <p className="text-sm mt-2">Visit the Calculator page to set up your personal profile</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const stepData = calculateRecommendedSteps(profile);
+  const stepData = calculateRecommendedSteps(effectiveProfile);
+  
+  // Show note if using defaults
+  const isUsingDefaults = !profile || !profile.age || !profile.activityLevel || !profile.currentWeightKg || !profile.heightCm;
 
   return (
     <Card className="w-full">
@@ -125,7 +115,10 @@ export function StepRecommendations() {
           <span>Daily Step Recommendations</span>
         </CardTitle>
         <CardDescription>
-          Personalized targets based on your profile and goals
+          {isUsingDefaults ? 
+            "Default recommendations - complete your profile in Calculator for personalized targets" :
+            "Personalized targets based on your profile and goals"
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -184,12 +177,18 @@ export function StepRecommendations() {
 
         {/* Profile Summary */}
         <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-2 border-t">
-          <div>Activity: <span className="capitalize">{(profile.activityLevel || 'moderate').replace('_', ' ')}</span></div>
-          <div>Goal: <span className="capitalize">{(profile.weightGoal || 'maintain').replace('_', ' ')}</span></div>
-          <div>Age: {profile.age || 'N/A'} years</div>
-          <div>BMI: {profile.currentWeightKg && profile.heightCm ? 
-            (profile.currentWeightKg / Math.pow(profile.heightCm / 100, 2)).toFixed(1) : 'N/A'}</div>
+          <div>Activity: <span className="capitalize">{(effectiveProfile.activityLevel || 'moderate').replace('_', ' ')}</span></div>
+          <div>Goal: <span className="capitalize">{(effectiveProfile.weightGoal || 'maintain').replace('_', ' ')}</span></div>
+          <div>Age: {effectiveProfile.age || 'N/A'} years</div>
+          <div>BMI: {effectiveProfile.currentWeightKg && effectiveProfile.heightCm ? 
+            (effectiveProfile.currentWeightKg / Math.pow(effectiveProfile.heightCm / 100, 2)).toFixed(1) : 'N/A'}</div>
         </div>
+        
+        {isUsingDefaults && (
+          <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200/30 dark:border-amber-700/30">
+            <span className="font-medium">📊 Using default values:</span> Complete your profile in the Calculator page for more accurate recommendations.
+          </div>
+        )}
       </CardContent>
     </Card>
   );

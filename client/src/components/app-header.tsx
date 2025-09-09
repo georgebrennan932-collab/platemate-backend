@@ -36,9 +36,22 @@ export function AppHeader() {
 
     loadSteps();
     
-    // Update steps every few seconds to show real-time changes
+    // Listen for storage changes for real-time updates
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith('platemate-steps-') || e.key === 'platemate-step-goal') {
+        loadSteps();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check every few seconds as fallback
     const interval = setInterval(loadSteps, 3000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, []);
 
   // Close dropdown when clicking outside
