@@ -76,17 +76,17 @@ export default function LandingPage() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           <Card className="border-blue-200 dark:border-blue-800 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-500 hover:scale-105 animate-fade-in-left animation-delay-1200 group">
             <CardHeader className="text-center">
               <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float group-hover:animate-bounce">
                 <Mic className="h-8 w-8 text-blue-600 dark:text-blue-400 group-hover:animate-pulse" />
               </div>
-              <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">Voice Input</CardTitle>
+              <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">Enhanced Voice Input</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center">
-                Simply speak your meals! Say "100g chicken" or "one banana" and watch it automatically appear in your food diary.
+                Beautiful voice capture with large, bold text display. Simply speak your meals and see them highlighted prominently before adding to your diary.
               </CardDescription>
             </CardContent>
           </Card>
@@ -123,18 +123,32 @@ export default function LandingPage() {
               <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-1000 group-hover:animate-bounce">
                 <Calculator className="h-8 w-8 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
               </div>
-              <CardTitle className="text-xl group-hover:text-green-600 transition-colors">Personal Calculator</CardTitle>
+              <CardTitle className="text-xl group-hover:text-green-600 transition-colors">Smart Calculator & Goals</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center">
-                Calculate your personalized daily calorie needs based on your BMR, activity level, and weight goals.
+                Calculate personalized daily calories and get recommended step targets based on your profile, age, and activity level.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="border-indigo-200 dark:border-indigo-800 hover:shadow-2xl hover:shadow-indigo-500/25 transition-all duration-500 hover:scale-105 hover:rotate-1 animate-fade-in-up animation-delay-2400 group">
+          <Card className="border-orange-200 dark:border-orange-800 hover:shadow-2xl hover:shadow-orange-500/25 transition-all duration-500 hover:scale-105 hover:rotate-1 animate-fade-in-up animation-delay-2400 group">
             <CardHeader className="text-center">
-              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-1500 group-hover:animate-bounce">
+              <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-1500 group-hover:animate-bounce">
+                <Activity className="h-8 w-8 text-orange-600 dark:text-orange-400 group-hover:animate-pulse" />
+              </div>
+              <CardTitle className="text-xl group-hover:text-orange-600 transition-colors">Step Tracking</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-center">
+                Built-in motion tracking with Android Health Connect integration. Track steps automatically with smart detection and manual controls.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="border-indigo-200 dark:border-indigo-800 hover:shadow-2xl hover:shadow-indigo-500/25 transition-all duration-500 hover:scale-105 hover:rotate-1 animate-fade-in-up animation-delay-2700 group">
+            <CardHeader className="text-center">
+              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-2000 group-hover:animate-bounce">
                 <Syringe className="h-8 w-8 text-indigo-600 dark:text-indigo-400 group-hover:animate-pulse" />
               </div>
               <CardTitle className="text-xl group-hover:text-indigo-600 transition-colors">Injection Support</CardTitle>
@@ -192,11 +206,11 @@ export default function LandingPage() {
                 <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full w-fit mx-auto mb-4 group-hover:animate-bounce">
                   <Target className="h-8 w-8 text-orange-600 dark:text-orange-400" />
                 </div>
-                <CardTitle className="text-lg group-hover:text-orange-600 transition-colors">Smart Goals</CardTitle>
+                <CardTitle className="text-lg group-hover:text-orange-600 transition-colors">Smart Goals & Steps</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-sm">
-                  Set and track personalized nutrition goals with automatic updates from your calorie calculations.
+                  Set personalized nutrition goals and get recommended daily step targets based on your age, activity level, and health goals.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -256,6 +270,14 @@ export default function LandingPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-1">Personalized Calculations</h3>
                 <p className="text-muted-foreground">Get precise BMR and TDEE calculations with medication-aware adjustments for safe weight management.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-3">
+              <Activity className="h-6 w-6 text-orange-500 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg font-semibold mb-1">Smart Step Tracking</h3>
+                <p className="text-muted-foreground">Built-in motion sensors with Health Connect integration. Get personalized daily step targets based on your profile and goals.</p>
               </div>
             </div>
             
