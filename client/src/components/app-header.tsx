@@ -66,7 +66,7 @@ export function AppHeader() {
             <h1 className="text-2xl font-bold gradient-text">PlateMate</h1>
             {isAuthenticated && (
               <div 
-                className="flex items-center space-x-1 mt-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border border-blue-200/30 dark:border-blue-700/30 cursor-pointer hover:scale-105 transition-transform"
+                className="flex items-center space-x-1 mt-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border border-blue-200/30 dark:border-blue-700/30 cursor-pointer hover:scale-105 transition-transform relative group"
                 onClick={() => {
                   const now = Date.now();
                   const timeSinceLastClick = now - lastClickTime;
@@ -113,12 +113,22 @@ export function AppHeader() {
                   
                   setLastClickTime(now);
                 }}
-                title="Click to add 50 steps, double-click to reset"
+                title="💡 Click: +50 steps | Double-tap: Reset to 0"
               >
                 <Footprints className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                 <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
                   {steps >= 1000 ? `${(steps/1000).toFixed(1)}k` : steps} steps
                 </span>
+                
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                  <div className="text-center">
+                    <div className="font-bold">💡 Step Counter Tips</div>
+                    <div className="mt-1">Click: +50 steps</div>
+                    <div>Double-tap: Reset to 0</div>
+                  </div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-100"></div>
+                </div>
               </div>
             )}
           </div>
