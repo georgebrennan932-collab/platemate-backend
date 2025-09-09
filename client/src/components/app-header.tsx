@@ -9,6 +9,7 @@ export function AppHeader() {
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const [steps, setSteps] = useState<number>(0);
+  const [lastClickTime, setLastClickTime] = useState<number>(0);
 
   // Load current steps from localStorage
   useEffect(() => {
@@ -67,26 +68,45 @@ export function AppHeader() {
               <div 
                 className="flex items-center space-x-1 mt-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border border-blue-200/30 dark:border-blue-700/30 cursor-pointer hover:scale-105 transition-transform"
                 onClick={() => {
-                  // Test function - manually add steps
-                  const todayKey = new Date().toISOString().split('T')[0];
-                  const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
-                  let currentSteps = 0;
-                  if (stored) {
-                    try {
-                      const stepData = JSON.parse(stored);
-                      currentSteps = stepData.count || 0;
-                    } catch {}
+                  const now = Date.now();
+                  const timeSinceLastClick = now - lastClickTime;
+                  
+                  if (timeSinceLastClick < 500) {
+                    // Double click detected - reset steps
+                    const todayKey = new Date().toISOString().split('T')[0];
+                    const stepData = {
+                      count: 0,
+                      date: todayKey,
+                      goal: 10000
+                    };
+                    localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
+                    setSteps(0);
+                    console.log('Steps reset to 0');
+                  } else {
+                    // Single click - add test steps
+                    const todayKey = new Date().toISOString().split('T')[0];
+                    const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
+                    let currentSteps = 0;
+                    if (stored) {
+                      try {
+                        const stepData = JSON.parse(stored);
+                        currentSteps = stepData.count || 0;
+                      } catch {}
+                    }
+                    const newSteps = currentSteps + 50; // Add 50 steps when clicked
+                    const stepData = {
+                      count: newSteps,
+                      date: todayKey,
+                      goal: 10000
+                    };
+                    localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
+                    setSteps(newSteps);
+                    console.log(`Added 50 steps, total: ${newSteps}`);
                   }
-                  const newSteps = currentSteps + 50; // Add 50 steps when clicked
-                  const stepData = {
-                    count: newSteps,
-                    date: todayKey,
-                    goal: 10000
-                  };
-                  localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
-                  setSteps(newSteps);
+                  
+                  setLastClickTime(now);
                 }}
-                title="Click to add 50 test steps"
+                title="Click to add 50 steps, double-click to reset"
               >
                 <Footprints className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                 <span className="text-sm font-bold text-blue-700 dark:text-blue-300">

@@ -161,27 +161,54 @@ export default function Home() {
       try {
         // Get current steps from local storage (using same keys as step counter)
         const todayKey = new Date().toISOString().split('T')[0];
-        const currentSteps = parseInt(localStorage.getItem(`platemate-steps-${todayKey}`) || '0');
-        const lastUpdate = localStorage.getItem('steps-last-sync');
+        const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
+        let currentSteps = 0;
+        if (stored) {
+          try {
+            const stepData = JSON.parse(stored);
+            currentSteps = stepData.count || 0;
+          } catch {}
+        }
         
-        if (currentSteps > 0) {
-          toast({
-            title: "Step Counter Active",
-            description: `You've taken ${currentSteps.toLocaleString()} steps today using built-in motion tracking!`,
-          });
-        } else {
-          // Initialize with some demo steps to show the counter working
-          const demoSteps = Math.floor(Math.random() * 2000) + 500; // Random between 500-2500 steps
-          const stepData = {
-            count: demoSteps,
-            date: todayKey,
-            goal: 10000
+        // Start motion tracking
+        if ('DeviceMotionEvent' in window) {
+          console.log('Starting motion detection...');
+          let lastMotionTime = 0;
+          let motionCount = 0;
+          
+          const handleMotion = (event: DeviceMotionEvent) => {
+            const now = Date.now();
+            if (now - lastMotionTime > 800) { // Detect movement every 800ms
+              const acc = event.accelerationIncludingGravity;
+              if (acc && (Math.abs(acc.x || 0) > 2 || Math.abs(acc.y || 0) > 2 || Math.abs(acc.z || 0) > 2)) {
+                motionCount++;
+                console.log(`Motion detected! Count: ${motionCount}`);
+                
+                // Add a step
+                const newSteps = currentSteps + 1;
+                const stepData = {
+                  count: newSteps,
+                  date: todayKey,
+                  goal: 10000
+                };
+                localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
+                currentSteps = newSteps;
+                lastMotionTime = now;
+              }
+            }
           };
-          localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
+          
+          window.addEventListener('devicemotion', handleMotion);
           
           toast({
-            title: "Step Tracking Activated!",
-            description: `Motion sensors initialized! You've already taken ${demoSteps.toLocaleString()} steps today. Keep moving to increase your count!`,
+            title: "Motion Tracking Started!",
+            description: "Shake or move your device to test step detection. Check console for debug info.",
+          });
+        } else {
+          toast({
+            title: "Motion Sensors Not Available",
+            description: "Your device doesn't support motion detection. Use the step counter button to manually track.",
+            variant: "destructive"
           });
         }
         
