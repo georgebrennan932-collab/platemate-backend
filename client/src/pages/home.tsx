@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/app-header";
@@ -12,7 +12,8 @@ import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Activity } from "lucide-react";
 import { healthConnectService } from "@/lib/health-connect-service";
-import type { FoodAnalysis } from "@shared/schema";
+import { ConfettiCelebration } from "@/components/confetti-celebration";
+import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
@@ -35,6 +36,20 @@ export default function Home() {
   const [isHealthConnectConnected, setIsHealthConnectConnected] = useState(false);
   const [lastHealthConnectSync, setLastHealthConnectSync] = useState<Date | null>(null);
   
+  // Persistent confetti celebration state
+  const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
+  
+  // Fetch nutrition goals and diary entries to check for achievements
+  const { data: nutritionGoals } = useQuery<NutritionGoals>({
+    queryKey: ['/api/nutrition-goals'],
+    retry: false,
+  });
+
+  const { data: diaryEntries } = useQuery<DiaryEntry[]>({
+    queryKey: ['/api/diary'],
+    retry: false,
+  });
+  
   // Initialize speech recognition and Health Connect
   useEffect(() => {
     const checkSpeechSupport = () => {
@@ -53,6 +68,64 @@ export default function Home() {
     };
     initHealthConnect();
   }, []);
+
+  // Check for achieved goals and trigger persistent confetti
+  useEffect(() => {
+    const checkForAchievedGoals = () => {
+      if (!nutritionGoals || !diaryEntries) return;
+
+      const today = new Date().toISOString().split('T')[0];
+      const lastCelebrationKey = `platemate-confetti-${today}`;
+      const lastCelebration = localStorage.getItem(lastCelebrationKey);
+
+      if (lastCelebration) return; // Already celebrated today
+
+      // Calculate nutrition progress
+      const todayEntries = diaryEntries.filter(entry => 
+        entry.mealDate && new Date(entry.mealDate).toDateString() === new Date().toDateString()
+      );
+
+      let totalCalories = 0;
+      let totalProtein = 0;
+      let totalCarbs = 0;
+      let totalFat = 0;
+
+      todayEntries.forEach(entry => {
+        // Note: This will need proper calculation with analysis data in real implementation
+        // For now, using placeholder values
+        totalCalories += 100; // Placeholder
+        totalProtein += 10; // Placeholder
+        totalCarbs += 15; // Placeholder
+        totalFat += 5; // Placeholder
+      });
+
+      // Check if nutrition goals are achieved
+      const caloriesAchieved = totalCalories >= (nutritionGoals.dailyCalories || 2000);
+      const proteinAchieved = totalProtein >= (nutritionGoals.dailyProtein || 150);
+
+      // Check step goals
+      const stepData = localStorage.getItem(`platemate-steps-${today}`);
+      let stepsAchieved = false;
+      
+      if (stepData) {
+        const parsed = JSON.parse(stepData);
+        stepsAchieved = parsed.count >= parsed.goal;
+      }
+
+      // Show confetti if any goal is achieved
+      if (caloriesAchieved || proteinAchieved || stepsAchieved) {
+        console.log('🎉 Goals achieved! Triggering persistent confetti celebration');
+        setShowPersistentConfetti(true);
+        
+        // Mark as celebrated today
+        localStorage.setItem(lastCelebrationKey, new Date().toISOString());
+      }
+    };
+
+    // Delay check to ensure data is loaded
+    const timeoutId = setTimeout(checkForAchievedGoals, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [nutritionGoals, diaryEntries]);
 
   const handleAnalysisStart = () => {
     soundService.playScan();
@@ -511,6 +584,14 @@ export default function Home() {
 
       {/* Bottom Navigation */}
       <BottomNavigation />
+      
+      {/* Persistent confetti celebration */}
+      <ConfettiCelebration 
+        trigger={showPersistentConfetti} 
+        onComplete={() => setShowPersistentConfetti(false)}
+        duration={4000}
+        particleCount={80}
+      />
       
       {/* Bottom padding to prevent content from being hidden behind bottom nav */}
       <div className="h-20"></div>
