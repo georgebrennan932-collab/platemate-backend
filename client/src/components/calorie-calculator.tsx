@@ -37,6 +37,25 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
   const queryClient = useQueryClient();
   const [calculatedCalories, setCalculatedCalories] = React.useState<number | null>(null);
   const [bmrData, setBmrData] = React.useState<any>(null);
+  
+  // Load form data from localStorage as fallback
+  const loadFormDataFromStorage = () => {
+    try {
+      const saved = localStorage.getItem('calculator-form-data');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  };
+  
+  // Save form data to localStorage
+  const saveFormDataToStorage = (data: ProfileFormData) => {
+    try {
+      localStorage.setItem('calculator-form-data', JSON.stringify(data));
+    } catch (error) {
+      console.warn('Could not save form data to localStorage:', error);
+    }
+  };
 
   // Fetch existing profile
   const { data: profile, isLoading } = useQuery<UserProfile>({
@@ -44,37 +63,65 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     retry: false,
   });
 
+  // Get initial form data from saved profile or localStorage
+  const getInitialFormData = () => {
+    const savedData = loadFormDataFromStorage();
+    return {
+      age: profile?.age || savedData?.age || 25,
+      sex: (profile?.sex as "male" | "female") || savedData?.sex || "male",
+      heightCm: profile?.heightCm || savedData?.heightCm || 170,
+      currentWeightKg: profile?.currentWeightKg || savedData?.currentWeightKg || 70,
+      goalWeightKg: profile?.goalWeightKg || savedData?.goalWeightKg || 65,
+      activityLevel: (profile?.activityLevel as any) || savedData?.activityLevel || "moderately_active",
+      weightGoal: (profile?.weightGoal as any) || savedData?.weightGoal || "maintain_weight",
+      weeklyWeightChangeKg: profile?.weeklyWeightChangeKg || savedData?.weeklyWeightChangeKg || 0,
+      medication: (profile?.medication as any) || savedData?.medication || "none",
+    };
+  };
+
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      age: profile?.age || 25,
-      sex: profile?.sex as "male" | "female" || "male",
-      heightCm: profile?.heightCm || 170,
-      currentWeightKg: profile?.currentWeightKg || 70,
-      goalWeightKg: profile?.goalWeightKg || 65,
-      activityLevel: profile?.activityLevel as any || "moderately_active",
-      weightGoal: profile?.weightGoal as any || "maintain_weight",
-      weeklyWeightChangeKg: profile?.weeklyWeightChangeKg || 0,
-      medication: profile?.medication as any || "none",
-    },
+    defaultValues: getInitialFormData(),
   });
 
-  // Update form when profile loads
+  // Update form when profile loads or save current form data
   React.useEffect(() => {
+    console.log('Profile data loaded:', profile);
+    
     if (profile) {
-      form.reset({
-        age: profile.age || 25,
-        sex: profile.sex as "male" | "female" || "male",
-        heightCm: profile.heightCm || 170,
-        currentWeightKg: profile.currentWeightKg || 70,
-        goalWeightKg: profile.goalWeightKg || 65,
-        activityLevel: profile.activityLevel as any || "moderately_active",
-        weightGoal: profile.weightGoal as any || "maintain_weight",
+      // If we have a saved profile, use it
+      const formData = {
+        age: profile.age && profile.age > 0 ? profile.age : 25,
+        sex: (profile.sex as "male" | "female") || "male",
+        heightCm: profile.heightCm && profile.heightCm > 0 ? profile.heightCm : 170,
+        currentWeightKg: profile.currentWeightKg && profile.currentWeightKg > 0 ? profile.currentWeightKg : 70,
+        goalWeightKg: profile.goalWeightKg && profile.goalWeightKg > 0 ? profile.goalWeightKg : 65,
+        activityLevel: (profile.activityLevel as any) || "moderately_active",
+        weightGoal: (profile.weightGoal as any) || "maintain_weight",
         weeklyWeightChangeKg: profile.weeklyWeightChangeKg || 0,
-        medication: profile.medication as any || "none",
-      });
+        medication: (profile.medication as any) || "none",
+      };
+      console.log('Setting form data from profile:', formData);
+      form.reset(formData);
+    } else {
+      // If no profile, try to restore from localStorage
+      const savedData = loadFormDataFromStorage();
+      if (savedData) {
+        console.log('Restoring form data from localStorage:', savedData);
+        form.reset(savedData);
+      }
     }
   }, [profile, form]);
+  
+  // Auto-save form data to localStorage when form changes
+  React.useEffect(() => {
+    const subscription = form.watch((data) => {
+      if (data.age && data.sex && data.heightCm && data.currentWeightKg) {
+        saveFormDataToStorage(data as ProfileFormData);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const saveProfileMutation = useMutation({
     mutationFn: async (data: InsertUserProfile) => {
