@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Footprints, Plus, Minus, Play, Pause } from 'lucide-react';
+import { Footprints, Plus, Minus, Play, Pause, Activity } from 'lucide-react';
 import { Motion } from '@capacitor/motion';
 import { Capacitor } from '@capacitor/core';
+import { googleFitService } from '@/lib/google-fit-service';
 
 interface StepData {
   count: number;
@@ -15,6 +16,8 @@ export function StepCounter() {
   const [isOpen, setIsOpen] = useState(false);
   const [isAutoTracking, setIsAutoTracking] = useState<boolean>(false);
   const [hasMotionPermission, setHasMotionPermission] = useState<boolean>(false);
+  const [isGoogleFitConnected, setIsGoogleFitConnected] = useState<boolean>(false);
+  const [lastGoogleFitSync, setLastGoogleFitSync] = useState<Date | null>(null);
   
   // Motion detection variables
   const lastAcceleration = useRef({ x: 0, y: 0, z: 0 });
@@ -115,6 +118,23 @@ export function StepCounter() {
     if (autoTrackingStored === 'true') {
       setIsAutoTracking(true);
     }
+  }, []);
+
+  // Initialize Google Fit integration
+  useEffect(() => {
+    const initGoogleFit = async () => {
+      const connected = await googleFitService.initialize();
+      setIsGoogleFitConnected(connected);
+      if (connected) {
+        setLastGoogleFitSync(googleFitService.getLastSyncTime());
+        // Auto-sync if connected and it's been more than 30 minutes
+        const lastSync = googleFitService.getLastSyncTime();
+        if (!lastSync || Date.now() - lastSync.getTime() > 30 * 60 * 1000) {
+          syncWithGoogleFit();
+        }
+      }
+    };
+    initGoogleFit();
   }, []);
 
   // Step detection algorithm
@@ -240,6 +260,22 @@ export function StepCounter() {
     localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
     if (newGoal) {
       localStorage.setItem('platemate-step-goal', newGoal.toString());
+    }
+  };
+
+  // Sync with Google Fit
+  const syncWithGoogleFit = async () => {
+    if (!isGoogleFitConnected) return;
+    
+    try {
+      const result = await googleFitService.syncWithLocalSteps();
+      if (result.synced) {
+        setSteps(result.steps);
+        setLastGoogleFitSync(new Date());
+        console.log('✓ Google Fit sync completed:', result.steps);
+      }
+    } catch (error) {
+      console.error('Google Fit sync failed:', error);
     }
   };
 
