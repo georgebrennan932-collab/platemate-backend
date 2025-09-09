@@ -1,7 +1,7 @@
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { Link } from "wouter";
 import { NutritionGoals } from "@/components/nutrition-goals";
-import { GoogleFitIntegration } from "@/components/google-fit-integration";
+import { HealthConnectIntegration } from "@/components/health-connect-integration";
 import { BottomNavigation } from "@/components/bottom-navigation";
 
 export function GoalsPage() {
@@ -39,11 +39,11 @@ export function GoalsPage() {
       <div className="max-w-md mx-auto p-4 space-y-6">
         <NutritionGoals />
         
-        {/* Google Fit Integration */}
-        <GoogleFitIntegration 
+        {/* Health Connect Integration */}
+        <HealthConnectIntegration 
           className="w-full"
           onStepsSync={(syncedSteps) => {
-            console.log(`Google Fit synced: ${syncedSteps} steps`);
+            console.log(`Health Connect synced: ${syncedSteps} steps`);
           }}
         />
       </div>
