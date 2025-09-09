@@ -1,5 +1,5 @@
-import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap } from "lucide-react";
-import type { FoodAnalysis } from "@shared/schema";
+import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus } from "lucide-react";
+import type { FoodAnalysis, DetectedFood } from "@shared/schema";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,18 +16,79 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [selectedMealType, setSelectedMealType] = useState<"breakfast" | "lunch" | "dinner" | "snack">("lunch");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
+  const [editableFoods, setEditableFoods] = useState<DetectedFood[]>(data.detectedFoods);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Function to update portion for a specific food item
+  const updateFoodPortion = (index: number, newPortion: string) => {
+    const updatedFoods = [...editableFoods];
+    const originalFood = data.detectedFoods[index];
+    const originalPortion = originalFood.portion;
+    
+    // Extract numeric value from portions (assuming format like "150g" or "1 cup")
+    const getPortionMultiplier = (original: string, updated: string): number => {
+      const originalMatch = original.match(/\d+(\.\d+)?/);
+      const updatedMatch = updated.match(/\d+(\.\d+)?/);
+      
+      if (originalMatch && updatedMatch) {
+        return parseFloat(updatedMatch[0]) / parseFloat(originalMatch[0]);
+      }
+      return 1; // Default to no change if we can't parse
+    };
+    
+    const multiplier = getPortionMultiplier(originalPortion, newPortion);
+    
+    // Update nutrition values based on the multiplier
+    updatedFoods[index] = {
+      ...originalFood,
+      portion: newPortion,
+      calories: Math.round(originalFood.calories * multiplier),
+      protein: Math.round(originalFood.protein * multiplier * 10) / 10,
+      carbs: Math.round(originalFood.carbs * multiplier * 10) / 10,
+      fat: Math.round(originalFood.fat * multiplier * 10) / 10,
+    };
+    
+    setEditableFoods(updatedFoods);
+  };
+
+  // Calculate total nutrition from editable foods
+  const calculateTotals = () => {
+    return editableFoods.reduce(
+      (totals, food) => ({
+        calories: totals.calories + food.calories,
+        protein: totals.protein + food.protein,
+        carbs: totals.carbs + food.carbs,
+        fat: totals.fat + food.fat,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+  };
+
+  const totals = calculateTotals();
+
   const addToDiaryMutation = useMutation({
     mutationFn: async () => {
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
+      
+      // Create a modified analysis with updated food data
+      const modifiedAnalysis = {
+        ...data,
+        detectedFoods: editableFoods,
+        totalCalories: totals.calories,
+        totalProtein: totals.protein,
+        totalCarbs: totals.carbs,
+        totalFat: totals.fat
+      };
+      
       const response = await apiRequest('POST', '/api/diary', {
         analysisId: data.id,
         mealType: selectedMealType,
         mealDate: mealDateTime.toISOString(),
-        notes: ""
+        notes: "",
+        modifiedAnalysis // Send the modified data
       });
       return await response.json();
     },
@@ -188,36 +249,98 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         </h3>
         
         <div className="space-y-4">
-          {data.detectedFoods.map((food, index) => (
+          {editableFoods.map((food, index) => (
             <div 
               key={index}
-              className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+              className={`p-3 rounded-lg transition-all ${
+                editingIndex === index 
+                  ? 'bg-primary/10 border-2 border-primary/30' 
+                  : 'bg-secondary/50 border border-transparent'
+              }`}
               data-testid={`card-food-${index}`}
             >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                  <i className={`${getFoodIcon(food.icon)} text-primary`}></i>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3 flex-1">
+                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <i className={`${getFoodIcon(food.icon)} text-primary`}></i>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium" data-testid={`text-food-name-${index}`}>
+                      {food.name}
+                    </p>
+                    {editingIndex === index ? (
+                      <div className="flex items-center space-x-2 mt-2">
+                        <input
+                          type="text"
+                          value={food.portion}
+                          onChange={(e) => updateFoodPortion(index, e.target.value)}
+                          className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
+                          placeholder="e.g., 200g, 1 cup"
+                          data-testid={`input-food-portion-${index}`}
+                        />
+                        <button
+                          onClick={() => setEditingIndex(null)}
+                          className="p-1 text-green-600 hover:bg-green-100 rounded"
+                          data-testid={`button-save-portion-${index}`}
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditableFoods([...data.detectedFoods]); // Reset to original
+                            setEditingIndex(null);
+                          }}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded"
+                          data-testid={`button-cancel-portion-${index}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <p className="text-sm text-muted-foreground" data-testid={`text-food-portion-${index}`}>
+                          {food.portion}
+                        </p>
+                        <button
+                          onClick={() => setEditingIndex(index)}
+                          className="p-1 text-blue-600 hover:bg-blue-100 rounded opacity-70 hover:opacity-100 transition-opacity"
+                          title="Edit portion"
+                          data-testid={`button-edit-portion-${index}`}
+                        >
+                          <Edit3 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium" data-testid={`text-food-name-${index}`}>
-                    {food.name}
+                <div className="text-right">
+                  <p className="font-semibold" data-testid={`text-food-calories-${index}`}>
+                    {food.calories} cal
                   </p>
-                  <p className="text-sm text-muted-foreground" data-testid={`text-food-portion-${index}`}>
-                    {food.portion}
+                  <p className="text-xs text-muted-foreground">
+                    {food.protein}g protein
                   </p>
+                  {editingIndex === index && (
+                    <div className="text-xs text-blue-600 mt-1">
+                      {food.carbs}g carbs • {food.fat}g fat
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold" data-testid={`text-food-calories-${index}`}>
-                  {food.calories} cal
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {food.protein}g protein
-                </p>
               </div>
             </div>
           ))}
         </div>
+        
+        {data.isAITemporarilyUnavailable && (
+          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+            <div className="flex items-center space-x-2">
+              <Info className="h-4 w-4 text-amber-600" />
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                <strong>Tip:</strong> AI estimates may not be perfect. You can edit portions above to get more accurate nutrition values.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Nutrition Summary Cards - Now Second */}
@@ -232,10 +355,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </div>
           </div>
           <p className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1" data-testid="text-calories">
-            {data.totalCalories}
+            {totals.calories}
           </p>
           <p className="text-xs text-red-600/70 dark:text-red-400/70 font-medium">
-            {Math.round((data.totalCalories / 2000) * 100)}% daily value
+            {Math.round((totals.calories / 2000) * 100)}% daily value
           </p>
         </div>
 
@@ -249,10 +372,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </div>
           </div>
           <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1" data-testid="text-protein">
-            {data.totalProtein}g
+            {totals.protein}g
           </p>
           <p className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium">
-            {Math.round((data.totalProtein / 50) * 100)}% daily value
+            {Math.round((totals.protein / 50) * 100)}% daily value
           </p>
         </div>
 
@@ -266,10 +389,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </div>
           </div>
           <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1" data-testid="text-carbs">
-            {data.totalCarbs}g
+            {totals.carbs}g
           </p>
           <p className="text-xs text-orange-600/70 dark:text-orange-400/70 font-medium">
-            {Math.round((data.totalCarbs / 300) * 100)}% daily value
+            {Math.round((totals.carbs / 300) * 100)}% daily value
           </p>
         </div>
 
@@ -283,10 +406,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </div>
           </div>
           <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1" data-testid="text-fat">
-            {data.totalFat}g
+            {totals.fat}g
           </p>
           <p className="text-xs text-yellow-600/70 dark:text-yellow-400/70 font-medium">
-            {Math.round((data.totalFat / 65) * 100)}% daily value
+            {Math.round((totals.fat / 65) * 100)}% daily value
           </p>
         </div>
       </div>
