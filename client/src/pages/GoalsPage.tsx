@@ -42,7 +42,7 @@ export function GoalsPage() {
         {/* Health Connect Integration */}
         <HealthConnectIntegration 
           className="w-full"
-          onStepsSync={(syncedSteps) => {
+          onStepsSync={(syncedSteps: number) => {
             console.log(`Health Connect synced: ${syncedSteps} steps`);
           }}
         />

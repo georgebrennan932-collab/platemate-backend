@@ -14,16 +14,16 @@ const CapacitorHealth = {
   async isHealthAvailable() { 
     return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'; 
   },
-  async checkHealthPermissions() { 
+  async checkHealthPermissions(options?: any) { 
     return { permissions: {} }; 
   },
-  async requestHealthPermissions() { 
+  async requestHealthPermissions(options?: any) { 
     if (!Capacitor.isNativePlatform()) {
       throw new Error('Health Connect is only available on Android devices');
     }
     return { permissions: {} }; 
   },
-  async queryHealthData() { 
+  async queryHealthData(options?: any) { 
     return { data: [] }; 
   },
   async showHealthConnectInPlayStore() { 
