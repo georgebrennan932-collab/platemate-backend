@@ -267,6 +267,73 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
   };
 
   const onSubmit = (data: ProfileFormData) => {
+    console.log('Form submitted with data:', data);
+    console.log('Form errors:', form.formState.errors);
+    
+    // Validate required fields with better error messaging
+    if (!data.age || data.age < 10 || data.age > 120) {
+      toast({
+        title: "Invalid Age",
+        description: "Please enter a valid age between 10 and 120 years.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.sex) {
+      toast({
+        title: "Missing Information",
+        description: "Please select your sex.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.heightCm || data.heightCm < 100 || data.heightCm > 250) {
+      toast({
+        title: "Invalid Height",
+        description: "Please enter a valid height between 100-250 cm.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.currentWeightKg || data.currentWeightKg < 30 || data.currentWeightKg > 300) {
+      toast({
+        title: "Invalid Current Weight",
+        description: "Please enter a valid current weight between 30-300 kg.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.goalWeightKg || data.goalWeightKg < 30 || data.goalWeightKg > 300) {
+      toast({
+        title: "Invalid Goal Weight", 
+        description: "Please enter a valid goal weight between 30-300 kg.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.activityLevel) {
+      toast({
+        title: "Missing Activity Level",
+        description: "Please select your activity level.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.weightGoal) {
+      toast({
+        title: "Missing Weight Goal",
+        description: "Please select your weight goal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Always calculate first
     handleCalculate(data);
     // Then save profile
