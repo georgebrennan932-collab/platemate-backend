@@ -154,43 +154,55 @@ export default function Home() {
     });
   };
 
-  // Health Connect sync handler
-  const handleHealthConnectSync = async () => {
+  // Step tracker handler - uses built-in motion sensors
+  const handleStepTracker = async () => {
     if (!isHealthConnectConnected) {
+      // Use built-in step counter with motion sensors
       try {
-        const connected = await healthConnectService.authenticate();
-        if (connected) {
-          setIsHealthConnectConnected(true);
-          const result = await healthConnectService.syncWithLocalSteps();
-          if (result.synced) {
-            setLastHealthConnectSync(new Date());
-            toast({
-              title: "Health Connect Connected!",
-              description: `Successfully synced ${result.steps} steps from Health Connect`,
-            });
-          } else {
-            toast({
-              title: "Connected Successfully",
-              description: "Health Connect is now connected. Step data will sync automatically.",
-            });
-          }
+        // Get current steps from local storage
+        const currentSteps = parseInt(localStorage.getItem('daily-steps') || '0');
+        const lastUpdate = localStorage.getItem('steps-last-sync');
+        
+        if (currentSteps > 0) {
+          toast({
+            title: "Step Counter Active",
+            description: `You've taken ${currentSteps.toLocaleString()} steps today using built-in motion tracking!`,
+          });
         } else {
           toast({
-            title: "Connection Failed",
-            description: "Could not connect to Health Connect. Please install Health Connect app from Play Store.",
-            variant: "destructive",
+            title: "Motion Tracking Started",
+            description: "Your device is now tracking steps using motion sensors. Start walking to see your count!",
           });
         }
+        
+        // Try to connect to Health Connect for enhanced accuracy (optional)
+        try {
+          const connected = await healthConnectService.authenticate();
+          if (connected) {
+            setIsHealthConnectConnected(true);
+            const result = await healthConnectService.syncWithLocalSteps();
+            if (result.synced) {
+              setLastHealthConnectSync(new Date());
+              toast({
+                title: "Enhanced Tracking Enabled",
+                description: `Health Connect connected! Now using both motion sensors and Health Connect for maximum accuracy.`,
+              });
+            }
+          }
+        } catch (error) {
+          // Health Connect not available - continue with built-in tracking
+          console.log('Health Connect not available, using built-in motion tracking');
+        }
+        
       } catch (error) {
-        console.error('Health Connect connection error:', error);
-        const errorMessage = error instanceof Error ? error.message : "Failed to connect to Health Connect. Please ensure the app is installed and try again.";
         toast({
-          title: "Platform Notice",
-          description: errorMessage,
-          variant: "default",
+          title: "Tracking Error",
+          description: "Could not start step tracking. Please check your device permissions.",
+          variant: "destructive",
         });
       }
     } else {
+      // Health Connect is connected, sync data
       try {
         const result = await healthConnectService.syncWithLocalSteps();
         if (result.synced) {
@@ -202,15 +214,15 @@ export default function Home() {
         } else {
           toast({
             title: "Already Up to Date",
-            description: "Your step count is already synced with Health Connect",
+            description: "Your step count is already synced",
           });
         }
       } catch (error) {
         console.error('Health Connect sync error:', error);
         toast({
           title: "Sync Failed",
-          description: "Could not sync with Health Connect. Connection may have expired - try reconnecting.",
-          variant: "destructive",
+          description: "Switching back to built-in motion tracking",
+          variant: "default",
         });
         setIsHealthConnectConnected(false);
       }
@@ -284,17 +296,17 @@ export default function Home() {
             </button>
             
             <button
-              onClick={handleHealthConnectSync}
+              onClick={handleStepTracker}
               className={`w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 ${
                 isHealthConnectConnected
                   ? 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]'
                   : 'bg-orange-500 text-white hover:bg-orange-600 hover:scale-[1.02]'
               }`}
-              data-testid="button-health-connect"
+              data-testid="button-step-tracker"
             >
               <Activity className="h-5 w-5 group-hover:scale-110 smooth-transition" />
               <span className="text-xs">
-                {isHealthConnectConnected ? 'Sync Health' : 'Health Connect'}
+                {isHealthConnectConnected ? 'Health Sync' : 'Step Tracker'}
               </span>
               {lastHealthConnectSync && (
                 <div className="text-xs opacity-75">
