@@ -9,6 +9,7 @@ export function AppHeader() {
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const [steps, setSteps] = useState<number>(0);
+  const [goal, setGoal] = useState<number>(10000);
   const [lastClickTime, setLastClickTime] = useState<number>(0);
 
   // Load current steps from localStorage
@@ -16,13 +17,20 @@ export function AppHeader() {
     const loadSteps = () => {
       const todayKey = new Date().toISOString().split('T')[0];
       const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
+      const goalStored = localStorage.getItem('platemate-step-goal');
+      
       if (stored) {
         try {
           const stepData = JSON.parse(stored);
           setSteps(stepData.count || 0);
+          if (stepData.goal) setGoal(stepData.goal);
         } catch {
           setSteps(0);
         }
+      }
+      
+      if (goalStored) {
+        setGoal(parseInt(goalStored));
       }
     };
 
@@ -117,7 +125,7 @@ export function AppHeader() {
               >
                 <Footprints className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                 <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
-                  {steps >= 1000 ? `${(steps/1000).toFixed(1)}k` : steps} steps
+                  {steps >= 1000 ? `${(steps/1000).toFixed(1)}k` : steps}/{goal >= 1000 ? `${(goal/1000).toFixed(1)}k` : goal}
                 </span>
                 
                 {/* Tooltip */}
