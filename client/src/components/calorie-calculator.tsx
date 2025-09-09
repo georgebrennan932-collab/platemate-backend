@@ -150,8 +150,8 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     },
     onSuccess: () => {
       toast({
-        title: "Goals Updated! 🎯",
-        description: "Your nutrition goals have been updated with the calculated values.",
+        title: "Goals Synced! 🎯",
+        description: "Your nutrition goals have been automatically updated and synced across all pages.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
     },
@@ -281,6 +281,10 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     
     setCalculatedCalories(targetCalories);
     setBmrData(calculationData);
+    
+    // Automatically update nutrition goals when calculations are done
+    const goals = calculateMacroTargets(targetCalories);
+    updateGoalsMutation.mutate(goals);
     
     if (onCaloriesCalculated) {
       onCaloriesCalculated(targetCalories);
