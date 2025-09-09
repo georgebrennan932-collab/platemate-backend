@@ -262,6 +262,20 @@ export function HelpPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Suggestions and Comments */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Suggestions and Comments</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p>We value your feedback and suggestions to help improve PlateMate!</p>
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="font-medium text-blue-900 dark:text-blue-100">Send us your thoughts:</p>
+              <p className="text-blue-700 dark:text-blue-300 mt-1">georgebrennan0811.suggestions@outlook.com</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Bottom Navigation */}
