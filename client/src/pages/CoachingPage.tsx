@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen, Clock, Check, TestTube2 } from "lucide-react";
+import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen, Clock, Check, TestTube2, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { notificationService } from "@/lib/notification-service";
 import { soundService } from "@/lib/sound-service";
@@ -88,8 +88,10 @@ export function CoachingPage() {
     }
   };
 
-  const { data: coaching, isLoading: coachingLoading, refetch: refetchCoaching } = useQuery<DailyCoaching>({
+  const { data: coaching, isLoading: coachingLoading, error: coachingError, refetch: refetchCoaching } = useQuery<DailyCoaching>({
     queryKey: ['/api/coaching/daily'],
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const { data: tips, isLoading: tipsLoading } = useQuery<EducationalTip[]>({
@@ -326,10 +328,61 @@ export function CoachingPage() {
                   </p>
                 </div>
               </>
+            ) : coachingError ? (
+              <div className="text-center space-y-4 py-8">
+                <div className="text-6xl">🤖</div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg">AI Coach Unavailable</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Having trouble connecting to your AI coach. Try generating new content!
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => generateCoachingMutation.mutate()}
+                  disabled={generateCoachingMutation.isPending}
+                  className="w-full"
+                >
+                  {generateCoachingMutation.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generate Daily Coaching
+                    </>
+                  )}
+                </Button>
+              </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No coaching content available. Generate your daily coaching to get started!
-              </p>
+              <div className="text-center space-y-4 py-8">
+                <div className="text-6xl">✨</div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg">Welcome to AI Coaching!</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Get personalized daily motivation, nutrition tips, and encouragement.
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => generateCoachingMutation.mutate()}
+                  disabled={generateCoachingMutation.isPending}
+                  className="w-full"
+                  size="lg"
+                >
+                  {generateCoachingMutation.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Generating Your Coaching...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Start Your Daily Coaching
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
