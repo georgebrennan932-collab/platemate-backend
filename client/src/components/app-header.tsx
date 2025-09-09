@@ -155,18 +155,18 @@ export function AppHeader() {
     
     // Add to buffer for smoothing
     stepBuffer.current.push(magnitude);
-    if (stepBuffer.current.length > 20) {
+    if (stepBuffer.current.length > 30) {
       stepBuffer.current.shift();
     }
     
     // Only start detecting after we have enough data
-    if (stepBuffer.current.length >= 5) {
-      // Calculate average and detect significant changes
+    if (stepBuffer.current.length >= 10) {
+      // Calculate average and detect significant changes (more conservative)
       const average = stepBuffer.current.reduce((a, b) => a + b, 0) / stepBuffer.current.length;
-      const threshold = Math.max(0.5, average + 0.3);
+      const threshold = Math.max(1.0, average + 0.8);
       
-      // Detect step if magnitude exceeds threshold and enough time has passed
-      if (magnitude > Math.max(0.3, threshold * 0.7) && timeSinceLastStep > 300) {
+      // Detect step if magnitude exceeds threshold and enough time has passed (much more selective)
+      if (magnitude > Math.max(1.2, threshold * 1.5) && timeSinceLastStep > 800) {
         console.log('🚶 Step detected!', magnitude.toFixed(2));
         lastStepTime.current = now;
         
