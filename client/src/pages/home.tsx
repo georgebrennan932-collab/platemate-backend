@@ -156,8 +156,23 @@ export default function Home() {
 
   // Google Fit sync handler
   const handleGoogleFitSync = async () => {
+    // Check if client ID is configured
+    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+      toast({
+        title: "Google Fit Not Configured",
+        description: "Google Fit integration requires configuration. Contact your administrator to enable this feature.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!isGoogleFitConnected) {
       try {
+        toast({
+          title: "Connecting to Google Fit...",
+          description: "Please authorize access to your fitness data",
+        });
+        
         const connected = await googleFitService.authenticate();
         if (connected) {
           setIsGoogleFitConnected(true);
@@ -166,14 +181,26 @@ export default function Home() {
             setLastGoogleFitSync(new Date());
             toast({
               title: "Google Fit Connected!",
-              description: `Synced ${result.steps} steps from Google Fit`,
+              description: `Successfully synced ${result.steps} steps from Google Fit`,
+            });
+          } else {
+            toast({
+              title: "Connected Successfully",
+              description: "Google Fit is now connected. Step data will sync automatically.",
             });
           }
+        } else {
+          toast({
+            title: "Connection Failed",
+            description: "Could not connect to Google Fit. Please try again or check your browser settings.",
+            variant: "destructive",
+          });
         }
       } catch (error) {
+        console.error('Google Fit connection error:', error);
         toast({
-          title: "Connection Failed",
-          description: "Could not connect to Google Fit. Check your settings.",
+          title: "Connection Error",
+          description: "Failed to connect to Google Fit. Please ensure you're using HTTPS and try again.",
           variant: "destructive",
         });
       }
@@ -184,15 +211,22 @@ export default function Home() {
           setLastGoogleFitSync(new Date());
           toast({
             title: "Sync Complete!",
-            description: `Synced ${result.steps} steps from Google Fit`,
+            description: `Updated with ${result.steps} steps from Google Fit`,
+          });
+        } else {
+          toast({
+            title: "Already Up to Date",
+            description: "Your step count is already synced with Google Fit",
           });
         }
       } catch (error) {
+        console.error('Google Fit sync error:', error);
         toast({
           title: "Sync Failed",
-          description: "Could not sync with Google Fit. Try again later.",
+          description: "Could not sync with Google Fit. Connection may have expired - try reconnecting.",
           variant: "destructive",
         });
+        setIsGoogleFitConnected(false);
       }
     }
   };

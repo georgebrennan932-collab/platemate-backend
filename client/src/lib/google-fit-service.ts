@@ -78,37 +78,58 @@ class GoogleFitService {
    */
   async authenticate(): Promise<boolean> {
     try {
+      // Check if client ID is configured
+      if (!this.config.clientId) {
+        throw new Error('Google Fit Client ID not configured');
+      }
+
       // Load Google Identity Services
       await this.loadGoogleIdentityServices();
 
-      return new Promise((resolve) => {
-        const client = (window as any).google.accounts.oauth2.initTokenClient({
-          client_id: this.config.clientId,
-          scope: this.config.scopes.join(' '),
-          callback: (response: any) => {
-            if (response.access_token) {
-              this.accessToken = response.access_token;
-              this.isAuthenticated = true;
+      return new Promise((resolve, reject) => {
+        try {
+          const client = (window as any).google.accounts.oauth2.initTokenClient({
+            client_id: this.config.clientId,
+            scope: this.config.scopes.join(' '),
+            callback: (response: any) => {
+              if (response.error) {
+                console.error('Google Fit OAuth error:', response.error);
+                reject(new Error(`Google Fit authentication failed: ${response.error}`));
+                return;
+              }
               
-              // Store token with 1-hour expiry
-              const expiryTime = Date.now() + (55 * 60 * 1000); // 55 minutes for safety
-              localStorage.setItem('googlefit-token', response.access_token);
-              localStorage.setItem('googlefit-token-expiry', expiryTime.toString());
-              
-              console.log('✓ Google Fit authenticated successfully');
-              resolve(true);
-            } else {
-              console.error('Google Fit authentication failed');
-              resolve(false);
+              if (response.access_token) {
+                this.accessToken = response.access_token;
+                this.isAuthenticated = true;
+                
+                // Store token with 1-hour expiry
+                const expiryTime = Date.now() + (55 * 60 * 1000); // 55 minutes for safety
+                localStorage.setItem('googlefit-token', response.access_token);
+                localStorage.setItem('googlefit-token-expiry', expiryTime.toString());
+                
+                console.log('✓ Google Fit authenticated successfully');
+                resolve(true);
+              } else {
+                console.error('Google Fit authentication failed - no access token received');
+                reject(new Error('Google Fit authentication failed - no access token received'));
+              }
             }
-          }
-        });
-        
-        client.requestAccessToken();
+          });
+          
+          // Add timeout for authentication request
+          setTimeout(() => {
+            reject(new Error('Google Fit authentication timeout'));
+          }, 30000); // 30 second timeout
+          
+          client.requestAccessToken();
+        } catch (clientError) {
+          console.error('Error creating OAuth client:', clientError);
+          reject(new Error('Failed to initialize Google Fit authentication'));
+        }
       });
     } catch (error) {
       console.error('Google Fit authentication error:', error);
-      return false;
+      throw error;
     }
   }
 
@@ -124,8 +145,27 @@ class GoogleFitService {
 
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Google Identity Services'));
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        // Wait a bit for the script to fully initialize
+        setTimeout(() => {
+          if ((window as any).google?.accounts) {
+            resolve();
+          } else {
+            reject(new Error('Google Identity Services failed to initialize'));
+          }
+        }, 100);
+      };
+      
+      script.onerror = () => reject(new Error('Failed to load Google Identity Services script'));
+      
+      // Add timeout for script loading
+      setTimeout(() => {
+        reject(new Error('Google Identity Services script loading timeout'));
+      }, 10000);
+      
       document.head.appendChild(script);
     });
   }
