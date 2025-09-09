@@ -270,9 +270,15 @@ export function HelpPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <p>We value your feedback and suggestions to help improve PlateMate!</p>
-            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <p className="font-medium text-blue-900 dark:text-blue-100">Send us your thoughts:</p>
-              <p className="text-blue-700 dark:text-blue-300 mt-1">georgebrennan0811.suggestions@outlook.com</p>
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="font-medium text-blue-900 dark:text-blue-100 mb-3">Send us your thoughts:</p>
+              <a 
+                href="mailto:georgebrennan0811.suggestions@outlook.com" 
+                className="block text-lg font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors break-all"
+                data-testid="email-suggestions"
+              >
+                georgebrennan0811.suggestions@outlook.com
+              </a>
             </div>
           </CardContent>
         </Card>
