@@ -122,14 +122,14 @@ export function ConfettiCelebration({
     setIsActive(true);
     setShowText(true);
     
-    // Screen flash effect
-    setScreenFlash({ opacity: 0.8, color: '#FFD700' });
-    setTimeout(() => setScreenFlash({ opacity: 0.4, color: '#FF6B6B' }), 100);
-    setTimeout(() => setScreenFlash({ opacity: 0.2, color: '#4ECDC4' }), 200);
-    setTimeout(() => setScreenFlash({ opacity: 0, color: '#FFD700' }), 400);
+    // Screen flash effect (shorter)
+    setScreenFlash({ opacity: 0.6, color: '#FFD700' });
+    setTimeout(() => setScreenFlash({ opacity: 0.3, color: '#FF6B6B' }), 80);
+    setTimeout(() => setScreenFlash({ opacity: 0.1, color: '#4ECDC4' }), 160);
+    setTimeout(() => setScreenFlash({ opacity: 0, color: '#FFD700' }), 300);
     
-    // Hide text after 2 seconds
-    setTimeout(() => setShowText(false), 2000);
+    // Hide text after 1.5 seconds
+    setTimeout(() => setShowText(false), 1500);
 
     // Animation loop
     let animationId: number;
