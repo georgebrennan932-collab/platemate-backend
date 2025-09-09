@@ -11,7 +11,7 @@ import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Activity } from "lucide-react";
-import { googleFitService } from "@/lib/google-fit-service";
+import { healthConnectService } from "@/lib/health-connect-service";
 import type { FoodAnalysis } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 
@@ -31,11 +31,11 @@ export default function Home() {
   const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   
-  // Google Fit state
-  const [isGoogleFitConnected, setIsGoogleFitConnected] = useState(false);
-  const [lastGoogleFitSync, setLastGoogleFitSync] = useState<Date | null>(null);
+  // Health Connect state
+  const [isHealthConnectConnected, setIsHealthConnectConnected] = useState(false);
+  const [lastHealthConnectSync, setLastHealthConnectSync] = useState<Date | null>(null);
   
-  // Initialize speech recognition and Google Fit
+  // Initialize speech recognition and Health Connect
   useEffect(() => {
     const checkSpeechSupport = () => {
       const supported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
@@ -43,15 +43,15 @@ export default function Home() {
     };
     checkSpeechSupport();
     
-    // Initialize Google Fit
-    const initGoogleFit = async () => {
-      const connected = await googleFitService.initialize();
-      setIsGoogleFitConnected(connected);
+    // Initialize Health Connect
+    const initHealthConnect = async () => {
+      const connected = await healthConnectService.initialize();
+      setIsHealthConnectConnected(connected);
       if (connected) {
-        setLastGoogleFitSync(googleFitService.getLastSyncTime());
+        setLastHealthConnectSync(new Date());
       }
     };
-    initGoogleFit();
+    initHealthConnect();
   }, []);
 
   const handleAnalysisStart = () => {
@@ -154,79 +154,69 @@ export default function Home() {
     });
   };
 
-  // Google Fit sync handler
-  const handleGoogleFitSync = async () => {
-    // Check if client ID is configured
-    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-      toast({
-        title: "Google Fit Not Configured",
-        description: "Google Fit integration requires configuration. Contact your administrator to enable this feature.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!isGoogleFitConnected) {
+  // Health Connect sync handler
+  const handleHealthConnectSync = async () => {
+    if (!isHealthConnectConnected) {
       try {
         toast({
-          title: "Connecting to Google Fit...",
+          title: "Connecting to Health Connect...",
           description: "Please authorize access to your fitness data",
         });
         
-        const connected = await googleFitService.authenticate();
+        const connected = await healthConnectService.authenticate();
         if (connected) {
-          setIsGoogleFitConnected(true);
-          const result = await googleFitService.syncWithLocalSteps();
+          setIsHealthConnectConnected(true);
+          const result = await healthConnectService.syncWithLocalSteps();
           if (result.synced) {
-            setLastGoogleFitSync(new Date());
+            setLastHealthConnectSync(new Date());
             toast({
-              title: "Google Fit Connected!",
-              description: `Successfully synced ${result.steps} steps from Google Fit`,
+              title: "Health Connect Connected!",
+              description: `Successfully synced ${result.steps} steps from Health Connect`,
             });
           } else {
             toast({
               title: "Connected Successfully",
-              description: "Google Fit is now connected. Step data will sync automatically.",
+              description: "Health Connect is now connected. Step data will sync automatically.",
             });
           }
         } else {
           toast({
             title: "Connection Failed",
-            description: "Could not connect to Google Fit. Please try again or check your browser settings.",
+            description: "Could not connect to Health Connect. Please install Health Connect app from Play Store.",
             variant: "destructive",
           });
         }
       } catch (error) {
-        console.error('Google Fit connection error:', error);
+        console.error('Health Connect connection error:', error);
         toast({
           title: "Connection Error",
-          description: "Failed to connect to Google Fit. Please ensure you're using HTTPS and try again.",
+          description: "Failed to connect to Health Connect. Please ensure the app is installed and try again.",
           variant: "destructive",
         });
       }
     } else {
       try {
-        const result = await googleFitService.syncWithLocalSteps();
+        const result = await healthConnectService.syncWithLocalSteps();
         if (result.synced) {
-          setLastGoogleFitSync(new Date());
+          setLastHealthConnectSync(new Date());
           toast({
             title: "Sync Complete!",
-            description: `Updated with ${result.steps} steps from Google Fit`,
+            description: `Updated with ${result.steps} steps from Health Connect`,
           });
         } else {
           toast({
             title: "Already Up to Date",
-            description: "Your step count is already synced with Google Fit",
+            description: "Your step count is already synced with Health Connect",
           });
         }
       } catch (error) {
-        console.error('Google Fit sync error:', error);
+        console.error('Health Connect sync error:', error);
         toast({
           title: "Sync Failed",
-          description: "Could not sync with Google Fit. Connection may have expired - try reconnecting.",
+          description: "Could not sync with Health Connect. Connection may have expired - try reconnecting.",
           variant: "destructive",
         });
-        setIsGoogleFitConnected(false);
+        setIsHealthConnectConnected(false);
       }
     }
   };
@@ -298,9 +288,9 @@ export default function Home() {
             </button>
             
             <button
-              onClick={handleGoogleFitSync}
+              onClick={handleHealthConnectSync}
               className={`w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 ${
-                isGoogleFitConnected
+                isHealthConnectConnected
                   ? 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]'
                   : 'bg-orange-500 text-white hover:bg-orange-600 hover:scale-[1.02]'
               }`}
@@ -308,11 +298,11 @@ export default function Home() {
             >
               <Activity className="h-5 w-5 group-hover:scale-110 smooth-transition" />
               <span className="text-xs">
-                {isGoogleFitConnected ? 'Sync Fit' : 'Connect Fit'}
+                {isHealthConnectConnected ? 'Sync Health' : 'Connect Health'}
               </span>
-              {lastGoogleFitSync && (
+              {lastHealthConnectSync && (
                 <div className="text-xs opacity-75">
-                  {lastGoogleFitSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {lastHealthConnectSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               )}
             </button>
