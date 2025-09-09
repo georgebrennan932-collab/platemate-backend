@@ -24,7 +24,7 @@ export function StepRecommendations() {
   // Function to apply custom goal
   const applyCustomGoal = () => {
     const goal = parseInt(customGoal);
-    if (goal && goal > 0 && goal <= 50000) {
+    if (goal && goal >= 10 && goal <= 50000) {
       localStorage.setItem('platemate-step-goal', goal.toString());
       window.dispatchEvent(new CustomEvent('platemate-steps-updated'));
       setCustomGoal('');
@@ -216,16 +216,16 @@ export function StepRecommendations() {
             <Input
               id="customGoal"
               type="number"
-              placeholder="Enter steps (1000-50000)"
+              placeholder="Enter steps (10-50000)"
               value={customGoal}
               onChange={(e) => setCustomGoal(e.target.value)}
-              min="1000"
+              min="10"
               max="50000"
               className="flex-1"
             />
             <Button 
               onClick={applyCustomGoal}
-              disabled={!customGoal || parseInt(customGoal) < 1000 || parseInt(customGoal) > 50000}
+              disabled={!customGoal || parseInt(customGoal) < 10 || parseInt(customGoal) > 50000}
               variant="outline"
               className="px-4"
             >
@@ -233,7 +233,7 @@ export function StepRecommendations() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Enter a custom daily step goal between 1,000 and 50,000 steps
+            Enter a custom daily step goal between 10 and 50,000 steps
           </p>
         </div>
       </CardContent>
