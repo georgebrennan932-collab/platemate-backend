@@ -562,7 +562,41 @@ export function DiaryPage() {
                                 </div>
                               )}
                               
-                              {/* Enhanced nutrition display */}
+                              {/* Enhanced detected foods - Now First */}
+                              {entry.analysis.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
+                                <div className="space-y-3 mb-4">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <div className="text-sm font-semibold text-foreground">Detected Foods</div>
+                                  </div>
+                                  <div className="grid gap-2">
+                                    {entry.analysis.detectedFoods.map((food: any, index: number) => (
+                                      <div key={index} className="flex items-center justify-between bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-lg px-4 py-3 border border-muted/50 hover:shadow-sm transition-shadow">
+                                        <div className="flex items-center gap-3">
+                                          <div className="text-lg bg-white dark:bg-gray-600 rounded-full w-8 h-8 flex items-center justify-center shadow-sm">
+                                            {food.icon || '🍽️'}
+                                          </div>
+                                          <span className="font-medium text-foreground text-sm">{food.name}</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          <div className="bg-primary/10 text-primary px-3 py-1 rounded-full">
+                                            <span className="text-xs font-semibold">
+                                              {food.portion}
+                                            </span>
+                                          </div>
+                                          <div className="bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-full">
+                                            <span className="text-xs font-semibold">
+                                              {food.calories}cal
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Enhanced nutrition display - Now Second */}
                               <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-4 border border-orange-200/50 dark:border-orange-700/30 mb-4">
                                 <div className="flex items-center justify-center mb-3">
                                   <div className="flex items-center space-x-2">
@@ -613,40 +647,6 @@ export function DiaryPage() {
                                   </div>
                                 </div>
                               </div>
-                              
-                              {/* Enhanced detected foods */}
-                              {entry.analysis.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                                <div className="space-y-3">
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                    <div className="text-sm font-semibold text-foreground">Detected Foods</div>
-                                  </div>
-                                  <div className="grid gap-2">
-                                    {entry.analysis.detectedFoods.map((food: any, index: number) => (
-                                      <div key={index} className="flex items-center justify-between bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-lg px-4 py-3 border border-muted/50 hover:shadow-sm transition-shadow">
-                                        <div className="flex items-center gap-3">
-                                          <div className="text-lg bg-white dark:bg-gray-600 rounded-full w-8 h-8 flex items-center justify-center shadow-sm">
-                                            {food.icon || '🍽️'}
-                                          </div>
-                                          <span className="font-medium text-foreground text-sm">{food.name}</span>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                          <div className="bg-primary/10 text-primary px-3 py-1 rounded-full">
-                                            <span className="text-xs font-semibold">
-                                              {food.portion}
-                                            </span>
-                                          </div>
-                                          <div className="bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-full">
-                                            <span className="text-xs font-semibold">
-                                              {food.calories}cal
-                                            </span>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
                               
                               {/* Enhanced notes section */}
                               {entry.notes && (
