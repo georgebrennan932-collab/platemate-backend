@@ -2,7 +2,6 @@ import { History, LogOut, User, ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
 import platemateLogo from "@/assets/platemate-logo.png";
-import { StepCounter } from "./step-counter";
 import { useState, useRef, useEffect } from "react";
 
 export function AppHeader() {
@@ -41,7 +40,6 @@ export function AppHeader() {
           </div>
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold gradient-text">PlateMate</h1>
-            {isAuthenticated && <StepCounter />}
           </div>
         </div>
         <div className="flex items-center space-x-2">
