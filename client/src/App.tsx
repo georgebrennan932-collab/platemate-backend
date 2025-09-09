@@ -6,8 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { notificationService } from "@/lib/notification-service";
 import { soundService } from "@/lib/sound-service";
-import { GestureNavigation } from "@/components/gesture-navigation";
-import { GestureOverlay } from "@/components/gesture-overlay";
 import { SpeechNavigation } from "@/components/speech-navigation";
 import { SpeechIndicator } from "@/components/speech-indicator";
 import { useEffect } from "react";
@@ -67,8 +65,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <GestureNavigation />
-        <GestureOverlay />
         <SpeechNavigation />
         <SpeechIndicator />
         <Router />
