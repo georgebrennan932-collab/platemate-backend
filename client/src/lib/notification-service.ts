@@ -160,8 +160,8 @@ class NotificationService {
     const timeUntilNotification = scheduledTime.getTime() - now.getTime();
 
     // Store timer ID in localStorage for persistence
-    const timerId = setTimeout(() => {
-      this.showWebNotification(config);
+    const timerId = setTimeout(async () => {
+      await this.showWebNotification(config);
       // Schedule next day's notification
       this.scheduleDailyWeb(config);
     }, timeUntilNotification);
@@ -173,31 +173,35 @@ class NotificationService {
     }));
   }
 
-  private showWebNotification(config: NotificationConfig): void {
+  private async showWebNotification(config: NotificationConfig): Promise<void> {
     if (this.hasPermission && 'Notification' in window) {
+      // Fetch fresh motivational content
+      const motivationalContent = await this.getMotivationalContent();
+      
       // Play notification sound
       soundService.playReminder();
 
-      const notification = new Notification(config.title, {
-        body: config.body,
+      const notification = new Notification(motivationalContent.title, {
+        body: motivationalContent.body,
         icon: '/favicon.ico',
         badge: '/favicon.ico',
-        tag: 'daily-coaching',
-        requireInteraction: false,
+        tag: 'daily-motivation',
+        requireInteraction: true, // Make it more prominent
         silent: false
       });
 
       notification.onclick = () => {
         window.focus();
-        // Navigate to coaching page if possible
-        if (window.location.pathname !== '/coaching') {
-          window.location.hash = '#/coaching';
-        }
+        // Navigate to home page to show full motivation
+        window.location.href = '/';
         notification.close();
       };
 
-      // Auto-close after 10 seconds
-      setTimeout(() => notification.close(), 10000);
+      // Keep open longer for motivation - 15 seconds
+      setTimeout(() => notification.close(), 15000);
+      
+      // Also show in-app toast for immediate visibility
+      this.showInAppMotivation(motivationalContent);
     }
   }
 
@@ -252,6 +256,85 @@ class NotificationService {
       await soundService.playNotification();
       this.showWebNotification(config);
     }
+  }
+
+  // Get motivational content from API
+  private async getMotivationalContent(): Promise<{title: string, body: string}> {
+    try {
+      // Try to fetch daily coaching content
+      const response = await fetch('/api/coaching/daily');
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          title: '🌟 Daily Motivation',
+          body: data.motivation || 'Stay focused on your health goals! Every small step counts.'
+        };
+      }
+    } catch (error) {
+      console.log('Could not fetch coaching content, using fallback');
+    }
+    
+    // Fallback motivational quotes
+    const fallbackQuotes = [
+      'Today is a new opportunity to nourish your body! 💪',
+      'Small steps lead to big changes. Keep going! ✨', 
+      'Your health journey matters. Stay consistent! 🌱',
+      'Fuel your body with intention and watch yourself thrive! 🔥',
+      'Every meal is a chance to love yourself better! ❤️'
+    ];
+    const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+    
+    return {
+      title: '🌟 Daily Motivation',
+      body: randomQuote
+    };
+  }
+
+  // Show in-app motivation toast
+  private showInAppMotivation(content: {title: string, body: string}): void {
+    // Create a temporary toast element for in-app display
+    const toastElement = document.createElement('div');
+    toastElement.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-lg shadow-2xl max-w-sm text-center backdrop-blur-sm border border-white/20';
+    toastElement.innerHTML = `
+      <div class="font-bold text-lg mb-1">${content.title}</div>
+      <div class="text-sm opacity-90">${content.body}</div>
+    `;
+    
+    document.body.appendChild(toastElement);
+    
+    // Animate in
+    toastElement.style.transform = 'translate(-50%, -100%)';
+    toastElement.style.opacity = '0';
+    
+    setTimeout(() => {
+      toastElement.style.transition = 'all 0.3s ease-out';
+      toastElement.style.transform = 'translate(-50%, 0)';
+      toastElement.style.opacity = '1';
+    }, 10);
+    
+    // Remove after 8 seconds
+    setTimeout(() => {
+      toastElement.style.transition = 'all 0.3s ease-in';
+      toastElement.style.transform = 'translate(-50%, -100%)';
+      toastElement.style.opacity = '0';
+      setTimeout(() => {
+        if (toastElement.parentNode) {
+          toastElement.parentNode.removeChild(toastElement);
+        }
+      }, 300);
+    }, 8000);
+    
+    // Click to dismiss
+    toastElement.addEventListener('click', () => {
+      toastElement.style.transition = 'all 0.2s ease-in';
+      toastElement.style.transform = 'translate(-50%, -100%)';
+      toastElement.style.opacity = '0';
+      setTimeout(() => {
+        if (toastElement.parentNode) {
+          toastElement.parentNode.removeChild(toastElement);
+        }
+      }, 200);
+    });
   }
 
   // Resume web notifications on app load (for web only)

@@ -470,7 +470,7 @@ export function CoachingPage() {
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-primary" />
-                Daily Reminders
+                🌟 Daily Motivation
               </div>
               {reminderEnabled && (
                 <div className="flex items-center gap-1 text-green-600">
@@ -484,7 +484,7 @@ export function CoachingPage() {
             {!showReminderSetup ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Get daily motivation and tips delivered at your preferred time.
+                  Get daily motivation and inspiring quotes delivered at your preferred time.
                 </p>
                 {reminderEnabled ? (
                   <div className="space-y-3">
@@ -492,7 +492,7 @@ export function CoachingPage() {
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-green-600" />
                         <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                          Daily reminders at {reminderTime}
+                          Daily motivation at {reminderTime}
                         </span>
                       </div>
                       <Switch
@@ -550,13 +550,13 @@ export function CoachingPage() {
             ) : (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reminder-time">Reminder Time</Label>
+                  <Label htmlFor="reminder-time">Motivation Time</Label>
                   <Input
-                    id="reminder-time"
+                    id="motivation-time"
                     type="time"
                     value={reminderTime}
                     onChange={(e) => saveReminderTime(e.target.value)}
-                    data-testid="input-reminder-time"
+                    data-testid="input-motivation-time"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -566,7 +566,7 @@ export function CoachingPage() {
                     data-testid="switch-enable-reminders"
                   />
                   <Label htmlFor="enable-reminders" className="text-sm">
-                    Enable daily reminders
+                    Enable daily motivation
                   </Label>
                 </div>
                 <div className="flex gap-2">
