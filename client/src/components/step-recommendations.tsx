@@ -1,17 +1,9 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Footprints, Target, TrendingUp, Users } from "lucide-react";
-
-interface UserProfile {
-  age: number;
-  sex: "male" | "female";
-  heightCm: number;
-  currentWeightKg: number;
-  goalWeightKg: number;
-  activityLevel: "sedentary" | "lightly_active" | "moderately_active" | "very_active" | "extra_active";
-  weightGoal: "lose_weight" | "maintain_weight" | "gain_weight";
-}
+import { Footprints, Target, TrendingUp, Users, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { UserProfile } from "@shared/schema";
 
 export function StepRecommendations() {
   const { data: profile } = useQuery<UserProfile>({
@@ -19,12 +11,26 @@ export function StepRecommendations() {
     retry: false,
   });
 
+  // Function to apply recommended steps to step counter
+  const applyStepsToCounter = (recommendedSteps: number) => {
+    localStorage.setItem('platemate-step-goal', recommendedSteps.toString());
+    window.location.reload(); // Refresh to update step counter
+  };
+
   const calculateRecommendedSteps = (profile: UserProfile): { 
     recommended: number; 
     min: number; 
     optimal: number; 
     reasoning: string;
   } => {
+    // Ensure required fields have valid values
+    const age = profile.age || 30;
+    const activityLevel = profile.activityLevel || "moderately_active";
+    const weightGoal = profile.weightGoal || "maintain_weight";
+    const currentWeight = profile.currentWeightKg || 70;
+    const height = profile.heightCm || 170;
+    const sex = profile.sex || "male";
+
     // Base recommendations by activity level
     const activityBaseSteps = {
       sedentary: 6000,
@@ -34,26 +40,26 @@ export function StepRecommendations() {
       extra_active: 15000,
     };
 
-    let baseSteps = activityBaseSteps[profile.activityLevel];
+    let baseSteps = activityBaseSteps[activityLevel as keyof typeof activityBaseSteps];
 
     // Age adjustments
-    if (profile.age >= 65) {
+    if (age >= 65) {
       baseSteps = Math.max(baseSteps - 2000, 4000); // Lower for seniors, min 4k
-    } else if (profile.age >= 50) {
+    } else if (age >= 50) {
       baseSteps = Math.max(baseSteps - 1000, 5000); // Slightly lower for 50+
-    } else if (profile.age <= 25) {
+    } else if (age <= 25) {
       baseSteps += 1000; // Higher for young adults
     }
 
     // Weight goal adjustments
-    if (profile.weightGoal === "lose_weight") {
+    if (weightGoal === "lose_weight") {
       baseSteps += 2000; // More steps for weight loss
-    } else if (profile.weightGoal === "gain_weight") {
+    } else if (weightGoal === "gain_weight") {
       baseSteps -= 1000; // Fewer steps when gaining weight (muscle building focus)
     }
 
     // BMI-based adjustments
-    const bmi = profile.currentWeightKg / Math.pow(profile.heightCm / 100, 2);
+    const bmi = currentWeight / Math.pow(height / 100, 2);
     if (bmi > 30) {
       baseSteps += 1500; // More steps for obesity
     } else if (bmi > 25) {
@@ -61,7 +67,7 @@ export function StepRecommendations() {
     }
 
     // Gender adjustments (men typically have longer strides)
-    if (profile.sex === "male") {
+    if (sex === "male") {
       baseSteps -= 500; // Slightly fewer steps for men (same distance, longer strides)
     }
 
@@ -70,16 +76,23 @@ export function StepRecommendations() {
     const optimal = Math.min(Math.round(recommended * 1.3), 25000);
 
     // Generate reasoning
-    let reasoning = `Based on your ${profile.activityLevel.replace('_', ' ')} lifestyle`;
-    if (profile.age >= 50) reasoning += ` and age (${profile.age})`;
-    if (profile.weightGoal === "lose_weight") reasoning += ` and weight loss goal`;
+    let reasoning = `Based on your ${activityLevel.replace('_', ' ')} lifestyle`;
+    if (age >= 50) reasoning += ` and age (${age})`;
+    if (weightGoal === "lose_weight") reasoning += ` and weight loss goal`;
     if (bmi > 25) reasoning += ` and current BMI (${bmi.toFixed(1)})`;
     reasoning += ", this target balances health benefits with achievability.";
 
     return { recommended, min, optimal, reasoning };
   };
 
-  if (!profile) {
+  // Check if profile has required data
+  const hasValidProfile = profile && 
+    profile.age && 
+    profile.activityLevel && 
+    profile.currentWeightKg && 
+    profile.heightCm;
+
+  if (!hasValidProfile) {
     return (
       <Card className="w-full">
         <CardHeader>
@@ -159,12 +172,23 @@ export function StepRecommendations() {
           </p>
         </div>
 
+        {/* Apply Button */}
+        <Button 
+          onClick={() => applyStepsToCounter(stepData.recommended)}
+          className="w-full"
+          variant="outline"
+        >
+          <Edit className="h-4 w-4 mr-2" />
+          Apply {stepData.recommended.toLocaleString()} steps to counter
+        </Button>
+
         {/* Profile Summary */}
         <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-2 border-t">
-          <div>Activity: <span className="capitalize">{profile.activityLevel.replace('_', ' ')}</span></div>
-          <div>Goal: <span className="capitalize">{profile.weightGoal.replace('_', ' ')}</span></div>
-          <div>Age: {profile.age} years</div>
-          <div>BMI: {(profile.currentWeightKg / Math.pow(profile.heightCm / 100, 2)).toFixed(1)}</div>
+          <div>Activity: <span className="capitalize">{(profile.activityLevel || 'moderate').replace('_', ' ')}</span></div>
+          <div>Goal: <span className="capitalize">{(profile.weightGoal || 'maintain').replace('_', ' ')}</span></div>
+          <div>Age: {profile.age || 'N/A'} years</div>
+          <div>BMI: {profile.currentWeightKg && profile.heightCm ? 
+            (profile.currentWeightKg / Math.pow(profile.heightCm / 100, 2)).toFixed(1) : 'N/A'}</div>
         </div>
       </CardContent>
     </Card>
