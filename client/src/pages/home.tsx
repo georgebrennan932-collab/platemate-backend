@@ -334,7 +334,7 @@ export default function Home() {
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 py-2 space-y-4">
           {/* Primary Actions */}
-          <div className="grid grid-cols-4 gap-2 mb-6">
+          <div className="grid grid-cols-3 gap-2 mb-6">
             <button
               onClick={handleVoiceInput}
               disabled={!speechSupported}
@@ -355,26 +355,6 @@ export default function Home() {
               <span className="text-xs">
                 {isListening ? 'Listening...' : 'Voice Add'}
               </span>
-            </button>
-            
-            <button
-              onClick={handleStepTracker}
-              className={`w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 ${
-                isHealthConnectConnected
-                  ? 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]'
-                  : 'bg-orange-500 text-white hover:bg-orange-600 hover:scale-[1.02]'
-              }`}
-              data-testid="button-step-tracker"
-            >
-              <Activity className="h-5 w-5 group-hover:scale-110 smooth-transition" />
-              <span className="text-xs">
-                {isHealthConnectConnected ? 'Health Sync' : 'Step Tracker'}
-              </span>
-              {lastHealthConnectSync && (
-                <div className="text-xs opacity-75">
-                  {lastHealthConnectSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              )}
             </button>
             
             <Link href="/advice">
