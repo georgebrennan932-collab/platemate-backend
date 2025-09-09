@@ -467,8 +467,8 @@ export default function Home() {
               {/* Voice Input Display */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 border border-blue-200/30 dark:border-blue-700/30">
                 <label className="block text-sm font-semibold mb-3 text-blue-700 dark:text-blue-300">What you said:</label>
-                <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-700 shadow-inner">
-                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-relaxed">
+                <div className="bg-gradient-to-r from-white to-blue-50 dark:from-gray-900 dark:to-blue-950/50 p-6 rounded-xl border-3 border-blue-300 dark:border-blue-600 shadow-lg">
+                  <p className="text-2xl font-black text-blue-900 dark:text-blue-100 leading-relaxed text-center tracking-wide">
                     "{voiceInput}"
                   </p>
                 </div>
