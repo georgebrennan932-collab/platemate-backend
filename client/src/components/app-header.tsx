@@ -1,4 +1,4 @@
-import { History, LogOut, User, ChevronDown, ChevronUp } from "lucide-react";
+import { History, LogOut, User, ChevronDown, ChevronUp, Footprints } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
 import platemateLogo from "@/assets/platemate-logo.png";
@@ -8,6 +8,29 @@ export function AppHeader() {
   const { user, isAuthenticated } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const [steps, setSteps] = useState<number>(0);
+
+  // Load current steps from localStorage
+  useEffect(() => {
+    const loadSteps = () => {
+      const todayKey = new Date().toISOString().split('T')[0];
+      const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
+      if (stored) {
+        try {
+          const stepData = JSON.parse(stored);
+          setSteps(stepData.count || 0);
+        } catch {
+          setSteps(0);
+        }
+      }
+    };
+
+    loadSteps();
+    
+    // Update steps every few seconds to show real-time changes
+    const interval = setInterval(loadSteps, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -40,6 +63,14 @@ export function AppHeader() {
           </div>
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold gradient-text">PlateMate</h1>
+            {isAuthenticated && (
+              <div className="flex items-center space-x-1 mt-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border border-blue-200/30 dark:border-blue-700/30">
+                <Footprints className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
+                  {steps >= 1000 ? `${(steps/1000).toFixed(1)}k` : steps} steps
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center space-x-2">
