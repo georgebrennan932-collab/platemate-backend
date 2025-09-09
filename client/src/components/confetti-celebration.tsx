@@ -267,9 +267,26 @@ export function ConfettiCelebration({
 // Hook for easy confetti triggering
 export function useConfetti() {
   const [shouldTrigger, setShouldTrigger] = useState(false);
+  const [hasCelebratedToday, setHasCelebratedToday] = useState(false);
+
+  // Check if we already celebrated today when component mounts
+  useEffect(() => {
+    const todayKey = new Date().toISOString().split('T')[0];
+    const celebrated = localStorage.getItem(`platemate-celebrated-${todayKey}`);
+    if (celebrated === 'true') {
+      setHasCelebratedToday(true);
+    }
+  }, []);
 
   const triggerConfetti = () => {
-    setShouldTrigger(true);
+    // Only trigger if we haven't celebrated today
+    if (!hasCelebratedToday) {
+      setShouldTrigger(true);
+      setHasCelebratedToday(true);
+      // Store celebration flag in localStorage
+      const todayKey = new Date().toISOString().split('T')[0];
+      localStorage.setItem(`platemate-celebrated-${todayKey}`, 'true');
+    }
   };
 
   const resetTrigger = () => {
@@ -280,5 +297,6 @@ export function useConfetti() {
     shouldTrigger,
     triggerConfetti,
     resetTrigger,
+    hasCelebratedToday,
   };
 }
