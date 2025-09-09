@@ -193,8 +193,8 @@ export function AppHeader() {
         localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
         setSteps(newSteps);
         
-        // Check if goal is reached and trigger confetti (only when reaching goal exactly, not exceeding)
-        if (goal > 0 && currentSteps < goal && newSteps === goal) {
+        // Check if goal is reached and trigger confetti (first time crossing threshold only)
+        if (goal > 0 && currentSteps < goal && newSteps >= goal) {
           console.log('🎉 Step goal achieved! Triggering confetti');
           triggerConfetti();
         }
@@ -308,8 +308,8 @@ export function AppHeader() {
                     localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
                     setSteps(newSteps);
                     
-                    // Check if goal is reached and trigger confetti (only when reaching goal exactly, not exceeding)
-                    if (goal > 0 && currentSteps < goal && newSteps === goal) {
+                    // Check if goal is reached and trigger confetti (first time crossing threshold only)
+                    if (goal > 0 && currentSteps < goal && newSteps >= goal) {
                       console.log('🎉 Step goal achieved! Triggering confetti');
                       triggerConfetti();
                     }
