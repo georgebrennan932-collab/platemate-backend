@@ -146,8 +146,8 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
   };
 
   // Calculate daily calories needed for weight goal with medication considerations
-  const calculateTargetCalories = (tdee: number, weightGoal: string, weeklyChange: number = 0.5, bmr: number, medication: string = 'none') => {
-    // 1 kg of fat ≈ 7700 calories
+  const calculateTargetCalories = (tdee: number, weightGoal: string, weeklyChange: number = 0.25, bmr: number, medication: string = 'none') => {
+    // 1 kg of fat ≈ 7700 calories (more conservative default of 0.25kg/week)
     const caloriesPerKg = 7700;
     const dailyCalorieChange = (weeklyChange * caloriesPerKg) / 7;
     
@@ -191,20 +191,20 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
       case 'ozempic':
       case 'wegovy':
         return {
-          minMultiplier: 1.3, // 130% of BMR minimum
-          maxDeficit: 800, // Max 800 calorie deficit per day
+          minMultiplier: 1.15, // 115% of BMR minimum (more reasonable floor)
+          maxDeficit: 600, // Max 600 calorie deficit per day (more conservative)
           name: 'Semaglutide (Ozempic/Wegovy)'
         };
       case 'mounjaro':
         return {
-          minMultiplier: 1.35, // 135% of BMR minimum (stronger appetite suppression)
-          maxDeficit: 750, // Max 750 calorie deficit per day
+          minMultiplier: 1.2, // 120% of BMR minimum (less restrictive)
+          maxDeficit: 550, // Max 550 calorie deficit per day
           name: 'Tirzepatide (Mounjaro)'
         };
       case 'other_glp1':
         return {
-          minMultiplier: 1.3, // 130% of BMR minimum
-          maxDeficit: 800, // Max 800 calorie deficit per day
+          minMultiplier: 1.15, // 115% of BMR minimum (more reasonable)
+          maxDeficit: 600, // Max 600 calorie deficit per day
           name: 'GLP-1 Medication'
         };
       default:
@@ -241,10 +241,10 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
 
   // Calculate recommended macronutrient targets based on calculated calories
   const calculateMacroTargets = (calories: number) => {
-    // Standard macronutrient distribution for balanced diet
-    const proteinCaloriesPercent = 0.25; // 25% protein
-    const carbsCaloriesPercent = 0.45;   // 45% carbs  
-    const fatCaloriesPercent = 0.30;     // 30% fat
+    // More realistic macronutrient distribution for sustainable health
+    const proteinCaloriesPercent = 0.20; // 20% protein (more reasonable for most people)
+    const carbsCaloriesPercent = 0.40;   // 40% carbs (better for weight management)  
+    const fatCaloriesPercent = 0.40;     // 40% fat (supports satiety and hormone function)
     
     const proteinGrams = Math.round((calories * proteinCaloriesPercent) / 4); // 4 calories per gram protein
     const carbsGrams = Math.round((calories * carbsCaloriesPercent) / 4);     // 4 calories per gram carbs
