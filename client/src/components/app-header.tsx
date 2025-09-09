@@ -36,20 +36,18 @@ export function AppHeader() {
 
     loadSteps();
     
-    // Listen for storage changes for real-time updates
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.startsWith('platemate-steps-') || e.key === 'platemate-step-goal') {
-        loadSteps();
-      }
+    // Listen for custom events for real-time updates within the same tab
+    const handleStepUpdate = () => {
+      loadSteps();
     };
     
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('platemate-steps-updated', handleStepUpdate);
     
     // Also check every few seconds as fallback
-    const interval = setInterval(loadSteps, 3000);
+    const interval = setInterval(loadSteps, 2000);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('platemate-steps-updated', handleStepUpdate);
       clearInterval(interval);
     };
   }, []);
@@ -98,10 +96,13 @@ export function AppHeader() {
                     const stepData = {
                       count: 0,
                       date: todayKey,
-                      goal: 10000
+                      goal: goal
                     };
                     localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
                     setSteps(0);
+                    
+                    // Trigger custom event for real-time updates
+                    window.dispatchEvent(new CustomEvent('platemate-steps-updated'));
                     
                     // Also clear any motion listeners to prevent old counts coming back
                     if ((window as any).currentMotionHandler) {
@@ -125,10 +126,13 @@ export function AppHeader() {
                     const stepData = {
                       count: newSteps,
                       date: todayKey,
-                      goal: 10000
+                      goal: goal
                     };
                     localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
                     setSteps(newSteps);
+                    
+                    // Trigger custom event for real-time updates
+                    window.dispatchEvent(new CustomEvent('platemate-steps-updated'));
                     console.log(`Added 50 steps, total: ${newSteps}`);
                   }
                   
