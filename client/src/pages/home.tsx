@@ -10,7 +10,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Activity } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Activity, Keyboard } from "lucide-react";
 import { healthConnectService } from "@/lib/health-connect-service";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
@@ -31,6 +31,8 @@ export default function Home() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [voiceInput, setVoiceInput] = useState('');
   const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
+  const [textInput, setTextInput] = useState('');
+  const [showTextMealDialog, setShowTextMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   
   // Health Connect state
@@ -228,6 +230,14 @@ export default function Home() {
     });
   };
 
+  const handleConfirmTextMeal = () => {
+    if (!textInput.trim()) return;
+    addVoiceMealMutation.mutate({
+      foodDescription: textInput.trim(),
+      mealType: selectedMealType
+    });
+  };
+
   // Step tracker handler - uses built-in motion sensors
   const handleStepTracker = async () => {
     if (!isHealthConnectConnected) {
@@ -377,18 +387,20 @@ export default function Home() {
         analysisId: analysis.id,
         mealType,
         mealDate: now.toISOString(),
-        notes: `Added via voice: "${foodDescription}"`
+        notes: `Added via text input: "${foodDescription}"`
       });
       return await diaryResponse.json();
     },
     onSuccess: () => {
       toast({
         title: "Meal Added!",
-        description: "Your voice meal has been added to your diary.",
+        description: "Your meal has been added to your diary.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
       setShowVoiceMealDialog(false);
+      setShowTextMealDialog(false);
       setVoiceInput('');
+      setTextInput('');
     },
     onError: (error: Error) => {
       toast({
@@ -408,7 +420,7 @@ export default function Home() {
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 py-2 space-y-4">
           {/* Primary Actions */}
-          <div className="grid grid-cols-2 gap-2 mb-6">
+          <div className="grid grid-cols-3 gap-2 mb-6">
             <button
               onClick={handleVoiceInput}
               disabled={!speechSupported}
@@ -429,6 +441,15 @@ export default function Home() {
               <span className="text-xs">
                 {isListening ? 'Listening...' : 'Voice Add'}
               </span>
+            </button>
+            
+            <button
+              onClick={() => setShowTextMealDialog(true)}
+              className="w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]"
+              data-testid="button-text-input"
+            >
+              <Keyboard className="h-5 w-5 group-hover:scale-110 smooth-transition" />
+              <span className="text-xs">Type Add</span>
             </button>
             
             <Link href="/advice">
@@ -556,6 +577,90 @@ export default function Home() {
                 disabled={addVoiceMealMutation.isPending}
                 className="flex-1 py-3 px-6 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
                 data-testid="button-confirm-voice-meal"
+              >
+                {addVoiceMealMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-5 w-5" />
+                    Add to Diary
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Text Meal Input Dialog */}
+      {showTextMealDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Keyboard className="h-6 w-6 text-primary" />
+              </div>
+              Type Your Meal
+            </h3>
+            
+            <div className="space-y-6">
+              {/* Text Input Field */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 border border-green-200/30 dark:border-green-700/30">
+                <label className="block text-sm font-semibold mb-3 text-green-700 dark:text-green-300">What did you eat?</label>
+                <input
+                  type="text"
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  placeholder="e.g., 100g salmon, 2 slices bread, 1 apple..."
+                  className="w-full p-4 rounded-xl border-2 border-green-300 dark:border-green-600 bg-white dark:bg-gray-900 text-lg font-medium focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none transition-all"
+                  data-testid="input-text-meal"
+                  autoFocus
+                />
+              </div>
+
+              {/* Meal Type Selection */}
+              <div>
+                <label className="block text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">Meal Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => (
+                    <button
+                      key={meal}
+                      onClick={() => setSelectedMealType(meal)}
+                      className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+                        selectedMealType === meal
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md scale-105'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      }`}
+                      data-testid={`button-text-meal-${meal}`}
+                    >
+                      {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Dialog Actions */}
+            <div className="flex space-x-4 mt-6">
+              <button
+                onClick={() => {
+                  setShowTextMealDialog(false);
+                  setTextInput('');
+                }}
+                disabled={addVoiceMealMutation.isPending}
+                className="flex-1 py-3 px-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 disabled:opacity-50"
+                data-testid="button-cancel-text-meal"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmTextMeal}
+                disabled={addVoiceMealMutation.isPending || !textInput.trim()}
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                data-testid="button-confirm-text-meal"
               >
                 {addVoiceMealMutation.isPending ? (
                   <>
