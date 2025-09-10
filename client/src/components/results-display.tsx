@@ -498,7 +498,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       {/* Add to Diary Dialog */}
       {showDiaryDialog && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 rounded-2xl p-8 w-full max-w-md shadow-2xl border border-white/20 dark:border-gray-700/50 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 dark:border-gray-700/50 animate-in slide-in-from-bottom-4 duration-300">
             
             {/* Beautiful Header */}
             <div className="text-center mb-8">
@@ -579,8 +579,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               </div>
             </div>
 
-            {/* Enhanced Dialog Actions */}
-            <div className="flex space-x-4 mt-8">
+            {/* Enhanced Dialog Actions - Always visible */}
+            <div className="flex space-x-4 mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 bg-white/50 dark:bg-gray-800/50 -mx-6 px-6 -mb-6 pb-6 rounded-b-2xl">
               <button
                 onClick={() => setShowDiaryDialog(false)}
                 className="flex-1 py-3 px-6 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md"
