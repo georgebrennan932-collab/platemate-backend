@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { NutritionGoals } from "@/components/nutrition-goals";
 import { StepRecommendations } from "@/components/step-recommendations";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { BottomHelpSection } from "@/components/bottom-help-section";
 
 export function GoalsPage() {
   return (
@@ -47,8 +48,8 @@ export function GoalsPage() {
       {/* Bottom Navigation */}
       <BottomNavigation />
       
-      {/* Bottom padding */}
-      <div className="h-20"></div>
+      {/* Bottom Help Section */}
+      <BottomHelpSection />
     </div>
   );
 }

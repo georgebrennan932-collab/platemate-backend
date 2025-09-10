@@ -5,12 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, Target, ArrowLeft } from 'lucide-react';
 import { Link } from 'wouter';
-import type { DiaryEntry, DrinkEntry, FoodAnalysis, DiaryEntryWithAnalysis } from '@shared/schema';
+import type { DiaryEntry, DrinkEntry, FoodAnalysis, DiaryEntryWithAnalysis, NutritionGoals } from '@shared/schema';
 import { BottomNavigation } from '@/components/bottom-navigation';
+import { BottomHelpSection } from '@/components/bottom-help-section';
 
 export default function CalculatorPage() {
   // Fetch nutrition goals
-  const { data: goals, isLoading: goalsLoading } = useQuery({
+  const { data: goals, isLoading: goalsLoading } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
     retry: false,
   });
@@ -144,8 +145,8 @@ export default function CalculatorPage() {
       {/* Bottom Navigation */}
       <BottomNavigation />
       
-      {/* Bottom padding */}
-      <div className="h-20"></div>
+      {/* Bottom Help Section */}
+      <BottomHelpSection />
     </div>
   );
 }

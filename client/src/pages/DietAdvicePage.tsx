@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users, Send, Bot, ChefHat, ExternalLink, Mic, MicOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { BottomHelpSection } from "@/components/bottom-help-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -598,8 +599,8 @@ export function DietAdvicePage() {
       {/* Bottom Navigation */}
       <BottomNavigation />
       
-      {/* Bottom padding */}
-      <div className="h-20"></div>
+      {/* Bottom Help Section */}
+      <BottomHelpSection />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { BottomHelpSection } from "@/components/bottom-help-section";
 import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils } from "lucide-react";
 
 const DIETARY_REQUIREMENTS = [
@@ -282,6 +283,9 @@ export function RecipesPage() {
 
       {/* Bottom Navigation */}
       <BottomNavigation />
+      
+      {/* Bottom Help Section */}
+      <BottomHelpSection />
     </div>
   );
 }

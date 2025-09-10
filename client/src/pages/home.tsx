@@ -15,6 +15,7 @@ import { healthConnectService } from "@/lib/health-connect-service";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { BottomHelpSection } from "@/components/bottom-help-section";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
 
@@ -585,6 +586,9 @@ export default function Home() {
       {/* Bottom Navigation */}
       <BottomNavigation />
       
+      {/* Bottom Help Section */}
+      <BottomHelpSection />
+      
       {/* Persistent confetti celebration */}
       <ConfettiCelebration 
         trigger={showPersistentConfetti} 
@@ -592,9 +596,6 @@ export default function Home() {
         duration={4000}
         particleCount={80}
       />
-      
-      {/* Bottom padding to prevent content from being hidden behind bottom nav */}
-      <div className="h-20"></div>
     </div>
   );
 }

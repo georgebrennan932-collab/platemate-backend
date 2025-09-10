@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { notificationService } from "@/lib/notification-service";
 import { soundService } from "@/lib/sound-service";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { BottomHelpSection } from "@/components/bottom-help-section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -607,6 +608,9 @@ export function CoachingPage() {
       </div>
 
       <BottomNavigation />
+      
+      {/* Bottom Help Section */}
+      <BottomHelpSection />
     </div>
   );
 }
