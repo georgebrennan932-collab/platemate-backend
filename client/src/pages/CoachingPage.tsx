@@ -521,11 +521,13 @@ export function CoachingPage() {
                         Change Time
                       </Button>
                       <Button 
-                        onClick={setupReminders}
+                        onClick={testNotification}
+                        variant="outline"
                         className="flex-1"
-                        data-testid="button-set-reminder"
+                        data-testid="button-test-notification-active"
+                        title="Test notification (will request permission if needed)"
                       >
-                        Set
+                        Test
                       </Button>
                     </div>
                   </div>
