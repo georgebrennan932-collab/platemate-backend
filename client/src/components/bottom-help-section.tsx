@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DIETARY_REQUIREMENTS = [
-  { value: "", label: "All Recipes" },
+  { value: "all", label: "All Recipes" },
   { value: "keto", label: "Keto" },
   { value: "vegan", label: "Vegan" },
   { value: "vegetarian", label: "Vegetarian" },
@@ -22,11 +22,11 @@ const DIETARY_REQUIREMENTS = [
 ];
 
 export function BottomHelpSection() {
-  const [selectedDiet, setSelectedDiet] = useState("");
+  const [selectedDiet, setSelectedDiet] = useState("all");
   const [, navigate] = useLocation();
 
   const handleViewRecipes = () => {
-    const url = selectedDiet ? `/recipes?diet=${selectedDiet}` : '/recipes';
+    const url = selectedDiet && selectedDiet !== 'all' ? `/recipes?diet=${selectedDiet}` : '/recipes';
     navigate(url);
   };
 
@@ -72,7 +72,7 @@ export function BottomHelpSection() {
               data-testid="button-view-tailored-recipes"
             >
               <ChefHat className="h-4 w-4 mr-2" />
-              {selectedDiet ? `View ${DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label} Recipes` : 'Browse All Recipes'}
+              {selectedDiet && selectedDiet !== 'all' ? `View ${DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label} Recipes` : 'Browse All Recipes'}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             
@@ -89,7 +89,7 @@ export function BottomHelpSection() {
             </Link>
           </div>
           
-          {selectedDiet && (
+          {selectedDiet && selectedDiet !== 'all' && (
             <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 rounded-lg p-2">
               <strong>Perfect match!</strong> We'll show you {DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label.toLowerCase()} recipes tailored to your dietary needs.
             </div>

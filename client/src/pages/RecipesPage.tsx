@@ -10,7 +10,7 @@ import { BottomHelpSection } from "@/components/bottom-help-section";
 import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils } from "lucide-react";
 
 const DIETARY_REQUIREMENTS = [
-  { value: "", label: "All Recipes" },
+  { value: "all", label: "All Recipes" },
   { value: "keto", label: "Keto" },
   { value: "vegan", label: "Vegan" },
   { value: "vegetarian", label: "Vegetarian" },
@@ -45,7 +45,7 @@ interface Recipe {
 }
 
 export function RecipesPage() {
-  const [selectedDiet, setSelectedDiet] = useState("");
+  const [selectedDiet, setSelectedDiet] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Get diet filter from URL parameters if provided
@@ -54,6 +54,8 @@ export function RecipesPage() {
     const dietParam = urlParams.get('diet');
     if (dietParam) {
       setSelectedDiet(dietParam);
+    } else {
+      setSelectedDiet('all');
     }
   }, []);
 
@@ -100,13 +102,13 @@ export function RecipesPage() {
         </div>
 
         {/* Selected Filter Display */}
-        {selectedDiet && (
+        {selectedDiet && selectedDiet !== 'all' && (
           <div className="mt-3 flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Filtering by:</span>
             <Badge variant="secondary" className="flex items-center gap-1">
               {DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label}
               <button 
-                onClick={() => setSelectedDiet("")}
+                onClick={() => setSelectedDiet("all")}
                 className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
                 data-testid="button-clear-filter"
               >
@@ -152,17 +154,17 @@ export function RecipesPage() {
           <div className="text-center py-12">
             <Utensils className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground mb-2">
-              {selectedDiet ? "No Recipes Found" : "Loading Delicious Recipes..."}
+              {selectedDiet && selectedDiet !== 'all' ? "No Recipes Found" : "Loading Delicious Recipes..."}
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {selectedDiet 
+              {selectedDiet && selectedDiet !== 'all'
                 ? `No recipes match your ${DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label} dietary requirements yet.`
                 : "Our AI is preparing some amazing recipes for you!"
               }
             </p>
-            {selectedDiet && (
+            {selectedDiet && selectedDiet !== 'all' && (
               <Button 
-                onClick={() => setSelectedDiet("")}
+                onClick={() => setSelectedDiet("all")}
                 variant="outline"
                 data-testid="button-clear-filter-empty"
               >
