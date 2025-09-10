@@ -571,20 +571,66 @@ export function DiaryPage() {
                   <div key={date}>
                     {filteredGroupedEntries[date]?.map((entry) => (
                       <div key={entry.id} className="bg-card border rounded-lg p-4 mb-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium capitalize">{entry.mealType}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(entry.mealDate), 'h:mm a')}
-                            </span>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            {/* Meal Photo Thumbnail */}
+                            {entry.analysis?.imageUrl && (
+                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
+                                <img 
+                                  src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`}
+                                  alt="Meal photo" 
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-medium capitalize">{entry.mealType}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {format(new Date(entry.mealDate), 'h:mm a')}
+                                </span>
+                              </div>
+                              <div className="text-sm font-semibold text-primary">
+                                {entry.analysis?.totalCalories || 0} cal
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-sm font-semibold">
-                            {entry.analysis?.totalCalories || 0} cal
+                          <div className="flex items-center space-x-1">
+                            <EditDiaryEntryDialog entry={entry} />
+                            <button
+                              onClick={() => deleteMutation.mutate(entry.id)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              title="Delete entry"
+                              data-testid={`button-delete-${entry.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         </div>
-                        {entry.analysis?.detectedFoods && (
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {entry.analysis.detectedFoods.map(food => food.name).join(', ')}
+                        
+                        {/* Detailed Food Information */}
+                        {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
+                          <div className="space-y-2">
+                            {entry.analysis.detectedFoods.map((food, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center">
+                                    <i className={`${food.icon || 'fas fa-utensils'} text-xs text-primary`}></i>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium">{food.name}</p>
+                                    <p className="text-xs text-muted-foreground">{food.portion}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-sm font-semibold">{food.calories} cal</p>
+                                  <p className="text-xs text-muted-foreground">{food.protein}g protein</p>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>

@@ -147,8 +147,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/diary", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      let analysisId = req.body.analysisId;
+      
+      // If modifiedAnalysis is provided, create a new analysis with the edited foods
+      if (req.body.modifiedAnalysis) {
+        const modifiedAnalysis = await storage.createFoodAnalysis({
+          imageUrl: req.body.modifiedAnalysis.imageUrl,
+          confidence: req.body.modifiedAnalysis.confidence,
+          totalCalories: req.body.modifiedAnalysis.totalCalories,
+          totalProtein: req.body.modifiedAnalysis.totalProtein,
+          totalCarbs: req.body.modifiedAnalysis.totalCarbs,
+          totalFat: req.body.modifiedAnalysis.totalFat,
+          detectedFoods: req.body.modifiedAnalysis.detectedFoods
+        });
+        analysisId = modifiedAnalysis.id;
+      }
+      
       const validatedEntry = insertDiaryEntrySchema.parse({
         ...req.body,
+        analysisId,
         userId
       });
       const diaryEntry = await storage.createDiaryEntry(validatedEntry);
