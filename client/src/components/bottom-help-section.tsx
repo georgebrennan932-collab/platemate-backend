@@ -27,7 +27,9 @@ export function BottomHelpSection() {
 
   const handleViewRecipes = () => {
     const url = selectedDiet && selectedDiet !== 'all' ? `/recipes?diet=${selectedDiet}` : '/recipes';
-    navigate(url);
+    console.log('Navigating to:', url);
+    // Use window.location for more reliable navigation
+    window.location.href = url;
   };
 
   return (
@@ -70,6 +72,7 @@ export function BottomHelpSection() {
               onClick={handleViewRecipes}
               className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
               data-testid="button-view-tailored-recipes"
+              type="button"
             >
               <ChefHat className="h-4 w-4 mr-2" />
               {selectedDiet && selectedDiet !== 'all' ? `View ${DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label} Recipes` : 'Browse All Recipes'}
