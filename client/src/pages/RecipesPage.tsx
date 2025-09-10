@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
-import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils } from "lucide-react";
+import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils, ArrowLeft } from "lucide-react";
 
 const DIETARY_REQUIREMENTS = [
   { value: "all", label: "All Recipes" },
@@ -70,16 +70,8 @@ export function RecipesPage() {
 
   const { data: recipes, isLoading, error } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes", selectedDiet === 'all' ? '' : selectedDiet, searchQuery],
-    queryFn: async () => {
-      const dietParam = selectedDiet === 'all' ? '' : selectedDiet;
-      const url = `/api/recipes/${dietParam}/${searchQuery || ''}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Failed to fetch recipes');
-      }
-      return response.json();
-    },
-    enabled: true
+    retry: 3,
+    retryDelay: 1000
   });
 
   const filteredRecipes = recipes || [];
@@ -89,14 +81,25 @@ export function RecipesPage() {
       {/* Header */}
       <div className="bg-primary/5 border-b border-primary/10 p-4 sticky top-0 z-10 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-              <ChefHat className="h-6 w-6" />
-              Recipe Collection
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Discover healthy recipes tailored to your dietary needs
-            </p>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/')}
+              className="p-2 hover:bg-primary/10"
+              data-testid="button-back-home"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
+                <ChefHat className="h-6 w-6" />
+                Recipe Collection
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Discover healthy recipes tailored to your dietary needs
+              </p>
+            </div>
           </div>
         </div>
 
