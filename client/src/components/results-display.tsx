@@ -1,4 +1,4 @@
-import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus } from "lucide-react";
+import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2 } from "lucide-react";
 import type { FoodAnalysis, DetectedFood } from "@shared/schema";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -52,6 +52,21 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     };
     
     setEditableFoods(updatedFoods);
+  };
+
+  const updateFoodName = (index: number, newName: string) => {
+    const updatedFoods = [...editableFoods];
+    updatedFoods[index] = {
+      ...updatedFoods[index],
+      name: newName,
+    };
+    setEditableFoods(updatedFoods);
+  };
+
+  const removeFoodItem = (index: number) => {
+    const updatedFoods = editableFoods.filter((_, i) => i !== index);
+    setEditableFoods(updatedFoods);
+    setEditingIndex(null);
   };
 
   // Calculate total nutrition from editable foods
@@ -265,9 +280,30 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                     <i className={`${getFoodIcon(food.icon)} text-primary`}></i>
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium" data-testid={`text-food-name-${index}`}>
-                      {food.name}
-                    </p>
+                    {editingIndex === index ? (
+                      <input
+                        type="text"
+                        value={food.name}
+                        onChange={(e) => updateFoodName(index, e.target.value)}
+                        className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background font-medium"
+                        placeholder="e.g., Jacket Potato with Ham and Cheese"
+                        data-testid={`input-food-name-${index}`}
+                      />
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <p className="font-medium" data-testid={`text-food-name-${index}`}>
+                          {food.name}
+                        </p>
+                        <button
+                          onClick={() => setEditingIndex(index)}
+                          className="p-1 text-blue-600 hover:bg-blue-100 rounded opacity-70 hover:opacity-100 transition-opacity"
+                          title="Edit food name"
+                          data-testid={`button-edit-name-${index}`}
+                        >
+                          <Edit3 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
                     {editingIndex === index ? (
                       <div className="flex items-center space-x-2 mt-2">
                         <input
@@ -291,9 +327,18 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                             setEditingIndex(null);
                           }}
                           className="p-1 text-red-600 hover:bg-red-100 rounded"
+                          title="Cancel changes"
                           data-testid={`button-cancel-portion-${index}`}
                         >
                           <X className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => removeFoodItem(index)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded"
+                          title="Remove this food item"
+                          data-testid={`button-remove-food-${index}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     ) : (
@@ -331,12 +376,22 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           ))}
         </div>
         
+        {/* Always show editing tip */}
+        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center space-x-2">
+            <Info className="h-4 w-4 text-blue-600" />
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              <strong>Tip:</strong> AI sometimes misidentifies foods. Click the <Edit3 className="h-3 w-3 inline mx-1" /> icon to edit food names and portions, or use the <Trash2 className="h-3 w-3 inline mx-1" /> icon to remove incorrect items.
+            </p>
+          </div>
+        </div>
+        
         {data.isAITemporarilyUnavailable && (
-          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+          <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
             <div className="flex items-center space-x-2">
               <Info className="h-4 w-4 text-amber-600" />
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                <strong>Tip:</strong> AI estimates may not be perfect. You can edit portions above to get more accurate nutrition values.
+                <strong>AI Unavailable:</strong> These are estimated values. Edit them above for more accuracy.
               </p>
             </div>
           </div>
