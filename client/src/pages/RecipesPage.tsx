@@ -70,8 +70,21 @@ export function RecipesPage() {
 
   const { data: recipes, isLoading, error } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes", selectedDiet === 'all' ? '' : selectedDiet, searchQuery],
+    queryFn: async () => {
+      const dietParam = selectedDiet === 'all' ? '' : selectedDiet;
+      const url = `/api/recipes/${dietParam}/${searchQuery || ''}`;
+      console.log('Fetching recipes from:', url);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch recipes: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log('Received recipes:', data);
+      return data;
+    },
     retry: 3,
-    retryDelay: 1000
+    retryDelay: 1000,
+    staleTime: 30000 // Cache for 30 seconds
   });
 
   const filteredRecipes = recipes || [];

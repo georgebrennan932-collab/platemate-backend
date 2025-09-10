@@ -535,14 +535,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fallback recipes when AI providers are unavailable
+  const fallbackRecipes = [
+    {
+      id: "fallback-1",
+      name: "Grilled Chicken Salad",
+      description: "Fresh mixed greens with grilled chicken breast, cherry tomatoes, and olive oil dressing",
+      calories: 320,
+      protein: 35,
+      carbs: 12,
+      fat: 15,
+      servings: 1,
+      prepTime: 15,
+      cookTime: 10,
+      difficulty: "Easy" as const,
+      ingredients: ["Mixed greens", "Chicken breast", "Cherry tomatoes", "Olive oil", "Lemon juice"],
+      instructions: ["Grill chicken", "Mix greens", "Add toppings", "Dress salad"],
+      tags: ["healthy", "protein"],
+      dietaryInfo: ["high-protein", "gluten-free"]
+    },
+    {
+      id: "fallback-2",
+      name: "Quinoa Buddha Bowl",
+      description: "Nutritious bowl with quinoa, roasted vegetables, and tahini dressing",
+      calories: 450,
+      protein: 15,
+      carbs: 65,
+      fat: 18,
+      servings: 1,
+      prepTime: 20,
+      cookTime: 25,
+      difficulty: "Medium" as const,
+      ingredients: ["Quinoa", "Sweet potato", "Broccoli", "Chickpeas", "Tahini"],
+      instructions: ["Cook quinoa", "Roast vegetables", "Assemble bowl", "Add dressing"],
+      tags: ["vegan", "healthy"],
+      dietaryInfo: ["vegan", "vegetarian", "high-fiber"]
+    },
+    {
+      id: "fallback-3",
+      name: "Mediterranean Wrap",
+      description: "Whole wheat wrap with hummus, vegetables, and feta cheese",
+      calories: 380,
+      protein: 12,
+      carbs: 45,
+      fat: 16,
+      servings: 1,
+      prepTime: 10,
+      cookTime: 0,
+      difficulty: "Easy" as const,
+      ingredients: ["Whole wheat tortilla", "Hummus", "Cucumber", "Tomatoes", "Feta cheese"],
+      instructions: ["Spread hummus", "Add vegetables", "Add cheese", "Roll wrap"],
+      tags: ["vegetarian", "mediterranean"],
+      dietaryInfo: ["vegetarian", "mediterranean"]
+    }
+  ];
+
   // Recipe routes
   app.get("/api/recipes", async (req, res) => {
     try {
       const dietaryFilter = req.query.diet as string || "";
-      const recipes = await aiManager.generateRecipes(dietaryFilter);
-      res.json(recipes);
+      
+      try {
+        const recipes = await aiManager.generateRecipes(dietaryFilter);
+        res.json(recipes);
+      } catch (aiError) {
+        console.log('AI providers unavailable, serving fallback recipes');
+        
+        // Filter fallback recipes by diet if specified
+        let filteredRecipes = fallbackRecipes;
+        if (dietaryFilter && dietaryFilter !== 'all') {
+          filteredRecipes = fallbackRecipes.filter(recipe => 
+            recipe.dietaryInfo.includes(dietaryFilter)
+          );
+        }
+        
+        // If no recipes match the diet, show all fallback recipes
+        if (filteredRecipes.length === 0) {
+          filteredRecipes = fallbackRecipes;
+        }
+        
+        res.json(filteredRecipes);
+      }
     } catch (error) {
       console.error("Error fetching recipes:", error);
+      res.status(500).json({ message: "Failed to fetch recipes" });
+    }
+  });
+
+  // Dynamic recipe route for diet filtering
+  app.get("/api/recipes/:diet?/:search?", async (req, res) => {
+    try {
+      const { diet, search } = req.params;
+      const dietaryFilter = diet || "";
+      
+      try {
+        const recipes = await aiManager.generateRecipes({
+          dietaryRestrictions: diet ? [diet] : [],
+          searchQuery: search || '',
+          count: 6
+        });
+        res.json(recipes);
+      } catch (aiError) {
+        console.log('AI providers unavailable, serving fallback recipes');
+        
+        // Filter fallback recipes by diet if specified
+        let filteredRecipes = fallbackRecipes;
+        if (dietaryFilter && dietaryFilter !== 'all') {
+          filteredRecipes = fallbackRecipes.filter(recipe => 
+            recipe.dietaryInfo.includes(dietaryFilter)
+          );
+        }
+        
+        // If no recipes match the diet, show all fallback recipes
+        if (filteredRecipes.length === 0) {
+          filteredRecipes = fallbackRecipes;
+        }
+        
+        res.json(filteredRecipes);
+      }
+    } catch (error) {
+      console.error("Error fetching dynamic recipes:", error);
       res.status(500).json({ message: "Failed to fetch recipes" });
     }
   });
