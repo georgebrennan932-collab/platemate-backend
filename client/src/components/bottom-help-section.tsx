@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ChefHat, Filter, ArrowRight, HelpCircle } from "lucide-react";
+import { ChefHat, Filter, ArrowRight, HelpCircle, MessageCircle, FileText, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,7 +33,8 @@ export function BottomHelpSection() {
   };
 
   return (
-    <div className="mt-8 mb-24 px-4">
+    <div className="mt-8 mb-24 px-4 space-y-6">
+      {/* Tailored Recipes Section */}
       <Card className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200 dark:border-orange-800">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
@@ -66,37 +67,80 @@ export function BottomHelpSection() {
             </Select>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <Button 
-              onClick={handleViewRecipes}
-              className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
-              data-testid="button-view-tailored-recipes"
-              type="button"
-            >
-              <ChefHat className="h-4 w-4 mr-2" />
-              {selectedDiet && selectedDiet !== 'all' ? `View ${DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label} Recipes` : 'Browse All Recipes'}
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-            
-            <Link href="/help">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="px-4"
-                data-testid="button-quick-help"
-                title="Get help and support"
-              >
-                <HelpCircle className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+          {/* Action Button */}
+          <Button 
+            onClick={handleViewRecipes}
+            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
+            data-testid="button-view-tailored-recipes"
+            type="button"
+          >
+            <ChefHat className="h-4 w-4 mr-2" />
+            {selectedDiet && selectedDiet !== 'all' ? `View ${DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label} Recipes` : 'Browse All Recipes'}
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
           
           {selectedDiet && selectedDiet !== 'all' && (
             <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 rounded-lg p-2">
-              <strong>Perfect match!</strong> We'll show you {DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label.toLowerCase()} recipes tailored to your dietary needs.
+              <strong>Perfect match!</strong> We'll show you {selectedDiet.replace('-', ' ')} recipes tailored to your dietary needs.
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Help Section */}
+      <Card className="bg-muted/30 border-dashed">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <HelpCircle className="h-4 w-4" />
+            Need Help?
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link href="/help">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full h-auto p-3 flex flex-col items-center gap-2 hover:bg-background"
+                data-testid="button-help-guide"
+              >
+                <FileText className="h-5 w-5" />
+                <div className="text-center">
+                  <div className="font-medium text-xs">User Guide</div>
+                  <div className="text-xs text-muted-foreground">How to use PlateMate</div>
+                </div>
+              </Button>
+            </Link>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full h-auto p-3 flex flex-col items-center gap-2 hover:bg-background"
+              onClick={() => window.open('mailto:support@platemate.app', '_blank')}
+              data-testid="button-contact-support"
+            >
+              <MessageCircle className="h-5 w-5" />
+              <div className="text-center">
+                <div className="font-medium text-xs">Contact Support</div>
+                <div className="text-xs text-muted-foreground">Get personalized help</div>
+              </div>
+            </Button>
+            
+            <Link href="/injection-advice">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full h-auto p-3 flex flex-col items-center gap-2 hover:bg-background"
+                data-testid="button-medication-help"
+              >
+                <ExternalLink className="h-5 w-5" />
+                <div className="text-center">
+                  <div className="font-medium text-xs">Medication Guide</div>
+                  <div className="text-xs text-muted-foreground">Weight loss injections</div>
+                </div>
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
