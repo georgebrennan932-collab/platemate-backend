@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syringe, Target, Activity, Mic, Volume2 } from "lucide-react";
+import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syringe, Target, Activity, Mic, Volume2, ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -146,9 +146,23 @@ export default function LandingPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-indigo-200 dark:border-indigo-800 hover:shadow-2xl hover:shadow-indigo-500/25 transition-all duration-500 hover:scale-105 hover:rotate-1 animate-fade-in-up animation-delay-2700 group">
+          <Card className="border-red-200 dark:border-red-800 hover:shadow-2xl hover:shadow-red-500/25 transition-all duration-500 hover:scale-105 hover:rotate-1 animate-fade-in-up animation-delay-2700 group">
             <CardHeader className="text-center">
-              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-2000 group-hover:animate-bounce">
+              <div className="bg-red-100 dark:bg-red-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-2000 group-hover:animate-bounce">
+                <ChefHat className="h-8 w-8 text-red-600 dark:text-red-400 group-hover:animate-pulse" />
+              </div>
+              <CardTitle className="text-xl group-hover:text-red-600 transition-colors">Tailored Recipes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-center">
+                AI-generated healthy recipes filtered by your dietary requirements - Keto, Vegan, High Protein, Gluten Free, and more.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="border-indigo-200 dark:border-indigo-800 hover:shadow-2xl hover:shadow-indigo-500/25 transition-all duration-500 hover:scale-105 hover:rotate-1 animate-fade-in-up animation-delay-3000 group">
+            <CardHeader className="text-center">
+              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-2300 group-hover:animate-bounce">
                 <Syringe className="h-8 w-8 text-indigo-600 dark:text-indigo-400 group-hover:animate-pulse" />
               </div>
               <CardTitle className="text-xl group-hover:text-indigo-600 transition-colors">Injection Support</CardTitle>
@@ -229,6 +243,20 @@ export default function LandingPage() {
               </CardContent>
             </Card>
 
+            <Card className="border-red-200 dark:border-red-800 hover:shadow-xl transition-all duration-300 group">
+              <CardHeader className="text-center">
+                <div className="bg-red-100 dark:bg-red-900 p-3 rounded-full w-fit mx-auto mb-4 group-hover:animate-bounce">
+                  <ChefHat className="h-8 w-8 text-red-600 dark:text-red-400" />
+                </div>
+                <CardTitle className="text-lg group-hover:text-red-600 transition-colors">Smart Recipe Engine</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-center text-sm">
+                  AI-powered recipe recommendations with dietary filters. Get personalized meal ideas that match your nutrition goals.
+                </CardDescription>
+              </CardContent>
+            </Card>
+
             <Card className="border-blue-200 dark:border-blue-800 hover:shadow-xl transition-all duration-300 group">
               <CardHeader className="text-center">
                 <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full w-fit mx-auto mb-4 group-hover:animate-bounce">
@@ -278,6 +306,14 @@ export default function LandingPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-1">Smart Step Tracking</h3>
                 <p className="text-muted-foreground">Built-in motion sensors with Health Connect integration. Get personalized daily step targets based on your profile and goals.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-3">
+              <ChefHat className="h-6 w-6 text-red-500 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg font-semibold mb-1">AI Recipe Generator</h3>
+                <p className="text-muted-foreground">Get personalized healthy recipes filtered by dietary requirements like Keto, Vegan, High Protein, and Gluten Free.</p>
               </div>
             </div>
             
