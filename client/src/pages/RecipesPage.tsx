@@ -48,6 +48,15 @@ export function RecipesPage() {
   const [selectedDiet, setSelectedDiet] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Get diet filter from URL parameters if provided
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dietParam = urlParams.get('diet');
+    if (dietParam) {
+      setSelectedDiet(dietParam);
+    }
+  }, []);
+
   const { data: recipes, isLoading, error } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes", selectedDiet, searchQuery],
     enabled: true
