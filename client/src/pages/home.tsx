@@ -408,7 +408,7 @@ export default function Home() {
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 py-2 space-y-4">
           {/* Primary Actions */}
-          <div className="grid grid-cols-3 gap-2 mb-6">
+          <div className="grid grid-cols-2 gap-2 mb-6">
             <button
               onClick={handleVoiceInput}
               disabled={!speechSupported}
@@ -438,15 +438,6 @@ export default function Home() {
               >
                 <Lightbulb className="h-5 w-5 group-hover:scale-110 smooth-transition" />
                 <span className="text-xs">AI Advice</span>
-              </button>
-            </Link>
-            <Link href="/help">
-              <button 
-                className="w-full modern-card hover:scale-[1.02] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-indigo-200/50 dark:border-indigo-700/30 py-4 px-2 rounded-xl font-medium smooth-transition flex flex-col items-center justify-center space-y-1 group min-h-[80px]"
-                data-testid="button-help"
-              >
-                <HelpCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 smooth-transition" />
-                <span className="text-xs text-indigo-700 dark:text-indigo-300">Help</span>
               </button>
             </Link>
           </div>
