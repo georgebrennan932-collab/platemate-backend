@@ -69,6 +69,52 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     setEditingIndex(null);
   };
 
+  const addNewFoodItem = () => {
+    const newFood = {
+      name: "New Food Item",
+      portion: "1 serving",
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      icon: "fas fa-utensils"
+    };
+    const updatedFoods = [...editableFoods, newFood];
+    setEditableFoods(updatedFoods);
+    setEditingIndex(updatedFoods.length - 1); // Start editing the new item immediately
+  };
+
+  const hasChanges = () => {
+    return JSON.stringify(editableFoods) !== JSON.stringify(data.detectedFoods);
+  };
+
+  const saveChanges = () => {
+    // Update the original data with the edited foods
+    data.detectedFoods = [...editableFoods];
+    toast({
+      title: "Changes Saved",
+      description: "Your food corrections have been saved successfully.",
+    });
+  };
+
+  const resetChanges = () => {
+    setEditableFoods([...data.detectedFoods]);
+    setEditingIndex(null);
+    toast({
+      title: "Changes Reset",
+      description: "All changes have been reset to original AI detection.",
+    });
+  };
+
+  const updateFoodNutrition = (index: number, field: string, value: number) => {
+    const updatedFoods = [...editableFoods];
+    updatedFoods[index] = {
+      ...updatedFoods[index],
+      [field]: value,
+    };
+    setEditableFoods(updatedFoods);
+  };
+
   // Calculate total nutrition from editable foods
   const calculateTotals = () => {
     return editableFoods.reduce(
@@ -366,8 +412,56 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                     {food.protein}g protein
                   </p>
                   {editingIndex === index && (
-                    <div className="text-xs text-blue-600 mt-1">
-                      {food.carbs}g carbs • {food.fat}g fat
+                    <div className="text-xs text-blue-600 mt-1 space-y-2">
+                      <div>{food.carbs}g carbs • {food.fat}g fat</div>
+                      {food.name === "New Food Item" && (
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div>
+                            <label className="text-xs text-gray-600 dark:text-gray-400">Calories</label>
+                            <input
+                              type="number"
+                              value={food.calories}
+                              onChange={(e) => updateFoodNutrition(index, 'calories', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1 text-xs border rounded bg-background"
+                              placeholder="0"
+                              data-testid={`input-calories-${index}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-600 dark:text-gray-400">Protein (g)</label>
+                            <input
+                              type="number"
+                              value={food.protein}
+                              onChange={(e) => updateFoodNutrition(index, 'protein', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1 text-xs border rounded bg-background"
+                              placeholder="0"
+                              data-testid={`input-protein-${index}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-600 dark:text-gray-400">Carbs (g)</label>
+                            <input
+                              type="number"
+                              value={food.carbs}
+                              onChange={(e) => updateFoodNutrition(index, 'carbs', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1 text-xs border rounded bg-background"
+                              placeholder="0"
+                              data-testid={`input-carbs-${index}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-600 dark:text-gray-400">Fat (g)</label>
+                            <input
+                              type="number"
+                              value={food.fat}
+                              onChange={(e) => updateFoodNutrition(index, 'fat', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1 text-xs border rounded bg-background"
+                              placeholder="0"
+                              data-testid={`input-fat-${index}`}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -375,13 +469,46 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </div>
           ))}
         </div>
+
+        {/* Add Missing Food Item */}
+        <div className="mt-4 p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl">
+          <button
+            onClick={() => addNewFoodItem()}
+            className="w-full flex items-center justify-center space-x-2 py-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+            data-testid="button-add-food"
+          >
+            <Plus className="h-5 w-5" />
+            <span className="font-medium">Add Missing Food Item</span>
+          </button>
+        </div>
+        
+        {/* Save Changes Button */}
+        {hasChanges() && (
+          <div className="mt-4 flex space-x-3">
+            <button
+              onClick={() => saveChanges()}
+              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+              data-testid="button-save-changes"
+            >
+              <Check className="h-5 w-5" />
+              <span>Save All Changes</span>
+            </button>
+            <button
+              onClick={() => resetChanges()}
+              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+              data-testid="button-reset-changes"
+            >
+              Reset
+            </button>
+          </div>
+        )}
         
         {/* Always show editing tip */}
         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <div className="flex items-center space-x-2">
             <Info className="h-4 w-4 text-blue-600" />
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              <strong>Tip:</strong> AI sometimes misidentifies foods. Click the <Edit3 className="h-3 w-3 inline mx-1" /> icon to edit food names and portions, or use the <Trash2 className="h-3 w-3 inline mx-1" /> icon to remove incorrect items.
+              <strong>Tip:</strong> AI sometimes misidentifies foods. Click the <Edit3 className="h-3 w-3 inline mx-1" /> icon to edit food names and portions, use the <Trash2 className="h-3 w-3 inline mx-1" /> icon to remove incorrect items, or use "Add Missing Food Item" to add foods the AI missed. Remember to save your changes!
             </p>
           </div>
         </div>
