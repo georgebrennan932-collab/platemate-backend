@@ -572,6 +572,141 @@ export class AIManager {
   }
 
   /**
+   * Generate recipes based on dietary requirements
+   */
+  async generateRecipes(dietaryFilter: string = ""): Promise<any[]> {
+    const availableProviders = this.getAvailableProviders();
+    
+    // Try each available provider
+    for (const provider of availableProviders) {
+      for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
+        try {
+          console.log(`Attempting recipe generation with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
+          
+          // Check if provider has generateRecipes method
+          if ('generateRecipes' in provider && typeof (provider as any).generateRecipes === 'function') {
+            const result = await (provider as any).generateRecipes(dietaryFilter);
+            console.log(`✓ Recipe generation successful with ${provider.name}`);
+            return result;
+          } else {
+            console.log(`${provider.name} does not support recipe generation, trying next provider`);
+            break;
+          }
+        } catch (error: any) {
+          console.error(`✗ Recipe generation failed with ${provider.name} (attempt ${attempt}):`, error.message);
+          
+          // Check if it's a rate limit error
+          if (error.message?.includes('rate limit') || error.message?.includes('quota') || error.status === 429) {
+            console.log(`${provider.name} hit rate limit, trying next provider`);
+            break;
+          }
+          
+          // If this was the last attempt for this provider, move to next
+          if (attempt === provider.maxRetries) {
+            console.log(`${provider.name} exhausted all retries, trying next provider`);
+            break;
+          }
+          
+          // Wait before retry (exponential backoff)
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          await this.sleep(waitTime);
+        }
+      }
+    }
+
+    // All providers failed, return fallback recipes
+    console.log("All AI providers failed for recipe generation, returning fallback recipes");
+    return this.getFallbackRecipes(dietaryFilter);
+  }
+
+  /**
+   * Get fallback recipes when AI providers are unavailable
+   */
+  private getFallbackRecipes(dietaryFilter: string): any[] {
+    const baseRecipes = [
+      {
+        id: "fallback-1",
+        name: "Grilled Chicken Salad",
+        description: "Fresh mixed greens with grilled chicken breast, vegetables, and olive oil dressing",
+        calories: 320,
+        protein: 28,
+        carbs: 12,
+        fat: 18,
+        servings: 1,
+        prepTime: 15,
+        cookTime: 10,
+        difficulty: "Easy" as const,
+        ingredients: ["chicken breast", "mixed greens", "tomatoes", "cucumbers", "olive oil", "lemon juice"],
+        instructions: [
+          "Season and grill chicken breast until cooked through",
+          "Mix greens, tomatoes, and cucumbers in a bowl",
+          "Slice chicken and place on top of salad",
+          "Drizzle with olive oil and lemon juice"
+        ],
+        tags: ["healthy", "protein", "low-carb"],
+        dietaryInfo: ["High Protein", "Gluten Free"]
+      },
+      {
+        id: "fallback-2",
+        name: "Vegetable Stir Fry",
+        description: "Colorful mixed vegetables stir-fried with garlic and ginger",
+        calories: 180,
+        protein: 6,
+        carbs: 25,
+        fat: 8,
+        servings: 2,
+        prepTime: 10,
+        cookTime: 8,
+        difficulty: "Easy" as const,
+        ingredients: ["broccoli", "bell peppers", "carrots", "snap peas", "garlic", "ginger", "soy sauce", "sesame oil"],
+        instructions: [
+          "Heat oil in a large pan or wok",
+          "Add garlic and ginger, stir for 30 seconds",
+          "Add vegetables and stir-fry for 5-6 minutes",
+          "Season with soy sauce and serve hot"
+        ],
+        tags: ["vegetarian", "vegan", "quick"],
+        dietaryInfo: ["Vegan", "Vegetarian", "High Fiber"]
+      },
+      {
+        id: "fallback-3",
+        name: "Quinoa Bowl",
+        description: "Nutritious quinoa bowl with roasted vegetables and tahini dressing",
+        calories: 420,
+        protein: 15,
+        carbs: 55,
+        fat: 16,
+        servings: 1,
+        prepTime: 20,
+        cookTime: 25,
+        difficulty: "Medium" as const,
+        ingredients: ["quinoa", "sweet potato", "chickpeas", "spinach", "tahini", "lemon juice", "olive oil"],
+        instructions: [
+          "Cook quinoa according to package instructions",
+          "Roast diced sweet potato and chickpeas at 400°F for 20 minutes",
+          "Mix tahini, lemon juice, and olive oil for dressing",
+          "Combine quinoa, roasted vegetables, spinach, and dressing"
+        ],
+        tags: ["vegetarian", "healthy", "protein"],
+        dietaryInfo: ["Vegetarian", "High Protein", "High Fiber", "Gluten Free"]
+      }
+    ];
+
+    // Filter recipes based on dietary requirements
+    if (!dietaryFilter) {
+      return baseRecipes;
+    }
+
+    return baseRecipes.filter(recipe => {
+      const filterLower = dietaryFilter.toLowerCase().replace('-', ' ');
+      return recipe.dietaryInfo.some(diet => 
+        diet.toLowerCase().includes(filterLower) || 
+        filterLower.includes(diet.toLowerCase())
+      );
+    });
+  }
+
+  /**
    * Get status of all providers for monitoring
    */
   public getProviderStatuses(): ProviderStatus[] {

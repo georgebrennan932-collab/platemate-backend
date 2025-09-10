@@ -680,6 +680,97 @@ Respond with JSON array of tip objects with: id, title, content, category, impor
     }
   }
 
+  async generateRecipes(dietaryFilter: string = ""): Promise<any[]> {
+    try {
+      const filterText = dietaryFilter ? ` that are suitable for ${dietaryFilter} dietary requirements` : "";
+      
+      const systemPrompt = `You are a professional chef and nutritionist. Generate 8-10 healthy and delicious recipes${filterText}.
+
+Each recipe should include:
+- Complete ingredient list with measurements
+- Step-by-step cooking instructions
+- Accurate nutritional information
+- Cooking time and difficulty level
+- Serving size information
+- Dietary tags and information
+
+Focus on:
+- Balanced nutrition
+- Easy-to-find ingredients
+- Clear, actionable instructions
+- Variety in meal types (breakfast, lunch, dinner, snacks)
+- Different cooking methods and cuisines
+
+Respond with a JSON object with a 'recipes' array.`;
+
+      const userPrompt = dietaryFilter 
+        ? `Generate healthy recipes for ${dietaryFilter} diet. Include variety in meal types and cooking methods.`
+        : "Generate a variety of healthy recipes for different meal types and dietary preferences.";
+
+      const response = await this.client.chat.completions.create({
+        model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt
+          },
+          {
+            role: "user",
+            content: userPrompt
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 3000,
+        temperature: 0.8,
+      });
+
+      const responseText = response.choices[0].message.content;
+      
+      if (!responseText) {
+        throw new Error("No response from OpenAI");
+      }
+
+      const parsed = JSON.parse(responseText);
+      const recipes = parsed.recipes || [];
+      
+      this.recordSuccess();
+      return recipes;
+
+    } catch (error: any) {
+      console.error("OpenAI recipe generation error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.status === 429 || error?.code === 'rate_limit_exceeded') {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'OpenAI rate limit exceeded',
+          true,
+          true,
+          60
+        );
+      } else if (error?.status >= 500) {
+        providerError = this.createError(
+          'SERVER_ERROR',
+          `OpenAI server error: ${error.message}`,
+          false,
+          true,
+          30
+        );
+      } else {
+        providerError = this.createError(
+          'RECIPE_ERROR',
+          `OpenAI recipe generation failed: ${error.message}`,
+          false,
+          false
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
+
   private calculateStreak(entries: DiaryEntry[]): number {
     if (!entries || entries.length === 0) return 0;
     

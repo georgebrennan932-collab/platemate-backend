@@ -720,6 +720,139 @@ Respond with JSON object containing 'tips' array.`;
     }
   }
 
+  async generateRecipes(dietaryFilter: string = ""): Promise<any[]> {
+    try {
+      const filterText = dietaryFilter ? ` that are suitable for ${dietaryFilter} dietary requirements` : "";
+      
+      const systemPrompt = `You are a professional chef and nutritionist. Generate 8-10 healthy and delicious recipes${filterText}.
+
+Each recipe should include:
+- Complete ingredient list with measurements
+- Step-by-step cooking instructions
+- Accurate nutritional information (calories, protein, carbs, fat)
+- Cooking time (prep and cook) and difficulty level
+- Serving size information
+- Dietary tags and information
+
+Focus on:
+- Balanced nutrition
+- Easy-to-find ingredients
+- Clear, actionable instructions
+- Variety in meal types (breakfast, lunch, dinner, snacks)
+- Different cooking methods and cuisines
+
+Respond with JSON in this exact format:
+{
+  "recipes": [
+    {
+      "id": "recipe-1",
+      "name": "Recipe Name",
+      "description": "Brief description",
+      "calories": 400,
+      "protein": 25,
+      "carbs": 35,
+      "fat": 15,
+      "servings": 2,
+      "prepTime": 15,
+      "cookTime": 20,
+      "difficulty": "Easy",
+      "ingredients": ["ingredient 1", "ingredient 2"],
+      "instructions": ["Step 1", "Step 2"],
+      "dietaryInfo": ["Vegetarian", "High Protein"]
+    }
+  ]
+}`;
+
+      const userPrompt = dietaryFilter 
+        ? `Generate healthy recipes for ${dietaryFilter} diet. Include variety in meal types and cooking methods.`
+        : "Generate a variety of healthy recipes for different meal types and dietary preferences.";
+
+      const response = await this.client.models.generateContent({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: systemPrompt,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "object",
+            properties: {
+              recipes: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    name: { type: "string" },
+                    description: { type: "string" },
+                    calories: { type: "number" },
+                    protein: { type: "number" },
+                    carbs: { type: "number" },
+                    fat: { type: "number" },
+                    servings: { type: "number" },
+                    prepTime: { type: "number" },
+                    cookTime: { type: "number" },
+                    difficulty: { type: "string" },
+                    ingredients: { type: "array", items: { type: "string" } },
+                    instructions: { type: "array", items: { type: "string" } },
+                    dietaryInfo: { type: "array", items: { type: "string" } }
+                  },
+                  required: ["id", "name", "description", "calories", "protein", "carbs", "fat", "servings", "prepTime", "cookTime", "difficulty", "ingredients", "instructions", "dietaryInfo"]
+                }
+              }
+            },
+            required: ["recipes"]
+          },
+          temperature: 0.8
+        },
+        contents: userPrompt,
+      });
+
+      const responseText = response.text;
+      
+      if (!responseText) {
+        throw new Error("No response from Gemini");
+      }
+
+      const parsed = JSON.parse(responseText);
+      const recipes = parsed.recipes || [];
+      
+      this.recordSuccess();
+      return recipes;
+
+    } catch (error: any) {
+      console.error("Gemini recipe generation error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.status === 429 || error?.code === 'RATE_LIMIT_EXCEEDED') {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'Gemini rate limit exceeded',
+          true,
+          true,
+          60
+        );
+      } else if (error?.status >= 500) {
+        providerError = this.createError(
+          'SERVER_ERROR',
+          `Gemini server error: ${error.message}`,
+          false,
+          true,
+          30
+        );
+      } else {
+        providerError = this.createError(
+          'RECIPE_ERROR',
+          `Gemini recipe generation failed: ${error.message}`,
+          false,
+          false
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
+
   private calculateStreak(entries: DiaryEntry[]): number {
     if (!entries || entries.length === 0) return 0;
     
