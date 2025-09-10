@@ -535,6 +535,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Recipe routes
+  app.get("/api/recipes", async (req, res) => {
+    try {
+      const dietaryFilter = req.query.diet as string || "";
+      const recipes = await aiManager.generateRecipes(dietaryFilter);
+      res.json(recipes);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+      res.status(500).json({ message: "Failed to fetch recipes" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

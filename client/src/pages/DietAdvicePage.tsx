@@ -431,10 +431,23 @@ export function DietAdvicePage() {
 
                 {advice.mealIdeas && advice.mealIdeas.length > 0 && (
                   <div className="bg-card border rounded-lg p-4">
-                    <h3 className="font-semibold text-primary mb-3 flex items-center">
-                      <Utensils className="h-4 w-4 mr-2" />
-                      Personalized Meal Ideas
-                    </h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-primary flex items-center">
+                        <Utensils className="h-4 w-4 mr-2" />
+                        Personalized Meal Ideas
+                      </h3>
+                      <Link href="/recipes">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex items-center gap-2"
+                          data-testid="button-view-recipes"
+                        >
+                          <ChefHat className="h-4 w-4" />
+                          Browse Recipes
+                        </Button>
+                      </Link>
+                    </div>
                     <div className="space-y-4">
                       {advice.mealIdeas.map((meal, index) => (
                         <div key={index} className="border rounded-lg p-4 bg-muted/30" data-testid={`card-meal-${index}`}>
