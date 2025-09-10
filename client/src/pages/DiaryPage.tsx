@@ -21,6 +21,7 @@ export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'diary' | 'analytics'>('diary');
+  const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
