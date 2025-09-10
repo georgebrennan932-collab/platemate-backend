@@ -53,22 +53,31 @@ class NotificationService {
 
   private async initializeWebNotifications(): Promise<void> {
     try {
-      if (!('Notification' in window)) {
-        console.log('Web notifications not supported');
+      // Check if running in a secure context (required for notifications)
+      if (!window.isSecureContext) {
+        console.log('Web notifications require secure context (HTTPS)');
         return;
       }
 
-      if (Notification.permission === 'granted') {
-        this.hasPermission = true;
-      } else if (Notification.permission !== 'denied') {
-        const permission = await Notification.requestPermission();
-        this.hasPermission = permission === 'granted';
+      if (!('Notification' in window)) {
+        console.log('Web notifications not supported by this browser');
+        return;
       }
 
-      if (this.hasPermission) {
-        console.log('✓ Web notifications permission granted');
+      // Check current permission status
+      const currentPermission = Notification.permission;
+      console.log(`Current notification permission: ${currentPermission}`);
+
+      if (currentPermission === 'granted') {
+        this.hasPermission = true;
+        console.log('✓ Web notifications permission already granted');
+      } else if (currentPermission === 'default') {
+        // Only request permission when user explicitly enables notifications
+        console.log('Web notifications permission not yet requested');
+        this.hasPermission = false;
       } else {
         console.log('✗ Web notifications permission denied');
+        this.hasPermission = false;
       }
     } catch (error) {
       console.error('Web notifications error:', error);
@@ -82,8 +91,13 @@ class NotificationService {
       return true;
     }
 
-    // Try to initialize notifications but continue even if not supported
+    // Initialize notification service
     await this.initialize();
+
+    // Request permission if we don't have it and notifications are supported
+    if (!Capacitor.isNativePlatform() && 'Notification' in window && !this.hasPermission) {
+      await this.requestWebNotificationPermission();
+    }
 
     try {
       if (Capacitor.isNativePlatform()) {
@@ -92,7 +106,8 @@ class NotificationService {
         await this.scheduleDailyWeb(config);
       }
       
-      console.log(`✓ Daily motivation scheduled for ${config.time} (will work with or without browser notifications)`);
+      const permissionStatus = this.hasPermission ? 'with browser notifications' : 'with in-app notifications only';
+      console.log(`✓ Daily motivation scheduled for ${config.time} (${permissionStatus})`);
       return true;
     } catch (error) {
       console.error('Failed to schedule daily motivation:', error);
@@ -182,7 +197,7 @@ class NotificationService {
     this.showInAppMotivation(motivationalContent);
     
     // Try browser notification if available (but don't require it)
-    if (this.hasPermission && 'Notification' in window) {
+    if (this.hasPermission && 'Notification' in window && window.isSecureContext) {
       try {
         const notification = new Notification(motivationalContent.title, {
           body: motivationalContent.body,
@@ -195,17 +210,99 @@ class NotificationService {
 
         notification.onclick = () => {
           window.focus();
-          window.location.href = '/';
+          if (window.location.pathname !== '/coaching') {
+            window.location.href = '/coaching';
+          }
           notification.close();
         };
 
-        setTimeout(() => notification.close(), 15000);
+        // Auto-close after 30 seconds
+        setTimeout(() => {
+          if (notification) {
+            notification.close();
+          }
+        }, 30000);
+        
+        console.log('✓ Browser notification shown:', motivationalContent.title);
       } catch (error) {
         console.log('Browser notification failed, but in-app motivation still works:', error);
       }
+    } else {
+      console.log('Browser notifications not available, using in-app motivation only');
     }
     
     console.log('🌟 Daily motivation delivered:', motivationalContent.body);
+  }
+
+  // Method to explicitly request notification permission
+  async requestWebNotificationPermission(): Promise<boolean> {
+    try {
+      if (!('Notification' in window)) {
+        console.log('Browser does not support notifications');
+        return false;
+      }
+
+      if (!window.isSecureContext) {
+        console.log('Notifications require secure context (HTTPS)');
+        return false;
+      }
+
+      if (Notification.permission === 'granted') {
+        this.hasPermission = true;
+        return true;
+      }
+
+      if (Notification.permission === 'denied') {
+        console.log('Notification permission was denied by user');
+        return false;
+      }
+
+      // Request permission
+      const permission = await Notification.requestPermission();
+      this.hasPermission = permission === 'granted';
+      
+      if (this.hasPermission) {
+        console.log('✓ Web notifications permission granted');
+      } else {
+        console.log('✗ Web notifications permission denied');
+      }
+      
+      return this.hasPermission;
+    } catch (error) {
+      console.error('Failed to request notification permission:', error);
+      return false;
+    }
+  }
+
+  // Method to show a test notification
+  async showTestNotification(): Promise<void> {
+    const hasPermission = await this.requestWebNotificationPermission();
+    
+    if (hasPermission) {
+      try {
+        const notification = new Notification('PlateMate Test', {
+          body: '🧪 This is a test notification! Your daily motivation will look like this.',
+          icon: '/favicon.ico',
+          tag: 'test-notification'
+        });
+        
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+        
+        setTimeout(() => notification.close(), 5000);
+        console.log('Test notification shown');
+      } catch (error) {
+        console.error('Failed to show test notification:', error);
+      }
+    } else {
+      // Show in-app test instead
+      this.showInAppMotivation({
+        title: 'PlateMate Test',
+        body: '🧪 Browser notifications not available, but in-app motivation works!'
+      });
+    }
   }
 
   async cancelDaily(): Promise<void> {

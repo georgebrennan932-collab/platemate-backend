@@ -172,7 +172,7 @@ export function CoachingPage() {
 
   const testNotification = async () => {
     try {
-      await notificationService.testNotification();
+      await notificationService.showTestNotification();
       await soundService.playSuccess();
       toast({
         title: "Test Notification Sent!",
@@ -483,9 +483,19 @@ export function CoachingPage() {
           <CardContent className="space-y-4">
             {!showReminderSetup ? (
               <>
-                <p className="text-sm text-muted-foreground">
-                  Get daily motivation and inspiring quotes delivered at your preferred time.
-                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Get daily motivation and inspiring quotes delivered at your preferred time.
+                  </p>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-start gap-2">
+                      <Bell className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-xs text-blue-700 dark:text-blue-300">
+                        <strong>Notification Info:</strong> For browser notifications, click "Test" and allow notifications when prompted. Don't worry - you'll still get in-app motivation even without browser permission!
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 {reminderEnabled ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
@@ -541,6 +551,7 @@ export function CoachingPage() {
                       size="sm"
                       className="px-3"
                       data-testid="button-test-notification"
+                      title="Test notification (will request permission if needed)"
                     >
                       <TestTube2 className="h-4 w-4" />
                     </Button>
