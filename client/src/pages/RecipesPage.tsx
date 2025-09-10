@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -47,6 +48,7 @@ interface Recipe {
 export function RecipesPage() {
   const [selectedDiet, setSelectedDiet] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [, navigate] = useLocation();
 
   // Get diet filter from URL parameters if provided
   useEffect(() => {
@@ -59,8 +61,24 @@ export function RecipesPage() {
     }
   }, []);
 
+  // Update URL when diet filter changes
+  const handleDietChange = (newDiet: string) => {
+    setSelectedDiet(newDiet);
+    const newUrl = newDiet && newDiet !== 'all' ? `/recipes?diet=${newDiet}` : '/recipes';
+    navigate(newUrl);
+  };
+
   const { data: recipes, isLoading, error } = useQuery<Recipe[]>({
-    queryKey: ["/api/recipes", selectedDiet, searchQuery],
+    queryKey: ["/api/recipes", selectedDiet === 'all' ? '' : selectedDiet, searchQuery],
+    queryFn: async () => {
+      const dietParam = selectedDiet === 'all' ? '' : selectedDiet;
+      const url = `/api/recipes/${dietParam}/${searchQuery || ''}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch recipes');
+      }
+      return response.json();
+    },
     enabled: true
   });
 
@@ -86,7 +104,7 @@ export function RecipesPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Select value={selectedDiet} onValueChange={setSelectedDiet}>
+            <Select value={selectedDiet} onValueChange={handleDietChange}>
               <SelectTrigger className="pl-10" data-testid="select-dietary-filter">
                 <SelectValue placeholder="Filter by dietary requirements" />
               </SelectTrigger>
