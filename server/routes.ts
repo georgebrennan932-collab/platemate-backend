@@ -629,11 +629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dietaryFilter = diet || "";
       
       try {
-        const recipes = await aiManager.generateRecipes({
-          dietaryRestrictions: diet ? [diet] : [],
-          searchQuery: search || '',
-          count: 6
-        });
+        const recipes = await aiManager.generateRecipes(dietaryFilter);
         res.json(recipes);
       } catch (aiError) {
         console.log('AI providers unavailable, serving fallback recipes');
