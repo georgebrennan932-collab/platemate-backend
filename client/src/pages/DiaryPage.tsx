@@ -255,6 +255,24 @@ export function DiaryPage() {
   };
 
   const allDates = new Set([...Object.keys(groupedEntries), ...Object.keys(groupedDrinks)]);
+  
+  // Get today's date string for filtering
+  const today = new Date().toDateString();
+  const todayNutrition = getDailyNutrition(today);
+  
+  // Calculate remaining to reach targets
+  const getRemainingNutrition = () => {
+    if (!nutritionGoals) return null;
+    return {
+      calories: Math.max(0, nutritionGoals.calories - todayNutrition.calories),
+      protein: Math.max(0, nutritionGoals.protein - todayNutrition.protein),
+      carbs: Math.max(0, nutritionGoals.carbs - todayNutrition.carbs),
+      fat: Math.max(0, nutritionGoals.fat - todayNutrition.fat),
+    };
+  };
+  
+  const remainingNutrition = getRemainingNutrition();
+  
   // Filter entries based on search and filters
   const filteredEntries = diaryEntries?.filter(entry => {
     // Text search
@@ -304,7 +322,13 @@ export function DiaryPage() {
   }, {} as Record<string, DiaryEntryWithAnalysis[]>);
   
   const allFilteredDates = new Set([...Object.keys(filteredGroupedEntries), ...Object.keys(groupedDrinks)]);
-  const sortedDates = Array.from(allFilteredDates).sort((a, b) => 
+  
+  // Filter dates based on view mode
+  const filteredByViewMode = viewMode === 'today' 
+    ? Array.from(allFilteredDates).filter(date => date === today)
+    : Array.from(allFilteredDates).filter(date => date !== today);
+    
+  const sortedDates = filteredByViewMode.sort((a, b) => 
     new Date(b).getTime() - new Date(a).getTime()
   );
 
@@ -341,6 +365,32 @@ export function DiaryPage() {
                 </button>
               </Link>
               <h1 className="text-xl font-bold">Food Diary</h1>
+              
+              {/* View Mode Toggle */}
+              <div className="flex bg-muted rounded-lg p-1 ml-2">
+                <button
+                  onClick={() => setViewMode('today')}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    viewMode === 'today' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid="view-today"
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setViewMode('history')}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    viewMode === 'history' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid="view-history"
+                >
+                  History
+                </button>
+              </div>
               
               {/* Voice input button */}
               {speechSupported && (
@@ -433,23 +483,88 @@ export function DiaryPage() {
             <WeeklyAnalytics goals={nutritionGoals} />
             <AdvancedAnalytics goals={nutritionGoals} />
           </div>
-        ) : sortedDates.length === 0 ? (
-          <div className="text-center py-12">
-            <Utensils className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">No entries yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Start scanning food and logging drinks to build your nutrition diary
-            </p>
-            <Link href="/scan">
-              <button 
-                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-                data-testid="button-start-scanning"
-              >
-                Start Tracking
-              </button>
-            </Link>
-          </div>
-        ) : (
+        ) : viewMode === 'today' ? (
+          <div className="space-y-6">
+            {/* Today's Summary */}
+            <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <Target className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-bold">Today's Intake</h2>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {format(new Date(), 'EEEE, MMMM d')}
+                </div>
+              </div>
+              
+              {/* Daily Totals */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="bg-background/80 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-primary">{todayNutrition.calories}</div>
+                  <div className="text-sm text-muted-foreground">Calories Consumed</div>
+                </div>
+                <div className="bg-background/80 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-orange-600">{remainingNutrition?.calories || 0}</div>
+                  <div className="text-sm text-muted-foreground">Calories Remaining</div>
+                </div>
+              </div>
+              
+              {/* Macros Progress */}
+              {nutritionGoals && (
+                <div className="space-y-3">
+                  <div className="text-sm font-medium mb-2">Macronutrients</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-red-600">{todayNutrition.protein}g</div>
+                      <div className="text-xs text-muted-foreground">Protein</div>
+                      <div className="text-xs text-green-600">({remainingNutrition?.protein || 0}g left)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-blue-600">{todayNutrition.carbs}g</div>
+                      <div className="text-xs text-muted-foreground">Carbs</div>
+                      <div className="text-xs text-green-600">({remainingNutrition?.carbs || 0}g left)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-yellow-600">{todayNutrition.fat}g</div>
+                      <div className="text-xs text-muted-foreground">Fat</div>
+                      <div className="text-xs text-green-600">({remainingNutrition?.fat || 0}g left)</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Progress Bar */}
+              {nutritionGoals && (
+                <div className="mt-4">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Daily Goal Progress</span>
+                    <span>{Math.round((todayNutrition.calories / nutritionGoals.calories) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, (todayNutrition.calories / nutritionGoals.calories) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Today's Meals */}
+            {sortedDates.length === 0 ? (
+              <div className="text-center py-8 bg-muted/30 rounded-xl">
+                <Utensils className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
+                <h3 className="font-medium text-muted-foreground mb-2">No meals logged today</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Start your day by scanning food or using voice input
+                </p>
+                <Link href="/scan">
+                  <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+                    Add First Meal
+                  </button>
+                </Link>
+              </div>
+            ) : (
           <div className="space-y-6">
             {sortedDates.map((date) => {
               const dailyNutrition = getDailyNutrition(date);
