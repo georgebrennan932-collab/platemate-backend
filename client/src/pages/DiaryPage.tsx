@@ -16,6 +16,7 @@ import { DataManagementDialog } from "@/components/data-management-dialog";
 import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
+import { WeightForm } from "@/components/weight-form";
 
 export function DiaryPage() {
   const { toast } = useToast();
@@ -509,11 +510,8 @@ export function DiaryPage() {
               </div>
             </div>
             
-            {/* Weight Form Placeholder */}
-            <div className="bg-card border rounded-xl p-6">
-              <h3 className="text-lg font-medium mb-4">Log Today's Weight</h3>
-              <p className="text-muted-foreground">Weight form component will be added here</p>
-            </div>
+            {/* Weight Form */}
+            <WeightForm />
             
             {/* Recent Weight Entries Placeholder */}
             <div className="bg-card border rounded-xl p-6">

@@ -1,0 +1,197 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { z } from "zod";
+import { Calendar, Save, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { insertWeightEntrySchema } from "@shared/schema";
+
+// Form schema with UI-friendly validation
+const weightFormSchema = insertWeightEntrySchema.extend({
+  weight: z.number().min(20, "Weight must be at least 20kg").max(300, "Weight must be less than 300kg"),
+  unit: z.enum(["kg", "lb"]).default("kg"),
+}).omit({ weightGrams: true }); // Remove weightGrams since we'll calculate it
+
+type WeightFormData = z.infer<typeof weightFormSchema>;
+
+interface WeightFormProps {
+  onSuccess?: () => void;
+}
+
+export function WeightForm({ onSuccess }: WeightFormProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [unit, setUnit] = useState<"kg" | "lb">("kg");
+
+  const form = useForm<WeightFormData>({
+    resolver: zodResolver(weightFormSchema),
+    defaultValues: {
+      weight: 0,
+      unit: "kg",
+      loggedAt: format(new Date(), "yyyy-MM-dd"),
+      notes: "",
+    },
+  });
+
+  const createWeightMutation = useMutation({
+    mutationFn: async (data: WeightFormData) => {
+      // Convert weight to grams based on unit
+      const weightInGrams = data.unit === "kg" 
+        ? Math.round(data.weight * 1000) 
+        : Math.round(data.weight * 453.592); // 1 lb = 453.592g
+
+      const payload = {
+        weightGrams: weightInGrams,
+        loggedAt: data.loggedAt,
+        notes: data.notes || undefined,
+      };
+
+      return apiRequest('POST', '/api/weights', payload);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Weight Logged",
+        description: "Your weight entry has been saved successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/weights'] });
+      
+      // Reset form with proper default values
+      form.reset({
+        weight: 0,
+        unit: "kg",
+        loggedAt: format(new Date(), "yyyy-MM-dd"),
+        notes: "",
+      });
+      
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save weight entry",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: WeightFormData) => {
+    createWeightMutation.mutate(data);
+  };
+
+  const handleUnitChange = (newUnit: "kg" | "lb") => {
+    const currentWeight = form.getValues("weight");
+    if (currentWeight > 0) {
+      // Convert current weight to new unit
+      const convertedWeight = newUnit === "kg" 
+        ? currentWeight * 0.453592 // lb to kg
+        : currentWeight * 2.20462; // kg to lb
+      
+      form.setValue("weight", Math.round(convertedWeight * 10) / 10); // Round to 1 decimal
+    }
+    setUnit(newUnit);
+    form.setValue("unit", newUnit);
+  };
+
+  return (
+    <div className="bg-card border rounded-xl p-6">
+      <div className="flex items-center space-x-2 mb-4">
+        <Target className="h-5 w-5 text-blue-600" />
+        <h3 className="text-lg font-medium">Log Today's Weight</h3>
+      </div>
+
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Date Input */}
+        <div className="space-y-2">
+          <Label htmlFor="loggedAt" data-testid="label-log-date">Date</Label>
+          <div className="relative">
+            <Input
+              id="loggedAt"
+              type="date"
+              {...form.register("loggedAt")}
+              className="pr-10"
+              data-testid="input-log-date"
+            />
+            <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
+          {form.formState.errors.loggedAt && (
+            <p className="text-sm text-red-500" data-testid="error-log-date">
+              {form.formState.errors.loggedAt.message}
+            </p>
+          )}
+        </div>
+
+        {/* Weight Input with Unit Selector */}
+        <div className="space-y-2">
+          <Label htmlFor="weight" data-testid="label-weight">Weight</Label>
+          <div className="flex space-x-2">
+            <Input
+              id="weight"
+              type="number"
+              step="0.1"
+              placeholder={`Enter weight in ${unit}`}
+              {...form.register("weight", { valueAsNumber: true })}
+              className="flex-1"
+              data-testid="input-weight"
+            />
+            <Select value={unit} onValueChange={handleUnitChange}>
+              <SelectTrigger className="w-20" data-testid="select-weight-unit">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="kg">kg</SelectItem>
+                <SelectItem value="lb">lb</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {form.formState.errors.weight && (
+            <p className="text-sm text-red-500" data-testid="error-weight">
+              {form.formState.errors.weight.message}
+            </p>
+          )}
+        </div>
+
+        {/* Notes Input */}
+        <div className="space-y-2">
+          <Label htmlFor="notes" data-testid="label-notes">Notes (Optional)</Label>
+          <Textarea
+            id="notes"
+            placeholder="Add notes about your weigh-in..."
+            {...form.register("notes")}
+            rows={3}
+            data-testid="input-notes"
+          />
+          {form.formState.errors.notes && (
+            <p className="text-sm text-red-500" data-testid="error-notes">
+              {form.formState.errors.notes.message}
+            </p>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          disabled={createWeightMutation.isPending}
+          className="w-full"
+          data-testid="button-save-weight"
+        >
+          {createWeightMutation.isPending ? (
+            <>Saving...</>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save Weight Entry
+            </>
+          )}
+        </Button>
+      </form>
+    </div>
+  );
+}
