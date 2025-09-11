@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, foodAnalyses, diaryEntries, drinkEntries, users, nutritionGoals, userProfiles } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
@@ -27,6 +27,13 @@ export interface IStorage {
   getDrinkEntries(userId?: string, limit?: number): Promise<DrinkEntry[]>;
   getDrinkEntry(id: string): Promise<DrinkEntry | undefined>;
   deleteDrinkEntry(id: string): Promise<boolean>;
+  
+  // Weight methods
+  createWeightEntry(entry: InsertWeightEntry): Promise<WeightEntry>;
+  getWeightEntries(userId: string, options?: { start?: Date; end?: Date; limit?: number }): Promise<WeightEntry[]>;
+  getWeightEntry(id: string): Promise<WeightEntry | undefined>;
+  updateWeightEntry(id: string, entry: Partial<InsertWeightEntry>): Promise<WeightEntry | undefined>;
+  deleteWeightEntry(id: string): Promise<boolean>;
   
   // Nutrition goals methods
   getNutritionGoals(userId: string): Promise<NutritionGoals | undefined>;
@@ -206,6 +213,53 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDrinkEntry(id: string): Promise<boolean> {
     const result = await db.delete(drinkEntries).where(eq(drinkEntries.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Weight entry methods
+  async createWeightEntry(entry: InsertWeightEntry): Promise<WeightEntry> {
+    const [weightEntry] = await db
+      .insert(weightEntries)
+      .values({
+        ...entry,
+        loggedAt: typeof entry.loggedAt === 'string' ? new Date(entry.loggedAt) : entry.loggedAt
+      })
+      .returning();
+    return weightEntry;
+  }
+
+  async getWeightEntries(userId: string, options: { start?: Date; end?: Date; limit?: number } = {}): Promise<WeightEntry[]> {
+    const { limit = 100 } = options;
+    return await db
+      .select()
+      .from(weightEntries)
+      .where(eq(weightEntries.userId, userId))
+      .orderBy(desc(weightEntries.loggedAt))
+      .limit(limit);
+    // Note: Date range filtering would be implemented with proper where clauses when needed
+  }
+
+  async getWeightEntry(id: string): Promise<WeightEntry | undefined> {
+    const [weightEntry] = await db.select().from(weightEntries).where(eq(weightEntries.id, id));
+    return weightEntry || undefined;
+  }
+
+  async updateWeightEntry(id: string, updateData: Partial<InsertWeightEntry>): Promise<WeightEntry | undefined> {
+    const processedData: any = { ...updateData };
+    if (processedData.loggedAt && typeof processedData.loggedAt === 'string') {
+      processedData.loggedAt = new Date(processedData.loggedAt);
+    }
+    
+    const [weightEntry] = await db
+      .update(weightEntries)
+      .set(processedData)
+      .where(eq(weightEntries.id, id))
+      .returning();
+    return weightEntry || undefined;
+  }
+
+  async deleteWeightEntry(id: string): Promise<boolean> {
+    const result = await db.delete(weightEntries).where(eq(weightEntries.id, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 

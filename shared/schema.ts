@@ -94,6 +94,15 @@ export const drinkEntries = pgTable("drink_entries", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const weightEntries = pgTable("weight_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  weightGrams: integer("weight_grams").notNull(), // weight in grams for decimal precision
+  loggedAt: timestamp("logged_at").notNull(), // when the weight was recorded
+  notes: text("notes"), // optional user notes
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const DetectedFoodSchema = z.object({
   name: z.string(),
   portion: z.string(),
@@ -170,10 +179,26 @@ export type NutritionGoals = typeof nutritionGoals.$inferSelect;
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
 
+export const insertWeightEntrySchema = createInsertSchema(weightEntries).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  loggedAt: z.string().or(z.date()), // Accept string or Date
+  notes: z.string().optional(),
+});
+
+export const updateWeightEntrySchema = insertWeightEntrySchema.partial().omit({
+  userId: true, // Cannot change user ownership
+});
+
+export type InsertWeightEntry = z.infer<typeof insertWeightEntrySchema>;
+export type WeightEntry = typeof weightEntries.$inferSelect;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   diaryEntries: many(diaryEntries),
   drinkEntries: many(drinkEntries),
+  weightEntries: many(weightEntries),
   nutritionGoals: one(nutritionGoals),
   profile: one(userProfiles),
 }));
@@ -210,6 +235,13 @@ export const diaryEntriesRelations = relations(diaryEntries, ({ one }) => ({
 export const drinkEntriesRelations = relations(drinkEntries, ({ one }) => ({
   user: one(users, {
     fields: [drinkEntries.userId],
+    references: [users.id],
+  }),
+}));
+
+export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [weightEntries.userId],
     references: [users.id],
   }),
 }));

@@ -20,7 +20,7 @@ import { BottomHelpSection } from "@/components/bottom-help-section";
 export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'diary' | 'analytics'>('diary');
+  const [activeTab, setActiveTab] = useState<'diary' | 'analytics' | 'weight'>('diary');
   const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
   
   // Search and filter state
@@ -438,6 +438,17 @@ export function DiaryPage() {
                 >
                   <TrendingUp className="h-4 w-4" />
                 </button>
+                <button
+                  onClick={() => setActiveTab('weight')}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'weight' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid="tab-weight"
+                >
+                  <Target className="h-4 w-4" />
+                </button>
               </div>
               <Link href="/help">
                 <button 
@@ -482,6 +493,39 @@ export function DiaryPage() {
           <div className="space-y-6">
             <WeeklyAnalytics goals={nutritionGoals} />
             <AdvancedAnalytics goals={nutritionGoals} />
+          </div>
+        ) : activeTab === 'weight' ? (
+          <div className="space-y-6">
+            {/* Weight Tracking Header */}
+            <div className="bg-gradient-to-br from-blue/5 to-blue/10 border border-blue/20 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <Target className="h-5 w-5 text-blue-600" />
+                  <h2 className="text-lg font-bold">Weight Progress</h2>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Track your weekly weigh-ins
+                </div>
+              </div>
+            </div>
+            
+            {/* Weight Form Placeholder */}
+            <div className="bg-card border rounded-xl p-6">
+              <h3 className="text-lg font-medium mb-4">Log Today's Weight</h3>
+              <p className="text-muted-foreground">Weight form component will be added here</p>
+            </div>
+            
+            {/* Recent Weight Entries Placeholder */}
+            <div className="bg-card border rounded-xl p-6">
+              <h3 className="text-lg font-medium mb-4">Recent Weigh-ins</h3>
+              <p className="text-muted-foreground">Weight list component will be added here</p>
+            </div>
+            
+            {/* Weight Progress Chart Placeholder */}
+            <div className="bg-card border rounded-xl p-6">
+              <h3 className="text-lg font-medium mb-4">12-Week Progress</h3>
+              <p className="text-muted-foreground">Weight chart component will be added here</p>
+            </div>
           </div>
         ) : viewMode === 'today' ? (
           <div className="space-y-6">

@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -408,6 +408,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete drink entry error:", error);
       res.status(500).json({ error: "Failed to delete drink entry" });
+    }
+  });
+
+  // Weight entry routes (protected)
+  app.post("/api/weights", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedEntry = insertWeightEntrySchema.parse({
+        ...req.body,
+        userId
+      });
+      const weightEntry = await storage.createWeightEntry(validatedEntry);
+      res.json(weightEntry);
+    } catch (error) {
+      console.error("Create weight entry error:", error);
+      res.status(400).json({ error: "Invalid weight entry data" });
+    }
+  });
+
+  app.get("/api/weights", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const start = req.query.start ? new Date(req.query.start as string) : undefined;
+      const end = req.query.end ? new Date(req.query.end as string) : undefined;
+      
+      const entries = await storage.getWeightEntries(userId, { start, end, limit });
+      res.json(entries);
+    } catch (error) {
+      console.error("Get weight entries error:", error);
+      res.status(500).json({ error: "Failed to retrieve weight entries" });
+    }
+  });
+
+  app.get("/api/weights/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const entry = await storage.getWeightEntry(req.params.id);
+      if (!entry) {
+        return res.status(404).json({ error: "Weight entry not found" });
+      }
+      
+      // Verify the entry belongs to the authenticated user
+      const userId = req.user.claims.sub;
+      if (entry.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      res.json(entry);
+    } catch (error) {
+      console.error("Get weight entry error:", error);
+      res.status(500).json({ error: "Failed to retrieve weight entry" });
+    }
+  });
+
+  app.patch("/api/weights/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const entry = await storage.getWeightEntry(req.params.id);
+      
+      if (!entry) {
+        return res.status(404).json({ error: "Weight entry not found" });
+      }
+      
+      // Verify the entry belongs to the authenticated user
+      if (entry.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const validatedUpdate = updateWeightEntrySchema.parse(req.body);
+      const updatedEntry = await storage.updateWeightEntry(req.params.id, validatedUpdate);
+      
+      if (!updatedEntry) {
+        return res.status(404).json({ error: "Weight entry not found" });
+      }
+      
+      res.json(updatedEntry);
+    } catch (error) {
+      console.error("Update weight entry error:", error);
+      res.status(400).json({ error: "Invalid weight entry data" });
+    }
+  });
+
+  app.delete("/api/weights/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const entry = await storage.getWeightEntry(req.params.id);
+      
+      if (!entry) {
+        return res.status(404).json({ error: "Weight entry not found" });
+      }
+      
+      // Verify the entry belongs to the authenticated user
+      if (entry.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const deleted = await storage.deleteWeightEntry(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Weight entry not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete weight entry error:", error);
+      res.status(500).json({ error: "Failed to delete weight entry" });
     }
   });
 
