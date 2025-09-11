@@ -27,6 +27,15 @@ export function DiaryPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'diary' | 'analytics' | 'weight'>('diary');
   const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
+
+  // Check URL parameters for tab switching
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam === 'weight') {
+      setActiveTab('weight');
+    }
+  }, []);
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');

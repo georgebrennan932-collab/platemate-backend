@@ -10,7 +10,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Activity, Keyboard } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Activity, Keyboard, Scale } from "lucide-react";
 import { healthConnectService } from "@/lib/health-connect-service";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
@@ -420,7 +420,7 @@ export default function Home() {
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 py-2 space-y-4">
           {/* Primary Actions */}
-          <div className="grid grid-cols-3 gap-2 mb-6">
+          <div className="grid grid-cols-4 gap-2 mb-6">
             <button
               onClick={handleVoiceInput}
               disabled={!speechSupported}
@@ -452,6 +452,15 @@ export default function Home() {
               <span className="text-xs">Type Add</span>
             </button>
             
+            <Link 
+              href="/diary?tab=weight"
+              className="w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 bg-orange-500 text-white hover:bg-orange-600 hover:scale-[1.02] no-underline"
+              data-testid="button-weigh-in"
+            >
+              <Scale className="h-5 w-5 group-hover:scale-110 smooth-transition" />
+              <span className="text-xs">Weigh In</span>
+            </Link>
+
             <Link href="/advice">
               <button 
                 className="w-full gradient-button hover:scale-[1.02] py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px]"
