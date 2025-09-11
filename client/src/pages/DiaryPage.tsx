@@ -19,6 +19,7 @@ import { BottomHelpSection } from "@/components/bottom-help-section";
 import { WeightForm } from "@/components/weight-form";
 import { WeightList } from "@/components/weight-list";
 import { WeightEditDialog } from "@/components/weight-edit-dialog";
+import { WeightChart } from "@/components/weight-chart";
 import type { WeightEntry } from "@shared/schema";
 
 export function DiaryPage() {
@@ -526,11 +527,8 @@ export function DiaryPage() {
               setIsEditDialogOpen(true);
             }} />
             
-            {/* Weight Progress Chart Placeholder */}
-            <div className="bg-card border rounded-xl p-6">
-              <h3 className="text-lg font-medium mb-4">12-Week Progress</h3>
-              <p className="text-muted-foreground">Weight chart component will be added here</p>
-            </div>
+            {/* Weight Progress Chart */}
+            <WeightChart />
           </div>
         ) : viewMode === 'today' ? (
           <div className="space-y-6">
