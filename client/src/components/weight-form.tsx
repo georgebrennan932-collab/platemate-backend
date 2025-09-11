@@ -14,11 +14,24 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertWeightEntrySchema } from "@shared/schema";
 
-// Form schema with UI-friendly validation
+// Form schema with unit-aware validation (omit server-side fields)
 const weightFormSchema = insertWeightEntrySchema.extend({
-  weight: z.number().min(20, "Weight must be at least 20kg").max(300, "Weight must be less than 300kg"),
+  weight: z.number().min(1, "Weight must be greater than 0"),
   unit: z.enum(["kg", "lb"]).default("kg"),
-}).omit({ weightGrams: true }); // Remove weightGrams since we'll calculate it
+}).omit({ 
+  weightGrams: true, // Remove weightGrams since we'll calculate it
+  userId: true, // Remove userId since it's added server-side
+}).refine((data) => {
+  // Unit-aware validation
+  if (data.unit === "kg") {
+    return data.weight >= 20 && data.weight <= 300;
+  } else { // lb
+    return data.weight >= 44 && data.weight <= 660; // 20-300kg in lb
+  }
+}, {
+  message: "Weight must be reasonable for the selected unit",
+  path: ["weight"],
+});
 
 type WeightFormData = z.infer<typeof weightFormSchema>;
 
@@ -63,13 +76,16 @@ export function WeightForm({ onSuccess }: WeightFormProps) {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/weights'] });
       
-      // Reset form with proper default values
-      form.reset({
-        weight: 0,
-        unit: "kg",
-        loggedAt: format(new Date(), "yyyy-MM-dd"),
-        notes: "",
-      });
+      // Reset form with proper default values - delay to avoid validation conflicts
+      setTimeout(() => {
+        form.reset({
+          weight: 0,
+          unit: "kg", 
+          loggedAt: format(new Date(), "yyyy-MM-dd"),
+          notes: "",
+        });
+        setUnit("kg"); // Sync unit state with form
+      }, 100);
       
       onSuccess?.();
     },
@@ -88,14 +104,19 @@ export function WeightForm({ onSuccess }: WeightFormProps) {
 
   const handleUnitChange = (newUnit: "kg" | "lb") => {
     const currentWeight = form.getValues("weight");
-    if (currentWeight > 0) {
-      // Convert current weight to new unit
-      const convertedWeight = newUnit === "kg" 
+    
+    // Only convert if units are actually different and weight is valid
+    if (currentWeight > 0 && unit !== newUnit) {
+      const convertedWeight = unit === "kg" && newUnit === "lb"
+        ? currentWeight * 2.20462 // kg to lb
+        : unit === "lb" && newUnit === "kg"
         ? currentWeight * 0.453592 // lb to kg
-        : currentWeight * 2.20462; // kg to lb
+        : currentWeight; // fallback - no conversion
       
-      form.setValue("weight", Math.round(convertedWeight * 10) / 10); // Round to 1 decimal
+      form.setValue("weight", Math.round(convertedWeight * 10) / 10);
     }
+    
+    // Update unit state
     setUnit(newUnit);
     form.setValue("unit", newUnit);
   };

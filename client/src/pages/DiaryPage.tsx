@@ -17,6 +17,9 @@ import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { WeightForm } from "@/components/weight-form";
+import { WeightList } from "@/components/weight-list";
+import { WeightEditDialog } from "@/components/weight-edit-dialog";
+import type { WeightEntry } from "@shared/schema";
 
 export function DiaryPage() {
   const { toast } = useToast();
@@ -29,6 +32,10 @@ export function DiaryPage() {
   const [mealTypeFilter, setMealTypeFilter] = useState('all');
   const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({});
   const [calorieRange, setCalorieRange] = useState<{ min?: number; max?: number }>({});
+
+  // Weight edit dialog state
+  const [editingWeightEntry, setEditingWeightEntry] = useState<WeightEntry | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Voice input state
   const [isListening, setIsListening] = useState(false);
@@ -513,11 +520,11 @@ export function DiaryPage() {
             {/* Weight Form */}
             <WeightForm />
             
-            {/* Recent Weight Entries Placeholder */}
-            <div className="bg-card border rounded-xl p-6">
-              <h3 className="text-lg font-medium mb-4">Recent Weigh-ins</h3>
-              <p className="text-muted-foreground">Weight list component will be added here</p>
-            </div>
+            {/* Recent Weight Entries */}
+            <WeightList onEdit={(entry) => {
+              setEditingWeightEntry(entry);
+              setIsEditDialogOpen(true);
+            }} />
             
             {/* Weight Progress Chart Placeholder */}
             <div className="bg-card border rounded-xl p-6">
@@ -798,6 +805,16 @@ export function DiaryPage() {
       
       {/* Bottom Help Section */}
       <BottomHelpSection />
+      
+      {/* Weight Edit Dialog */}
+      <WeightEditDialog
+        entry={editingWeightEntry}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSuccess={() => {
+          setEditingWeightEntry(null);
+        }}
+      />
     </div>
   );
 }
