@@ -70,3 +70,11 @@ Preferred communication style: Simple, everyday language.
 - **App Configuration**: Custom app icons, splash screens, and native app settings
 - **Build Process**: Unified build system that generates web and native mobile apps
 - **Plugins**: Camera, Filesystem, Status Bar, Splash Screen, and App plugins integrated
+
+# Recent Changes
+
+- **Homepage Weight Integration**: Moved weekly weigh-in functionality directly to main homepage with clearly labeled "Weekly Weigh-In" section featuring orange gradient design and Scale icon
+- **Complete CRUD Weight System**: Full weight tracking with WeightForm on homepage, WeightList in diary, WeightEditDialog for editing, and WeightChart with 12-week trend visualization using Recharts
+- **Unit Conversion System**: Proper kg/lb conversion with validation ranges (kg: 20-300, lb: 44-660) and precise storage in grams for accuracy
+- **Mobile-First Weight Tracking**: Responsive weight interface optimized for mobile health tracking use cases with easy homepage access
+- **End-to-End Testing Verified**: Homepage weigh-in form successfully tested with POST /api/weights integration and diary synchronization confirmed

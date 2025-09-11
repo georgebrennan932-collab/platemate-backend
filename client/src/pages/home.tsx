@@ -16,6 +16,7 @@ import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
+import { WeightForm } from "@/components/weight-form";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
 
@@ -687,6 +688,32 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Weekly Weigh-In Section */}
+      <div className="max-w-md mx-auto px-4 py-6 mb-8">
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/30 rounded-xl p-6 border border-orange-200/50 dark:border-orange-700/30 shadow-sm">
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center mb-3">
+              <div className="bg-orange-500 p-3 rounded-full">
+                <Scale className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-orange-800 dark:text-orange-200 mb-2">
+              Weekly Weigh-In
+            </h2>
+            <p className="text-orange-700/80 dark:text-orange-300/80 text-sm">
+              Track your weight progress with quick, easy entries
+            </p>
+          </div>
+          
+          <WeightForm onSuccess={() => {
+            toast({
+              title: "Weight Recorded!",
+              description: "Your weight has been added to your progress tracking.",
+            });
+          }} />
+        </div>
+      </div>
 
       {/* Bottom Navigation */}
       <BottomNavigation />
