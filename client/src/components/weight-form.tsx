@@ -160,10 +160,16 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
               id="weight"
               type="number"
               step="0.1"
+              min="0"
               placeholder={`Enter weight in ${unit}`}
               {...form.register("weight", { valueAsNumber: true })}
               className="flex-1"
               data-testid="input-weight"
+              onFocus={(e) => {
+                if (e.target.value === "0") {
+                  e.target.value = "";
+                }
+              }}
             />
             <Select value={unit} onValueChange={handleUnitChange}>
               <SelectTrigger className="w-20" data-testid="select-weight-unit">
@@ -200,11 +206,11 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
         </div>
 
         {/* Submit Button */}
-        {compact ? (
+        <div className="sticky bottom-0 left-0 right-0 bg-card/95 backdrop-blur supports-backdrop-blur:bg-card/80 border-t pt-4 mt-6 -mx-6 -mb-6 px-6 pb-6 z-50">
           <Button
             type="submit"
             disabled={createWeightMutation.isPending}
-            className="w-full"
+            className="w-full shadow-lg"
             data-testid="button-save-weight"
           >
             {createWeightMutation.isPending ? (
@@ -216,25 +222,7 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
               </>
             )}
           </Button>
-        ) : (
-          <div className="sticky bottom-0 left-0 right-0 bg-card/95 backdrop-blur supports-backdrop-blur:bg-card/80 border-t pt-4 mt-6 -mx-6 -mb-6 px-6 pb-6">
-            <Button
-              type="submit"
-              disabled={createWeightMutation.isPending}
-              className="w-full"
-              data-testid="button-save-weight"
-            >
-              {createWeightMutation.isPending ? (
-                <>Saving...</>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Weight Entry
-                </>
-              )}
-            </Button>
-          </div>
-        )}
+        </div>
       </form>
     </div>
   );
