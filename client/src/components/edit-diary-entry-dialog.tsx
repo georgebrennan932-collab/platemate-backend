@@ -43,9 +43,24 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
 
   const updateMutation = useMutation({
     mutationFn: async (updateData: any) => {
-      await apiRequest("PATCH", `/api/diary/${entry.id}`, updateData);
+      console.log("🔄 Attempting to update entry:", {
+        entryId: entry.id,
+        updateData,
+        url: `/api/diary/${entry.id}`
+      });
+      
+      try {
+        const response = await apiRequest("PATCH", `/api/diary/${entry.id}`, updateData);
+        const result = await response.json();
+        console.log("✅ Update successful:", result);
+        return result;
+      } catch (error) {
+        console.error("❌ Update failed:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("🎉 Mutation success callback triggered");
       toast({
         title: "Entry Updated",
         description: "Your meal entry has been updated successfully.",
@@ -54,12 +69,30 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
       setOpen(false);
     },
     onError: (error: Error) => {
+      console.error("💥 Mutation error callback triggered:", error);
+      
+      // Extract more specific error information
+      let errorMessage = "Failed to update entry. Please try again.";
+      if (error.message) {
+        // Check if it's a network error or API error
+        if (error.message.includes("401")) {
+          errorMessage = "Please log in again to continue.";
+        } else if (error.message.includes("403")) {
+          errorMessage = "You don't have permission to edit this entry.";
+        } else if (error.message.includes("404")) {
+          errorMessage = "Entry not found. It may have been deleted.";
+        } else if (error.message.includes("400")) {
+          errorMessage = "Invalid data. Please check your input.";
+        } else {
+          errorMessage = `Update failed: ${error.message}`;
+        }
+      }
+      
       toast({
         title: "Update Failed",
-        description: "Failed to update entry. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
-      console.error("Error updating diary entry:", error);
     },
   });
 
