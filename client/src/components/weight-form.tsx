@@ -37,9 +37,10 @@ type WeightFormData = z.infer<typeof weightFormSchema>;
 
 interface WeightFormProps {
   onSuccess?: () => void;
+  compact?: boolean;
 }
 
-export function WeightForm({ onSuccess }: WeightFormProps) {
+export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [unit, setUnit] = useState<"kg" | "lb">("kg");
@@ -122,13 +123,15 @@ export function WeightForm({ onSuccess }: WeightFormProps) {
   };
 
   return (
-    <div className="bg-card border rounded-xl p-6">
-      <div className="flex items-center space-x-2 mb-4">
-        <Target className="h-5 w-5 text-blue-600" />
-        <h3 className="text-lg font-medium">Log Today's Weight</h3>
-      </div>
+    <div className={compact ? "space-y-3" : "bg-card border rounded-xl p-6"}>
+      {!compact && (
+        <div className="flex items-center space-x-2 mb-4">
+          <Target className="h-5 w-5 text-blue-600" />
+          <h3 className="text-lg font-medium">Log Today's Weight</h3>
+        </div>
+      )}
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className={compact ? "space-y-3" : "space-y-4"}>
         {/* Date Input */}
         <div className="space-y-2">
           <Label htmlFor="loggedAt" data-testid="label-log-date">Date</Label>

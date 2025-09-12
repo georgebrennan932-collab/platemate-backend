@@ -16,9 +16,8 @@ import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
-import { WeightForm } from "@/components/weight-form";
-import { WeightList } from "@/components/weight-list";
 import { WeightEditDialog } from "@/components/weight-edit-dialog";
+import { WeeklyWeighInWidget } from "@/components/weekly-weigh-in-widget";
 import type { WeightEntry } from "@shared/schema";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';

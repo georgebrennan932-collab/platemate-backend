@@ -12,9 +12,10 @@ import type { WeightEntry } from "@shared/schema";
 interface WeightListProps {
   onEdit?: (entry: WeightEntry) => void;
   displayUnit?: "kg" | "lb";
+  compact?: boolean;
 }
 
-export function WeightList({ onEdit, displayUnit = "kg" }: WeightListProps) {
+export function WeightList({ onEdit, displayUnit = "kg", compact = false }: WeightListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<string | null>(null);
