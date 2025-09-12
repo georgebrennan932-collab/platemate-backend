@@ -91,7 +91,7 @@ export function WeightEditDialog({ entry, open, onOpenChange, onSuccess }: Weigh
         notes: data.notes || null,
       };
 
-      return apiRequest(`/api/weights/${entry.id}`, "PATCH", updateData);
+      return apiRequest("PATCH", `/api/weights/${entry.id}`, updateData);
     },
     onSuccess: () => {
       toast({

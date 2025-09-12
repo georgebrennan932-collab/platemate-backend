@@ -17,6 +17,9 @@ import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { WeightForm } from "@/components/weight-form";
+import { WeightList } from "@/components/weight-list";
+import { WeightEditDialog } from "@/components/weight-edit-dialog";
+import type { WeightEntry } from "@shared/schema";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
 
@@ -42,6 +45,10 @@ export default function Home() {
   
   // Persistent confetti celebration state
   const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
+  
+  // Weight edit dialog state
+  const [editingWeightEntry, setEditingWeightEntry] = useState<WeightEntry | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   // Fetch nutrition goals and diary entries to check for achievements
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
@@ -712,6 +719,17 @@ export default function Home() {
               description: "Your weight has been added to your progress tracking.",
             });
           }} />
+          
+          {/* Recent Weight Entries */}
+          <div className="mt-6 pt-6 border-t border-orange-200/50 dark:border-orange-700/30">
+            <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-4">
+              Recent Weigh-Ins
+            </h3>
+            <WeightList onEdit={(entry) => {
+              setEditingWeightEntry(entry);
+              setIsEditDialogOpen(true);
+            }} />
+          </div>
         </div>
       </div>
 
@@ -721,6 +739,18 @@ export default function Home() {
       {/* Bottom Help Section */}
       <BottomHelpSection />
       
+      {/* Weight Edit Dialog */}
+      <WeightEditDialog
+        entry={editingWeightEntry}
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) {
+            setEditingWeightEntry(null);
+          }
+        }}
+      />
+
       {/* Persistent confetti celebration */}
       <ConfettiCelebration 
         trigger={showPersistentConfetti} 
