@@ -16,9 +16,6 @@ import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
-import { WeightEditDialog } from "@/components/weight-edit-dialog";
-import { WeeklyWeighInWidget } from "@/components/weekly-weigh-in-widget";
-import type { WeightEntry } from "@shared/schema";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
 
@@ -45,9 +42,6 @@ export default function Home() {
   // Persistent confetti celebration state
   const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
   
-  // Weight edit dialog state
-  const [editingWeightEntry, setEditingWeightEntry] = useState<WeightEntry | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   // Fetch nutrition goals and diary entries to check for achievements
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
@@ -695,42 +689,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Weekly Weigh-In Section */}
-      <div className="max-w-md mx-auto px-4 py-6 mb-8">
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/30 rounded-xl p-6 border border-orange-200/50 dark:border-orange-700/30 shadow-sm">
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center mb-3">
-              <div className="bg-orange-500 p-3 rounded-full">
-                <Scale className="h-6 w-6 text-white" />
-              </div>
-            </div>
-            <h2 className="text-xl font-bold text-orange-800 dark:text-orange-200 mb-2">
-              Weekly Weigh-In
-            </h2>
-            <p className="text-orange-700/80 dark:text-orange-300/80 text-sm">
-              Track your weight progress with quick, easy entries
-            </p>
-          </div>
-          
-          <WeightForm onSuccess={() => {
-            toast({
-              title: "Weight Recorded!",
-              description: "Your weight has been added to your progress tracking.",
-            });
-          }} />
-          
-          {/* Recent Weight Entries */}
-          <div className="mt-6 pt-6 border-t border-orange-200/50 dark:border-orange-700/30">
-            <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-4">
-              Recent Weigh-Ins
-            </h3>
-            <WeightList onEdit={(entry) => {
-              setEditingWeightEntry(entry);
-              setIsEditDialogOpen(true);
-            }} />
-          </div>
-        </div>
-      </div>
 
       {/* Bottom Navigation */}
       <BottomNavigation />
@@ -738,17 +696,6 @@ export default function Home() {
       {/* Bottom Help Section */}
       <BottomHelpSection />
       
-      {/* Weight Edit Dialog */}
-      <WeightEditDialog
-        entry={editingWeightEntry}
-        open={isEditDialogOpen}
-        onOpenChange={(open) => {
-          setIsEditDialogOpen(open);
-          if (!open) {
-            setEditingWeightEntry(null);
-          }
-        }}
-      />
 
       {/* Persistent confetti celebration */}
       <ConfettiCelebration 
