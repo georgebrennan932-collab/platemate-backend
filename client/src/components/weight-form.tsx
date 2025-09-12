@@ -200,21 +200,41 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
         </div>
 
         {/* Submit Button */}
-        <Button
-          type="submit"
-          disabled={createWeightMutation.isPending}
-          className="w-full"
-          data-testid="button-save-weight"
-        >
-          {createWeightMutation.isPending ? (
-            <>Saving...</>
-          ) : (
-            <>
-              <Save className="h-4 w-4 mr-2" />
-              Save Weight Entry
-            </>
-          )}
-        </Button>
+        {compact ? (
+          <Button
+            type="submit"
+            disabled={createWeightMutation.isPending}
+            className="w-full"
+            data-testid="button-save-weight"
+          >
+            {createWeightMutation.isPending ? (
+              <>Saving...</>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Weight Entry
+              </>
+            )}
+          </Button>
+        ) : (
+          <div className="sticky bottom-0 left-0 right-0 bg-card/95 backdrop-blur supports-backdrop-blur:bg-card/80 border-t pt-4 mt-6 -mx-6 -mb-6 px-6 pb-6">
+            <Button
+              type="submit"
+              disabled={createWeightMutation.isPending}
+              className="w-full"
+              data-testid="button-save-weight"
+            >
+              {createWeightMutation.isPending ? (
+                <>Saving...</>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Weight Entry
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </form>
     </div>
   );

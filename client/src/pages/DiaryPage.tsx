@@ -506,7 +506,7 @@ export function DiaryPage() {
       )}
       
       {/* Content */}
-      <div className="max-w-md mx-auto p-4">
+      <div className="max-w-md mx-auto p-4 pb-32">
         {activeTab === 'analytics' ? (
           <div className="space-y-6">
             <WeeklyAnalytics goals={nutritionGoals} />
