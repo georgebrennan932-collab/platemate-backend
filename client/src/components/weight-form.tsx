@@ -206,20 +206,20 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
         </div>
 
         {/* Submit Button */}
-        <div className="sticky bottom-0 left-0 right-0 bg-card/95 backdrop-blur supports-backdrop-blur:bg-card/80 border-t pt-4 mt-6 -mx-6 -mb-6 px-6 pb-6 z-50">
+        <div className="sticky bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 pt-4 mt-6 -mx-6 -mb-6 px-6 pb-6 z-50 shadow-lg">
           <Button
             type="submit"
             disabled={createWeightMutation.isPending}
-            className="w-full shadow-lg"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow-md transition-colors"
             data-testid="button-save-weight"
           >
             {createWeightMutation.isPending ? (
-              <>Saving...</>
+              <span className="text-white">Saving...</span>
             ) : (
-              <>
+              <span className="flex items-center justify-center text-white">
                 <Save className="h-4 w-4 mr-2" />
                 Save Weight Entry
-              </>
+              </span>
             )}
           </Button>
         </div>
