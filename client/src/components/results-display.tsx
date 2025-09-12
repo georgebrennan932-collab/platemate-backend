@@ -89,8 +89,16 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   };
 
   const saveChanges = () => {
-    // Update the original data with the edited foods
+    // Update the original data with the edited foods AND recalculated totals
+    const newTotals = calculateTotals();
     data.detectedFoods = [...editableFoods];
+    data.totalCalories = newTotals.calories;
+    data.totalProtein = newTotals.protein;
+    data.totalCarbs = newTotals.carbs;
+    data.totalFat = newTotals.fat;
+    
+    console.log("🔄 Saved changes with recalculated totals:", newTotals);
+    
     toast({
       title: "Changes Saved",
       description: "Your food corrections have been saved successfully.",
