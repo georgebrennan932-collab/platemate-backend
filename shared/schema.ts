@@ -120,9 +120,14 @@ export const insertFoodAnalysisSchema = createInsertSchema(foodAnalyses).omit({
   createdAt: true,
 });
 
+export const updateFoodAnalysisSchema = z.object({
+  detectedFoods: z.array(DetectedFoodSchema).min(1, "At least one food item is required"),
+});
+
 export type InsertFoodAnalysis = z.infer<typeof insertFoodAnalysisSchema> & {
   isAITemporarilyUnavailable?: boolean;
 };
+export type UpdateFoodAnalysis = z.infer<typeof updateFoodAnalysisSchema>;
 export type FoodAnalysis = typeof foodAnalyses.$inferSelect & {
   isAITemporarilyUnavailable?: boolean;
 };

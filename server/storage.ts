@@ -5,6 +5,7 @@ import { eq, desc } from "drizzle-orm";
 export interface IStorage {
   getFoodAnalysis(id: string): Promise<FoodAnalysis | undefined>;
   createFoodAnalysis(analysis: InsertFoodAnalysis): Promise<FoodAnalysis>;
+  updateFoodAnalysis(id: string, updates: Partial<InsertFoodAnalysis>): Promise<FoodAnalysis | undefined>;
   getAllFoodAnalyses(): Promise<FoodAnalysis[]>;
   
   // User methods (for authentication)
@@ -64,6 +65,31 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return analysis;
+  }
+
+  async updateFoodAnalysis(id: string, updates: Partial<InsertFoodAnalysis>): Promise<FoodAnalysis | undefined> {
+    // Only set fields that are actually provided in updates to avoid nulling existing data
+    const setClause: any = {};
+    
+    if (updates.imageUrl !== undefined) setClause.imageUrl = updates.imageUrl;
+    if (updates.confidence !== undefined) setClause.confidence = updates.confidence;
+    if (updates.totalCalories !== undefined) setClause.totalCalories = updates.totalCalories;
+    if (updates.totalProtein !== undefined) setClause.totalProtein = updates.totalProtein;
+    if (updates.totalCarbs !== undefined) setClause.totalCarbs = updates.totalCarbs;
+    if (updates.totalFat !== undefined) setClause.totalFat = updates.totalFat;
+    if (updates.detectedFoods !== undefined) setClause.detectedFoods = updates.detectedFoods as DetectedFood[];
+
+    // If no fields to update, return existing analysis
+    if (Object.keys(setClause).length === 0) {
+      return await this.getFoodAnalysis(id);
+    }
+
+    const [analysis] = await db
+      .update(foodAnalyses)
+      .set(setClause)
+      .where(eq(foodAnalyses.id, id))
+      .returning();
+    return analysis || undefined;
   }
 
   async getAllFoodAnalyses(): Promise<FoodAnalysis[]> {

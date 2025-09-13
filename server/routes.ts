@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -115,6 +115,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Text analysis error:", error);
       res.status(500).json({ error: "Failed to analyze food description" });
+    }
+  });
+
+  // Update food analysis (for editing detected foods) - PROTECTED
+  app.patch("/api/analyses/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+
+      // Validate request body using zod schema (excludes client-side totals)
+      const validatedData = updateFoodAnalysisSchema.parse(req.body);
+
+      // Check if analysis exists
+      const existingAnalysis = await storage.getFoodAnalysis(id);
+      if (!existingAnalysis) {
+        return res.status(404).json({ error: "Food analysis not found" });
+      }
+
+      // Check ownership: user must have diary entries referencing this analysis
+      const userDiaryEntries = await storage.getDiaryEntries(userId);
+      const hasOwnership = userDiaryEntries.some(entry => entry.analysisId === id);
+      
+      if (!hasOwnership) {
+        return res.status(403).json({ 
+          error: "Access denied. You can only edit food analyses from your own diary entries." 
+        });
+      }
+
+      // Calculate nutrition totals server-side from detectedFoods (never trust client)
+      const serverTotals = validatedData.detectedFoods.reduce(
+        (totals, food) => ({
+          calories: totals.calories + food.calories,
+          protein: totals.protein + food.protein,
+          carbs: totals.carbs + food.carbs,
+          fat: totals.fat + food.fat,
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      );
+
+      // Update with server-calculated totals
+      const updates = {
+        detectedFoods: validatedData.detectedFoods,
+        totalCalories: serverTotals.calories,
+        totalProtein: serverTotals.protein,
+        totalCarbs: serverTotals.carbs,
+        totalFat: serverTotals.fat
+      };
+
+      const updatedAnalysis = await storage.updateFoodAnalysis(id, updates);
+      
+      if (!updatedAnalysis) {
+        return res.status(500).json({ error: "Failed to update food analysis" });
+      }
+
+      console.log(`✅ User ${userId} updated food analysis ${id} with ${validatedData.detectedFoods.length} foods. Totals: ${serverTotals.calories}cal, ${serverTotals.protein}g protein`);
+      res.json(updatedAnalysis);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        console.error("Validation error:", error.errors);
+        return res.status(400).json({ 
+          error: "Invalid request data", 
+          details: error.errors 
+        });
+      }
+      console.error("Update analysis error:", error);
+      res.status(500).json({ error: "Failed to update food analysis" });
     }
   });
 

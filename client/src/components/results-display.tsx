@@ -25,7 +25,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   // Function to update portion for a specific food item
   const updateFoodPortion = (index: number, newPortion: string) => {
     const updatedFoods = [...editableFoods];
-    const originalFood = data.detectedFoods[index];
+    const currentFood = editableFoods[index]; // Fix: Use current editable food, not original
+    
+    // Find the original baseline food from data.detectedFoods by name (more reliable than index)
+    const originalFood = data.detectedFoods.find(f => f.name === currentFood.name) || currentFood;
     const originalPortion = originalFood.portion;
     
     // Extract numeric value from portions (assuming format like "150g" or "1 cup")
@@ -39,11 +42,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       return 1; // Default to no change if we can't parse
     };
     
+    // Always calculate multiplier from original baseline, not current values
     const multiplier = getPortionMultiplier(originalPortion, newPortion);
     
-    // Update nutrition values based on the multiplier
+    // Update nutrition values based on the multiplier from original baseline
     updatedFoods[index] = {
-      ...originalFood,
+      ...currentFood,
       portion: newPortion,
       calories: Math.round(originalFood.calories * multiplier),
       protein: Math.round(originalFood.protein * multiplier * 10) / 10,
@@ -88,21 +92,52 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     return JSON.stringify(editableFoods) !== JSON.stringify(data.detectedFoods);
   };
 
+  const saveChangesMutation = useMutation({
+    mutationFn: async () => {
+      // Server calculates totals for security - only send detectedFoods
+      const response = await apiRequest('PATCH', `/api/analyses/${data.id}`, {
+        detectedFoods: editableFoods
+      });
+      return await response.json();
+    },
+    onSuccess: (updatedAnalysis) => {
+      // Update the original data with server-calculated values
+      data.detectedFoods = [...updatedAnalysis.detectedFoods];
+      data.totalCalories = updatedAnalysis.totalCalories;
+      data.totalProtein = updatedAnalysis.totalProtein;
+      data.totalCarbs = updatedAnalysis.totalCarbs;
+      data.totalFat = updatedAnalysis.totalFat;
+      
+      // Update local state to match server response
+      setEditableFoods([...updatedAnalysis.detectedFoods]);
+      
+      console.log("✅ Successfully saved changes to database. Server totals:", {
+        calories: updatedAnalysis.totalCalories,
+        protein: updatedAnalysis.totalProtein
+      });
+      
+      toast({
+        title: "Changes Saved",
+        description: "Your food corrections have been saved to the database.",
+      });
+      
+      // Invalidate all related caches
+      queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/analyses', data.id] });
+    },
+    onError: (error: Error) => {
+      console.error("❌ Failed to save changes:", error);
+      toast({
+        title: "Save Failed",
+        description: "Could not save your changes. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const saveChanges = () => {
-    // Update the original data with the edited foods AND recalculated totals
-    const newTotals = calculateTotals();
-    data.detectedFoods = [...editableFoods];
-    data.totalCalories = newTotals.calories;
-    data.totalProtein = newTotals.protein;
-    data.totalCarbs = newTotals.carbs;
-    data.totalFat = newTotals.fat;
-    
-    console.log("🔄 Saved changes with recalculated totals:", newTotals);
-    
-    toast({
-      title: "Changes Saved",
-      description: "Your food corrections have been saved successfully.",
-    });
+    saveChangesMutation.mutate();
   };
 
   const resetChanges = () => {
@@ -495,11 +530,21 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <div className="mt-4 flex space-x-3">
             <button
               onClick={() => saveChanges()}
-              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+              disabled={saveChangesMutation.isPending}
+              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 disabled:transform-none shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
               data-testid="button-save-changes"
             >
-              <Check className="h-5 w-5" />
-              <span>Save All Changes</span>
+              {saveChangesMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="h-5 w-5" />
+                  <span>Save All Changes</span>
+                </>
+              )}
             </button>
             <button
               onClick={() => resetChanges()}
