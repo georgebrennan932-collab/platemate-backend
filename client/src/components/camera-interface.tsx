@@ -23,28 +23,47 @@ export function CameraInterface({
 
   const analysisMutation = useMutation({
     mutationFn: async (file: File) => {
+      console.log("📸 Starting image analysis:", {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
+      });
+      
       const formData = new FormData();
       formData.append('image', file);
       
+      console.log("🚀 Sending request to /api/analyze...");
       const response = await fetch('/api/analyze', {
         method: 'POST',
         body: formData,
       });
 
+      console.log("📡 Response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("❌ API Error:", errorData);
         throw new Error(errorData.error || 'Analysis failed');
       }
 
-      return response.json();
+      const result = await response.json();
+      console.log("✅ Analysis successful:", result);
+      return result;
     },
     onMutate: () => {
+      console.log("🔄 Analysis mutation starting...");
       onAnalysisStart();
     },
     onSuccess: (data: FoodAnalysis) => {
+      console.log("🎉 Analysis success callback triggered:", data);
       onAnalysisSuccess(data);
     },
     onError: (error: Error) => {
+      console.error("💥 Analysis error callback triggered:", error);
       onAnalysisError(error.message);
     },
   });
@@ -62,9 +81,16 @@ export function CameraInterface({
   };
 
   const handleCameraCapture = async () => {
+    console.log("📷 Camera capture requested");
+    console.log("🔍 Platform check:", {
+      isNative: Capacitor.isNativePlatform(),
+      platform: Capacitor.getPlatform()
+    });
+    
     // Use Capacitor Camera API if available (native app)
     if (Capacitor.isNativePlatform()) {
       try {
+        console.log("📱 Using Capacitor camera...");
         const image = await CapacitorCamera.getPhoto({
           quality: 90,
           allowEditing: false,
@@ -72,23 +98,36 @@ export function CameraInterface({
           source: CameraSource.Camera,
         });
         
+        console.log("📸 Photo captured successfully:", {
+          hasBase64: !!image.base64String,
+          base64Length: image.base64String?.length || 0
+        });
+        
         // Convert base64 to File object
         const response = await fetch(`data:image/jpeg;base64,${image.base64String}`);
         const blob = await response.blob();
         const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
         
+        console.log("📄 File created:", {
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type
+        });
+        
         setSelectedFile(file);
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
         
+        console.log("🎯 Starting auto-analysis...");
         // Auto-analyze the captured photo
         analysisMutation.mutate(file);
       } catch (error) {
-        console.error('Error taking photo:', error);
+        console.error('❌ Error taking photo:', error);
         // Fall back to web camera input
         cameraInputRef.current?.click();
       }
     } else {
+      console.log("🌐 Using web camera input...");
       // Use web camera input for browsers
       cameraInputRef.current?.click();
     }
