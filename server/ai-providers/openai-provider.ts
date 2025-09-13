@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { promises as fs } from "fs";
-import { AIProvider, FoodAnalysisResult, DietAdviceResult, DiaryEntry, ProviderError, DailyCoaching, EducationalTip } from "./types";
+import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, DiaryEntry, ProviderError, DailyCoaching, EducationalTip } from "./types";
 
 export class OpenAIProvider extends AIProvider {
   public readonly name = "OpenAI";
@@ -136,6 +136,102 @@ Be as accurate as possible with portion estimates and nutritional values. If you
         providerError = this.createError(
           'ANALYSIS_ERROR',
           `OpenAI analysis failed: ${error.message}`,
+          false,
+          false
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
+
+  async detectFoodNames(imagePath: string): Promise<FoodDetectionResult> {
+    try {
+      // Convert image to base64
+      const imageBuffer = await fs.readFile(imagePath);
+      const base64Image = imageBuffer.toString('base64');
+      const mimeType = 'image/jpeg';
+
+      const response = await this.client.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Analyze this food image and identify all visible food items. Return ONLY the food names, separated by commas. 
+
+Examples:
+- "banana, chicken breast, broccoli"
+- "pizza, salad"
+- "rice, beans, grilled chicken"
+
+DO NOT provide nutrition information, portions, or any other details. Only return the food names as a simple comma-separated list.
+
+If you can't clearly identify something, don't include it. Be as accurate as possible with food identification.`
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${mimeType};base64,${base64Image}`
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 200,
+        temperature: 0.1
+      });
+
+      const responseText = response.choices[0].message.content;
+      
+      if (!responseText) {
+        throw new Error("No response from OpenAI");
+      }
+
+      console.log(`🤖 OpenAI detected food names: ${responseText}`);
+
+      // Parse the comma-separated food names
+      const detectedFoodNames = responseText
+        .split(',')
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+
+      const result: FoodDetectionResult = {
+        confidence: 85, // Default confidence for food detection
+        detectedFoodNames
+      };
+
+      this.recordSuccess();
+      return result;
+
+    } catch (error: any) {
+      console.error("OpenAI food detection error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.status === 429 || error?.code === 'rate_limit_exceeded') {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'OpenAI rate limit exceeded',
+          true,
+          true,
+          60 // Retry after 1 minute
+        );
+      } else if (error?.status >= 500) {
+        providerError = this.createError(
+          'SERVER_ERROR',
+          `OpenAI server error: ${error.message}`,
+          false,
+          true,
+          30
+        );
+      } else {
+        providerError = this.createError(
+          'DETECTION_ERROR',
+          `OpenAI food detection failed: ${error.message}`,
           false,
           false
         );

@@ -21,6 +21,12 @@ export interface DetectedFood {
   icon: string;
 }
 
+// New interface for food name detection only
+export interface FoodDetectionResult {
+  confidence: number; // 0-100
+  detectedFoodNames: string[];
+}
+
 export interface MealIdea {
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   name: string;
@@ -97,6 +103,8 @@ export abstract class AIProvider {
 
   abstract analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult>;
   abstract analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult>;
+  // New method for food detection only (no nutrition calculation)
+  abstract detectFoodNames(imagePath: string): Promise<FoodDetectionResult>;
   abstract generateDietAdvice(entries: DiaryEntry[], userProfile?: any): Promise<DietAdviceResult>;
   abstract answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string>;
   abstract generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching>;

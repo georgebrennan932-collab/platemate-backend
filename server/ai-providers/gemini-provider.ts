@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { promises as fs } from "fs";
-import { AIProvider, FoodAnalysisResult, DietAdviceResult, DiaryEntry, ProviderError, DailyCoaching, EducationalTip } from "./types";
+import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, DiaryEntry, ProviderError, DailyCoaching, EducationalTip } from "./types";
 
 export class GeminiProvider extends AIProvider {
   public readonly name = "Gemini";
@@ -130,6 +130,96 @@ Be as accurate as possible with portion estimates and nutritional values. If you
         providerError = this.createError(
           'ANALYSIS_ERROR',
           `Gemini analysis failed: ${error.message}`,
+          false,
+          true,
+          60
+        );
+      }
+      
+      this.recordError(providerError);
+      throw providerError;
+    }
+  }
+
+  async detectFoodNames(imagePath: string): Promise<FoodDetectionResult> {
+    try {
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error("GEMINI_API_KEY not configured");
+      }
+
+      // Read image file
+      const imageBytes = await fs.readFile(imagePath);
+      
+      const contents = [
+        {
+          inlineData: {
+            data: imageBytes.toString("base64"),
+            mimeType: "image/jpeg",
+          },
+        },
+        `Analyze this food image and identify all visible food items. Return ONLY the food names, separated by commas.
+
+Examples:
+- "banana, chicken breast, broccoli"
+- "pizza, salad"
+- "rice, beans, grilled chicken"
+
+DO NOT provide nutrition information, portions, or any other details. Only return the food names as a simple comma-separated list.
+
+If you can't clearly identify something, don't include it. Be as accurate as possible with food identification.`,
+      ];
+
+      const response = await this.client.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: contents,
+      });
+
+      const responseText = response.text;
+      
+      if (!responseText) {
+        throw new Error("No response from Gemini");
+      }
+
+      console.log(`🤖 Gemini detected food names: ${responseText}`);
+
+      // Parse the comma-separated food names
+      const detectedFoodNames = responseText
+        .split(',')
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+
+      const result: FoodDetectionResult = {
+        confidence: 80, // Default confidence for food detection
+        detectedFoodNames
+      };
+
+      this.recordSuccess();
+      return result;
+
+    } catch (error: any) {
+      console.error("Gemini food detection error:", error);
+      
+      let providerError: ProviderError;
+      
+      if (error?.message?.includes('quota') || error?.message?.includes('rate')) {
+        providerError = this.createError(
+          'RATE_LIMIT',
+          'Gemini rate limit exceeded',
+          true,
+          true,
+          120 // Retry after 2 minutes
+        );
+      } else if (error?.message?.includes('GEMINI_API_KEY')) {
+        providerError = this.createError(
+          'CONFIG_ERROR',
+          'Gemini API key not configured',
+          false,
+          false
+        );
+      } else {
+        providerError = this.createError(
+          'DETECTION_ERROR',
+          `Gemini food detection failed: ${error.message}`,
           false,
           true,
           60
