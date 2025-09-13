@@ -194,6 +194,9 @@ export function CameraInterface({
               <p className="text-gray-400 text-sm mt-2 px-4">
                 Point at your food and capture
               </p>
+              <p className="text-gray-300 text-xs mt-2 px-4 leading-relaxed" data-testid="text-scale-tip-default">
+                <strong>Tip:</strong> Include a fork or hand for accurate portion sizing
+              </p>
             </div>
           </div>
         )}
@@ -204,9 +207,12 @@ export function CameraInterface({
         </div>
         
         {/* Enhanced top overlay with instructions */}
-        <div className="absolute top-4 left-4 right-4 bg-gradient-to-r from-black/80 via-slate-900/80 to-black/80 text-white p-4 rounded-xl backdrop-blur-md border border-white/10 shadow-xl">
+        <div className="absolute top-4 left-4 right-4 z-20 bg-gradient-to-r from-black/80 via-slate-900/80 to-black/80 text-white p-4 rounded-xl backdrop-blur-md border border-white/10 shadow-xl">
           <p className="text-sm text-center font-medium" data-testid="text-instructions">
             Position your plate within the circle
+          </p>
+          <p className="text-xs text-center text-gray-300 mt-1 leading-relaxed" data-testid="text-scale-tip">
+            💡 <strong>Pro tip:</strong> Include a fork, hand, or coin in the photo to help AI determine scale for more accurate portion sizes
           </p>
           <div className="flex items-center justify-center mt-2 space-x-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
