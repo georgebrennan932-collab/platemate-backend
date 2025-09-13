@@ -21,10 +21,11 @@ export interface DetectedFood {
   icon: string;
 }
 
-// New interface for food name detection only
+// Interface for food detection - simple food name detection only
 export interface FoodDetectionResult {
   confidence: number; // 0-100
-  detectedFoodNames: string[];
+  detectedFoodNames: string[]; // Simple array of food names for USDA lookup
+  referenceObjects?: string[]; // Optional reference objects for portion estimation
 }
 
 export interface MealIdea {

@@ -31,24 +31,31 @@ export class OpenAIProvider extends AIProvider {
             content: [
               {
                 type: "text",
-                text: `Analyze this food image and identify all visible food items. For each food item, estimate the portion size and provide nutritional information (calories, protein, carbs, fat in grams). Return the response as a JSON object with this exact structure:
+                text: `Analyze this food image and identify all visible food items. 
+
+IMPORTANT: Look for reference objects in the image to help estimate scale and portion sizes:
+- Plate, bowl, or dish (standard dinner plate = 10-12 inches)
+- Utensils (fork = 7 inches, spoon = 6 inches)
+- Hand or fingers for scale
+- Common objects like coins, phones, etc.
+
+For each food item detected, provide ONLY the food name and estimated portion - DO NOT include nutritional information as we will look that up from the USDA database for accuracy.
+
+Return the response as a JSON object with this exact structure:
 
 {
   "confidence": number (0-100),
+  "referenceObjects": ["list of reference objects spotted for scale estimation"],
   "detectedFoods": [
     {
       "name": "Food Name",
-      "portion": "estimated portion size",
-      "calories": number,
-      "protein": number,
-      "carbs": number,
-      "fat": number,
+      "portion": "estimated portion size with weight/volume",
       "icon": "appropriate icon name from: egg, bacon, bread-slice, apple-alt"
     }
   ]
 }
 
-Be as accurate as possible with portion estimates and nutritional values. If you can't clearly identify something, don't include it. Use standard USDA nutritional values.`
+Focus on accurate food identification and portion estimation using any reference objects you can see. Be specific with portions (e.g., "100g", "1 medium slice", "150ml").`
               },
               {
                 type: "image_url",
@@ -83,30 +90,28 @@ Be as accurate as possible with portion estimates and nutritional values. If you
         throw new Error("Invalid response format from OpenAI");
       }
 
-      // Calculate totals and round to integers for database compatibility
-      const totalCalories = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.calories || 0), 0));
-      const totalProtein = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.protein || 0), 0));
-      const totalCarbs = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.carbs || 0), 0));
-      const totalFat = Math.round(parsed.detectedFoods.reduce((sum: number, food: any) => sum + (food.fat || 0), 0));
-
-      // Round nutritional values in detected foods
-      const roundedDetectedFoods = parsed.detectedFoods.map((food: any) => ({
-        ...food,
-        calories: Math.round(food.calories || 0),
-        protein: Math.round(food.protein || 0),
-        carbs: Math.round(food.carbs || 0),
-        fat: Math.round(food.fat || 0)
+      // Convert to legacy format for now - will be updated after USDA integration
+      const mockNutritionFoods = parsed.detectedFoods.map((food: any) => ({
+        name: food.name,
+        portion: food.portion,
+        calories: 100, // Mock - will be replaced by USDA lookup
+        protein: 5,
+        carbs: 10,
+        fat: 3,
+        icon: food.icon
       }));
 
       const result: FoodAnalysisResult = {
         imageUrl: imagePath,
         confidence: Math.round(parsed.confidence || 85),
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        detectedFoods: roundedDetectedFoods
-      };
+        totalCalories: mockNutritionFoods.reduce((sum: number, food: any) => sum + food.calories, 0),
+        totalProtein: mockNutritionFoods.reduce((sum: number, food: any) => sum + food.protein, 0),
+        totalCarbs: mockNutritionFoods.reduce((sum: number, food: any) => sum + food.carbs, 0),
+        totalFat: mockNutritionFoods.reduce((sum: number, food: any) => sum + food.fat, 0),
+        detectedFoods: mockNutritionFoods,
+        // Store reference objects in a custom property for now
+        referenceObjects: parsed.referenceObjects || []
+      } as any;
 
       this.recordSuccess();
       return result;

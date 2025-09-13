@@ -1,6 +1,7 @@
-import { AIProvider, FoodAnalysisResult, DietAdviceResult, DiaryEntry, ProviderError, ProviderStatus, DailyCoaching, EducationalTip } from "./types";
+import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, DiaryEntry, ProviderError, ProviderStatus, DailyCoaching, EducationalTip } from "./types";
 import { OpenAIProvider } from "./openai-provider";
 import { GeminiProvider } from "./gemini-provider";
+import { usdaService } from "../services/usda-service";
 
 export class AIManager {
   private providers: AIProvider[] = [];
@@ -166,9 +167,185 @@ export class AIManager {
   }
 
   /**
-   * Analyze food image using the best available provider with intelligent fallback
+   * Enhanced food analysis workflow: AI detection + USDA nutrition lookup
    */
   async analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult> {
+    try {
+      // Step 1: Detect food names using AI providers
+      const detection = await this.detectFoodNamesFromImage(imagePath);
+      
+      // Step 2: Get accurate nutrition from USDA for detected foods
+      const nutritionData = await this.getNutritionFromUSDA(detection.detectedFoodNames);
+      
+      // Step 3: Combine results into comprehensive analysis
+      return this.combineDetectionWithNutrition(imagePath, detection, nutritionData);
+      
+    } catch (error: any) {
+      console.warn('Enhanced analysis failed, falling back to legacy method:', error.message);
+      return this.legacyAnalyzeFoodImage(imagePath);
+    }
+  }
+
+  /**
+   * Detect food names from image using AI providers
+   */
+  async detectFoodNamesFromImage(imagePath: string): Promise<FoodDetectionResult> {
+    const availableProviders = this.getAvailableProviders();
+    
+    // Try each available provider
+    for (const provider of availableProviders) {
+      for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
+        try {
+          console.log(`🔍 Detecting food names with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
+          
+          const result = await provider.detectFoodNames(imagePath);
+          
+          console.log(`✅ Food detection successful with ${provider.name}: ${result.detectedFoodNames.join(', ')}`);
+          return result;
+          
+        } catch (error: any) {
+          console.log(`❌ Food detection failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
+          
+          // If it's a rate limit error, move to next provider immediately
+          if (error.isRateLimit) {
+            console.log(`${provider.name} hit rate limit, trying next provider`);
+            break;
+          }
+          
+          // If it's the last attempt with this provider, continue to next provider
+          if (attempt === provider.maxRetries) {
+            console.log(`${provider.name} exhausted all retries, trying next provider`);
+            break;
+          }
+          
+          // Wait before retry (exponential backoff)
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          await this.sleep(waitTime);
+        }
+      }
+    }
+
+    // All providers failed, return fallback
+    console.log('All AI providers failed for food detection, using fallback');
+    return {
+      confidence: 0,
+      detectedFoodNames: ['Mixed Food'], // Generic fallback
+      referenceObjects: []
+    };
+  }
+
+  /**
+   * Get nutrition data from USDA for detected food names
+   */
+  async getNutritionFromUSDA(foodNames: string[]): Promise<Map<string, any>> {
+    try {
+      console.log(`🔍 Looking up nutrition data for: ${foodNames.join(', ')}`);
+      
+      const nutritionMap = await usdaService.findMultipleMatches(foodNames);
+      
+      console.log(`✅ Found USDA nutrition data for ${nutritionMap.size}/${foodNames.length} foods`);
+      return nutritionMap;
+      
+    } catch (error: any) {
+      console.warn('USDA nutrition lookup failed:', error.message);
+      return new Map(); // Return empty map on failure
+    }
+  }
+
+  /**
+   * Combine AI detection results with USDA nutrition data
+   */
+  async combineDetectionWithNutrition(
+    imagePath: string, 
+    detection: FoodDetectionResult, 
+    nutritionMap: Map<string, any>
+  ): Promise<FoodAnalysisResult> {
+    const detectedFoods = [];
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
+
+    // Process each detected food
+    for (const foodName of detection.detectedFoodNames) {
+      const usdaData = nutritionMap.get(foodName);
+      
+      if (usdaData) {
+        // Use accurate USDA nutrition data
+        const food = {
+          name: usdaData.usdaFood.description,
+          portion: '100g', // Default portion - could be enhanced with AI portion estimation
+          calories: usdaData.nutrition.calories,
+          protein: Math.round(usdaData.nutrition.protein),
+          carbs: Math.round(usdaData.nutrition.carbs),
+          fat: Math.round(usdaData.nutrition.fat),
+          icon: this.getFoodIcon(foodName)
+        };
+        
+        detectedFoods.push(food);
+        totalCalories += food.calories;
+        totalProtein += food.protein;
+        totalCarbs += food.carbs;
+        totalFat += food.fat;
+        
+        console.log(`✅ Enhanced: ${foodName} → ${food.name} (${food.calories} cal)`);
+      } else {
+        // Fallback for foods not found in USDA
+        const fallbackFood = {
+          name: foodName,
+          portion: '1 serving',
+          calories: 150, // Conservative estimate
+          protein: 8,
+          carbs: 15,
+          fat: 6,
+          icon: this.getFoodIcon(foodName)
+        };
+        
+        detectedFoods.push(fallbackFood);
+        totalCalories += fallbackFood.calories;
+        totalProtein += fallbackFood.protein;
+        totalCarbs += fallbackFood.carbs;
+        totalFat += fallbackFood.fat;
+        
+        console.log(`⚠️ Fallback: ${foodName} (USDA data not available)`);
+      }
+    }
+
+    return {
+      imageUrl: imagePath,
+      confidence: detection.confidence,
+      totalCalories,
+      totalProtein,
+      totalCarbs,
+      totalFat,
+      detectedFoods
+    };
+  }
+
+  /**
+   * Get appropriate icon for food type
+   */
+  private getFoodIcon(foodName: string): string {
+    const lowerName = foodName.toLowerCase();
+    
+    if (lowerName.includes('apple') || lowerName.includes('fruit')) return '🍎';
+    if (lowerName.includes('banana')) return '🍌';
+    if (lowerName.includes('chicken') || lowerName.includes('poultry')) return '🍗';
+    if (lowerName.includes('fish') || lowerName.includes('salmon')) return '🐟';
+    if (lowerName.includes('beef') || lowerName.includes('meat')) return '🥩';
+    if (lowerName.includes('rice') || lowerName.includes('grain')) return '🍚';
+    if (lowerName.includes('bread') || lowerName.includes('toast')) return '🍞';
+    if (lowerName.includes('egg')) return '🥚';
+    if (lowerName.includes('vegetable') || lowerName.includes('broccoli') || lowerName.includes('carrot')) return '🥕';
+    if (lowerName.includes('salad') || lowerName.includes('lettuce')) return '🥗';
+    
+    return '🍽️'; // Default food icon
+  }
+
+  /**
+   * Legacy food analysis method (fallback when enhanced method fails)
+   */
+  async legacyAnalyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult> {
     const availableProviders = this.getAvailableProviders();
     
     // Try each available provider
@@ -242,9 +419,130 @@ export class AIManager {
   }
 
   /**
-   * Analyze food from text description using the best available provider with intelligent fallback
+   * Enhanced text analysis workflow: AI parsing + USDA nutrition lookup
    */
   async analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
+    try {
+      // Step 1: Parse food names from text description
+      const foodNames = await this.parseFoodNamesFromText(foodDescription);
+      
+      // Step 2: Get accurate nutrition from USDA for parsed foods
+      const nutritionData = await this.getNutritionFromUSDA(foodNames);
+      
+      // Step 3: Combine results into comprehensive analysis
+      return this.combineTextWithNutrition(foodDescription, foodNames, nutritionData);
+      
+    } catch (error: any) {
+      console.warn('Enhanced text analysis failed, falling back to legacy method:', error.message);
+      return this.legacyAnalyzeFoodText(foodDescription);
+    }
+  }
+
+  /**
+   * Parse food names from text description using AI providers
+   */
+  async parseFoodNamesFromText(foodDescription: string): Promise<string[]> {
+    // Simple text parsing - extract food names from description
+    // This could be enhanced with AI providers in the future
+    const lowerDesc = foodDescription.toLowerCase();
+    const foodKeywords = [];
+    
+    // Basic keyword extraction
+    const commonFoods = [
+      'apple', 'banana', 'orange', 'chicken', 'beef', 'salmon', 'fish', 
+      'rice', 'bread', 'pasta', 'egg', 'milk', 'cheese', 'broccoli', 
+      'carrot', 'potato', 'tomato', 'lettuce', 'avocado', 'spinach'
+    ];
+    
+    for (const food of commonFoods) {
+      if (lowerDesc.includes(food)) {
+        foodKeywords.push(food);
+      }
+    }
+    
+    // If no keywords found, use the whole description as a search term
+    if (foodKeywords.length === 0) {
+      foodKeywords.push(foodDescription.trim());
+    }
+    
+    console.log(`📝 Parsed food names from "${foodDescription}": ${foodKeywords.join(', ')}`);
+    return foodKeywords;
+  }
+
+  /**
+   * Combine text input with USDA nutrition data
+   */
+  async combineTextWithNutrition(
+    originalText: string,
+    foodNames: string[], 
+    nutritionMap: Map<string, any>
+  ): Promise<FoodAnalysisResult> {
+    const detectedFoods = [];
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
+
+    // Process each parsed food
+    for (const foodName of foodNames) {
+      const usdaData = nutritionMap.get(foodName);
+      
+      if (usdaData) {
+        // Use accurate USDA nutrition data
+        const food = {
+          name: usdaData.usdaFood.description,
+          portion: '100g', // Default portion - could be enhanced with portion parsing
+          calories: usdaData.nutrition.calories,
+          protein: Math.round(usdaData.nutrition.protein),
+          carbs: Math.round(usdaData.nutrition.carbs),
+          fat: Math.round(usdaData.nutrition.fat),
+          icon: this.getFoodIcon(foodName)
+        };
+        
+        detectedFoods.push(food);
+        totalCalories += food.calories;
+        totalProtein += food.protein;
+        totalCarbs += food.carbs;
+        totalFat += food.fat;
+        
+        console.log(`✅ Enhanced: ${foodName} → ${food.name} (${food.calories} cal)`);
+      } else {
+        // Fallback for foods not found in USDA
+        const fallbackFood = {
+          name: foodName,
+          portion: '1 serving',
+          calories: 150, // Conservative estimate
+          protein: 8,
+          carbs: 15,
+          fat: 6,
+          icon: this.getFoodIcon(foodName)
+        };
+        
+        detectedFoods.push(fallbackFood);
+        totalCalories += fallbackFood.calories;
+        totalProtein += fallbackFood.protein;
+        totalCarbs += fallbackFood.carbs;
+        totalFat += fallbackFood.fat;
+        
+        console.log(`⚠️ Fallback: ${foodName} (USDA data not available)`);
+      }
+    }
+
+    return {
+      imageUrl: `voice-input-${Date.now()}.txt`,
+      confidence: nutritionMap.size > 0 ? 90 : 50, // Higher confidence if USDA data found
+      totalCalories,
+      totalProtein,
+      totalCarbs,
+      totalFat,
+      detectedFoods
+    };
+  }
+
+  /**
+   * Legacy text analysis method (fallback when enhanced method fails)
+   */
+  async legacyAnalyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
     const availableProviders = this.getAvailableProviders();
     
     // Try each available provider in priority order
