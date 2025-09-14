@@ -125,37 +125,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analyze food image
-  app.post("/api/analyze", upload.single('image'), async (req, res) => {
+  app.post("/api/analyze", upload.single('image'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided" });
       }
 
-      // Validate and process image with Sharp for optimization
+      // Process image with Sharp for optimization (resilient processing)
       const processedImagePath = `uploads/processed_${req.file.filename}.jpg`;
       
       try {
-        // First validate the image by attempting to get metadata
-        await sharp(req.file.path).metadata();
-        
-        // If validation passes, process the image (smaller size to reduce tokens)
+        // Attempt to process the image with Sharp (more resilient approach)
         await sharp(req.file.path)
+          .rotate() // Auto-rotate based on EXIF data
           .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
           .jpeg({ quality: 75 })
           .toFile(processedImagePath);
-      } catch (sharpError) {
-        console.error("Image processing error:", sharpError);
+          
+        console.log("✅ Image processed successfully with Sharp");
+      } catch (sharpError: any) {
+        console.warn("⚠️ Sharp processing failed, falling back to original file:", sharpError.message);
         
-        // Clean up the original file before returning error
+        // Fallback: copy original file as processed image
         try {
-          await fs.unlink(req.file.path);
-        } catch (unlinkError) {
-          console.error("Error cleaning up original file:", unlinkError);
+          await fs.copyFile(req.file.path, processedImagePath);
+          console.log("✅ Using original file as fallback");
+        } catch (copyError) {
+          console.error("❌ Fallback copy failed:", copyError);
+          
+          // Clean up the original file before returning error
+          try {
+            await fs.unlink(req.file.path);
+          } catch (unlinkError) {
+            console.error("Error cleaning up original file:", unlinkError);
+          }
+          
+          return res.status(415).json({ 
+            error: "Unsupported image format. Please upload a valid JPEG or PNG image." 
+          });
         }
-        
-        return res.status(400).json({ 
-          error: "Invalid image file. Please upload a valid JPEG or PNG image." 
-        });
       }
 
       // Clean up original file after successful processing
@@ -171,7 +179,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const analysis = await storage.createFoodAnalysis(foodAnalysisData);
 
-      res.json(analysis);
+      // Optional: Auto-add to diary if user is authenticated and requests it
+      if (req.user && req.body.autoAddToDiary === 'true') {
+        try {
+          const userId = req.user.claims.sub;
+          const diaryData = {
+            userId,
+            analysisId: analysis.id,
+            mealType: req.body.mealType || 'snack',
+            mealDate: req.body.mealDate || new Date().toISOString().split('T')[0],
+            notes: req.body.notes || '',
+            customMealName: req.body.customMealName || null
+          };
+          
+          const validatedDiaryEntry = insertDiaryEntrySchema.parse(diaryData);
+          const diaryEntry = await storage.createDiaryEntry(validatedDiaryEntry);
+          
+          console.log(`✅ Auto-added analysis ${analysis.id} to diary for user ${userId}`);
+          
+          // Return both analysis and diary entry info
+          res.json({
+            ...analysis,
+            diaryEntry: {
+              id: diaryEntry.id,
+              mealType: diaryEntry.mealType,
+              mealDate: diaryEntry.mealDate
+            }
+          });
+        } catch (diaryError) {
+          console.error("Failed to auto-add to diary:", diaryError);
+          // Still return the analysis even if diary add fails
+          res.json(analysis);
+        }
+      } else {
+        res.json(analysis);
+      }
     } catch (error) {
       console.error("Analysis error:", error);
       res.status(500).json({ error: "Failed to analyze image" });
@@ -215,6 +257,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Food analysis not found" });
       }
 
+      // Auto-repair legacy entries only if they have legacy placeholder characteristics
+      const isLegacyEntry = existingAnalysis.totalCalories === 0 && 
+                           existingAnalysis.totalProtein === 0 && 
+                           existingAnalysis.totalCarbs === 0 && 
+                           existingAnalysis.totalFat === 0 &&
+                           existingAnalysis.detectedFoods.some((food: any) => 
+                             food.name === "Rate Limit Reached" || 
+                             food.portion === "OpenAI API limit exceeded"
+                           );
+
+      let processedFoods = validatedData.detectedFoods;
+      
+      if (isLegacyEntry) {
+        // Only repair foods from legacy entries that still have placeholder data
+        processedFoods = validatedData.detectedFoods.map((food) => {
+          if (food.name === "Rate Limit Reached" || food.portion === "OpenAI API limit exceeded") {
+            console.log(`🔧 Auto-repairing legacy food entry: ${food.name}`);
+            return {
+              name: "Mixed Food",
+              portion: "1 serving",
+              calories: 250,
+              protein: 12,
+              carbs: 25,
+              fat: 10,
+              icon: "apple-alt"
+            };
+          }
+          return food;
+        });
+      }
+
       // Check ownership: user must have diary entries referencing this analysis
       const userDiaryEntries = await storage.getDiaryEntries(userId);
       const hasOwnership = userDiaryEntries.some(entry => entry.analysisId === id);
@@ -225,8 +298,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Calculate nutrition totals server-side from detectedFoods (never trust client)
-      const serverTotals = validatedData.detectedFoods.reduce(
+      // Calculate nutrition totals server-side from processed foods (never trust client)
+      const serverTotals = processedFoods.reduce(
         (totals, food) => ({
           calories: totals.calories + food.calories,
           protein: totals.protein + food.protein,
@@ -238,7 +311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update with server-calculated totals
       const updates = {
-        detectedFoods: validatedData.detectedFoods,
+        detectedFoods: processedFoods,
         totalCalories: serverTotals.calories,
         totalProtein: serverTotals.protein,
         totalCarbs: serverTotals.carbs,
@@ -251,7 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to update food analysis" });
       }
 
-      console.log(`✅ User ${userId} updated food analysis ${id} with ${validatedData.detectedFoods.length} foods. Totals: ${serverTotals.calories}cal, ${serverTotals.protein}g protein`);
+      console.log(`✅ User ${userId} updated food analysis ${id} with ${processedFoods.length} foods. Totals: ${serverTotals.calories}cal, ${serverTotals.protein}g protein`);
       res.json(updatedAnalysis);
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -288,6 +361,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get analysis error:", error);
       res.status(500).json({ error: "Failed to retrieve analysis" });
+    }
+  });
+
+  // Refresh analysis - reanalyze the image with current AI providers
+  app.post("/api/analyses/:id/refresh", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+
+      // Check if analysis exists
+      const existingAnalysis = await storage.getFoodAnalysis(id);
+      if (!existingAnalysis) {
+        return res.status(404).json({ error: "Food analysis not found" });
+      }
+
+      // Check ownership: user must have diary entries referencing this analysis
+      const userDiaryEntries = await storage.getDiaryEntries(userId);
+      const hasOwnership = userDiaryEntries.some(entry => entry.analysisId === id);
+      
+      if (!hasOwnership) {
+        return res.status(403).json({ 
+          error: "Access denied. You can only refresh food analyses from your own diary entries." 
+        });
+      }
+
+      // Re-analyze the image using current AI providers
+      let freshAnalysisData;
+      try {
+        // Normalize imageUrl to filesystem path if needed
+        let imagePath = existingAnalysis.imageUrl;
+        if (imagePath.startsWith('/uploads/') || imagePath.startsWith('uploads/')) {
+          imagePath = path.join(process.cwd(), imagePath.replace(/^\//, ''));
+        }
+        
+        freshAnalysisData = await aiManager.analyzeFoodImage(imagePath);
+      } catch (error) {
+        console.error("Fresh analysis failed:", error);
+        // If AI fails, use improved fallback data
+        freshAnalysisData = {
+          imageUrl: existingAnalysis.imageUrl,
+          confidence: 0,
+          totalCalories: 400,
+          totalProtein: 20,
+          totalCarbs: 40,
+          totalFat: 15,
+          detectedFoods: [
+            {
+              name: "Mixed Food",
+              portion: "1 serving",
+              calories: 250,
+              protein: 12,
+              carbs: 25,
+              fat: 10,
+              icon: "apple-alt"
+            },
+            {
+              name: "Estimated Portion",
+              portion: "Medium size", 
+              calories: 150,
+              protein: 8,
+              carbs: 15,
+              fat: 5,
+              icon: "apple-alt"
+            }
+          ],
+          isAITemporarilyUnavailable: true
+        };
+      }
+
+      // Update the existing analysis with fresh data
+      const updates = {
+        detectedFoods: freshAnalysisData.detectedFoods,
+        totalCalories: freshAnalysisData.totalCalories,
+        totalProtein: freshAnalysisData.totalProtein,
+        totalCarbs: freshAnalysisData.totalCarbs,
+        totalFat: freshAnalysisData.totalFat,
+        confidence: freshAnalysisData.confidence
+      };
+
+      const updatedAnalysis = await storage.updateFoodAnalysis(id, updates);
+      
+      if (!updatedAnalysis) {
+        return res.status(500).json({ error: "Failed to refresh food analysis" });
+      }
+
+      console.log(`✅ User ${userId} refreshed food analysis ${id}. New totals: ${freshAnalysisData.totalCalories}cal, ${freshAnalysisData.totalProtein}g protein`);
+      res.json(updatedAnalysis);
+    } catch (error: any) {
+      console.error("Refresh analysis error:", error);
+      res.status(500).json({ error: "Failed to refresh food analysis" });
     }
   });
 
