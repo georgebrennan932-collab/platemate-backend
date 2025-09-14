@@ -455,7 +455,9 @@ export class AIManager {
     ];
     
     for (const food of commonFoods) {
-      if (lowerDesc.includes(food)) {
+      // Use word boundaries to avoid partial matches (e.g., "apple" in "pineapple")
+      const regex = new RegExp(`\\b${food}\\b`, 'i');
+      if (regex.test(lowerDesc)) {
         foodKeywords.push(food);
       }
     }

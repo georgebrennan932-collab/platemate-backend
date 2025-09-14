@@ -142,7 +142,7 @@ export class USDAService {
     // USDA nutrient IDs for key macronutrients
     const findNutrient = (numbers: string[]) => {
       for (const number of numbers) {
-        const nutrient = nutrients.find(n => n.nutrient.number === number);
+        const nutrient = nutrients.find(n => n.nutrient && n.nutrient.number === number);
         if (nutrient) return nutrient.amount;
       }
       return 0;
@@ -183,23 +183,46 @@ export class USDAService {
         return null;
       }
 
-      // Simple scoring: prefer foods with more complete nutrient data
+      // Smart scoring: prefer whole foods over processed foods
       const scoredFoods = searchResults.foods.map(food => {
+        const description = food.description.toLowerCase();
         const nutrientCount = food.foodNutrients.length;
         const hasBasicNutrients = ['203', '204', '205', '208'].every(id => 
-          food.foodNutrients.some(n => n.nutrient.number === id && n.amount > 0)
+          food.foodNutrients.some(n => n.nutrient && n.nutrient.number === id && n.amount > 0)
         );
         
-        // Score based on nutrient completeness and basic nutrient availability
-        const score = nutrientCount + (hasBasicNutrients ? 100 : 0);
+        let score = nutrientCount + (hasBasicNutrients ? 100 : 0);
+        
+        // Boost whole foods
+        if (description.includes('raw') || description.includes('fresh')) score += 50;
+        if (description.split(',').length <= 2) score += 30; // Prefer simple descriptions
+        
+        // Penalize processed foods
+        if (description.includes('croissant') || description.includes('cake') || description.includes('cookie')) score -= 100;
+        if (description.includes('canned') || description.includes('frozen prepared')) score -= 20;
+        if (description.includes('with ') || description.includes('sauce') || description.includes('dressing')) score -= 15;
+        
+        // Exact matches get huge boost
+        if (description.startsWith(foodName.toLowerCase())) score += 200;
+        
         return { food, score };
       });
 
-      // Get the highest scoring food
+      // Get the highest scoring food and fetch full details for accurate nutrition
       const bestMatch = scoredFoods.sort((a, b) => b.score - a.score)[0];
-      const nutrition = this.extractNutritionData(bestMatch.food);
-
-      console.log(`✅ Best USDA match for "${foodName}": ${bestMatch.food.description}`);
+      
+      // Replace debug logs with compact summary
+      console.log(`🔍 Top candidates for "${foodName}":`, scoredFoods
+        .slice(0, 3)
+        .map(x => `${x.food.description} [${x.score}]`)
+        .join(' | '));
+      
+      // Fetch full food details for complete nutrition data
+      const fullFoodDetails = await this.getFoodDetails(bestMatch.food.fdcId);
+      const nutrition = this.extractNutritionData(fullFoodDetails);
+      
+      console.log(`🧪 Nutrient numbers present:`, fullFoodDetails.foodNutrients.map(n => n.nutrient?.number));
+      console.log(`✅ Best USDA match for "${foodName}": ${fullFoodDetails.description}`);
       
       return {
         usdaFood: bestMatch.food,
