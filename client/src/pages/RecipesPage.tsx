@@ -334,3 +334,5 @@ export function RecipesPage() {
     </div>
   );
 }
+
+export default RecipesPage;
