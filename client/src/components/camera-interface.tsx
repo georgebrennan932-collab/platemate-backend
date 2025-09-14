@@ -224,7 +224,12 @@ export function CameraInterface({
         </div>
       </div>
       
-      {/* Enhanced Upload alternative */}
+      {/* Subtle scale tip */}
+      <div className="mt-4 text-center">
+        <p className="text-xs text-gray-400 font-medium" data-testid="text-scale-advice">
+          💡 <span className="text-gray-300">Pro tip:</span> Include a fork or your hand for more accurate portions
+        </p>
+      </div>
 
       {/* Hidden file inputs */}
       <input
