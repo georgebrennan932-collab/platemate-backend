@@ -23,6 +23,7 @@ function App() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
+      <Route path="/scan" component={CameraPage} />
       <Route path="/home" component={Home} />
       <Route path="/diary" component={DiaryPage} />
       <Route path="/calculator" component={CalculatorPage} />
