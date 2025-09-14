@@ -44,18 +44,24 @@ export default function LandingPage() {
         {/* Get Started Button */}
         <div className="text-center mb-16 animate-fade-in-up animation-delay-900">
           {isAuthenticated ? (
-            <Link href="/scan">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-pulse-glow relative overflow-hidden group"
-                data-testid="button-get-started"
-              >
-                {/* Animated shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                <Mic className="h-6 w-6 mr-2 animate-bounce" />
-                Start Voice Logging
-              </Button>
-            </Link>
+            <div className="space-y-4">
+              <div className="inline-flex items-center px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
+                <Shield className="h-4 w-4 mr-2" />
+                ✅ Signed in and ready!
+              </div>
+              <Link href="/scan">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-pulse-glow relative overflow-hidden group"
+                  data-testid="button-get-started"
+                >
+                  {/* Animated shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                  <Camera className="h-6 w-6 mr-2 animate-bounce" />
+                  Start Using PlateMate
+                </Button>
+              </Link>
+            </div>
           ) : (
             <a href="/api/login">
               <Button 
@@ -66,7 +72,7 @@ export default function LandingPage() {
                 {/* Animated shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 <LogIn className="h-6 w-6 mr-2 animate-bounce" />
-                Login to Start
+                Sign In to Start
               </Button>
             </a>
           )}
