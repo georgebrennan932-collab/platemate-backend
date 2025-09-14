@@ -346,7 +346,7 @@ export class AIManager {
       
       if (usdaData) {
         // Convert AI portion to grams for scaling
-        const portionGrams = this.convertPortionToGrams(aiFood.portion);
+        const portionGrams = this.convertPortionToGrams(aiFood.portion, aiFood.name);
         const scaleFactor = portionGrams / 100; // USDA data is per 100g
         
         // Scale USDA nutrition to AI-estimated portion
@@ -393,12 +393,31 @@ export class AIManager {
   /**
    * Convert portion descriptions to grams for nutrition scaling
    */
-  private convertPortionToGrams(portion: string): number {
+  private convertPortionToGrams(portion: string, foodName?: string): number {
     const portionLower = portion.toLowerCase();
+    const foodLower = foodName?.toLowerCase() || '';
     
     // Extract numbers from portion string
     const numMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
     const num = numMatch ? parseFloat(numMatch[1]) : 1;
+    
+    // Contextual UK/British food portions
+    if (portionLower.includes('rasher') || portionLower.includes('rashers')) {
+      if (foodLower.includes('back bacon') || foodLower.includes('bacon back')) {
+        return num * 28; // Back bacon rasher ≈ 28g
+      }
+      if (foodLower.includes('streaky bacon') || foodLower.includes('bacon streaky')) {
+        return num * 15; // Streaky bacon rasher ≈ 15g  
+      }
+      if (foodLower.includes('bacon')) {
+        return num * 20; // Default bacon rasher ≈ 20g
+      }
+    }
+    
+    // UK Black pudding / Blood sausage slices
+    if (portionLower.includes('slice') && (foodLower.includes('black pudding') || foodLower.includes('blood sausage'))) {
+      return num * 45; // Black pudding slice ≈ 45g
+    }
     
     // Direct weight conversions
     if (portionLower.includes('g') && !portionLower.includes('kg')) {
@@ -442,8 +461,8 @@ export class AIManager {
       return 300; // Large portion ≈ 300g
     }
     
-    // Default fallback
-    return 100; // Assume 100g if can't parse
+    // Default fallback - Never return less than 1g if a count is present
+    return Math.max(100, num * 10); // Minimum reasonable portion
   }
 
   /**

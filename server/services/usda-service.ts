@@ -172,11 +172,51 @@ export class USDAService {
   }
 
   /**
+   * Preprocess food names for better USDA matching
+   */
+  private preprocessFoodName(foodName: string): string {
+    const name = foodName.toLowerCase().trim();
+    
+    // Handle British/International food terms
+    if (name.includes('back bacon') || name.includes('bacon back')) {
+      return 'pork bacon cured';
+    }
+    if (name.includes('black pudding')) {
+      return 'blood sausage';
+    }
+    if (name.includes('streaky bacon')) {
+      return 'pork bacon belly';
+    }
+    if (name.includes('rashers')) {
+      return 'bacon strips';
+    }
+    
+    // Handle common modifiers that confuse USDA search
+    let processed = name
+      .replace(/\b(2|two|3|three|1|one)\s+(slice|slices|piece|pieces|strip|strips)\b/g, '') // Remove portion descriptors
+      .replace(/\b(approx\.?|approximately)\s*\d+g?\b/g, '') // Remove weight estimates
+      .replace(/\b\d+g\b/g, '') // Remove gram measurements
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+    
+    // If we removed too much, return the original
+    if (processed.length < 3) {
+      return foodName;
+    }
+    
+    return processed;
+  }
+
+  /**
    * Find the best matching USDA food for a detected food name
    */
   async findBestMatch(foodName: string): Promise<{ usdaFood: USDAFood; nutrition: NutritionData } | null> {
     try {
-      const searchResults = await this.searchFoods(foodName, 10);
+      // Preprocess food names to improve USDA matching
+      const searchTerm = this.preprocessFoodName(foodName);
+      console.log(`🔍 Preprocessed "${foodName}" → "${searchTerm}" for USDA search`);
+      
+      const searchResults = await this.searchFoods(searchTerm, 10);
       
       if (searchResults.foods.length === 0) {
         console.log(`❌ No USDA matches found for: ${foodName}`);
@@ -193,6 +233,17 @@ export class USDAService {
         
         let score = nutrientCount + (hasBasicNutrients ? 100 : 0);
         
+        // Handle British/International food names
+        const searchName = foodName.toLowerCase();
+        if (searchName.includes('back bacon') || searchName.includes('bacon')) {
+          if (description.includes('pork') && description.includes('bacon')) score += 150;
+          if (description.includes('chicken') || description.includes('turkey')) score -= 200; // Avoid poultry for bacon
+        }
+        if (searchName.includes('black pudding')) {
+          if (description.includes('sausage') || description.includes('blood')) score += 150;
+          if (description.includes('banana') || description.includes('chocolate')) score -= 200; // Avoid desserts
+        }
+        
         // Boost whole foods
         if (description.includes('raw') || description.includes('fresh')) score += 50;
         if (description.split(',').length <= 2) score += 30; // Prefer simple descriptions
@@ -204,6 +255,12 @@ export class USDAService {
         
         // Exact matches get huge boost
         if (description.startsWith(foodName.toLowerCase())) score += 200;
+        
+        // Boost bacon-related foods when searching for bacon
+        if (searchName.includes('bacon')) {
+          if (description.includes('bacon') && description.includes('pork')) score += 100;
+          if (description.includes('cured') && description.includes('pork')) score += 75;
+        }
         
         return { food, score };
       });
