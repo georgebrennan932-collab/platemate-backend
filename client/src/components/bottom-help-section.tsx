@@ -143,13 +143,13 @@ export function BottomHelpSection() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="w-full h-auto p-3 flex flex-col items-center gap-2 hover:bg-background"
+                className="w-full h-auto p-3 flex flex-col items-center gap-2 bg-slate-800/80 hover:bg-slate-700/90 border border-slate-600/50 backdrop-blur-xl rounded-2xl transition-all duration-300 hover:scale-[1.02]"
                 data-testid="button-medication-help"
               >
-                <ExternalLink className="h-5 w-5" />
+                <ExternalLink className="h-5 w-5 text-blue-400" />
                 <div className="text-center">
-                  <div className="font-medium text-xs">Medication Guide</div>
-                  <div className="text-xs text-muted-foreground">Weight loss injections</div>
+                  <div className="font-medium text-xs text-white">Medication Guide</div>
+                  <div className="text-xs text-blue-200">Weight loss injections</div>
                 </div>
               </Button>
             </Link>
