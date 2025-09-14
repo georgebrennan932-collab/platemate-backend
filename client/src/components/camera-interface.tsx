@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Images, Zap, Camera, CloudUpload } from "lucide-react";
+import { Images, Zap, Camera, CloudUpload, Syringe } from "lucide-react";
+import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
@@ -229,6 +230,16 @@ export function CameraInterface({
         <p className="text-sm text-white font-medium bg-slate-800/80 backdrop-blur-xl border border-slate-600/50 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
           💡 For more precise portion analysis, place a fork or your hand in the photo.
         </p>
+      </div>
+
+      {/* Injection Advice Quick Access */}
+      <div className="mt-4 text-center">
+        <Link href="/injection-advice">
+          <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 mx-auto border border-white/10 backdrop-blur-xl" data-testid="button-injection-advice-quick">
+            <Syringe className="h-5 w-5" />
+            <span>Weight Loss Injection Guide</span>
+          </button>
+        </Link>
       </div>
 
       {/* Hidden file inputs */}
