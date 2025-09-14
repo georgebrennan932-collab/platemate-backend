@@ -135,36 +135,9 @@ export function CameraInterface({
   };
 
   const handleGallerySelect = async () => {
-    // Use Capacitor Camera API for gallery selection if available (native app)
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const image = await CapacitorCamera.getPhoto({
-          quality: 90,
-          allowEditing: false,
-          resultType: CameraResultType.Base64,
-          source: CameraSource.Photos,
-        });
-        
-        // Convert base64 to File object
-        const response = await fetch(`data:image/jpeg;base64,${image.base64String}`);
-        const blob = await response.blob();
-        const file = new File([blob], 'gallery-photo.jpg', { type: 'image/jpeg' });
-        
-        setSelectedFile(file);
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-        
-        // Auto-analyze the selected photo
-        analysisMutation.mutate(file);
-      } catch (error) {
-        console.error('Error selecting photo:', error);
-        // Fall back to file input
-        fileInputRef.current?.click();
-      }
-    } else {
-      // Use file input for browsers
-      fileInputRef.current?.click();
-    }
+    // Always use file input for reliable gallery access across all platforms
+    // This bypasses Capacitor Camera API issues on some Android devices
+    fileInputRef.current?.click();
   };
 
   return (
