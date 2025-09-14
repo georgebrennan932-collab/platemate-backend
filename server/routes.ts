@@ -126,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analyze food image
-  app.post("/api/analyze", upload.single('image'), async (req: any, res) => {
+  app.post("/api/analyze", isAuthenticated, upload.single('image'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided" });
@@ -178,6 +178,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Real food recognition and nutrition analysis using multi-AI provider system
       const foodAnalysisData = await aiManager.analyzeFoodImage(processedImagePath);
 
+      // CONFIDENCE THRESHOLD CHECK: If confidence < 80%, create confirmation workflow
+      if (foodAnalysisData.confidence < 80) {
+        console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for image analysis - creating food confirmation`);
+        
+        // Create food confirmation for user review
+        const userId = req.user.claims.sub;
+        const confirmationData = {
+          userId,
+          imageUrl: `/uploads/processed_${req.file.filename}.jpg`, // Use processed image path
+          originalConfidence: foodAnalysisData.confidence,
+          suggestedFoods: foodAnalysisData.detectedFoods,
+          alternativeOptions: [], // Could be populated with USDA alternatives
+          status: 'pending' as const
+        };
+        
+        // Validate confirmation data with schema
+        try {
+          const validatedConfirmation = insertFoodConfirmationSchema.parse(confirmationData);
+          const confirmation = await storage.createFoodConfirmation(validatedConfirmation);
+          
+          return res.status(202).json({
+            type: 'confirmation_required',
+            confirmationId: confirmation.id,
+            confidence: foodAnalysisData.confidence,
+            message: 'Analysis requires confirmation due to low confidence',
+            suggestedFoods: foodAnalysisData.detectedFoods,
+            imageUrl: confirmationData.imageUrl
+          });
+        } catch (validationError: any) {
+          if (validationError.name === 'ZodError') {
+            console.error('Image analysis confirmation validation error:', validationError.errors);
+            return res.status(400).json({
+              error: 'Invalid confirmation data for image analysis',
+              details: validationError.errors
+            });
+          }
+          throw validationError; // Re-throw non-validation errors
+        }
+      }
+
+      // High confidence (≥80%) - proceed with immediate analysis
+      console.log(`✅ High confidence (${foodAnalysisData.confidence}%) for image analysis - creating food analysis`);
       const analysis = await storage.createFoodAnalysis(foodAnalysisData);
 
       // Optional: Auto-add to diary if user is authenticated and requests it
@@ -222,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Text-based food analysis for voice input
-  app.post("/api/analyze-text", async (req, res) => {
+  app.post("/api/analyze-text", isAuthenticated, async (req: any, res) => {
     try {
       const { foodDescription } = req.body;
       
@@ -233,7 +275,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use AI manager to analyze text-based food description
       const foodAnalysisData = await aiManager.analyzeFoodText(foodDescription.trim());
 
-      // Create food analysis record
+      // CONFIDENCE THRESHOLD CHECK: If confidence < 80%, create confirmation workflow
+      if (foodAnalysisData.confidence < 80) {
+        console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for text analysis - creating food confirmation`);
+        
+        // Create food confirmation for user review
+        const userId = req.user.claims.sub;
+        const confirmationData = {
+          userId,
+          imageUrl: 'text://analysis', // Placeholder for text-based analysis
+          originalConfidence: foodAnalysisData.confidence,
+          suggestedFoods: foodAnalysisData.detectedFoods,
+          alternativeOptions: [], // Could be populated with USDA alternatives
+          status: 'pending' as const
+        };
+        
+        // Validate confirmation data with schema
+        try {
+          const validatedConfirmation = insertFoodConfirmationSchema.parse(confirmationData);
+          const confirmation = await storage.createFoodConfirmation(validatedConfirmation);
+          
+          return res.status(202).json({
+            type: 'confirmation_required',
+            confirmationId: confirmation.id,
+            confidence: foodAnalysisData.confidence,
+            message: 'Analysis requires confirmation due to low confidence',
+            suggestedFoods: foodAnalysisData.detectedFoods
+          });
+        } catch (validationError: any) {
+          if (validationError.name === 'ZodError') {
+            console.error('Text analysis confirmation validation error:', validationError.errors);
+            return res.status(400).json({
+              error: 'Invalid confirmation data for text analysis',
+              details: validationError.errors
+            });
+          }
+          throw validationError; // Re-throw non-validation errors
+        }
+      }
+
+      // High confidence (≥80%) - proceed with immediate analysis
+      console.log(`✅ High confidence (${foodAnalysisData.confidence}%) for text analysis - creating food analysis`);
       const analysis = await storage.createFoodAnalysis(foodAnalysisData);
 
       res.json(analysis);
