@@ -462,6 +462,17 @@ export class AIManager {
       return num * 5; // 1 tsp ≈ 5g
     }
     
+    // Hash brown differentiation
+    if (portionLower.includes('hash brown') || (foodLower.includes('hash brown') && portionLower.includes('piece'))) {
+      if (portionLower.includes('round') || portionLower.includes('rounds') || portionLower.includes('tater tot')) {
+        return num * 12; // Hash brown rounds ≈ 12g each
+      }
+      if (portionLower.includes('patty') || portionLower.includes('patties')) {
+        return num * 55; // Hash brown patty ≈ 55g each  
+      }
+      return num * 55; // Default hash brown patty size
+    }
+    
     // Common portion conversions (estimates)
     if (portionLower.includes('slice')) {
       return num * 30; // Average slice ≈ 30g

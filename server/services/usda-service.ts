@@ -191,6 +191,24 @@ export class USDAService {
       return 'bacon strips';
     }
     
+    // Force pork variants for generic meat terms to avoid meatless alternatives
+    if (name.includes('bacon') && !name.includes('turkey') && !name.includes('chicken') && !name.includes('beef') && !name.includes('meatless') && !name.includes('veggie')) {
+      if (name.includes('slice') || name.includes('rashers')) {
+        return 'pork bacon slice';
+      }
+      return 'pork bacon cured';
+    }
+    
+    if (name.includes('sausage') && !name.includes('chicken') && !name.includes('turkey') && !name.includes('meatless') && !name.includes('veggie')) {
+      if (name.includes('link')) {
+        return 'pork breakfast sausage link';
+      }
+      if (name.includes('patty')) {
+        return 'pork breakfast sausage patty';
+      }
+      return 'pork breakfast sausage';
+    }
+    
     // Handle common modifiers that confuse USDA search
     let processed = name
       .replace(/\b(2|two|3|three|1|one)\s+(slice|slices|piece|pieces|strip|strips)\b/g, '') // Remove portion descriptors
@@ -235,6 +253,15 @@ export class USDAService {
         
         // Handle British/International food names
         const searchName = foodName.toLowerCase();
+        
+        // Hard filter meatless alternatives when searching for real meat (unless explicitly requested)
+        const isMeatlessAlternative = /(meatless|vegetarian|veggie|plant[- ]based|meat substitute)/i.test(description);
+        const requestedMeatless = /(meatless|vegetarian|veggie|plant[- ]based)/i.test(searchName);
+        if (isMeatlessAlternative && !requestedMeatless) {
+          console.log(`🚫 Filtering meatless alternative: ${food.description}`);
+          score -= 1000; // Heavy penalty to ensure real meat products rank higher
+        }
+        
         if (searchName.includes('back bacon') || searchName.includes('bacon')) {
           if (description.includes('pork') && description.includes('bacon')) score += 150;
           if (description.includes('chicken') || description.includes('turkey')) score -= 200; // Avoid poultry for bacon
@@ -242,6 +269,13 @@ export class USDAService {
         if (searchName.includes('black pudding')) {
           if (description.includes('sausage') || description.includes('blood')) score += 150;
           if (description.includes('banana') || description.includes('chocolate')) score -= 200; // Avoid desserts
+        }
+        
+        // Boost breakfast sausage forms when searching for sausage
+        if (searchName.includes('sausage')) {
+          if (description.includes('pork') && (description.includes('breakfast') || description.includes('link') || description.includes('patty'))) {
+            score += 150;
+          }
         }
         
         // Boost whole foods
