@@ -1,6 +1,6 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles, simpleFoodEntries } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   getFoodAnalysis(id: string): Promise<FoodAnalysis | undefined>;
@@ -47,6 +47,13 @@ export interface IStorage {
   // Simple food entry methods (for mobile app compatibility)
   createSimpleFoodEntry(entry: InsertSimpleFoodEntry): Promise<SimpleFoodEntry>;
   getSimpleFoodEntries(userId: string, limit?: number): Promise<SimpleFoodEntry[]>;
+  
+  // Food confirmation methods (for confidence threshold workflow)
+  createFoodConfirmation(confirmation: InsertFoodConfirmation): Promise<FoodConfirmation>;
+  getFoodConfirmation(id: string): Promise<FoodConfirmation | undefined>;
+  getFoodConfirmationsByUser(userId: string, status?: string): Promise<FoodConfirmation[]>;
+  updateFoodConfirmation(id: string, updates: UpdateFoodConfirmation): Promise<FoodConfirmation | undefined>;
+  deleteFoodConfirmation(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -352,6 +359,66 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(simpleFoodEntries.createdAt))
       .limit(limit);
     return entries;
+  }
+
+  // Food confirmation methods (for confidence threshold workflow)
+  async createFoodConfirmation(confirmationData: InsertFoodConfirmation): Promise<FoodConfirmation> {
+    const [confirmation] = await db
+      .insert(foodConfirmations)
+      .values({
+        userId: confirmationData.userId,
+        imageUrl: confirmationData.imageUrl,
+        originalConfidence: confirmationData.originalConfidence,
+        suggestedFoods: confirmationData.suggestedFoods as DetectedFood[],
+        alternativeOptions: confirmationData.alternativeOptions as DetectedFood[] | undefined,
+        status: confirmationData.status || 'pending',
+        userFeedback: confirmationData.userFeedback,
+      })
+      .returning();
+    return confirmation;
+  }
+
+  async getFoodConfirmation(id: string): Promise<FoodConfirmation | undefined> {
+    const [confirmation] = await db
+      .select()
+      .from(foodConfirmations)
+      .where(eq(foodConfirmations.id, id));
+    return confirmation || undefined;
+  }
+
+  async getFoodConfirmationsByUser(userId: string, status?: string): Promise<FoodConfirmation[]> {
+    const whereClause = status
+      ? and(eq(foodConfirmations.userId, userId), eq(foodConfirmations.status, status))
+      : eq(foodConfirmations.userId, userId);
+
+    const confirmations = await db
+      .select()
+      .from(foodConfirmations)
+      .where(whereClause)
+      .orderBy(desc(foodConfirmations.createdAt));
+    
+    return confirmations;
+  }
+
+  async updateFoodConfirmation(id: string, updates: UpdateFoodConfirmation): Promise<FoodConfirmation | undefined> {
+    const [confirmation] = await db
+      .update(foodConfirmations)
+      .set({
+        status: updates.status,
+        finalFoods: updates.finalFoods as DetectedFood[],
+        userFeedback: updates.userFeedback,
+        confirmedAt: new Date(),
+      })
+      .where(eq(foodConfirmations.id, id))
+      .returning();
+    return confirmation || undefined;
+  }
+
+  async deleteFoodConfirmation(id: string): Promise<boolean> {
+    const result = await db
+      .delete(foodConfirmations)
+      .where(eq(foodConfirmations.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 }
 

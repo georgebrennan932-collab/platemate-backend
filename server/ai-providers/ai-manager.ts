@@ -393,29 +393,43 @@ export class AIManager {
   }
 
   /**
-   * Convert portion descriptions to grams for nutrition scaling
+   * Enhanced portion normalization: Convert all portion descriptions to grams
+   * This ensures consistent 100g baseline scaling for all nutrition data
    */
   private convertPortionToGrams(portion: string, foodName?: string): number {
-    const portionLower = portion.toLowerCase();
+    const portionLower = portion.toLowerCase().trim();
     const foodLower = foodName?.toLowerCase() || '';
     
-    // Regex-based unit parsing with precedence (fix the 'g' in "large" bug)
+    // STEP 1: Handle explicit weight/volume measurements (most accurate)
     const kgMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?kg\b/);
     if (kgMatch) {
-      return parseFloat(kgMatch[1]) * 1000;
+      const result = parseFloat(kgMatch[1]) * 1000;
+      console.log(`⚖️  Direct weight conversion: ${portion} = ${result}g`);
+      return result;
     }
     
     const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?g\b/);
     if (gramsMatch) {
-      return parseFloat(gramsMatch[1]);
+      const result = parseFloat(gramsMatch[1]);
+      console.log(`⚖️  Direct weight conversion: ${portion} = ${result}g`);
+      return result;
+    }
+    
+    const ozMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?oz\b/);
+    if (ozMatch) {
+      const result = parseFloat(ozMatch[1]) * 28.35; // 1 oz = 28.35g
+      console.log(`⚖️  Ounce conversion: ${portion} = ${result}g`);
+      return result;
     }
     
     const mlMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?ml\b/);
     if (mlMatch) {
-      return parseFloat(mlMatch[1]); // Assume 1ml ≈ 1g for most foods
+      const result = parseFloat(mlMatch[1]); // Assume 1ml ≈ 1g for most foods
+      console.log(`⚖️  Volume conversion: ${portion} = ${result}g`);
+      return result;
     }
     
-    // Extract count numbers for contextual conversions
+    // STEP 2: Extract count numbers for contextual conversions
     const numMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
     const num = numMatch ? parseFloat(numMatch[1]) : 1;
     
@@ -493,8 +507,44 @@ export class AIManager {
       return 300; // Large portion ≈ 300g
     }
     
-    // Default fallback - Never return less than reasonable portion
-    return Math.max(50, num * 25); // More conservative default
+    // STEP 3: Enhanced food-specific standardized portions
+    const standardPortions = [
+      // Proteins  
+      { keywords: ['chicken breast', 'chicken fillet'], portion: num * 150, label: 'chicken breast' },
+      { keywords: ['fish fillet', 'salmon fillet'], portion: num * 120, label: 'fish fillet' },
+      { keywords: ['steak', 'beef steak'], portion: num * 200, label: 'beef steak' },
+      
+      // Breads & Grains
+      { keywords: ['bread slice'], portion: num * 28, label: 'bread slice' },
+      { keywords: ['bagel'], portion: num * 95, label: 'bagel' },
+      { keywords: ['muffin'], portion: num * 60, label: 'muffin' },
+      { keywords: ['toast slice'], portion: num * 25, label: 'toast slice' },
+      
+      // Fruits
+      { keywords: ['apple', 'medium apple'], portion: num * 180, label: 'apple' },
+      { keywords: ['banana', 'medium banana'], portion: num * 120, label: 'banana' },
+      { keywords: ['orange'], portion: num * 150, label: 'orange' },
+      
+      // Vegetables
+      { keywords: ['potato', 'medium potato'], portion: num * 170, label: 'potato' },
+      { keywords: ['carrot', 'medium carrot'], portion: num * 60, label: 'carrot' },
+      
+      // Dairy
+      { keywords: ['cheese slice'], portion: num * 20, label: 'cheese slice' },
+      { keywords: ['yogurt cup'], portion: num * 170, label: 'yogurt cup' }
+    ];
+    
+    for (const standard of standardPortions) {
+      if (standard.keywords.some(keyword => portionLower.includes(keyword) || foodLower.includes(keyword))) {
+        console.log(`⚖️  Standardized portion: ${portion} (${foodName}) = ${standard.portion}g (${standard.label})`);
+        return standard.portion;
+      }
+    }
+
+    // Default fallback with improved logging
+    const fallbackGrams = Math.max(50, num * 25); // Conservative default minimum 50g
+    console.log(`⚖️  Fallback portion: ${portion} (${foodName}) = ${fallbackGrams}g (default estimate)`);
+    return fallbackGrams;
   }
 
   /**

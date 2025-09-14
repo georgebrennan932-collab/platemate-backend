@@ -241,7 +241,7 @@ export class USDAService {
         return null;
       }
 
-      // Smart scoring: prefer whole foods over processed foods
+      // Enhanced scoring: prefer generic/average entries over branded/extreme ones
       const scoredFoods = searchResults.foods.map(food => {
         const description = food.description.toLowerCase();
         const nutrientCount = food.foodNutrients.length;
@@ -260,6 +260,82 @@ export class USDAService {
         if (isMeatlessAlternative && !requestedMeatless) {
           console.log(`🚫 Filtering meatless alternative: ${food.description}`);
           score -= 1000; // Heavy penalty to ensure real meat products rank higher
+        }
+
+        // ===== ENHANCED GENERIC/AVERAGE PREFERENCE LOGIC =====
+        
+        // Heavily penalize branded entries (identifiable by ALL CAPS brands)
+        const brandPatterns = [
+          /\b[A-Z]{2,}\s+[A-Z]{2,}/, // Multiple ALL CAPS words (test against original description)
+          /\b(WENDY'S|MCDONALD'S|BURGER KING|KFC|TACO BELL|SUBWAY|DOMINO'S|PIZZA HUT)\b/i,
+          /\b(OSCAR MAYER|JOHNSONVILLE|HORMEL|TYSON|BUTTERBALL|HILLSHIRE FARM)\b/i,
+          /\b(KRAFT|HEINZ|CAMPBELL'S|NESTLE|KELLOGG'S|GENERAL MILLS)\b/i
+        ];
+        
+        // Test ALL CAPS pattern against original description, others against lowercased
+        const isBranded = brandPatterns.some((pattern, index) => {
+          if (index === 0) { // First pattern checks ALL CAPS - test original description
+            return pattern.test(food.description);
+          }
+          return pattern.test(description); // Other patterns use /i flag - test lowercased
+        });
+        if (isBranded) {
+          score -= 200; // Heavy penalty for branded items
+          console.log(`📉 Branded entry penalty: ${food.description}`);
+        }
+        
+        // Boost generic/simple descriptions
+        const genericBoosts = [
+          { pattern: /^[a-z\s,]+, raw$/, boost: 150, label: "raw generic" },
+          { pattern: /^[a-z\s,]+, cooked$/, boost: 140, label: "cooked generic" },
+          { pattern: /^[a-z\s,]+, fresh$/, boost: 130, label: "fresh generic" },
+          { pattern: /^\w+, \w+$/, boost: 120, label: "simple two-word" }, // e.g., "Bacon, pork"
+          { pattern: /^(pork|beef|chicken|fish|turkey), /, boost: 110, label: "generic meat" },
+          { pattern: /, average/, boost: 100, label: "average entry" },
+          { pattern: /, typical/, boost: 95, label: "typical entry" },
+          { pattern: /, standard/, boost: 90, label: "standard entry" }
+        ];
+        
+        for (const { pattern, boost, label } of genericBoosts) {
+          if (pattern.test(description)) {
+            score += boost;
+            console.log(`📈 Generic boost (+${boost}) for ${label}: ${food.description}`);
+            break; // Apply only the first matching boost
+          }
+        }
+        
+        // Penalize extreme/jumbo portions
+        const extremePatterns = [
+          { pattern: /\b(jumbo|giant|super|mega|extra[\s-]large|xl|xxl)\b/i, penalty: 150, label: "jumbo size" },
+          { pattern: /\b(double|triple|quad)\b/i, penalty: 120, label: "multiple portions" },
+          { pattern: /\b(premium|deluxe|gourmet|specialty)\b/i, penalty: 80, label: "premium variant" },
+          { pattern: /\b(loaded|stuffed|supreme)\b/i, penalty: 100, label: "loaded variant" }
+        ];
+        
+        for (const { pattern, penalty, label } of extremePatterns) {
+          if (pattern.test(description)) {
+            score -= penalty;
+            console.log(`📉 Extreme penalty (-${penalty}) for ${label}: ${food.description}`);
+            break; // Apply only the first matching penalty
+          }
+        }
+        
+        // Boost USDA SR Legacy and Foundation data (more reliable)
+        if (description.includes('includes foods for usda')) {
+          score += 80;
+          console.log(`📈 USDA reliable data boost: ${food.description}`);
+        }
+        
+        // Penalize overly specific preparations unless requested
+        const specificPreparations = [
+          'breaded and fried', 'with sauce', 'in gravy', 'with cheese sauce',
+          'honey glazed', 'teriyaki', 'bbq', 'buffalo', 'ranch'
+        ];
+        
+        const hasSpecificPrep = specificPreparations.some(prep => description.includes(prep));
+        if (hasSpecificPrep && !searchName.includes('sauce') && !searchName.includes('glazed')) {
+          score -= 60;
+          console.log(`📉 Specific preparation penalty: ${food.description}`);
         }
         
         if (searchName.includes('back bacon') || searchName.includes('bacon')) {

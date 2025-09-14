@@ -67,6 +67,21 @@ export const foodAnalyses = pgTable("food_analyses", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Pending food confirmations for low confidence detections (<80%)
+export const foodConfirmations = pgTable("food_confirmations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  imageUrl: text("image_url").notNull(),
+  originalConfidence: integer("original_confidence").notNull(), // Original AI confidence (0-100)
+  suggestedFoods: jsonb("suggested_foods").notNull().$type<DetectedFood[]>(), // AI's food suggestions
+  alternativeOptions: jsonb("alternative_options").$type<DetectedFood[]>(), // Other USDA options for manual selection
+  status: varchar("status").notNull().default("pending"), // pending, confirmed, rejected
+  finalFoods: jsonb("final_foods").$type<DetectedFood[]>(), // User-confirmed or modified foods
+  userFeedback: text("user_feedback"), // Optional user feedback on why they changed the selection
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  confirmedAt: timestamp("confirmed_at"), // When user confirmed/rejected
+});
+
 export const diaryEntries = pgTable("diary_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
@@ -207,6 +222,26 @@ export const updateWeightEntrySchema = insertWeightEntrySchema.partial().omit({
 
 export type InsertWeightEntry = z.infer<typeof insertWeightEntrySchema>;
 export type WeightEntry = typeof weightEntries.$inferSelect;
+
+// Food confirmation schemas for confidence threshold workflow
+export const insertFoodConfirmationSchema = createInsertSchema(foodConfirmations).omit({
+  id: true,
+  createdAt: true,
+  confirmedAt: true,
+}).extend({
+  status: z.enum(["pending", "confirmed", "rejected"]).default("pending"),
+  userFeedback: z.string().optional(),
+});
+
+export const updateFoodConfirmationSchema = z.object({
+  status: z.enum(["confirmed", "rejected"]),
+  finalFoods: z.array(DetectedFoodSchema).min(1, "At least one food item is required"),
+  userFeedback: z.string().optional(),
+});
+
+export type InsertFoodConfirmation = z.infer<typeof insertFoodConfirmationSchema>;
+export type UpdateFoodConfirmation = z.infer<typeof updateFoodConfirmationSchema>;
+export type FoodConfirmation = typeof foodConfirmations.$inferSelect;
 
 // Simple food entry schemas for mobile app compatibility
 export const insertSimpleFoodEntrySchema = createInsertSchema(simpleFoodEntries).omit({

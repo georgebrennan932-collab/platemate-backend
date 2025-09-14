@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -362,6 +362,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get analysis error:", error);
       res.status(500).json({ error: "Failed to retrieve analysis" });
+    }
+  });
+
+  // === FOOD CONFIRMATION API ENDPOINTS (for confidence threshold workflow) ===
+  
+  // Create food confirmation for low confidence analysis (<80%)
+  app.post("/api/food-confirmations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertFoodConfirmationSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const confirmation = await storage.createFoodConfirmation(validatedData);
+      res.json(confirmation);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          error: "Invalid confirmation data", 
+          details: error.errors 
+        });
+      }
+      console.error("Create food confirmation error:", error);
+      res.status(500).json({ error: "Failed to create food confirmation" });
+    }
+  });
+
+  // Get pending food confirmations for user
+  app.get("/api/food-confirmations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const status = req.query.status as string | undefined;
+      
+      const confirmations = await storage.getFoodConfirmationsByUser(userId, status);
+      res.json(confirmations);
+    } catch (error) {
+      console.error("Get food confirmations error:", error);
+      res.status(500).json({ error: "Failed to retrieve food confirmations" });
+    }
+  });
+
+  // Get specific food confirmation
+  app.get("/api/food-confirmations/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const confirmation = await storage.getFoodConfirmation(req.params.id);
+      
+      if (!confirmation) {
+        return res.status(404).json({ error: "Food confirmation not found" });
+      }
+      
+      // Verify ownership
+      if (confirmation.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      res.json(confirmation);
+    } catch (error) {
+      console.error("Get food confirmation error:", error);
+      res.status(500).json({ error: "Failed to retrieve food confirmation" });
+    }
+  });
+
+  // Confirm or reject food analysis (user decision)
+  app.patch("/api/food-confirmations/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      
+      // Verify ownership first
+      const existing = await storage.getFoodConfirmation(id);
+      if (!existing) {
+        return res.status(404).json({ error: "Food confirmation not found" });
+      }
+      if (existing.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const validatedData = updateFoodConfirmationSchema.parse(req.body);
+      const confirmation = await storage.updateFoodConfirmation(id, validatedData);
+      
+      if (!confirmation) {
+        return res.status(500).json({ error: "Failed to update food confirmation" });
+      }
+
+      // If confirmed, create a new food analysis with final foods
+      if (validatedData.status === 'confirmed') {
+        const finalTotals = validatedData.finalFoods.reduce(
+          (totals, food) => ({
+            calories: totals.calories + food.calories,
+            protein: totals.protein + food.protein,
+            carbs: totals.carbs + food.carbs,
+            fat: totals.fat + food.fat,
+          }),
+          { calories: 0, protein: 0, carbs: 0, fat: 0 }
+        );
+
+        const finalAnalysis = await storage.createFoodAnalysis({
+          imageUrl: existing.imageUrl,
+          confidence: 95, // Set higher confidence after user confirmation
+          totalCalories: finalTotals.calories,
+          totalProtein: finalTotals.protein,
+          totalCarbs: finalTotals.carbs,
+          totalFat: finalTotals.fat,
+          detectedFoods: validatedData.finalFoods
+        });
+
+        console.log(`✅ User ${userId} confirmed food analysis. Created final analysis ${finalAnalysis.id}`);
+        res.json({ confirmation, finalAnalysis });
+      } else {
+        console.log(`❌ User ${userId} rejected food analysis ${id}`);
+        res.json(confirmation);
+      }
+      
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          error: "Invalid confirmation data", 
+          details: error.errors 
+        });
+      }
+      console.error("Update food confirmation error:", error);
+      res.status(500).json({ error: "Failed to update food confirmation" });
     }
   });
 
