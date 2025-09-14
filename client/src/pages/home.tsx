@@ -439,7 +439,7 @@ export default function Home() {
                 <Mic className="h-4 w-4" />
               )}
               <span className="text-sm">
-                {isListening ? 'Listening...' : 'Add More'}
+                {isListening ? 'Listening...' : 'Voice Add'}
               </span>
             </button>
             
