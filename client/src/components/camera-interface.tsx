@@ -191,18 +191,9 @@ export function CameraInterface({
             
             {/* Center content */}
             <div className="relative z-10 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/25 border border-white/10">
+              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/25 border border-white/10">
                 <Camera className="text-white h-10 w-10" />
               </div>
-              <p className="text-white text-center px-6 font-semibold text-lg mb-2">
-                Use camera or select image from gallery
-              </p>
-              <p className="text-gray-300 text-sm mt-2 px-6 opacity-80">
-                Point at your food and capture
-              </p>
-              <p className="text-gray-400 text-xs mt-3 px-6 leading-relaxed" data-testid="text-scale-tip-default">
-                <span className="text-blue-400">💡</span> <strong>Tip:</strong> Include a fork or hand for accurate portion sizing
-              </p>
             </div>
           </div>
         )}
