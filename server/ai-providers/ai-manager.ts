@@ -167,21 +167,24 @@ export class AIManager {
   }
 
   /**
-   * Enhanced food analysis workflow: AI detection + USDA nutrition lookup
+   * Enhanced food analysis workflow: AI detection with portions + USDA nutrition lookup
    */
   async analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult> {
     try {
-      // Step 1: Detect food names using AI providers
-      const detection = await this.detectFoodNamesFromImage(imagePath);
+      // Step 1: Get full AI analysis with portions using legacy providers  
+      const fullAnalysis = await this.legacyAnalyzeFoodImage(imagePath);
       
-      // Step 2: Get accurate nutrition from USDA for detected foods
-      const nutritionData = await this.getNutritionFromUSDA(detection.detectedFoodNames);
+      // Step 2: Extract food names for USDA lookup
+      const foodNames = fullAnalysis.detectedFoods.map(food => food.name);
       
-      // Step 3: Combine results into comprehensive analysis
-      return this.combineDetectionWithNutrition(imagePath, detection, nutritionData);
+      // Step 3: Get accurate nutrition from USDA for detected foods
+      const nutritionData = await this.getNutritionFromUSDA(foodNames);
+      
+      // Step 4: Combine AI portions with USDA nutrition data
+      return this.combineAIPortionsWithUSDANutrition(imagePath, fullAnalysis, nutritionData);
       
     } catch (error: any) {
-      console.warn('Enhanced analysis failed, falling back to legacy method:', error.message);
+      console.warn('Enhanced analysis failed, falling back to simple legacy method:', error.message);
       return this.legacyAnalyzeFoodImage(imagePath);
     }
   }
@@ -320,6 +323,127 @@ export class AIManager {
       totalFat,
       detectedFoods
     };
+  }
+
+  /**
+   * Combine AI portions with USDA nutrition data for accurate analysis
+   */
+  async combineAIPortionsWithUSDANutrition(
+    imagePath: string,
+    aiAnalysis: FoodAnalysisResult,
+    nutritionMap: Map<string, any>
+  ): Promise<FoodAnalysisResult> {
+    const detectedFoods = [];
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
+
+    // Process each AI-detected food with portion estimates
+    for (const aiFood of aiAnalysis.detectedFoods) {
+      // Try to match with USDA nutrition data
+      const usdaData = nutritionMap.get(aiFood.name);
+      
+      if (usdaData) {
+        // Convert AI portion to grams for scaling
+        const portionGrams = this.convertPortionToGrams(aiFood.portion);
+        const scaleFactor = portionGrams / 100; // USDA data is per 100g
+        
+        // Scale USDA nutrition to AI-estimated portion
+        const food = {
+          name: usdaData.usdaFood.description,
+          portion: aiFood.portion, // Keep original AI portion estimate
+          calories: Math.round(usdaData.nutrition.calories * scaleFactor),
+          protein: Math.round(usdaData.nutrition.protein * scaleFactor),
+          carbs: Math.round(usdaData.nutrition.carbs * scaleFactor),
+          fat: Math.round(usdaData.nutrition.fat * scaleFactor),
+          icon: aiFood.icon || this.getFoodIcon(aiFood.name)
+        };
+        
+        detectedFoods.push(food);
+        totalCalories += food.calories;
+        totalProtein += food.protein;
+        totalCarbs += food.carbs;
+        totalFat += food.fat;
+        
+        console.log(`✅ Enhanced: ${aiFood.name} (${aiFood.portion}) → ${food.name} (${food.calories} cal)`);
+      } else {
+        // Use AI nutrition data if no USDA match found
+        detectedFoods.push(aiFood);
+        totalCalories += aiFood.calories;
+        totalProtein += aiFood.protein;
+        totalCarbs += aiFood.carbs;
+        totalFat += aiFood.fat;
+        
+        console.log(`⚠️ AI fallback: ${aiFood.name} (${aiFood.portion}) - ${aiFood.calories} cal`);
+      }
+    }
+
+    return {
+      imageUrl: imagePath,
+      confidence: aiAnalysis.confidence,
+      totalCalories,
+      totalProtein,
+      totalCarbs,
+      totalFat,
+      detectedFoods
+    };
+  }
+
+  /**
+   * Convert portion descriptions to grams for nutrition scaling
+   */
+  private convertPortionToGrams(portion: string): number {
+    const portionLower = portion.toLowerCase();
+    
+    // Extract numbers from portion string
+    const numMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
+    const num = numMatch ? parseFloat(numMatch[1]) : 1;
+    
+    // Direct weight conversions
+    if (portionLower.includes('g') && !portionLower.includes('kg')) {
+      return num;
+    }
+    if (portionLower.includes('kg')) {
+      return num * 1000;
+    }
+    
+    // Volume conversions (rough estimates)
+    if (portionLower.includes('ml')) {
+      return num; // Assume 1ml ≈ 1g for most foods
+    }
+    if (portionLower.includes('cup')) {
+      return num * 240; // 1 cup ≈ 240g
+    }
+    if (portionLower.includes('tbsp') || portionLower.includes('tablespoon')) {
+      return num * 15; // 1 tbsp ≈ 15g
+    }
+    if (portionLower.includes('tsp') || portionLower.includes('teaspoon')) {
+      return num * 5; // 1 tsp ≈ 5g
+    }
+    
+    // Common portion conversions (estimates)
+    if (portionLower.includes('slice')) {
+      return num * 30; // Average slice ≈ 30g
+    }
+    if (portionLower.includes('piece') || portionLower.includes('item')) {
+      return num * 50; // Average piece ≈ 50g
+    }
+    if (portionLower.includes('serving')) {
+      return num * 150; // Average serving ≈ 150g
+    }
+    if (portionLower.includes('small')) {
+      return 75; // Small portion ≈ 75g
+    }
+    if (portionLower.includes('medium')) {
+      return 150; // Medium portion ≈ 150g
+    }
+    if (portionLower.includes('large')) {
+      return 300; // Large portion ≈ 300g
+    }
+    
+    // Default fallback
+    return 100; // Assume 100g if can't parse
   }
 
   /**
