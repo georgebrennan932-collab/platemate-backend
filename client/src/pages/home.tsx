@@ -417,57 +417,9 @@ export default function Home() {
     <div className="bg-background text-foreground min-h-screen">
       <AppHeader />
       
-      {/* Modern Add Food Interface */}
+      {/* Quick Actions - Compact */}
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 mb-6">
-          {/* Main Add Food Box */}
-          <div className="bg-gradient-to-br from-slate-800 via-gray-800 to-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-700/50 mb-4">
-            {/* Header */}
-            <div className="text-center mb-6">
-              <h3 className="text-white text-lg font-semibold mb-2">Add Missing Foods</h3>
-              <p className="text-gray-300 text-sm">
-                AI might miss some items in your meal
-              </p>
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="flex space-x-4">
-              {/* Add More Button (Voice) */}
-              <button
-                onClick={handleVoiceInput}
-                disabled={!speechSupported}
-                className={`flex-1 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 backdrop-blur-xl border border-white/10 transition-all duration-300 shadow-xl hover:scale-105 ${
-                  isListening
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : speechSupported
-                    ? 'bg-gradient-to-br from-slate-700/90 to-slate-800/90 text-white hover:from-slate-600/90 hover:to-slate-700/90 hover:shadow-purple-500/25'
-                    : 'bg-gray-600/50 text-gray-400 cursor-not-allowed opacity-50'
-                }`}
-                data-testid="button-add-voice"
-              >
-                {isListening ? (
-                  <MicOff className="h-5 w-5 text-white" />
-                ) : (
-                  <Mic className="h-5 w-5 text-purple-400" />
-                )}
-                <span className="font-semibold">
-                  {isListening ? 'Listening...' : 'Add More'}
-                </span>
-              </button>
-              
-              {/* Type Button */}
-              <button
-                onClick={() => setShowTextMealDialog(true)}
-                className="flex-1 bg-gradient-to-br from-white to-gray-100 dark:from-gray-100 dark:to-white text-slate-800 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 shadow-xl hover:scale-105 transition-all duration-300 hover:shadow-green-500/25 border border-gray-200"
-                data-testid="button-add-type"
-              >
-                <Plus className="h-5 w-5 text-green-500" />
-                <span className="font-semibold">Type</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Actions - Compact */}
           <div className="grid grid-cols-2 gap-3">
             <Link 
               href="/diary?tab=weight"

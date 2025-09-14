@@ -35,57 +35,70 @@ export function BottomHelpSection() {
   return (
     <div className="mt-8 mb-24 px-4 space-y-6">
       {/* Tailored Recipes Section */}
-      <Card className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200 dark:border-orange-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
-            <ChefHat className="h-5 w-5" />
-            Tailored Recipes for You
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Discover healthy recipes perfectly matched to your dietary needs and preferences.
+      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-[2.5rem] p-6 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.8)] border border-slate-600/30 backdrop-blur-xl">
+        {/* Subtle inner glow */}
+        <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-br from-orange-500/5 via-transparent to-red-500/5"></div>
+        
+        {/* Header */}
+        <div className="text-center mb-6 relative z-10">
+          <div className="flex items-center justify-center space-x-3 mb-2">
+            <div className="p-3 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-2xl shadow-orange-500/25 border border-white/10">
+              <ChefHat className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-white text-xl font-bold">Tailored Recipes for You</h3>
+          </div>
+          <p className="text-gray-300 text-sm">
+            Discover healthy recipes perfectly matched to your dietary needs and preferences
           </p>
-          
-          {/* Dietary Requirements Dropdown */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Filter className="h-4 w-4" />
+        </div>
+
+        {/* Dietary Requirements Dropdown */}
+        <div className="space-y-4 relative z-10">
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-gray-200 flex items-center gap-2">
+              <Filter className="h-4 w-4 text-orange-400" />
               Choose Your Dietary Preference:
             </label>
             <Select value={selectedDiet} onValueChange={setSelectedDiet}>
-              <SelectTrigger className="w-full" data-testid="select-bottom-dietary-filter">
+              <SelectTrigger 
+                className="bg-slate-800/80 border-slate-600/50 text-white backdrop-blur-xl hover:bg-slate-700/80 transition-all duration-300"
+                data-testid="select-bottom-dietary-filter"
+              >
                 <SelectValue placeholder="Select dietary requirements" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-slate-800 border-slate-600 text-white">
                 {DIETARY_REQUIREMENTS.map((diet) => (
-                  <SelectItem key={diet.value} value={diet.value} data-testid={`option-bottom-diet-${diet.value || 'all'}`}>
+                  <SelectItem 
+                    key={diet.value} 
+                    value={diet.value}
+                    className="hover:bg-slate-700 focus:bg-slate-700"
+                    data-testid={`option-bottom-diet-${diet.value || 'all'}`}
+                  >
                     {diet.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          {/* Action Button */}
-          <Button 
+          
+          <button
             onClick={handleViewRecipes}
-            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
+            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-4 px-6 rounded-2xl font-semibold transition-all duration-300 shadow-2xl hover:scale-[1.02] hover:shadow-orange-500/40 border border-white/10 backdrop-blur-xl flex items-center justify-center space-x-3"
             data-testid="button-view-tailored-recipes"
             type="button"
           >
-            <ChefHat className="h-4 w-4 mr-2" />
-            {selectedDiet && selectedDiet !== 'all' ? `View ${DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label} Recipes` : 'Browse All Recipes'}
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+            <ChefHat className="h-5 w-5" />
+            <span>{selectedDiet && selectedDiet !== 'all' ? `View ${DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label} Recipes` : 'Browse All Recipes'}</span>
+            <ArrowRight className="h-5 w-5" />
+          </button>
           
           {selectedDiet && selectedDiet !== 'all' && (
-            <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 rounded-lg p-2">
+            <div className="text-xs text-orange-200 bg-gradient-to-r from-orange-600/20 to-red-600/20 rounded-2xl p-3 border border-orange-500/30 backdrop-blur-xl">
               <strong>Perfect match!</strong> We'll show you {selectedDiet.replace('-', ' ')} recipes tailored to your dietary needs.
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Help Section */}
       <Card className="bg-muted/30 border-dashed">
