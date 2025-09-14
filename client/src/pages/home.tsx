@@ -417,58 +417,74 @@ export default function Home() {
     <div className="bg-background text-foreground min-h-screen">
       <AppHeader />
       
-      {/* Quick Actions - Only show when camera is ready */}
+      {/* Modern Add Food Interface */}
       {currentState === 'camera' && (
-        <div className="max-w-md mx-auto px-4 py-2 space-y-4">
-          {/* Primary Actions */}
-          <div className="grid grid-cols-4 gap-2 mb-6">
-            <button
-              onClick={handleVoiceInput}
-              disabled={!speechSupported}
-              className={`w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 ${
-                isListening
-                  ? 'bg-red-500 text-white animate-pulse scale-105'
-                  : speechSupported
-                  ? 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-[1.02]'
-                  : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
-              }`}
-              data-testid="button-voice-input"
-            >
-              {isListening ? (
-                <MicOff className="h-5 w-5 group-hover:scale-110 smooth-transition" />
-              ) : (
-                <Mic className="h-5 w-5 group-hover:scale-110 smooth-transition" />
-              )}
-              <span className="text-xs">
-                {isListening ? 'Listening...' : 'Voice Add'}
-              </span>
-            </button>
+        <div className="max-w-md mx-auto px-4 mb-6">
+          {/* Main Add Food Box */}
+          <div className="bg-gradient-to-br from-slate-800 via-gray-800 to-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-700/50 mb-4">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <h3 className="text-white text-lg font-semibold mb-2">Add Missing Foods</h3>
+              <p className="text-gray-300 text-sm">
+                AI might miss some items in your meal
+              </p>
+            </div>
             
-            <button
-              onClick={() => setShowTextMealDialog(true)}
-              className="w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]"
-              data-testid="button-text-input"
-            >
-              <Keyboard className="h-5 w-5 group-hover:scale-110 smooth-transition" />
-              <span className="text-xs">Type Add</span>
-            </button>
-            
+            {/* Action Buttons */}
+            <div className="flex space-x-4">
+              {/* Add More Button (Voice) */}
+              <button
+                onClick={handleVoiceInput}
+                disabled={!speechSupported}
+                className={`flex-1 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 backdrop-blur-xl border border-white/10 transition-all duration-300 shadow-xl hover:scale-105 ${
+                  isListening
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : speechSupported
+                    ? 'bg-gradient-to-br from-slate-700/90 to-slate-800/90 text-white hover:from-slate-600/90 hover:to-slate-700/90 hover:shadow-purple-500/25'
+                    : 'bg-gray-600/50 text-gray-400 cursor-not-allowed opacity-50'
+                }`}
+                data-testid="button-add-voice"
+              >
+                {isListening ? (
+                  <MicOff className="h-5 w-5 text-white" />
+                ) : (
+                  <Mic className="h-5 w-5 text-purple-400" />
+                )}
+                <span className="font-semibold">
+                  {isListening ? 'Listening...' : 'Add More'}
+                </span>
+              </button>
+              
+              {/* Type Button */}
+              <button
+                onClick={() => setShowTextMealDialog(true)}
+                className="flex-1 bg-gradient-to-br from-white to-gray-100 dark:from-gray-100 dark:to-white text-slate-800 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 shadow-xl hover:scale-105 transition-all duration-300 hover:shadow-green-500/25 border border-gray-200"
+                data-testid="button-add-type"
+              >
+                <Plus className="h-5 w-5 text-green-500" />
+                <span className="font-semibold">Type</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Actions - Compact */}
+          <div className="grid grid-cols-2 gap-3">
             <Link 
               href="/diary?tab=weight"
-              className="w-full py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px] transition-all duration-200 bg-orange-500 text-white hover:bg-orange-600 hover:scale-[1.02] no-underline"
+              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-orange-500 text-white hover:bg-orange-600 hover:scale-[1.02] no-underline"
               data-testid="button-weigh-in"
             >
-              <Scale className="h-5 w-5 group-hover:scale-110 smooth-transition" />
-              <span className="text-xs">Weigh In</span>
+              <Scale className="h-4 w-4" />
+              <span className="text-sm">Weigh In</span>
             </Link>
 
             <Link href="/advice">
               <button 
-                className="w-full gradient-button hover:scale-[1.02] py-4 px-2 rounded-xl font-medium flex flex-col items-center justify-center space-y-1 group min-h-[80px]"
+                className="w-full gradient-button hover:scale-[1.02] py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2"
                 data-testid="button-diet-advice"
               >
-                <Lightbulb className="h-5 w-5 group-hover:scale-110 smooth-transition" />
-                <span className="text-xs">AI Advice</span>
+                <Lightbulb className="h-4 w-4" />
+                <span className="text-sm">AI Advice</span>
               </button>
             </Link>
           </div>
