@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles, simpleFoodEntries } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
@@ -43,6 +43,10 @@ export interface IStorage {
   // User profile methods
   getUserProfile(userId: string): Promise<UserProfile | undefined>;
   upsertUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
+  
+  // Simple food entry methods (for mobile app compatibility)
+  createSimpleFoodEntry(entry: InsertSimpleFoodEntry): Promise<SimpleFoodEntry>;
+  getSimpleFoodEntries(userId: string, limit?: number): Promise<SimpleFoodEntry[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -329,6 +333,25 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return profile;
+  }
+
+  // Simple food entry methods (for mobile app compatibility)
+  async createSimpleFoodEntry(entryData: InsertSimpleFoodEntry): Promise<SimpleFoodEntry> {
+    const [entry] = await db
+      .insert(simpleFoodEntries)
+      .values(entryData)
+      .returning();
+    return entry;
+  }
+
+  async getSimpleFoodEntries(userId: string, limit: number = 50): Promise<SimpleFoodEntry[]> {
+    const entries = await db
+      .select()
+      .from(simpleFoodEntries)
+      .where(eq(simpleFoodEntries.userId, userId))
+      .orderBy(desc(simpleFoodEntries.createdAt))
+      .limit(limit);
+    return entries;
   }
 }
 

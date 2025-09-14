@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -39,6 +39,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // saveFood endpoint for mobile app compatibility - accepts simple food entries
+  app.post("/saveFood", async (req, res) => {
+    try {
+      // Log the incoming request body for debugging
+      console.log("📱 /saveFood endpoint received request:", JSON.stringify(req.body, null, 2));
+      
+      const { food, amount, userId } = req.body;
+      
+      // Validate required fields
+      if (!food || !amount || !userId) {
+        console.log("❌ Missing required fields:", { food: !!food, amount: !!amount, userId: !!userId });
+        return res.status(400).json({
+          status: "error",
+          message: "Missing required fields: food, amount, and userId are all required"
+        });
+      }
+      
+      // Validate data types
+      if (typeof food !== 'string' || typeof amount !== 'string' || typeof userId !== 'string') {
+        console.log("❌ Invalid field types:", { 
+          food: typeof food, 
+          amount: typeof amount, 
+          userId: typeof userId 
+        });
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid data types: food, amount, and userId must be strings"
+        });
+      }
+      
+      // Create the entry using validated schema
+      const validatedEntry = insertSimpleFoodEntrySchema.parse({
+        food: food.trim(),
+        amount: amount.trim(),
+        userId: userId.trim()
+      });
+      
+      console.log("✅ Validated entry data:", validatedEntry);
+      
+      // Save to database
+      const savedEntry = await storage.createSimpleFoodEntry(validatedEntry);
+      
+      console.log("💾 Successfully saved food entry to database:", {
+        id: savedEntry.id,
+        food: savedEntry.food,
+        amount: savedEntry.amount,
+        userId: savedEntry.userId,
+        createdAt: savedEntry.createdAt
+      });
+      
+      // Return success response in the exact format requested
+      res.json({ status: "ok" });
+      
+    } catch (error: any) {
+      console.error("❌ /saveFood error:", error);
+      
+      // Handle validation errors specifically
+      if (error.name === 'ZodError') {
+        console.error("Validation error details:", error.errors);
+        return res.status(400).json({
+          status: "error",
+          message: `Validation failed: ${error.errors.map((e: any) => e.message).join(', ')}`
+        });
+      }
+      
+      // Handle database errors
+      if (error.code === '23503') { // Foreign key constraint
+        console.error("Database foreign key error - invalid userId");
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid userId: user not found in database"
+        });
+      }
+      
+      // Generic error response
+      res.status(500).json({
+        status: "error",
+        message: "Failed to save food entry to database"
+      });
     }
   });
 

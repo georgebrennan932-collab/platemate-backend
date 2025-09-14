@@ -103,6 +103,15 @@ export const weightEntries = pgTable("weight_entries", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Simple food entries for mobile app compatibility
+export const simpleFoodEntries = pgTable("simple_food_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  food: text("food").notNull(), // food name/description
+  amount: text("amount").notNull(), // amount with unit (e.g., "8g", "1 cup")
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const DetectedFoodSchema = z.object({
   name: z.string(),
   portion: z.string(),
@@ -199,11 +208,21 @@ export const updateWeightEntrySchema = insertWeightEntrySchema.partial().omit({
 export type InsertWeightEntry = z.infer<typeof insertWeightEntrySchema>;
 export type WeightEntry = typeof weightEntries.$inferSelect;
 
+// Simple food entry schemas for mobile app compatibility
+export const insertSimpleFoodEntrySchema = createInsertSchema(simpleFoodEntries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type SimpleFoodEntry = typeof simpleFoodEntries.$inferSelect;
+export type InsertSimpleFoodEntry = z.infer<typeof insertSimpleFoodEntrySchema>;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   diaryEntries: many(diaryEntries),
   drinkEntries: many(drinkEntries),
   weightEntries: many(weightEntries),
+  simpleFoodEntries: many(simpleFoodEntries),
   nutritionGoals: one(nutritionGoals),
   profile: one(userProfiles),
 }));
@@ -247,6 +266,13 @@ export const drinkEntriesRelations = relations(drinkEntries, ({ one }) => ({
 export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({
   user: one(users, {
     fields: [weightEntries.userId],
+    references: [users.id],
+  }),
+}));
+
+export const simpleFoodEntriesRelations = relations(simpleFoodEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [simpleFoodEntries.userId],
     references: [users.id],
   }),
 }));
