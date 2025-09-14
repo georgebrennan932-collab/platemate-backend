@@ -115,82 +115,79 @@ export function DrinksBar() {
 
   if (!isExpanded) {
     return (
-      <Card className="mx-4 mb-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 border-blue-200 dark:border-blue-800 shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center space-x-3 text-lg">
-            <div className="p-2 bg-blue-500 rounded-full shadow-md">
-              <Droplets className="h-5 w-5 text-white" />
+      <div className="mx-4 mb-4 bg-gradient-to-br from-slate-800 via-gray-800 to-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-700/50">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center space-x-3 mb-2">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl shadow-lg">
+              <Droplets className="h-6 w-6 text-white" />
             </div>
-            <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent font-bold">Quick Drinks</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            {/* Water */}
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => handleQuickAdd('water')}
-              disabled={addDrinkMutation.isPending}
-              className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-300 hover:from-blue-200 hover:to-cyan-200 hover:shadow-md transition-all duration-200 text-blue-700 dark:text-blue-300"
-              data-testid="button-quick-water"
-            >
-              <GlassWater className="h-6 w-6" />
-              <span className="text-sm font-medium">Water</span>
-            </Button>
-            
-            {/* Coffee */}
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => handleQuickAdd('coffee')}
-              disabled={addDrinkMutation.isPending}
-              className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-amber-300 hover:from-amber-200 hover:to-orange-200 hover:shadow-md transition-all duration-200 text-amber-700 dark:text-amber-300"
-              data-testid="button-quick-coffee"
-            >
-              <Coffee className="h-6 w-6" />
-              <span className="text-sm font-medium">Coffee</span>
-            </Button>
-            
-            {/* Beer */}
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => handleQuickAdd('beer')}
-              disabled={addDrinkMutation.isPending}
-              className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 border-yellow-300 hover:from-yellow-200 hover:to-amber-200 hover:shadow-md transition-all duration-200 text-yellow-700 dark:text-yellow-300"
-              data-testid="button-quick-beer"
-            >
-              <Beer className="h-6 w-6" />
-              <span className="text-sm font-medium">Beer</span>
-            </Button>
-            
-            {/* Wine */}
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => handleQuickAdd('wine')}
-              disabled={addDrinkMutation.isPending}
-              className="flex flex-col items-center space-y-2 h-20 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 border-purple-300 hover:from-purple-200 hover:to-pink-200 hover:shadow-md transition-all duration-200 text-purple-700 dark:text-purple-300"
-              data-testid="button-quick-wine"
-            >
-              <Wine className="h-6 w-6" />
-              <span className="text-sm font-medium">Wine</span>
-            </Button>
+            <h3 className="text-white text-xl font-bold">Quick Drinks</h3>
           </div>
-          
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setIsExpanded(true)}
-            className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
-            data-testid="button-more-drinks"
+          <p className="text-gray-300 text-sm">Log your beverages instantly</p>
+        </div>
+
+        {/* Quick Drink Buttons */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Water */}
+          <button
+            onClick={() => handleQuickAdd('water')}
+            disabled={addDrinkMutation.isPending}
+            className="bg-gradient-to-br from-blue-600/90 to-cyan-600/90 hover:from-blue-500/90 hover:to-cyan-500/90 text-white p-4 rounded-2xl flex flex-col items-center justify-center space-y-2 transition-all duration-300 shadow-xl hover:scale-105 hover:shadow-blue-500/25 border border-blue-400/20 backdrop-blur-sm min-h-[80px]"
+            data-testid="button-quick-water"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            More Drinks & Custom Amounts
-          </Button>
-        </CardContent>
-      </Card>
+            <GlassWater className="h-7 w-7" />
+            <span className="text-sm font-semibold">Water</span>
+            <span className="text-xs opacity-75">250ml</span>
+          </button>
+          
+          {/* Coffee */}
+          <button
+            onClick={() => handleQuickAdd('coffee')}
+            disabled={addDrinkMutation.isPending}
+            className="bg-gradient-to-br from-amber-600/90 to-orange-600/90 hover:from-amber-500/90 hover:to-orange-500/90 text-white p-4 rounded-2xl flex flex-col items-center justify-center space-y-2 transition-all duration-300 shadow-xl hover:scale-105 hover:shadow-amber-500/25 border border-amber-400/20 backdrop-blur-sm min-h-[80px]"
+            data-testid="button-quick-coffee"
+          >
+            <Coffee className="h-7 w-7" />
+            <span className="text-sm font-semibold">Coffee</span>
+            <span className="text-xs opacity-75">240ml</span>
+          </button>
+          
+          {/* Beer */}
+          <button
+            onClick={() => handleQuickAdd('beer')}
+            disabled={addDrinkMutation.isPending}
+            className="bg-gradient-to-br from-yellow-600/90 to-amber-600/90 hover:from-yellow-500/90 hover:to-amber-500/90 text-white p-4 rounded-2xl flex flex-col items-center justify-center space-y-2 transition-all duration-300 shadow-xl hover:scale-105 hover:shadow-yellow-500/25 border border-yellow-400/20 backdrop-blur-sm min-h-[80px]"
+            data-testid="button-quick-beer"
+          >
+            <Beer className="h-7 w-7" />
+            <span className="text-sm font-semibold">Beer</span>
+            <span className="text-xs opacity-75">355ml</span>
+          </button>
+          
+          {/* Wine */}
+          <button
+            onClick={() => handleQuickAdd('wine')}
+            disabled={addDrinkMutation.isPending}
+            className="bg-gradient-to-br from-purple-600/90 to-pink-600/90 hover:from-purple-500/90 hover:to-pink-500/90 text-white p-4 rounded-2xl flex flex-col items-center justify-center space-y-2 transition-all duration-300 shadow-xl hover:scale-105 hover:shadow-purple-500/25 border border-purple-400/20 backdrop-blur-sm min-h-[80px]"
+            data-testid="button-quick-wine"
+          >
+            <Wine className="h-7 w-7" />
+            <span className="text-sm font-semibold">Wine</span>
+            <span className="text-xs opacity-75">150ml</span>
+          </button>
+        </div>
+        
+        {/* More Options Button */}
+        <button
+          onClick={() => setIsExpanded(true)}
+          className="w-full bg-gradient-to-r from-slate-700/90 to-slate-800/90 hover:from-slate-600/90 hover:to-slate-700/90 text-white py-4 px-6 rounded-2xl font-semibold transition-all duration-300 shadow-xl hover:scale-[1.02] hover:shadow-slate-500/25 border border-white/10 backdrop-blur-xl flex items-center justify-center space-x-3"
+          data-testid="button-more-drinks"
+        >
+          <Plus className="h-5 w-5" />
+          <span>More Drinks & Custom Amounts</span>
+        </button>
+      </div>
     );
   }
 
