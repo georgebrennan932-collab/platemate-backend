@@ -349,6 +349,8 @@ export class AIManager {
         const portionGrams = this.convertPortionToGrams(aiFood.portion, aiFood.name);
         const scaleFactor = portionGrams / 100; // USDA data is per 100g
         
+        console.log(`🔧 DEBUG: "${aiFood.portion}" for "${aiFood.name}" → ${portionGrams}g → scaleFactor: ${scaleFactor}`);
+        
         // Scale USDA nutrition to AI-estimated portion
         const food = {
           name: usdaData.usdaFood.description,
@@ -397,9 +399,32 @@ export class AIManager {
     const portionLower = portion.toLowerCase();
     const foodLower = foodName?.toLowerCase() || '';
     
-    // Extract numbers from portion string
+    // Regex-based unit parsing with precedence (fix the 'g' in "large" bug)
+    const kgMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?kg\b/);
+    if (kgMatch) {
+      return parseFloat(kgMatch[1]) * 1000;
+    }
+    
+    const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?g\b/);
+    if (gramsMatch) {
+      return parseFloat(gramsMatch[1]);
+    }
+    
+    const mlMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?ml\b/);
+    if (mlMatch) {
+      return parseFloat(mlMatch[1]); // Assume 1ml ≈ 1g for most foods
+    }
+    
+    // Extract count numbers for contextual conversions
     const numMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
     const num = numMatch ? parseFloat(numMatch[1]) : 1;
+    
+    // Specific egg handling (before generic size rules)
+    if (foodLower.includes('egg')) {
+      if (portionLower.includes('large')) return num * 50; // Large egg ≈ 50g
+      if (portionLower.includes('medium')) return num * 44; // Medium egg ≈ 44g  
+      if (portionLower.includes('small')) return num * 38; // Small egg ≈ 38g
+    }
     
     // Contextual UK/British food portions
     if (portionLower.includes('rasher') || portionLower.includes('rashers')) {
@@ -419,18 +444,14 @@ export class AIManager {
       return num * 45; // Black pudding slice ≈ 45g
     }
     
-    // Direct weight conversions
-    if (portionLower.includes('g') && !portionLower.includes('kg')) {
-      return num;
-    }
-    if (portionLower.includes('kg')) {
-      return num * 1000;
+    // Sausage links
+    if (portionLower.includes('link') || portionLower.includes('links')) {
+      if (foodLower.includes('sausage')) {
+        return num * 45; // Sausage link ≈ 45g
+      }
     }
     
     // Volume conversions (rough estimates)
-    if (portionLower.includes('ml')) {
-      return num; // Assume 1ml ≈ 1g for most foods
-    }
     if (portionLower.includes('cup')) {
       return num * 240; // 1 cup ≈ 240g
     }
@@ -461,8 +482,8 @@ export class AIManager {
       return 300; // Large portion ≈ 300g
     }
     
-    // Default fallback - Never return less than 1g if a count is present
-    return Math.max(100, num * 10); // Minimum reasonable portion
+    // Default fallback - Never return less than reasonable portion
+    return Math.max(50, num * 25); // More conservative default
   }
 
   /**
