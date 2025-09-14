@@ -1,4 +1,4 @@
-import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2 } from "lucide-react";
+import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2, Mic } from "lucide-react";
 import type { FoodAnalysis, DetectedFood } from "@shared/schema";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -513,16 +513,38 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           ))}
         </div>
 
-        {/* Add Missing Food Item */}
-        <div className="mt-4 p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl">
-          <button
-            onClick={() => addNewFoodItem()}
-            className="w-full flex items-center justify-center space-x-2 py-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
-            data-testid="button-add-food"
-          >
-            <Plus className="h-5 w-5" />
-            <span className="font-medium">Add Missing Food Item</span>
-          </button>
+        {/* Add Missing Food Item - Enhanced Design */}
+        <div className="mt-4 bg-gradient-to-br from-slate-800 via-gray-800 to-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-700/50">
+          {/* Header with Instructions */}
+          <div className="text-center mb-6">
+            <h3 className="text-white text-lg font-semibold mb-2">Add Missing Foods</h3>
+            <p className="text-gray-300 text-sm">
+              AI might miss some items in your meal
+            </p>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex space-x-4">
+            {/* Add More Button (Voice) */}
+            <button
+              onClick={() => addNewFoodItem()}
+              className="flex-1 bg-gradient-to-br from-slate-700/90 to-slate-800/90 text-white py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 backdrop-blur-xl border border-white/10 hover:from-slate-600/90 hover:to-slate-700/90 transition-all duration-300 shadow-xl hover:scale-105 hover:shadow-purple-500/25"
+              data-testid="button-add-voice"
+            >
+              <Mic className="h-5 w-5 text-purple-400" />
+              <span className="font-semibold">Add More</span>
+            </button>
+            
+            {/* Type Button */}
+            <button
+              onClick={() => addNewFoodItem()}
+              className="flex-1 bg-gradient-to-br from-white to-gray-100 text-slate-800 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 shadow-xl hover:scale-105 transition-all duration-300 hover:shadow-green-500/25 border border-gray-200"
+              data-testid="button-add-type"
+            >
+              <Plus className="h-5 w-5 text-green-500" />
+              <span className="font-semibold">Type</span>
+            </button>
+          </div>
         </div>
         
         {/* Save Changes Button */}
