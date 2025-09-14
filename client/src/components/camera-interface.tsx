@@ -227,7 +227,7 @@ export function CameraInterface({
       {/* Scale tip */}
       <div className="mt-4 text-center">
         <p className="text-sm text-white font-medium bg-slate-800/80 backdrop-blur-xl border border-slate-600/50 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
-          💡 <span className="text-blue-300">Pro tip:</span> Include a fork or your hand for more accurate portions
+          💡 For more precise portion analysis, place a fork or your hand in the photo.
         </p>
       </div>
 
