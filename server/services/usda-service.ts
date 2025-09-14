@@ -387,6 +387,15 @@ export class USDAService {
   }
 
   /**
+   * Clear the entire cache to force fresh searches
+   */
+  clearCache(): void {
+    const cacheSize = this.cache.size;
+    this.cache.clear();
+    console.log(`🧹 Cleared USDA cache (${cacheSize} entries removed)`);
+  }
+
+  /**
    * Health check for USDA service
    */
   async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; message: string }> {

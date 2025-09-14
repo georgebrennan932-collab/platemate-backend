@@ -9,6 +9,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import express from "express";
 import { aiManager } from "./ai-providers/ai-manager";
+import { usdaService } from "./services/usda-service";
 
 // Configure multer for image uploads
 const upload = multer({ 
@@ -964,6 +965,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Reset AI providers error:", error);
       res.status(500).json({ error: "Failed to reset providers" });
+    }
+  });
+
+  // Clear USDA cache to force fresh searches
+  app.post("/api/clear-usda-cache", async (req, res) => {
+    try {
+      usdaService.clearCache();
+      res.json({ success: true, message: "USDA cache cleared successfully" });
+    } catch (error) {
+      console.error("Clear USDA cache error:", error);
+      res.status(500).json({ error: "Failed to clear USDA cache" });
     }
   });
 
