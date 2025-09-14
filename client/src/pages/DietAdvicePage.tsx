@@ -604,3 +604,5 @@ export function DietAdvicePage() {
     </div>
   );
 }
+
+export default DietAdvicePage;

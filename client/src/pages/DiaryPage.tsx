@@ -825,3 +825,5 @@ export function DiaryPage() {
     </div>
   );
 }
+
+export default DiaryPage;
