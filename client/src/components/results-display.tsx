@@ -22,6 +22,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [voiceInput, setVoiceInput] = useState('');
   const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
+  const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -46,8 +47,16 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       return;
     }
 
-    if (isListening) {
+    // If already listening, stop the recording
+    if (isListening && recognitionInstance) {
+      console.log('🛑 Stopping voice recording...');
+      try {
+        recognitionInstance.stop();
+      } catch (error) {
+        console.warn('Error stopping recognition:', error);
+      }
       setIsListening(false);
+      setRecognitionInstance(null);
       return;
     }
 
@@ -58,6 +67,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       recognition.lang = 'en-US';
 
       recognition.onstart = () => {
+        console.log('🎤 Voice recording started');
         setIsListening(true);
         toast({
           title: "Listening...",
@@ -67,28 +77,42 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
+        console.log('🎤 Voice captured:', transcript);
         setVoiceInput(transcript);
         setShowVoiceMealDialog(true);
         toast({
           title: "Voice captured!",
           description: `Heard: "${transcript}"`,
         });
+        setIsListening(false);
+        setRecognitionInstance(null);
       };
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        toast({
-          title: "Speech Error",
-          description: "Could not recognize speech. Please try again.",
-          variant: "destructive",
-        });
+        
+        // Don't show error for aborted (user stopped)
+        if (event.error === 'aborted') {
+          console.log('🎤 Voice recording stopped by user');
+        } else {
+          toast({
+            title: "Speech Error",
+            description: "Could not recognize speech. Please try again.",
+            variant: "destructive",
+          });
+        }
         setIsListening(false);
+        setRecognitionInstance(null);
       };
 
       recognition.onend = () => {
+        console.log('🎤 Voice recording ended');
         setIsListening(false);
+        setRecognitionInstance(null);
       };
 
+      // Store the recognition instance so we can stop it later
+      setRecognitionInstance(recognition);
       recognition.start();
     } catch (error) {
       toast({
@@ -97,6 +121,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         variant: "destructive",
       });
       setIsListening(false);
+      setRecognitionInstance(null);
     }
   };
 
