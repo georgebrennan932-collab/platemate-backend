@@ -45,16 +45,16 @@ export function BottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-border/50 z-40">
-      <div className="max-w-md mx-auto px-2 py-2">
-        <div className="flex justify-around items-center">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-border/50 z-40 w-full">
+      <div className="max-w-md mx-auto px-2 py-2 w-full">
+        <div className="flex justify-around items-center w-full">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link key={item.href} href={item.href}>
                 <button
                   className={cn(
-                    "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200",
+                    "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-none",
                     "hover:bg-primary/10 hover:scale-105",
                     item.isActive 
                       ? "text-primary bg-primary/10 scale-105" 

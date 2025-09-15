@@ -541,71 +541,6 @@ export function DiaryPage() {
           </div>
         ) : viewMode === 'today' ? (
           <div className="space-y-6">
-            {/* Today's Summary */}
-            <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Target className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-bold">Today's Intake</h2>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {format(new Date(), 'EEEE, MMMM d')}
-                </div>
-              </div>
-              
-              {/* Daily Totals */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-background/80 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-primary" data-testid="calories-consumed">{todayNutrition.calories}</div>
-                  <div className="text-sm text-muted-foreground">Calories Consumed</div>
-                </div>
-                <div className="bg-background/80 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600" data-testid="calories-remaining">{remainingNutrition?.calories || 0}</div>
-                  <div className="text-sm text-muted-foreground">Calories Remaining</div>
-                </div>
-              </div>
-              
-              {/* Macros Progress */}
-              {nutritionGoals && (
-                <div className="space-y-3">
-                  <div className="text-sm font-medium mb-2">Macronutrients</div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-red-600">{todayNutrition.protein}g</div>
-                      <div className="text-xs text-muted-foreground">Protein</div>
-                      <div className="text-xs text-green-600">({remainingNutrition?.protein || 0}g left)</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-blue-600">{todayNutrition.carbs}g</div>
-                      <div className="text-xs text-muted-foreground">Carbs</div>
-                      <div className="text-xs text-green-600">({remainingNutrition?.carbs || 0}g left)</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-yellow-600">{todayNutrition.fat}g</div>
-                      <div className="text-xs text-muted-foreground">Fat</div>
-                      <div className="text-xs text-green-600">({remainingNutrition?.fat || 0}g left)</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Progress Bar */}
-              {nutritionGoals && (
-                <div className="mt-4">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Daily Goal Progress</span>
-                    <span>{Math.round((todayNutrition.calories / (nutritionGoals.dailyCalories || 1)) * 100)}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, (todayNutrition.calories / (nutritionGoals.dailyCalories || 1)) * 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </div>
-            
             {/* Today's Meals */}
             {sortedDates.length === 0 ? (
               <div className="text-center py-8 bg-muted/30 rounded-xl">
@@ -709,6 +644,71 @@ export function DiaryPage() {
                 ))}
               </div>
             )}
+            
+            {/* Today's Summary */}
+            <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <Target className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-bold">Today's Intake</h2>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {format(new Date(), 'EEEE, MMMM d')}
+                </div>
+              </div>
+              
+              {/* Daily Totals */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="bg-background/80 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-primary" data-testid="calories-consumed">{todayNutrition.calories}</div>
+                  <div className="text-sm text-muted-foreground">Calories Consumed</div>
+                </div>
+                <div className="bg-background/80 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-orange-600" data-testid="calories-remaining">{remainingNutrition?.calories || 0}</div>
+                  <div className="text-sm text-muted-foreground">Calories Remaining</div>
+                </div>
+              </div>
+              
+              {/* Macros Progress */}
+              {nutritionGoals && (
+                <div className="space-y-3">
+                  <div className="text-sm font-medium mb-2">Macronutrients</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-red-600">{todayNutrition.protein}g</div>
+                      <div className="text-xs text-muted-foreground">Protein</div>
+                      <div className="text-xs text-green-600">({remainingNutrition?.protein || 0}g left)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-blue-600">{todayNutrition.carbs}g</div>
+                      <div className="text-xs text-muted-foreground">Carbs</div>
+                      <div className="text-xs text-green-600">({remainingNutrition?.carbs || 0}g left)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-yellow-600">{todayNutrition.fat}g</div>
+                      <div className="text-xs text-muted-foreground">Fat</div>
+                      <div className="text-xs text-green-600">({remainingNutrition?.fat || 0}g left)</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Progress Bar */}
+              {nutritionGoals && (
+                <div className="mt-4">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Daily Goal Progress</span>
+                    <span>{Math.round((todayNutrition.calories / (nutritionGoals.dailyCalories || 1)) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, (todayNutrition.calories / (nutritionGoals.dailyCalories || 1)) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="space-y-6">
