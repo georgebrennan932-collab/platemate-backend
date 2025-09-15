@@ -443,6 +443,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         >
                           <Edit3 className="h-3 w-3" />
                         </button>
+                        <button
+                          onClick={() => removeFoodItem(index)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded opacity-70 hover:opacity-100 transition-opacity"
+                          title="Remove this food item"
+                          data-testid={`button-remove-food-${index}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     )}
                   </div>
