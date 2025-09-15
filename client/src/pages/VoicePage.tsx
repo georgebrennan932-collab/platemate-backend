@@ -289,7 +289,7 @@ export default function VoicePage() {
     });
   };
 
-  const startVoiceInput = async () => {
+  const startVoiceInput = () => {
     if (!capabilities.speechRecognitionSupported) {
       toast({
         title: "Not Supported",
@@ -299,25 +299,22 @@ export default function VoicePage() {
       return;
     }
 
-    // Force stop any existing recognition first
-    stopVoiceInput();
+    // Immediately set listening state
+    setVoiceInput(prev => ({ ...prev, isListening: true, transcript: '' }));
 
     try {
       const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       
-      // Simple, controlled recognition settings
       recognition.continuous = false;
-      recognition.interimResults = false; // Changed to false for simpler control
+      recognition.interimResults = false;
       recognition.lang = voiceInput.language;
-      recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
         console.log('🎤 Voice recognition started');
-        setVoiceInput(prev => ({ ...prev, isListening: true, transcript: '' }));
         toast({
           title: "Listening... 👂",
-          description: "Say something - it will stop automatically when done",
+          description: "Say something now!",
         });
       };
 
@@ -335,7 +332,8 @@ export default function VoicePage() {
           setVoiceInput(prev => ({
             ...prev,
             transcript: prev.transcript + transcript,
-            confidence: event.results[0]?.[0]?.confidence || 0
+            confidence: event.results[0]?.[0]?.confidence || 0,
+            isListening: false // Auto-stop after getting result
           }));
 
           toast({
@@ -343,20 +341,20 @@ export default function VoicePage() {
             description: `Heard: "${transcript.trim()}"`,
           });
         }
+        
+        // Auto cleanup after result
+        (window as any).currentRecognition = null;
       };
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         setVoiceInput(prev => ({ ...prev, isListening: false }));
-        
-        // Clean up reference
         (window as any).currentRecognition = null;
         
-        // Only show error if it's not an abort (user-initiated stop)
         if (event.error !== 'aborted' && event.error !== 'no-speech') {
           toast({
-            title: "Speech Error",
-            description: `Speech recognition error: ${event.error}`,
+            title: "Speech Error", 
+            description: `Error: ${event.error}`,
             variant: "destructive",
           });
         }
@@ -368,7 +366,6 @@ export default function VoicePage() {
         (window as any).currentRecognition = null;
       };
 
-      // Start recognition and store reference
       recognition.start();
       (window as any).currentRecognition = recognition;
       
@@ -384,54 +381,66 @@ export default function VoicePage() {
   };
 
   const stopVoiceInput = () => {
-    console.log('🛑 User clicked stop voice input');
+    console.log('🛑 FORCE STOPPING voice input');
     
-    // Force immediate state update
+    // Nuclear option - completely reset everything
     setVoiceInput(prev => ({ 
       ...prev, 
       isListening: false 
     }));
     
-    // Kill any existing recognition
-    if ((window as any).currentRecognition) {
-      const recognition = (window as any).currentRecognition;
-      
-      // Clear reference first to prevent any callbacks
+    // Kill the recognition instance
+    const recognition = (window as any).currentRecognition;
+    if (recognition) {
       (window as any).currentRecognition = null;
       
       try {
-        // Force stop with abort (most aggressive method)
         recognition.abort();
-        console.log('🛑 Recognition forcibly aborted');
-      } catch (error) {
-        console.warn('Error aborting recognition:', error);
-      }
-      
-      // Additional cleanup - remove all event listeners
-      try {
         recognition.onstart = null;
         recognition.onresult = null;
         recognition.onerror = null;
         recognition.onend = null;
-      } catch (error) {
-        console.warn('Error cleaning up recognition listeners:', error);
+      } catch (e) {
+        console.warn('Error cleaning up recognition:', e);
       }
     }
     
-    // Clear any global speech recognition
+    // Force stop any browser speech activity
     try {
-      if ((window as any).speechSynthesis) {
-        (window as any).speechSynthesis.cancel();
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // Stop any active media streams
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(stream => {
+            stream.getTracks().forEach(track => track.stop());
+          })
+          .catch(() => {}); // Ignore errors
       }
-    } catch (error) {
-      console.warn('Error canceling speech synthesis:', error);
+    } catch (e) {
+      console.warn('Error stopping media streams:', e);
     }
     
-    console.log('🛑 Voice input completely stopped');
+    // Cancel any speech synthesis
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (e) {
+      console.warn('Error canceling speech synthesis:', e);
+    }
+    
+    // Force page reload if still problematic (nuclear option)
+    setTimeout(() => {
+      if (voiceInput.isListening) {
+        console.warn('🚨 Voice still listening after stop - forcing page reload');
+        window.location.reload();
+      }
+    }, 2000);
+    
+    console.log('🛑 Voice input FORCE STOPPED');
     
     toast({
-      title: "Voice Input Stopped ✋",
-      description: "Speech recognition has been completely stopped",
+      title: "Voice Stopped! ✋",
+      description: "All speech recognition has been terminated",
     });
   };
 
