@@ -3,6 +3,8 @@ import { useEffect } from "react";
 
 // ✅ Pages in your /pages folder
 import CameraPage from "./pages/CameraPage";
+import CameraTestPage from "./pages/CameraTestPage";
+import VoicePage from "./pages/VoicePage";
 import LandingPage from "./pages/LandingPage";
 import Home from "./pages/home";
 import DiaryPage from "./pages/DiaryPage";
@@ -35,7 +37,9 @@ function App() {
       <Route path="/goals" component={GoalsPage} />
       <Route path="/injection-advice" component={InjectionAdvicePage} />
       <Route path="/help" component={HelpPage} />
-      <Route path="/camera" component={CameraPage} />
+      <Route path="/camera" component={CameraTestPage} />
+      <Route path="/food-camera" component={CameraPage} />
+      <Route path="/voice" component={VoicePage} />
       <Route component={NotFound} />
     </Switch>
   );

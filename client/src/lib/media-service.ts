@@ -1,7 +1,18 @@
+import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
+import { Device } from '@capacitor/device';
+
 // Enhanced media service for camera and microphone functionality
 export interface MediaPermissions {
   camera: boolean;
   microphone: boolean;
+}
+
+export interface CapacitorCameraOptions {
+  quality?: number;
+  allowEditing?: boolean;
+  resultType?: CameraResultType;
+  source?: CameraSource;
 }
 
 export interface CameraConstraints {
@@ -682,6 +693,97 @@ export class MediaService {
     }
 
     console.error(`❌ ${mediaType} error:`, message, error);
+  }
+
+  // Capacitor Camera Methods
+  async takePhoto(options: CapacitorCameraOptions = {}): Promise<Photo> {
+    if (!Capacitor.isNativePlatform()) {
+      console.log('📱 Web platform - using Capacitor Camera for web');
+    } else {
+      console.log('📱 Native platform - using native camera');
+    }
+
+    const defaultOptions = {
+      quality: options.quality || 90,
+      allowEditing: options.allowEditing || false,
+      resultType: options.resultType || CameraResultType.Uri,
+      source: options.source || CameraSource.Camera,
+    };
+
+    try {
+      const image = await Camera.getPhoto(defaultOptions);
+      console.log('📸 Photo captured successfully:', {
+        format: image.format,
+        webPath: image.webPath ? 'available' : 'none'
+      });
+      return image;
+    } catch (error) {
+      console.error('❌ Camera error:', error);
+      throw new Error(`Failed to take photo: ${error}`);
+    }
+  }
+
+  async selectFromGallery(options: CapacitorCameraOptions = {}): Promise<Photo> {
+    console.log('🖼️ Selecting from photo gallery...');
+
+    const galleryOptions = {
+      quality: options.quality || 90,
+      allowEditing: options.allowEditing || false,
+      resultType: options.resultType || CameraResultType.Uri,
+      source: CameraSource.Photos,
+    };
+
+    try {
+      const image = await Camera.getPhoto(galleryOptions);
+      console.log('📷 Gallery photo selected successfully');
+      return image;
+    } catch (error) {
+      console.error('❌ Gallery selection error:', error);
+      throw new Error(`Failed to select from gallery: ${error}`);
+    }
+  }
+
+  async checkCameraPermissions(): Promise<boolean> {
+    try {
+      const permissions = await Camera.checkPermissions();
+      console.log('📋 Camera permissions status:', permissions);
+      
+      if (permissions.camera === 'granted' && permissions.photos === 'granted') {
+        return true;
+      }
+      
+      // Request permissions if not granted
+      const requestResult = await Camera.requestPermissions();
+      console.log('📋 Permission request result:', requestResult);
+      
+      return requestResult.camera === 'granted' && requestResult.photos === 'granted';
+    } catch (error) {
+      console.error('❌ Permission check error:', error);
+      return false;
+    }
+  }
+
+  async getDeviceInfo() {
+    try {
+      const info = await Device.getInfo();
+      console.log('📱 Device info:', {
+        platform: info.platform,
+        isVirtual: info.isVirtual,
+        model: info.model
+      });
+      return info;
+    } catch (error) {
+      console.error('❌ Device info error:', error);
+      return null;
+    }
+  }
+
+  isNativePlatform(): boolean {
+    return Capacitor.isNativePlatform();
+  }
+
+  isPlatform(platform: string): boolean {
+    return Capacitor.getPlatform() === platform;
   }
 
   // Clean up all media resources
