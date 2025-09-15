@@ -718,7 +718,7 @@ export class AIManager {
         // Use accurate USDA nutrition data
         const food = {
           name: usdaData.usdaFood.description,
-          portion: '100g', // Default portion - could be enhanced with portion parsing
+          portion: originalText, // PRESERVE original user input (e.g., "2 large eggs")
           calories: usdaData.nutrition.calories,
           protein: Math.round(usdaData.nutrition.protein),
           carbs: Math.round(usdaData.nutrition.carbs),
