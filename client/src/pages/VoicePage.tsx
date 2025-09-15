@@ -299,15 +299,23 @@ export default function VoicePage() {
       return;
     }
 
+    // Stop any existing recognition first
+    stopVoiceInput();
+
     try {
       const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       
-      recognition.continuous = true;
+      // More controlled recognition settings
+      recognition.continuous = false; // Changed to false for better control
       recognition.interimResults = true;
       recognition.lang = voiceInput.language;
+      recognition.maxAlternatives = 1;
+
+      let isActive = true; // Track if recognition should be active
 
       recognition.onstart = () => {
+        console.log('🎤 Voice recognition started');
         setVoiceInput(prev => ({ ...prev, isListening: true, transcript: '' }));
         toast({
           title: "Listening... 👂",
@@ -316,6 +324,8 @@ export default function VoicePage() {
       };
 
       recognition.onresult = (event: any) => {
+        if (!isActive) return; // Don't process results if we're stopping
+
         let finalTranscript = '';
         let interimTranscript = '';
 
@@ -338,20 +348,32 @@ export default function VoicePage() {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
+        isActive = false;
         setVoiceInput(prev => ({ ...prev, isListening: false }));
-        toast({
-          title: "Speech Error",
-          description: `Speech recognition error: ${event.error}`,
-          variant: "destructive",
-        });
+        
+        // Only show error if it's not an abort (user-initiated stop)
+        if (event.error !== 'aborted') {
+          toast({
+            title: "Speech Error",
+            description: `Speech recognition error: ${event.error}`,
+            variant: "destructive",
+          });
+        }
+        (window as any).currentRecognition = null;
       };
 
       recognition.onend = () => {
+        console.log('🎤 Voice recognition ended');
+        isActive = false;
         setVoiceInput(prev => ({ ...prev, isListening: false }));
+        (window as any).currentRecognition = null;
       };
 
       recognition.start();
       (window as any).currentRecognition = recognition;
+      
+      // Store isActive flag on the recognition for external access
+      (window as any).currentRecognition.isActive = isActive;
     } catch (error) {
       console.error('Failed to start voice input:', error);
       toast({
@@ -363,33 +385,47 @@ export default function VoicePage() {
   };
 
   const stopVoiceInput = () => {
+    console.log('🛑 Stopping voice input...');
+    
+    // Immediately update state
+    setVoiceInput(prev => ({ ...prev, isListening: false }));
+    
     if ((window as any).currentRecognition) {
+      const recognition = (window as any).currentRecognition;
+      
       try {
-        // Force immediate stop with state cleanup
-        setVoiceInput(prev => ({ ...prev, isListening: false }));
+        // Mark as inactive first
+        if (recognition.isActive !== undefined) {
+          recognition.isActive = false;
+        }
         
-        (window as any).currentRecognition.abort(); // Use abort() for immediate termination
-        console.log('🛑 VoicePage: Recognition.abort() called and state cleared');
+        // Try abort first (immediate stop)
+        recognition.abort();
+        console.log('🛑 Recognition.abort() called');
+        
+        // Clear reference immediately
+        (window as any).currentRecognition = null;
         
         toast({
-          title: "Voice Input Stopped",
+          title: "Voice Input Stopped ✋",
           description: "Speech recognition has been stopped",
         });
       } catch (error) {
-        console.warn('Error aborting recognition:', error);
+        console.warn('Error stopping recognition:', error);
+        
+        // Fallback: try stop method
         try {
-          (window as any).currentRecognition.stop();
-          console.log('🛑 VoicePage: Recognition.stop() called as fallback');
+          recognition.stop();
+          console.log('🛑 Recognition.stop() used as fallback');
         } catch (stopError) {
-          console.warn('Error with stop() fallback:', stopError);
+          console.warn('Both abort() and stop() failed:', stopError);
         }
-        // Ensure state is cleared even if abort/stop fails
-        setVoiceInput(prev => ({ ...prev, isListening: false }));
+        
+        // Force clear reference
+        (window as any).currentRecognition = null;
       }
-      
-      (window as any).currentRecognition = null;
     } else {
-      setVoiceInput(prev => ({ ...prev, isListening: false }));
+      console.log('🛑 No active recognition to stop');
     }
   };
 
