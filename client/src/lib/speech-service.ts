@@ -80,7 +80,14 @@ class SpeechService {
       };
 
       this.recognition.onerror = (event: any) => {
-        console.error('🎤 Speech recognition error:', event.error);
+        console.error('Speech recognition error:', event.error);
+        
+        // Don't treat 'aborted' as an error if we deliberately stopped
+        if (event.error === 'aborted' && !this.isEnabled) {
+          console.log('🎤 Speech recognition properly stopped');
+          return;
+        }
+        
         this.triggerEvent({ 
           type: 'error', 
           error: event.error 
@@ -178,10 +185,20 @@ class SpeechService {
   }
 
   stopListening() {
-    if (this.recognition && this.isListening) {
+    if (this.recognition) {
       this.isEnabled = false;
       this.continuousMode = false;
-      this.recognition.stop();
+      
+      // Force stop regardless of current state
+      try {
+        this.recognition.stop();
+        console.log('🛑 Speech recognition stop requested');
+      } catch (error) {
+        console.warn('Speech recognition stop error (expected):', error);
+      }
+      
+      // Ensure state is updated
+      this.isListening = false;
     }
   }
 
