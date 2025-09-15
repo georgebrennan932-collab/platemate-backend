@@ -299,51 +299,62 @@ export default function VoicePage() {
       return;
     }
 
-    // Immediately set listening state
-    setVoiceInput(prev => ({ ...prev, isListening: true, transcript: '' }));
+    // Clean stop any existing recognition first
+    if ((window as any).currentRecognition) {
+      try {
+        (window as any).currentRecognition.abort();
+      } catch (e) {}
+      (window as any).currentRecognition = null;
+    }
 
     try {
       const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      // Simple settings that work reliably
+      recognition.continuous = true; // Allow longer speech
+      recognition.interimResults = true; // Show progress
       recognition.lang = voiceInput.language;
+      recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
         console.log('🎤 Voice recognition started');
+        setVoiceInput(prev => ({ ...prev, isListening: true, transcript: '' }));
         toast({
           title: "Listening... 👂",
-          description: "Say something now!",
+          description: "Speak now - click stop when done",
         });
       };
 
       recognition.onresult = (event: any) => {
         console.log('🎤 Voice recognition got result');
-        let transcript = '';
+        let finalTranscript = '';
+        let interimTranscript = '';
 
-        for (let i = 0; i < event.results.length; i++) {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          
           if (event.results[i].isFinal) {
-            transcript += event.results[i][0].transcript;
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
           }
         }
 
-        if (transcript.trim()) {
-          setVoiceInput(prev => ({
-            ...prev,
-            transcript: prev.transcript + transcript,
-            confidence: event.results[0]?.[0]?.confidence || 0,
-            isListening: false // Auto-stop after getting result
-          }));
+        // Update transcript with final + interim
+        setVoiceInput(prev => ({
+          ...prev,
+          transcript: prev.transcript + finalTranscript + interimTranscript,
+          confidence: event.results[event.results.length - 1]?.[0]?.confidence || 0
+        }));
 
+        // Show success toast for final results
+        if (finalTranscript.trim()) {
           toast({
             title: "Got it! ✅",
-            description: `Heard: "${transcript.trim()}"`,
+            description: `Heard: "${finalTranscript.trim()}"`,
           });
         }
-        
-        // Auto cleanup after result
-        (window as any).currentRecognition = null;
       };
 
       recognition.onerror = (event: any) => {
@@ -366,6 +377,7 @@ export default function VoicePage() {
         (window as any).currentRecognition = null;
       };
 
+      // Start recognition
       recognition.start();
       (window as any).currentRecognition = recognition;
       
@@ -374,73 +386,40 @@ export default function VoicePage() {
       setVoiceInput(prev => ({ ...prev, isListening: false }));
       toast({
         title: "Voice Input Error",
-        description: `Failed to start voice input: ${error}`,
+        description: `Failed to start voice input`,
         variant: "destructive",
       });
     }
   };
 
   const stopVoiceInput = () => {
-    console.log('🛑 FORCE STOPPING voice input');
+    console.log('🛑 Stopping voice input');
     
-    // Nuclear option - completely reset everything
-    setVoiceInput(prev => ({ 
-      ...prev, 
-      isListening: false 
-    }));
+    // Update state immediately
+    setVoiceInput(prev => ({ ...prev, isListening: false }));
     
-    // Kill the recognition instance
+    // Stop recognition cleanly
     const recognition = (window as any).currentRecognition;
     if (recognition) {
-      (window as any).currentRecognition = null;
-      
       try {
-        recognition.abort();
-        recognition.onstart = null;
-        recognition.onresult = null;
-        recognition.onerror = null;
-        recognition.onend = null;
-      } catch (e) {
-        console.warn('Error cleaning up recognition:', e);
+        recognition.stop(); // Use stop() instead of abort() for cleaner shutdown
+        console.log('🛑 Recognition.stop() called');
+      } catch (error) {
+        console.warn('Error stopping recognition:', error);
+        try {
+          recognition.abort(); // Fallback to abort if stop fails
+        } catch (abortError) {
+          console.warn('Error aborting recognition:', abortError);
+        }
       }
+      
+      // Clear reference
+      (window as any).currentRecognition = null;
     }
-    
-    // Force stop any browser speech activity
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // Stop any active media streams
-        navigator.mediaDevices.getUserMedia({ audio: true })
-          .then(stream => {
-            stream.getTracks().forEach(track => track.stop());
-          })
-          .catch(() => {}); // Ignore errors
-      }
-    } catch (e) {
-      console.warn('Error stopping media streams:', e);
-    }
-    
-    // Cancel any speech synthesis
-    try {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    } catch (e) {
-      console.warn('Error canceling speech synthesis:', e);
-    }
-    
-    // Force page reload if still problematic (nuclear option)
-    setTimeout(() => {
-      if (voiceInput.isListening) {
-        console.warn('🚨 Voice still listening after stop - forcing page reload');
-        window.location.reload();
-      }
-    }, 2000);
-    
-    console.log('🛑 Voice input FORCE STOPPED');
     
     toast({
-      title: "Voice Stopped! ✋",
-      description: "All speech recognition has been terminated",
+      title: "Voice Stopped ✋",
+      description: "Speech recognition has been stopped",
     });
   };
 
