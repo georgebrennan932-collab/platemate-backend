@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Images, Zap, Camera, CloudUpload, Syringe, Mic, MicOff, RotateCcw, Play, Square } from "lucide-react";
+import { Images, Zap, Camera, CloudUpload, Syringe } from "lucide-react";
 import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -22,36 +22,20 @@ export function CameraInterface({
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
-  const [isLiveCameraActive, setIsLiveCameraActive] = useState(false);
-  const [isMicrophoneActive, setIsMicrophoneActive] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [permissionsGranted, setPermissionsGranted] = useState({ camera: false, microphone: false });
+  const [flashEnabled, setFlashEnabled] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Initialize permissions check and cleanup
+  // Initialize media service
   useEffect(() => {
-    const initializeMedia = async () => {
-      if (!mediaService.isMediaSupported()) {
-        toast({
-          title: "Media Not Supported",
-          description: "Camera and microphone features require a modern browser with HTTPS",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check current permissions
-      const permissions = await mediaService.checkPermissions();
-      setPermissionsGranted(permissions);
-      
-      console.log('📱 Media permissions status:', permissions);
-    };
-
-    initializeMedia();
+    if (!mediaService.isMediaSupported()) {
+      toast({
+        title: "Camera Not Supported",
+        description: "Camera requires a modern browser with HTTPS",
+        variant: "destructive",
+      });
+    }
 
     // Cleanup on unmount
     return () => {
@@ -118,94 +102,6 @@ export function CameraInterface({
     }
   };
 
-  // Start live camera stream
-  const handleStartLiveCamera = async () => {
-    if (!videoRef.current) return;
-
-    try {
-      console.log("📹 Starting live camera stream...");
-      await mediaService.startCamera(videoRef.current, { facingMode: 'environment' });
-      setIsLiveCameraActive(true);
-      setPreviewUrl(''); // Clear any static preview
-
-      toast({
-        title: "Camera Started",
-        description: "Live camera preview is now active",
-      });
-    } catch (error: any) {
-      console.error('❌ Failed to start camera:', error);
-      toast({
-        title: "Camera Error",
-        description: error.message || "Failed to access camera. Please check permissions.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Stop live camera stream
-  const handleStopLiveCamera = () => {
-    mediaService.stopCamera();
-    setIsLiveCameraActive(false);
-    console.log("⏹️ Live camera stream stopped");
-  };
-
-  // Capture photo from live stream
-  const handleCaptureFromStream = async () => {
-    if (!videoRef.current || !isLiveCameraActive) {
-      console.warn("⚠️ No active camera stream to capture from");
-      return;
-    }
-
-    try {
-      console.log("📸 Capturing photo from live stream...");
-      
-      // Use canvas to capture current video frame
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx || !videoRef.current.videoWidth) {
-        throw new Error('Video not ready for capture');
-      }
-
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
-      // Convert to blob
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Failed to create photo blob'));
-        }, 'image/jpeg', 0.9);
-      });
-
-      // Create file from blob
-      const file = new File([blob], 'live-camera-photo.jpg', { type: 'image/jpeg' });
-      
-      console.log("📄 Photo captured from stream:", {
-        fileName: file.name,
-        fileSize: file.size,
-        width: canvas.width,
-        height: canvas.height
-      });
-
-      setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-
-      // Stop live stream and analyze
-      handleStopLiveCamera();
-      analysisMutation.mutate(file);
-
-    } catch (error) {
-      console.error('❌ Failed to capture from stream:', error);
-      toast({
-        title: "Capture Failed",
-        description: "Could not capture photo from camera stream",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleCameraCapture = async () => {
     console.log("📷 Camera capture requested");
@@ -250,130 +146,27 @@ export function CameraInterface({
         analysisMutation.mutate(file);
       } catch (error) {
         console.error('❌ Error taking photo:', error);
-        // Fall back to live camera if supported, otherwise file input
-        if (mediaService.isMediaSupported()) {
-          await handleStartLiveCamera();
-        } else {
-          cameraInputRef.current?.click();
-        }
-      }
-    } else {
-      // For web browsers, try live camera first, then fall back to file input
-      if (mediaService.isMediaSupported() && !isLiveCameraActive) {
-        await handleStartLiveCamera();
-      } else if (isLiveCameraActive) {
-        await handleCaptureFromStream();
-      } else {
-        console.log("🌐 Using web camera input...");
+        // Fall back to web camera input
         cameraInputRef.current?.click();
       }
+    } else {
+      // For web browsers, use camera input
+      console.log("🌐 Using web camera input...");
+      cameraInputRef.current?.click();
     }
   };
 
-  // Switch camera (front/back)
-  const handleSwitchCamera = async () => {
-    if (!isLiveCameraActive || !videoRef.current) return;
-
-    try {
-      console.log("🔄 Switching camera...");
-      await mediaService.switchCamera(videoRef.current);
-      
-      toast({
-        title: "Camera Switched",
-        description: "Camera switched successfully",
-      });
-    } catch (error: any) {
-      console.error('❌ Failed to switch camera:', error);
-      toast({
-        title: "Switch Failed",
-        description: error.message || "Could not switch camera",
-        variant: "destructive",
-      });
-    }
+  // Toggle flash for camera
+  const handleFlashToggle = () => {
+    setFlashEnabled(!flashEnabled);
+    toast({
+      title: flashEnabled ? "Flash Disabled" : "Flash Enabled",
+      description: `Camera flash is now ${flashEnabled ? 'off' : 'on'}`,
+    });
   };
 
-  // Start microphone recording
-  const handleStartMicrophoneRecording = async () => {
-    try {
-      console.log("🎤 Starting microphone recording...");
-      await mediaService.startMicrophoneRecording();
-      await mediaService.startAudioRecording();
-      
-      setIsMicrophoneActive(true);
-      setIsRecording(true);
-      setAudioBlob(null);
-
-      toast({
-        title: "Recording Started",
-        description: "Microphone recording is now active",
-      });
-    } catch (error: any) {
-      console.error('❌ Failed to start microphone:', error);
-      toast({
-        title: "Microphone Error",
-        description: error.message || "Failed to access microphone. Please check permissions.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Stop microphone recording
-  const handleStopMicrophoneRecording = async () => {
-    if (!isRecording) return;
-
-    try {
-      console.log("⏹️ Stopping microphone recording...");
-      const blob = await mediaService.stopAudioRecording();
-      mediaService.stopMicrophone();
-      
-      setIsRecording(false);
-      setIsMicrophoneActive(false);
-      setAudioBlob(blob);
-
-      console.log("🎵 Audio recorded:", {
-        size: blob.size,
-        type: blob.type
-      });
-
-      toast({
-        title: "Recording Stopped",
-        description: `Recorded ${Math.round(blob.size / 1024)}KB of audio`,
-      });
-    } catch (error: any) {
-      console.error('❌ Failed to stop recording:', error);
-      toast({
-        title: "Recording Error",
-        description: "Failed to save recording",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Play recorded audio
-  const handlePlayRecordedAudio = () => {
-    if (!audioBlob) return;
-
-    try {
-      console.log("▶️ Playing recorded audio...");
-      mediaService.playAudio(audioBlob);
-      
-      toast({
-        title: "Playing Audio",
-        description: "Playing your recorded audio",
-      });
-    } catch (error) {
-      console.error('❌ Failed to play audio:', error);
-      toast({
-        title: "Playback Error",
-        description: "Could not play recorded audio",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleGallerySelect = async () => {
-    // Always use file input for reliable gallery access across all platforms
-    // This bypasses Capacitor Camera API issues on some Android devices
+  const handleGallerySelect = () => {
+    // Use file input for reliable gallery access across all platforms
     fileInputRef.current?.click();
   };
 
@@ -384,20 +177,8 @@ export function CameraInterface({
         {/* Subtle inner glow */}
         <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5"></div>
         
-        {/* Live Camera Video */}
-        {isLiveCameraActive && (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover rounded-[2.5rem]"
-            data-testid="video-live-camera"
-          />
-        )}
-        
         {/* Static Image Preview */}
-        {previewUrl && !isLiveCameraActive && (
+        {previewUrl && (
           <img 
             src={previewUrl} 
             alt="Selected food image" 
@@ -407,37 +188,21 @@ export function CameraInterface({
         )}
         
         {/* Default Camera Icon */}
-        {!previewUrl && !isLiveCameraActive && (
+        {!previewUrl && (
           <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
             <div className="relative z-10 text-center">
               <div className="w-16 h-16 mx-auto bg-slate-700/80 rounded-xl flex items-center justify-center border border-slate-600/50">
                 <Camera className="text-white h-8 w-8" />
               </div>
               <p className="text-white/70 text-sm mt-2">
-                {mediaService.isMediaSupported() ? 'Tap to start live camera' : 'Tap to take photo'}
+                Tap to take photo
               </p>
             </div>
           </div>
         )}
         
-        {/* Live Camera Status */}
-        {isLiveCameraActive && (
-          <div className="absolute top-4 left-4 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center space-x-1">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span>LIVE</span>
-          </div>
-        )}
-        
-        {/* Recording Status */}
-        {isRecording && (
-          <div className="absolute top-4 right-4 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center space-x-1">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span>REC</span>
-          </div>
-        )}
-        
-        {/* Plate detection circle - only show when live or has preview */}
-        {(isLiveCameraActive || previewUrl) && (
+        {/* Plate detection circle - only show when has preview */}
+        {previewUrl && (
           <div className="absolute inset-16 border border-white/30 rounded-full border-dashed"></div>
         )}
         
@@ -449,81 +214,35 @@ export function CameraInterface({
               className="w-12 h-12 bg-slate-700/80 rounded-xl flex items-center justify-center border border-slate-600/50 hover:bg-slate-600/80 transition-colors duration-200"
               onClick={handleGallerySelect}
               data-testid="button-gallery"
+              title="Select from Gallery"
             >
               <Images className="text-white h-5 w-5" />
             </button>
             
-            {/* Switch Camera - only show during live camera */}
-            {isLiveCameraActive && (
-              <button 
-                className="w-12 h-12 bg-slate-700/80 rounded-xl flex items-center justify-center border border-slate-600/50 hover:bg-slate-600/80 transition-colors duration-200"
-                onClick={handleSwitchCamera}
-                data-testid="button-switch-camera"
-                title="Switch Camera"
-              >
-                <RotateCcw className="text-white h-5 w-5" />
-              </button>
-            )}
-            
             {/* Main Capture button */}
             <button 
-              className={`w-16 h-16 rounded-full flex items-center justify-center border-2 border-white/20 transition-all duration-200 ${
-                isLiveCameraActive 
-                  ? 'bg-red-600 hover:bg-red-500 animate-pulse' 
-                  : 'bg-blue-600 hover:bg-blue-500'
-              }`}
+              className="w-16 h-16 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center border-2 border-white/20 transition-all duration-200"
               onClick={handleCameraCapture}
               data-testid="button-capture"
+              title="Take Photo"
             >
               <Camera className="text-white h-8 w-8" />
             </button>
             
-            {/* Microphone Record/Stop button */}
+            {/* Flash toggle button */}
             <button 
               className={`w-12 h-12 rounded-xl flex items-center justify-center border border-slate-600/50 transition-all duration-200 ${
-                isRecording
-                  ? 'bg-red-600 hover:bg-red-500 animate-pulse'
-                  : isMicrophoneActive
-                  ? 'bg-orange-600 hover:bg-orange-500'
+                flashEnabled
+                  ? 'bg-yellow-600 hover:bg-yellow-500'
                   : 'bg-slate-700/80 hover:bg-slate-600/80'
               }`}
-              onClick={isRecording ? handleStopMicrophoneRecording : handleStartMicrophoneRecording}
-              data-testid="button-microphone"
-              title={isRecording ? 'Stop Recording' : 'Start Recording'}
+              onClick={handleFlashToggle}
+              data-testid="button-flash"
+              title={flashEnabled ? 'Flash On' : 'Flash Off'}
             >
-              {isRecording ? (
-                <Square className="text-white h-5 w-5" />
-              ) : (
-                <Mic className="text-white h-5 w-5" />
-              )}
+              <Zap className="text-white h-5 w-5" />
             </button>
-
-            {/* Stop Live Camera button - only show during live camera */}
-            {isLiveCameraActive && (
-              <button 
-                className="w-12 h-12 bg-gray-700/80 rounded-xl flex items-center justify-center border border-slate-600/50 hover:bg-gray-600/80 transition-colors duration-200"
-                onClick={handleStopLiveCamera}
-                data-testid="button-stop-camera"
-                title="Stop Camera"
-              >
-                <Square className="text-white h-5 w-5" />
-              </button>
-            )}
           </div>
-          
-          {/* Audio Playback - show when audio recorded */}
-          {audioBlob && !isLiveCameraActive && (
-            <div className="mt-3 flex justify-center">
-              <button 
-                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200"
-                onClick={handlePlayRecordedAudio}
-                data-testid="button-play-audio"
-              >
-                <Play className="h-4 w-4" />
-                <span className="text-sm">Play Recording</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
       
