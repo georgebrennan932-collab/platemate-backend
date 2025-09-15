@@ -408,7 +408,7 @@ export class AIManager {
       return result;
     }
     
-    const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?g\b/);
+    const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?(?:g\b|grams?\b)/);
     if (gramsMatch) {
       const result = parseFloat(gramsMatch[1]);
       console.log(`⚖️  Direct weight conversion: ${portion} = ${result}g`);
