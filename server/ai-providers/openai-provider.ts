@@ -256,11 +256,24 @@ If you can't clearly identify something, don't include it. Be as accurate as pos
             role: "user",
             content: `Analyze this food description and extract nutritional information. Parse the quantity, unit, and food name from: "${foodDescription}"
 
-For example:
-- "100g salmon" → 100 grams of salmon
-- "one apple" → 1 medium apple (about 150g)
-- "two slices of bread" → 2 slices (about 56g)
-- "half cup rice" → 0.5 cups cooked rice
+CRITICAL: Use simple, basic food names. Do NOT use complex preparations or processed versions unless explicitly stated.
+
+Examples:
+- "2 large eggs" → "Eggs, raw, large" (NOT egg custard, egg salad, or any preparation)
+- "100g salmon" → "Salmon, raw"
+- "one apple" → "Apple, raw, medium"
+- "two slices of bread" → "Bread, white, slice"
+- "half cup rice" → "Rice, cooked, white"
+- "chicken breast" → "Chicken breast, raw, skinless"
+- "banana" → "Banana, raw, medium"
+
+FOOD NAME RULES:
+- Always assume RAW/FRESH unless cooking method is specified
+- Use simple ingredient names, not recipe names
+- For eggs: always use "Eggs, raw, large" unless cooking method mentioned
+- For meat: assume raw, skinless unless specified
+- For vegetables: assume raw unless cooking mentioned
+- For fruits: assume raw, fresh
 
 Provide accurate nutritional information based on standard USDA values. Return the response as a JSON object with this exact structure:
 
@@ -268,7 +281,7 @@ Provide accurate nutritional information based on standard USDA values. Return t
   "confidence": number (0-100),
   "detectedFoods": [
     {
-      "name": "Food Name",
+      "name": "Simple, basic food name (raw/fresh unless specified)",
       "portion": "interpreted portion size with units",
       "calories": number,
       "protein": number,
@@ -279,7 +292,7 @@ Provide accurate nutritional information based on standard USDA values. Return t
   ]
 }
 
-Be as accurate as possible with portion estimates and nutritional values. Use standard USDA nutritional values.`
+Be as accurate as possible with portion estimates and nutritional values. Use standard USDA nutritional values for basic, unprocessed foods.`
           }
         ],
         max_tokens: 1000,
