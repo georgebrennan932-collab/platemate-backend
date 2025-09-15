@@ -1,6 +1,6 @@
-import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2, Mic } from "lucide-react";
+import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2, Mic, MicOff } from "lucide-react";
 import type { FoodAnalysis, DetectedFood } from "@shared/schema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -18,9 +18,87 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
   const [editableFoods, setEditableFoods] = useState<DetectedFood[]>(data.detectedFoods);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [voiceInput, setVoiceInput] = useState('');
+  const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check speech recognition support
+  useEffect(() => {
+    const checkSpeechSupport = () => {
+      const supported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+      setSpeechSupported(supported);
+    };
+    checkSpeechSupport();
+  }, []);
+
+  // Handle voice input for adding food items
+  const handleVoiceInput = async () => {
+    if (!speechSupported) {
+      toast({
+        title: "Speech Not Supported",
+        description: "Speech recognition is not supported in this browser",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new (window.SpeechRecognition || (window as any).webkitSpeechRecognition)();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        toast({
+          title: "Listening...",
+          description: "Say your food item and quantity (e.g., '100g salmon')",
+        });
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setVoiceInput(transcript);
+        setShowVoiceMealDialog(true);
+        toast({
+          title: "Voice captured!",
+          description: `Heard: "${transcript}"`,
+        });
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        toast({
+          title: "Speech Error",
+          description: "Could not recognize speech. Please try again.",
+          variant: "destructive",
+        });
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (error) {
+      toast({
+        title: "Speech Error",
+        description: "Failed to start speech recognition",
+        variant: "destructive",
+      });
+      setIsListening(false);
+    }
+  };
 
   // Function to update portion for a specific food item
   const updateFoodPortion = (index: number, newPortion: string) => {
@@ -172,6 +250,64 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   };
 
   const totals = calculateTotals();
+
+  const addVoiceMealMutation = useMutation({
+    mutationFn: async ({ foodDescription }: { foodDescription: string }) => {
+      // Analyze the text-based food description
+      const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
+      const analysis = await analysisResponse.json();
+      
+      // Add the new food to the current analysis
+      const newFood = analysis.detectedFoods[0]; // Take the first detected food
+      if (newFood) {
+        const updatedFoods = [...editableFoods, newFood];
+        setEditableFoods(updatedFoods);
+        
+        // Save changes to the database
+        const updateResponse = await apiRequest('PATCH', `/api/analyses/${data.id}`, {
+          detectedFoods: updatedFoods
+        });
+        return await updateResponse.json();
+      }
+      return analysis;
+    },
+    onSuccess: (updatedAnalysis) => {
+      toast({
+        title: "Food Added!",
+        description: "Voice food item has been added to your analysis.",
+      });
+      
+      // Update data totals if we got an updated analysis back
+      if (updatedAnalysis && updatedAnalysis.detectedFoods) {
+        data.detectedFoods = [...updatedAnalysis.detectedFoods];
+        data.totalCalories = updatedAnalysis.totalCalories;
+        data.totalProtein = updatedAnalysis.totalProtein;
+        data.totalCarbs = updatedAnalysis.totalCarbs;
+        data.totalFat = updatedAnalysis.totalFat;
+        setEditableFoods([...updatedAnalysis.detectedFoods]);
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      setShowVoiceMealDialog(false);
+      setVoiceInput('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add food from voice. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error adding voice food:", error);
+    },
+  });
+
+  const handleConfirmVoiceFood = () => {
+    if (!voiceInput.trim()) return;
+    addVoiceMealMutation.mutate({
+      foodDescription: voiceInput.trim()
+    });
+  };
 
   const addToDiaryMutation = useMutation({
     mutationFn: async () => {
@@ -535,12 +671,23 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <div className="flex space-x-4">
             {/* Add More Button (Voice) */}
             <button
-              onClick={() => addNewFoodItem()}
-              className="flex-1 bg-gradient-to-br from-slate-700/90 to-slate-800/90 text-white py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 backdrop-blur-xl border border-white/10 hover:from-slate-600/90 hover:to-slate-700/90 transition-all duration-300 shadow-xl hover:scale-105 hover:shadow-purple-500/25"
+              onClick={handleVoiceInput}
+              disabled={!speechSupported}
+              className={`flex-1 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 backdrop-blur-xl border transition-all duration-300 shadow-xl hover:scale-105 font-semibold ${
+                isListening
+                  ? 'bg-red-500 text-white border-red-400 animate-pulse hover:shadow-red-500/25'
+                  : speechSupported
+                  ? 'bg-gradient-to-br from-slate-700/90 to-slate-800/90 text-white border-white/10 hover:from-slate-600/90 hover:to-slate-700/90 hover:shadow-purple-500/25'
+                  : 'bg-gray-400 text-gray-600 cursor-not-allowed border-gray-300'
+              }`}
               data-testid="button-add-voice"
             >
-              <Mic className="h-5 w-5 text-purple-400" />
-              <span className="font-semibold">Add More</span>
+              {isListening ? (
+                <MicOff className="h-5 w-5" />
+              ) : (
+                <Mic className="h-5 w-5 text-purple-400" />
+              )}
+              <span>{isListening ? 'Stop Listening' : 'Voice Add'}</span>
             </button>
             
             {/* Type Button */}
@@ -867,6 +1014,66 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                   </span>
                 ) : (
                   'Add to Diary'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Voice Meal Confirmation Dialog */}
+      {showVoiceMealDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Mic className="h-6 w-6 text-primary" />
+              </div>
+              Voice Input Captured
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  What did I hear?
+                </label>
+                <div className="p-3 bg-muted rounded-lg border">
+                  <p className="text-foreground font-medium">"{voiceInput}"</p>
+                </div>
+              </div>
+              
+              <div className="text-sm text-muted-foreground">
+                <p>This will be added to your current meal analysis.</p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowVoiceMealDialog(false);
+                  setVoiceInput('');
+                }}
+                className="flex-1 py-2 px-4 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                data-testid="button-cancel-voice"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmVoiceFood}
+                disabled={addVoiceMealMutation.isPending}
+                className="flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                data-testid="button-confirm-voice"
+              >
+                {addVoiceMealMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    <span>Add Food</span>
+                  </>
                 )}
               </button>
             </div>
