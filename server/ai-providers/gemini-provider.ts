@@ -282,7 +282,7 @@ Provide accurate nutritional information based on standard USDA values. Return t
   "detectedFoods": [
     {
       "name": "Simple, basic food name (raw/fresh unless specified)",
-      "portion": "interpreted portion size with units",
+      "portion": "PRESERVE original portion description from user (e.g., keep '2 large eggs' as '2 large eggs', not '100g')",
       "calories": number,
       "protein": number,
       "carbs": number,
