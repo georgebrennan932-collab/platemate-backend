@@ -49,14 +49,28 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
     // If already listening, stop the recording
     if (isListening && recognitionInstance) {
-      console.log('🛑 Stopping voice recording...');
+      console.log('🛑 User clicked stop - current state:', {
+        isListening,
+        hasRecognitionInstance: !!recognitionInstance,
+        recognitionState: recognitionInstance
+      });
+      
       try {
-        recognitionInstance.stop();
+        recognitionInstance.abort(); // Use abort() instead of stop() for immediate termination
+        console.log('🛑 Recognition.abort() called successfully');
       } catch (error) {
-        console.warn('Error stopping recognition:', error);
+        console.warn('Error aborting recognition:', error);
+        try {
+          recognitionInstance.stop();
+          console.log('🛑 Recognition.stop() called as fallback');
+        } catch (stopError) {
+          console.warn('Error with stop() fallback:', stopError);
+        }
       }
+      
       setIsListening(false);
       setRecognitionInstance(null);
+      console.log('🛑 State cleared - should be stopped now');
       return;
     }
 
