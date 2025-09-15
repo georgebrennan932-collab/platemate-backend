@@ -627,11 +627,12 @@ export function DiaryPage() {
                   <div key={date}>
                     {filteredGroupedEntries[date]?.map((entry) => (
                       <div key={entry.id} className="bg-card border rounded-lg p-4 mb-2">
-                        <div className="flex items-start justify-between mb-3">
+                        {/* Header with meal info and actions */}
+                        <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
                             {/* Meal Photo Thumbnail */}
                             {entry.analysis?.imageUrl && (
-                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
+                              <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted">
                                 <img 
                                   src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`}
                                   alt="Meal photo" 
@@ -643,14 +644,27 @@ export function DiaryPage() {
                               </div>
                             )}
                             <div>
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2 mb-1">
                                 <span className="text-sm font-medium capitalize">{entry.mealType}</span>
                                 <span className="text-xs text-muted-foreground">
                                   {format(new Date(entry.mealDate), 'h:mm a')}
                                 </span>
                               </div>
-                              <div className="text-sm font-semibold text-primary">
-                                {entry.analysis?.totalCalories || 0} cal
+                              
+                              {/* Compact nutrition overview */}
+                              <div className="flex items-center space-x-3 text-xs">
+                                <span className="font-semibold text-red-600" data-testid={`meal-calories-${entry.id}`}>
+                                  {entry.analysis?.totalCalories || 0} cal
+                                </span>
+                                <span className="text-blue-600" data-testid={`meal-protein-${entry.id}`}>
+                                  {entry.analysis?.totalProtein || 0}g protein
+                                </span>
+                                <span className="text-orange-600" data-testid={`meal-carbs-${entry.id}`}>
+                                  {entry.analysis?.totalCarbs || 0}g carbs
+                                </span>
+                                <span className="text-yellow-600" data-testid={`meal-fat-${entry.id}`}>
+                                  {entry.analysis?.totalFat || 0}g fat
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -667,23 +681,23 @@ export function DiaryPage() {
                           </div>
                         </div>
                         
-                        {/* Detailed Food Information */}
+                        {/* Compact food list */}
                         {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                             {entry.analysis.detectedFoods.map((food, index) => (
-                              <div key={index} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center">
-                                    <i className={`${food.icon || 'fas fa-utensils'} text-xs text-primary`}></i>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium">{food.name}</p>
-                                    <p className="text-xs text-muted-foreground">{food.portion}</p>
+                              <div key={index} className="flex items-center justify-between py-1 px-2 bg-muted/20 rounded text-xs">
+                                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                  <span className="text-sm">{food.icon || '🍽️'}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{food.name}</p>
+                                    <p className="text-muted-foreground">{food.portion}</p>
                                   </div>
                                 </div>
-                                <div className="text-right">
-                                  <p className="text-sm font-semibold">{food.calories} cal</p>
-                                  <p className="text-xs text-muted-foreground">{food.protein}g protein</p>
+                                <div className="flex items-center space-x-2 text-right ml-2 shrink-0">
+                                  <span className="font-medium">{food.calories}</span>
+                                  <span className="text-blue-600">{food.protein}p</span>
+                                  <span className="text-orange-600">{food.carbs}c</span>
+                                  <span className="text-yellow-600">{food.fat}f</span>
                                 </div>
                               </div>
                             ))}
