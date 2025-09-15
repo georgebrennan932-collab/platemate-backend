@@ -363,6 +363,22 @@ export class USDAService {
         if (description.includes('canned') || description.includes('frozen prepared')) score -= 20;
         if (description.includes('with ') || description.includes('sauce') || description.includes('dressing')) score -= 15;
         
+        // CRITICAL: Heavy penalty for processed egg products when searching for simple eggs
+        if (searchName.includes('egg') && !searchName.includes('custard') && !searchName.includes('mix')) {
+          if (description.includes('custard') || description.includes('mix') || description.includes('prepared') || 
+              description.includes('scrambled') || description.includes('deviled') || description.includes('salad')) {
+            score -= 300; // Heavy penalty for processed egg products
+            console.log(`📉 Processed egg penalty (-300): ${food.description}`);
+          }
+          
+          // Boost simple, raw eggs when searching for basic eggs
+          if ((description.includes('eggs, grade') || description.includes('egg, whole')) && 
+              (description.includes('raw') || !description.includes('cooked'))) {
+            score += 200; // Huge boost for simple raw eggs
+            console.log(`📈 Simple egg boost (+200): ${food.description}`);
+          }
+        }
+        
         // Exact matches get huge boost
         if (description.startsWith(foodName.toLowerCase())) score += 200;
         
