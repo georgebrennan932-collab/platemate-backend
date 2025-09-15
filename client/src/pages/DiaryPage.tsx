@@ -658,15 +658,11 @@ export function DiaryPage() {
               </div>
               
               {/* Daily Totals */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-background/80 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-primary" data-testid="calories-consumed">{todayNutrition.calories}</div>
-                  <div className="text-sm text-muted-foreground">Calories Consumed</div>
+              <div className="bg-background/80 rounded-lg p-4 text-center mb-4">
+                <div className="text-2xl font-bold text-primary" data-testid="calories-consumed">
+                  {todayNutrition.calories} <span className="text-sm text-green-600">({remainingNutrition?.calories || 0} left)</span>
                 </div>
-                <div className="bg-background/80 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600" data-testid="calories-remaining">{remainingNutrition?.calories || 0}</div>
-                  <div className="text-sm text-muted-foreground">Calories Remaining</div>
-                </div>
+                <div className="text-sm text-muted-foreground">Calories</div>
               </div>
               
               {/* Macros Progress */}
@@ -675,19 +671,22 @@ export function DiaryPage() {
                   <div className="text-sm font-medium mb-2">Macronutrients</div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="text-center">
-                      <div className="text-lg font-bold text-red-600">{todayNutrition.protein}g</div>
+                      <div className="text-lg font-bold text-red-600">
+                        {todayNutrition.protein}g <span className="text-xs text-green-600">({remainingNutrition?.protein || 0} left)</span>
+                      </div>
                       <div className="text-xs text-muted-foreground">Protein</div>
-                      <div className="text-xs text-green-600">({remainingNutrition?.protein || 0}g left)</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-bold text-blue-600">{todayNutrition.carbs}g</div>
+                      <div className="text-lg font-bold text-blue-600">
+                        {todayNutrition.carbs}g <span className="text-xs text-green-600">({remainingNutrition?.carbs || 0} left)</span>
+                      </div>
                       <div className="text-xs text-muted-foreground">Carbs</div>
-                      <div className="text-xs text-green-600">({remainingNutrition?.carbs || 0}g left)</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-bold text-yellow-600">{todayNutrition.fat}g</div>
+                      <div className="text-lg font-bold text-yellow-600">
+                        {todayNutrition.fat}g <span className="text-xs text-green-600">({remainingNutrition?.fat || 0} left)</span>
+                      </div>
                       <div className="text-xs text-muted-foreground">Fat</div>
-                      <div className="text-xs text-green-600">({remainingNutrition?.fat || 0}g left)</div>
                     </div>
                   </div>
                 </div>
