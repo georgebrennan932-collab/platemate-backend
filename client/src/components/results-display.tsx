@@ -1,4 +1,4 @@
-import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2, Mic, MicOff } from "lucide-react";
+import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2, Mic, MicOff, ArrowLeft } from "lucide-react";
 import type { FoodAnalysis, DetectedFood } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -56,8 +56,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       });
       
       try {
-        recognitionInstance.abort(); // Use abort() instead of stop() for immediate termination
-        console.log('🛑 Recognition.abort() called successfully');
+        // Force immediate stop with state cleanup
+        setIsListening(false);
+        setRecognitionInstance(null);
+        
+        recognitionInstance.abort(); // Use abort() for immediate termination
+        console.log('🛑 Recognition.abort() called and state cleared');
       } catch (error) {
         console.warn('Error aborting recognition:', error);
         try {
@@ -66,11 +70,15 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         } catch (stopError) {
           console.warn('Error with stop() fallback:', stopError);
         }
+        // Ensure state is cleared even if abort/stop fails
+        setIsListening(false);
+        setRecognitionInstance(null);
       }
       
-      setIsListening(false);
-      setRecognitionInstance(null);
-      console.log('🛑 State cleared - should be stopped now');
+      toast({
+        title: "Voice Recording Stopped",
+        description: "Speech recognition has been stopped",
+      });
       return;
     }
 
@@ -453,6 +461,18 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   return (
     <div className="p-4 space-y-4">
+      {/* Back Button */}
+      <div className="flex items-center mb-4">
+        <button 
+          onClick={onScanAnother}
+          className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted/30 rounded-xl"
+          data-testid="button-back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="font-medium">Back to Camera</span>
+        </button>
+      </div>
+      
       {/* AI Unavailable Warning */}
       {data.isAITemporarilyUnavailable && (
         <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">

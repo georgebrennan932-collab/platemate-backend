@@ -364,9 +364,33 @@ export default function VoicePage() {
 
   const stopVoiceInput = () => {
     if ((window as any).currentRecognition) {
-      (window as any).currentRecognition.stop();
+      try {
+        // Force immediate stop with state cleanup
+        setVoiceInput(prev => ({ ...prev, isListening: false }));
+        
+        (window as any).currentRecognition.abort(); // Use abort() for immediate termination
+        console.log('🛑 VoicePage: Recognition.abort() called and state cleared');
+        
+        toast({
+          title: "Voice Input Stopped",
+          description: "Speech recognition has been stopped",
+        });
+      } catch (error) {
+        console.warn('Error aborting recognition:', error);
+        try {
+          (window as any).currentRecognition.stop();
+          console.log('🛑 VoicePage: Recognition.stop() called as fallback');
+        } catch (stopError) {
+          console.warn('Error with stop() fallback:', stopError);
+        }
+        // Ensure state is cleared even if abort/stop fails
+        setVoiceInput(prev => ({ ...prev, isListening: false }));
+      }
+      
+      (window as any).currentRecognition = null;
+    } else {
+      setVoiceInput(prev => ({ ...prev, isListening: false }));
     }
-    setVoiceInput(prev => ({ ...prev, isListening: false }));
   };
 
   const formatTime = (seconds: number) => {
