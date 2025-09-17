@@ -71,8 +71,18 @@ export function RecipesPage() {
   const { data: recipes, isLoading, error } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes", selectedDiet === 'all' ? '' : selectedDiet, searchQuery],
     queryFn: async () => {
+      // Build URL properly to avoid double slashes
+      let url = '/api/recipes';
       const dietParam = selectedDiet === 'all' ? '' : selectedDiet;
-      const url = `/api/recipes/${dietParam}/${searchQuery || ''}`;
+      
+      if (dietParam && searchQuery) {
+        url = `/api/recipes/${dietParam}/${searchQuery}`;
+      } else if (dietParam) {
+        url = `/api/recipes/${dietParam}`;
+      } else if (searchQuery) {
+        url = `/api/recipes/_/${searchQuery}`;
+      }
+      
       console.log('Fetching recipes from:', url);
       const response = await fetch(url);
       if (!response.ok) {
