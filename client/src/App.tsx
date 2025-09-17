@@ -10,6 +10,7 @@ import Home from "./pages/home";
 import DiaryPage from "./pages/DiaryPage";
 import DietAdvicePage from "./pages/DietAdvicePage";
 import CalculatorPage from "./pages/calculator";
+import CalculatorTestPage from "./pages/CalculatorTestPage";
 import RecipesPage from "./pages/RecipesPage";
 import CoachingPage from "./pages/CoachingPage";
 import GoalsPage from "./pages/GoalsPage";
@@ -29,6 +30,7 @@ function App() {
       <Route path="/home" component={Home} />
       <Route path="/diary" component={DiaryPage} />
       <Route path="/calculator" component={CalculatorPage} />
+      <Route path="/calculator-test" component={CalculatorTestPage} />
       <Route path="/advice" component={DietAdvicePage} />
       <Route path="/ai-advice" component={DietAdvicePage} />
       <Route path="/diet-advice" component={DietAdvicePage} />
