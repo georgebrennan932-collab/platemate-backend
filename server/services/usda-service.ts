@@ -177,6 +177,28 @@ export class USDAService {
   private preprocessFoodName(foodName: string): string {
     const name = foodName.toLowerCase().trim();
     
+    // ===== SNACK FOODS & CRISPS HANDLING =====
+    // Handle British "crisps" and American "chips" - focus on the snack food category
+    if (name.includes('crisps') || (name.includes('chips') && !name.includes('fish') && !name.includes('wood'))) {
+      // For compound crisp names like "prawn cocktail crisps", prioritize the snack type
+      if (name.includes('prawn cocktail')) {
+        return 'snacks corn based extruded chips plain'; // Generic savory chip/crisp
+      }
+      if (name.includes('salt') && name.includes('vinegar')) {
+        return 'snacks potato chips plain salted';
+      }
+      if (name.includes('cheese') && name.includes('onion')) {
+        return 'snacks corn based extruded chips cheese';
+      }
+      // Generic crisp/chip fallback
+      if (name.includes('crisps')) {
+        return 'snacks potato chips plain salted';
+      }
+      if (name.includes('chips')) {
+        return 'snacks potato chips plain salted';
+      }
+    }
+    
     // Handle British/International food terms
     if (name.includes('back bacon') || name.includes('bacon back')) {
       return 'pork bacon cured';
@@ -262,6 +284,38 @@ export class USDAService {
           score -= 1000; // Heavy penalty to ensure real meat products rank higher
         }
 
+        // ===== FOOD CATEGORY COMPATIBILITY SCORING =====
+        // Prevent category mismatches (e.g., snacks matching with beverages)
+        const isSnackFood = /(crisps?|chips?|snacks?|crackers?)/i.test(searchName);
+        const isBeverage = /(cocktail|drink|beverage|juice|soda|beer|wine|alcohol)/i.test(description);
+        
+        if (isSnackFood && isBeverage) {
+          score -= 2000; // Massive penalty for category mismatch
+          console.log(`🚫 Category mismatch: snack food "${searchName}" matched with beverage "${food.description}" - penalty applied`);
+        }
+        
+        // Boost appropriate category matches
+        if (isSnackFood && /snacks?/i.test(description)) {
+          score += 300; // Strong boost for proper snack category match
+          console.log(`📈 Snack category match boost: ${food.description}`);
+        }
+        
+        // Additional category compatibility checks
+        const isMeat = /(meat|beef|pork|chicken|turkey|lamb|bacon|sausage)/i.test(searchName);
+        const isDessert = /(cake|cookie|dessert|sweet|candy|chocolate)/i.test(description);
+        const isVegetable = /(vegetable|carrot|broccoli|lettuce|spinach)/i.test(searchName);
+        const isFruit = /(fruit|apple|banana|orange|berry)/i.test(searchName);
+        
+        if (isMeat && isDessert) {
+          score -= 1500; // Heavy penalty for meat vs dessert mismatch
+          console.log(`🚫 Meat-dessert mismatch: "${searchName}" vs "${food.description}"`);
+        }
+        
+        if ((isVegetable || isFruit) && isBeverage && !/(juice|smoothie)/i.test(description)) {
+          score -= 1000; // Penalty for produce vs non-juice beverage mismatch  
+          console.log(`🚫 Produce-beverage mismatch: "${searchName}" vs "${food.description}"`);
+        }
+
         // ===== ENHANCED GENERIC/AVERAGE PREFERENCE LOGIC =====
         
         // Heavily penalize branded entries (identifiable by ALL CAPS brands)
@@ -318,6 +372,13 @@ export class USDAService {
             console.log(`📉 Extreme penalty (-${penalty}) for ${label}: ${food.description}`);
             break; // Apply only the first matching penalty
           }
+        }
+        
+        // Handle NFS (Not Further Specified) with small genericity penalty
+        // NFS foods are less specific but shouldn't be treated as beverages
+        if (/\bnfs\b/i.test(description)) {
+          score -= 25; // Small penalty for being less specific
+          console.log(`📉 NFS genericity penalty (-25): ${food.description}`);
         }
         
         // Boost USDA SR Legacy and Foundation data (more reliable)
