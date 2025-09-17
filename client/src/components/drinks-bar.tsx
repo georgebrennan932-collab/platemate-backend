@@ -68,7 +68,7 @@ export function DrinksBar() {
   };
 
   const handleQuickAdd = (drinkType: keyof typeof drinkPresets) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user?.id) {
       toast({
         title: "Authentication Required",
         description: "Please log in to record drinks.",
@@ -81,6 +81,7 @@ export function DrinksBar() {
     const alcoholUnits = calculateAlcoholUnits(preset.defaultAmount, preset.alcoholContent);
     
     const drink: InsertDrinkEntry = {
+      userId: user.id,
       drinkName: preset.name,
       drinkType,
       amount: preset.defaultAmount,
@@ -95,7 +96,7 @@ export function DrinksBar() {
   };
 
   const handleCustomAdd = () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user?.id) {
       toast({
         title: "Authentication Required",
         description: "Please log in to record drinks.",
@@ -114,6 +115,7 @@ export function DrinksBar() {
     const alcoholUnits = calculateAlcoholUnits(amountNum, preset.alcoholContent);
     
     const drink: InsertDrinkEntry = {
+      userId: user.id,
       drinkName: selectedDrink === 'other' ? customName : preset.name,
       drinkType: selectedDrink as any,
       amount: amountNum,
