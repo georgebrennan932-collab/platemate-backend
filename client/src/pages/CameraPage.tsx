@@ -10,8 +10,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Activity, Keyboard, Scale } from "lucide-react";
-import { healthConnectService } from "@/lib/health-connect-service";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
@@ -35,9 +34,6 @@ export function CameraPage() {
   const [showTextMealDialog, setShowTextMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   
-  // Health Connect state
-  const [isHealthConnectConnected, setIsHealthConnectConnected] = useState(false);
-  const [lastHealthConnectSync, setLastHealthConnectSync] = useState<Date | null>(null);
   
   // Persistent confetti celebration state
   const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
@@ -54,23 +50,13 @@ export function CameraPage() {
     retry: false,
   });
   
-  // Initialize speech recognition and Health Connect
+  // Initialize speech recognition
   useEffect(() => {
     const checkSpeechSupport = () => {
       const supported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
       setSpeechSupported(supported);
     };
     checkSpeechSupport();
-    
-    // Initialize Health Connect
-    const initHealthConnect = async () => {
-      const connected = await healthConnectService.initialize();
-      setIsHealthConnectConnected(connected);
-      if (connected) {
-        setLastHealthConnectSync(new Date());
-      }
-    };
-    initHealthConnect();
   }, []);
 
   const handleAnalysisStart = () => {

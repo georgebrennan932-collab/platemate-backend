@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syringe, Target, Activity, Mic, Volume2, ChefHat } from "lucide-react";
+import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syringe, Target, Mic, Volume2, ChefHat, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -133,7 +133,7 @@ export default function LandingPage() {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center">
-                Calculate personalized daily calories and get recommended step targets based on your profile, age, and activity level.
+                Calculate personalized daily calories and set nutrition goals based on your profile, age, and activity level.
               </CardDescription>
             </CardContent>
           </Card>
@@ -141,13 +141,13 @@ export default function LandingPage() {
           <Card className="border-orange-200 dark:border-orange-800 hover:shadow-2xl hover:shadow-orange-500/25 transition-all duration-500 hover:scale-105 hover:rotate-1 animate-fade-in-up animation-delay-2400 group">
             <CardHeader className="text-center">
               <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-1500 group-hover:animate-bounce">
-                <Activity className="h-8 w-8 text-orange-600 dark:text-orange-400 group-hover:animate-pulse" />
+                <Scale className="h-8 w-8 text-orange-600 dark:text-orange-400 group-hover:animate-pulse" />
               </div>
-              <CardTitle className="text-xl group-hover:text-orange-600 transition-colors">Step Tracking</CardTitle>
+              <CardTitle className="text-xl group-hover:text-orange-600 transition-colors">Weight Tracking</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center">
-                Built-in motion tracking with Android Health Connect integration. Track steps automatically with smart detection and manual controls.
+                Track your weight progress with visual charts and analytics. Monitor trends over time and celebrate your achievements.
               </CardDescription>
             </CardContent>
           </Card>
@@ -226,11 +226,11 @@ export default function LandingPage() {
                 <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full w-fit mx-auto mb-4 group-hover:animate-bounce">
                   <Target className="h-8 w-8 text-orange-600 dark:text-orange-400" />
                 </div>
-                <CardTitle className="text-lg group-hover:text-orange-600 transition-colors">Smart Goals & Steps</CardTitle>
+                <CardTitle className="text-lg group-hover:text-orange-600 transition-colors">Smart Goals & Analytics</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-sm">
-                  Set personalized nutrition goals and get recommended daily step targets based on your age, activity level, and health goals.
+                  Set personalized nutrition goals and track your progress with detailed analytics based on your age, activity level, and health goals.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -238,7 +238,7 @@ export default function LandingPage() {
             <Card className="border-purple-200 dark:border-purple-800 hover:shadow-xl transition-all duration-300 group">
               <CardHeader className="text-center">
                 <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full w-fit mx-auto mb-4 group-hover:animate-bounce">
-                  <Activity className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                  <Target className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                 </div>
                 <CardTitle className="text-lg group-hover:text-purple-600 transition-colors">Medication-Aware</CardTitle>
               </CardHeader>
@@ -308,10 +308,10 @@ export default function LandingPage() {
             </div>
             
             <div className="flex items-start space-x-3">
-              <Activity className="h-6 w-6 text-orange-500 mt-1 flex-shrink-0" />
+              <Scale className="h-6 w-6 text-orange-500 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-semibold mb-1">Smart Step Tracking</h3>
-                <p className="text-muted-foreground">Built-in motion sensors with Health Connect integration. Get personalized daily step targets based on your profile and goals.</p>
+                <h3 className="text-lg font-semibold mb-1">Weight Progress Tracking</h3>
+                <p className="text-muted-foreground">Monitor your weight journey with beautiful charts and progress analytics. Celebrate milestones and stay motivated.</p>
               </div>
             </div>
             

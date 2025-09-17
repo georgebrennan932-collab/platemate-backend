@@ -10,8 +10,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Activity, Keyboard, Scale } from "lucide-react";
-import { healthConnectService } from "@/lib/health-connect-service";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
@@ -35,9 +34,6 @@ export default function Home() {
   const [showTextMealDialog, setShowTextMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   
-  // Health Connect state
-  const [isHealthConnectConnected, setIsHealthConnectConnected] = useState(false);
-  const [lastHealthConnectSync, setLastHealthConnectSync] = useState<Date | null>(null);
   
   // Persistent confetti celebration state
   const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
@@ -54,23 +50,13 @@ export default function Home() {
     retry: false,
   });
   
-  // Initialize speech recognition and Health Connect
+  // Initialize speech recognition
   useEffect(() => {
     const checkSpeechSupport = () => {
       const supported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
       setSpeechSupported(supported);
     };
     checkSpeechSupport();
-    
-    // Initialize Health Connect
-    const initHealthConnect = async () => {
-      const connected = await healthConnectService.initialize();
-      setIsHealthConnectConnected(connected);
-      if (connected) {
-        setLastHealthConnectSync(new Date());
-      }
-    };
-    initHealthConnect();
   }, []);
 
   // Check for achieved goals and trigger persistent confetti
@@ -107,17 +93,8 @@ export default function Home() {
       const caloriesAchieved = totalCalories >= (nutritionGoals.dailyCalories || 2000);
       const proteinAchieved = totalProtein >= (nutritionGoals.dailyProtein || 150);
 
-      // Check step goals
-      const stepData = localStorage.getItem(`platemate-steps-${today}`);
-      let stepsAchieved = false;
-      
-      if (stepData) {
-        const parsed = JSON.parse(stepData);
-        stepsAchieved = parsed.count >= parsed.goal;
-      }
-
       // Show confetti if any goal is achieved
-      if (caloriesAchieved || proteinAchieved || stepsAchieved) {
+      if (caloriesAchieved || proteinAchieved) {
         console.log('🎉 Goals achieved! Triggering persistent confetti celebration');
         setShowPersistentConfetti(true);
         
@@ -239,142 +216,6 @@ export default function Home() {
     });
   };
 
-  // Step tracker handler - uses built-in motion sensors
-  const handleStepTracker = async () => {
-    if (!isHealthConnectConnected) {
-      // Use built-in step counter with motion sensors
-      try {
-        const todayKey = new Date().toISOString().split('T')[0];
-        
-        // Clear any existing motion listeners first
-        const existingListeners = document.querySelectorAll('[data-motion-listener]');
-        existingListeners.forEach(() => {
-          window.removeEventListener('devicemotion', (window as any).currentMotionHandler);
-        });
-        
-        // Start motion tracking
-        if ('DeviceMotionEvent' in window) {
-          console.log('Starting realistic step detection...');
-          let lastStepTime = 0;
-          let stepDetectionBuffer: number[] = [];
-          
-          const handleMotion = (event: DeviceMotionEvent) => {
-            const now = Date.now();
-            const acc = event.accelerationIncludingGravity;
-            
-            if (acc) {
-              // Calculate total acceleration magnitude
-              const magnitude = Math.sqrt((acc.x || 0)**2 + (acc.y || 0)**2 + (acc.z || 0)**2);
-              
-              // Add to buffer for smoothing
-              stepDetectionBuffer.push(magnitude);
-              if (stepDetectionBuffer.length > 20) {
-                stepDetectionBuffer.shift();
-              }
-              
-              // Only detect steps if we have enough data and enough time has passed
-              if (stepDetectionBuffer.length >= 10 && now - lastStepTime > 600) {
-                const avgMagnitude = stepDetectionBuffer.reduce((a, b) => a + b, 0) / stepDetectionBuffer.length;
-                const currentVariation = Math.abs(magnitude - avgMagnitude);
-                
-                // Detect significant movement (like a step)
-                if (currentVariation > 2.5) {
-                  console.log(`Step detected! Magnitude: ${magnitude.toFixed(2)}, Variation: ${currentVariation.toFixed(2)}`);
-                  
-                  // Get current steps from localStorage and add one
-                  const stored = localStorage.getItem(`platemate-steps-${todayKey}`);
-                  let currentSteps = 0;
-                  if (stored) {
-                    try {
-                      const stepData = JSON.parse(stored);
-                      currentSteps = stepData.count || 0;
-                    } catch {}
-                  }
-                  
-                  const newSteps = currentSteps + 1;
-                  const stepData = {
-                    count: newSteps,
-                    date: todayKey,
-                    goal: 10000
-                  };
-                  localStorage.setItem(`platemate-steps-${todayKey}`, JSON.stringify(stepData));
-                  lastStepTime = now;
-                  
-                  console.log(`Total steps: ${newSteps}`);
-                }
-              }
-            }
-          };
-          
-          // Store reference to remove later
-          (window as any).currentMotionHandler = handleMotion;
-          window.addEventListener('devicemotion', handleMotion);
-          
-          toast({
-            title: "Step Detection Started!",
-            description: "Walk normally to track your steps. Double-click step counter to reset and stop tracking.",
-          });
-        } else {
-          toast({
-            title: "Motion Sensors Not Available",
-            description: "Your device doesn't support motion detection. Use the step counter button to manually track.",
-            variant: "destructive"
-          });
-        }
-        
-        // Try to connect to Health Connect for enhanced accuracy (optional)
-        try {
-          const connected = await healthConnectService.authenticate();
-          if (connected) {
-            setIsHealthConnectConnected(true);
-            const result = await healthConnectService.syncWithLocalSteps();
-            if (result.synced) {
-              setLastHealthConnectSync(new Date());
-              toast({
-                title: "Enhanced Tracking Enabled",
-                description: `Health Connect connected! Now using both motion sensors and Health Connect for maximum accuracy.`,
-              });
-            }
-          }
-        } catch (error) {
-          // Health Connect not available - continue with built-in tracking
-          console.log('Health Connect not available, using built-in motion tracking');
-        }
-        
-      } catch (error) {
-        toast({
-          title: "Tracking Error",
-          description: "Could not start step tracking. Please check your device permissions.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      // Health Connect is connected, sync data
-      try {
-        const result = await healthConnectService.syncWithLocalSteps();
-        if (result.synced) {
-          setLastHealthConnectSync(new Date());
-          toast({
-            title: "Sync Complete!",
-            description: `Updated with ${result.steps} steps from Health Connect`,
-          });
-        } else {
-          toast({
-            title: "Already Up to Date",
-            description: "Your step count is already synced",
-          });
-        }
-      } catch (error) {
-        console.error('Health Connect sync error:', error);
-        toast({
-          title: "Sync Failed",
-          description: "Switching back to built-in motion tracking",
-          variant: "default",
-        });
-        setIsHealthConnectConnected(false);
-      }
-    }
-  };
 
   const addVoiceMealMutation = useMutation({
     mutationFn: async ({ foodDescription, mealType }: { foodDescription: string, mealType: string }) => {

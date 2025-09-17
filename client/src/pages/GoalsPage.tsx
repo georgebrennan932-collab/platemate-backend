@@ -1,7 +1,6 @@
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { Link } from "wouter";
 import { NutritionGoals } from "@/components/nutrition-goals";
-import { StepRecommendations } from "@/components/step-recommendations";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 
@@ -39,10 +38,6 @@ export function GoalsPage() {
       {/* Content */}
       <div className="max-w-md mx-auto p-4 space-y-6">
         <NutritionGoals />
-        
-        {/* Step Recommendations */}
-        <StepRecommendations />
-        
       </div>
       
       {/* Bottom Navigation */}
