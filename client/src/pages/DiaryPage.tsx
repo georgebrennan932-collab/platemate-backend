@@ -640,6 +640,70 @@ export function DiaryPage() {
                         )}
                       </div>
                     ))}
+                    
+                    {/* Today's Drinks */}
+                    {groupedDrinks[date]?.map((drink) => (
+                      <div key={drink.id} className="bg-card border border-blue-200 rounded-lg p-4 mb-2">
+                        {/* Header with drink info and actions */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            {/* Drink Icon */}
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-blue-100 flex items-center justify-center">
+                              <Droplets className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-sm font-medium capitalize">{drink.drinkName}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {format(new Date(drink.loggedAt), 'h:mm a')}
+                                </span>
+                              </div>
+                              
+                              {/* Compact drink info */}
+                              <div className="flex items-center space-x-3 text-xs">
+                                <span className="font-semibold text-red-600" data-testid={`drink-calories-${drink.id}`}>
+                                  {drink.calories || 0} cal
+                                </span>
+                                <span className="text-blue-600" data-testid={`drink-amount-${drink.id}`}>
+                                  {drink.amount}ml
+                                </span>
+                                {drink.caffeine > 0 && (
+                                  <span className="text-green-600" data-testid={`drink-caffeine-${drink.id}`}>
+                                    {drink.caffeine}mg caffeine
+                                  </span>
+                                )}
+                                {drink.alcoholContent > 0 && (
+                                  <span className="text-purple-600" data-testid={`drink-alcohol-${drink.id}`}>
+                                    {drink.alcoholContent}% ABV
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={() => deleteDrinkMutation.mutate(drink.id)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              title="Delete drink"
+                              data-testid={`button-delete-drink-${drink.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Drink Details */}
+                        <div className="bg-blue-50/50 rounded-lg p-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center space-x-4">
+                              <span className="text-muted-foreground">Type: <strong>{drink.drinkType}</strong></span>
+                              {drink.sugar > 0 && <span className="text-muted-foreground">Sugar: <strong>{drink.sugar}g</strong></span>}
+                              {drink.alcoholUnits > 0 && <span className="text-muted-foreground">Units: <strong>{drink.alcoholUnits}</strong></span>}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
