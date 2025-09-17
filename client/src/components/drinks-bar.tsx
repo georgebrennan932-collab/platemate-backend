@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { soundService } from "@/lib/sound-service";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,9 +32,7 @@ export function DrinksBar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // This would normally come from authentication context
-  const userId = "current-user"; // This will be replaced with actual user ID from auth
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   const addDrinkMutation = useMutation({
     mutationFn: async (drink: InsertDrinkEntry) => {
@@ -69,11 +68,19 @@ export function DrinksBar() {
   };
 
   const handleQuickAdd = (drinkType: keyof typeof drinkPresets) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to record drinks.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const preset = drinkPresets[drinkType];
     const alcoholUnits = calculateAlcoholUnits(preset.defaultAmount, preset.alcoholContent);
     
     const drink: InsertDrinkEntry = {
-      userId,
       drinkName: preset.name,
       drinkType,
       amount: preset.defaultAmount,
@@ -88,6 +95,15 @@ export function DrinksBar() {
   };
 
   const handleCustomAdd = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to record drinks.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!selectedDrink || !amount) return;
     
     const preset = drinkPresets[selectedDrink as keyof typeof drinkPresets];
@@ -98,7 +114,6 @@ export function DrinksBar() {
     const alcoholUnits = calculateAlcoholUnits(amountNum, preset.alcoholContent);
     
     const drink: InsertDrinkEntry = {
-      userId,
       drinkName: selectedDrink === 'other' ? customName : preset.name,
       drinkType: selectedDrink as any,
       amount: amountNum,

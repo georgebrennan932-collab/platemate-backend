@@ -172,6 +172,7 @@ export const updateDiaryEntrySchema = insertDiaryEntrySchema.partial().extend({
 
 export const insertDrinkEntrySchema = createInsertSchema(drinkEntries).omit({
   id: true,
+  userId: true, // Server automatically injects userId from authenticated session
   createdAt: true,
 }).extend({
   drinkType: z.enum(["water", "coffee", "tea", "juice", "soda", "sports_drink", "beer", "wine", "spirits", "cocktail", "other"]),
