@@ -465,6 +465,33 @@ export class AIManager {
       }
     }
     
+    // UK Crisps/Chips handling - Standard single-serve packets are 25g in the UK
+    const isUKCrisp = foodLower.includes('crisps') || 
+                     (foodLower.includes('chips') && !foodLower.includes('fish') && !foodLower.includes('wood'));
+    
+    if (isUKCrisp || 
+        portionLower.includes('crisps') || 
+        (portionLower.includes('chips') && !portionLower.includes('fish'))) {
+      
+      // Handle specific UK crisp portion terms
+      if (portionLower.includes('packet') || portionLower.includes('bag') || 
+          portionLower.includes('single serve') || portionLower.includes('individual')) {
+        console.log(`⚖️  UK crisp packet: ${portion} (${foodName}) = ${num * 25}g (standard UK single-serve)`);
+        return num * 25; // UK single-serve crisp packet ≈ 25g
+      }
+      
+      // Handle sharing/multi-serve bags
+      if (portionLower.includes('sharing') || portionLower.includes('family') || 
+          portionLower.includes('multi') || portionLower.includes('large bag')) {
+        console.log(`⚖️  UK crisp sharing bag: ${portion} (${foodName}) = ${num * 150}g (sharing size)`);
+        return num * 150; // UK sharing bag ≈ 150g
+      }
+      
+      // Default UK crisp portion (assume standard single-serve if no specific size mentioned)
+      console.log(`⚖️  UK crisp default: ${portion} (${foodName}) = ${num * 25}g (standard UK portion)`);
+      return num * 25; // Default UK crisp portion ≈ 25g
+    }
+    
     // Volume conversions (rough estimates)
     if (portionLower.includes('cup')) {
       return num * 240; // 1 cup ≈ 240g
@@ -531,7 +558,12 @@ export class AIManager {
       
       // Dairy
       { keywords: ['cheese slice'], portion: num * 20, label: 'cheese slice' },
-      { keywords: ['yogurt cup'], portion: num * 170, label: 'yogurt cup' }
+      { keywords: ['yogurt cup'], portion: num * 170, label: 'yogurt cup' },
+      
+      // Snacks & Crisps (UK standard single-serve portions)
+      { keywords: ['crisps', 'potato chips', 'chips packet', 'crisp packet'], portion: num * 25, label: 'UK crisps' },
+      { keywords: ['prawn cocktail crisps', 'salt vinegar crisps', 'cheese onion crisps'], portion: num * 25, label: 'UK flavored crisps' },
+      { keywords: ['ready salted crisps', 'smoky bacon crisps', 'roast chicken crisps'], portion: num * 25, label: 'UK flavored crisps' }
     ];
     
     for (const standard of standardPortions) {

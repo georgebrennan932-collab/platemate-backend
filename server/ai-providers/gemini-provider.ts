@@ -40,6 +40,11 @@ IMPORTANT: Look for reference objects in the image to help estimate scale and po
 - Hand or fingers for scale
 - Common objects like coins, phones, etc.
 
+CRITICAL UK FOOD PORTIONS:
+- UK crisps/chips: Single-serve packets are typically 25g (NOT 30g). Use "25g" for standard crisp packets.
+- If you see a crisp packet, bag, or single-serve portion, estimate as "25g" unless it's clearly a sharing size.
+- Common UK crisp flavors (Ready Salted, Cheese & Onion, Salt & Vinegar, Prawn Cocktail) are typically 25g packets.
+
 Guidelines for accurate food identification:
 - Focus on identifying actual food items, not random objects
 - Look for typical breakfast, lunch, dinner, or snack foods
@@ -63,7 +68,7 @@ Return the response as a JSON object with this exact structure:
   ]
 }
 
-Focus on accurate food identification and portion estimation using any reference objects you can see. Be specific with portions (e.g., "100g", "1 medium slice", "150ml"). Only return the JSON object, no additional text.`,
+Focus on accurate food identification and portion estimation using any reference objects you can see. Be specific with portions (e.g., "100g", "1 medium slice", "150ml", "25g" for UK crisps). Only return the JSON object, no additional text.`,
       ];
 
       const response = await this.client.models.generateContent({

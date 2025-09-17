@@ -181,14 +181,18 @@ export class USDAService {
     // Handle British "crisps" and American "chips" - focus on the snack food category
     if (name.includes('crisps') || (name.includes('chips') && !name.includes('fish') && !name.includes('wood'))) {
       // For compound crisp names like "prawn cocktail crisps", prioritize the snack type
+      // UK crisp flavors - all typically potato-based
       if (name.includes('prawn cocktail')) {
-        return 'snacks corn based extruded chips plain'; // Generic savory chip/crisp
+        return 'snacks potato chips plain salted'; // British crisps are typically potato-based
       }
       if (name.includes('salt') && name.includes('vinegar')) {
         return 'snacks potato chips plain salted';
       }
       if (name.includes('cheese') && name.includes('onion')) {
-        return 'snacks corn based extruded chips cheese';
+        return 'snacks potato chips plain salted'; // British cheese & onion crisps are potato-based
+      }
+      if (name.includes('ready salted') || name.includes('smoky bacon') || name.includes('roast chicken')) {
+        return 'snacks potato chips plain salted'; // Common UK crisp flavors are potato-based
       }
       // Generic crisp/chip fallback
       if (name.includes('crisps')) {
