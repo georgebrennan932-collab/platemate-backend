@@ -25,7 +25,8 @@ function App() {
 
   return (
     <Switch>
-      <Route path="/" component={LandingPage} />
+      <Route path="/" component={Home} />
+      <Route path="/landing" component={LandingPage} />
       <Route path="/scan" component={CameraPage} />
       <Route path="/home" component={Home} />
       <Route path="/diary" component={DiaryPage} />
