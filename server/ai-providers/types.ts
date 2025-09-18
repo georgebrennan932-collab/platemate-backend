@@ -92,6 +92,22 @@ export interface ProviderStatus {
   errorCount: number;
 }
 
+export interface HealthCheckResult {
+  providerName: string;
+  healthy: boolean;
+  responseTime: number;
+  error?: string;
+  timestamp: Date;
+  details?: {
+    model?: string;
+    apiVersion?: string;
+    rateLimit?: {
+      remaining: number;
+      resetTime: Date;
+    };
+  };
+}
+
 export abstract class AIProvider {
   public abstract readonly name: string;
   public abstract readonly priority: number; // Lower number = higher priority
@@ -110,6 +126,9 @@ export abstract class AIProvider {
   abstract answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string>;
   abstract generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching>;
   abstract generateEducationalTips(category: 'all' | 'nutrition' | 'medication' | 'motivation'): Promise<EducationalTip[]>;
+  
+  // Health check method for startup optimization
+  abstract performHealthCheck(): Promise<HealthCheckResult>;
 
   public getStatus(): ProviderStatus {
     return {

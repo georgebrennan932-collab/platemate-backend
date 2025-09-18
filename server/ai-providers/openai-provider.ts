@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { promises as fs } from "fs";
-import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, DiaryEntry, ProviderError, DailyCoaching, EducationalTip } from "./types";
+import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, DiaryEntry, ProviderError, DailyCoaching, EducationalTip, HealthCheckResult } from "./types";
 
 export class OpenAIProvider extends AIProvider {
   public readonly name = "OpenAI";
@@ -14,6 +14,42 @@ export class OpenAIProvider extends AIProvider {
     this.client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
+  }
+
+  async performHealthCheck(): Promise<HealthCheckResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Simple health check with a lightweight request
+      const response = await this.client.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: "Health check" }],
+        max_tokens: 5
+      });
+
+      const responseTime = Date.now() - startTime;
+      
+      return {
+        providerName: this.name,
+        healthy: true,
+        responseTime,
+        timestamp: new Date(),
+        details: {
+          model: "gpt-4o-mini",
+          apiVersion: "1.0"
+        }
+      };
+    } catch (error: any) {
+      const responseTime = Date.now() - startTime;
+      
+      return {
+        providerName: this.name,
+        healthy: false,
+        responseTime,
+        error: error.message,
+        timestamp: new Date()
+      };
+    }
   }
 
   async analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult> {

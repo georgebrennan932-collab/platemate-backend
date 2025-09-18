@@ -10,6 +10,7 @@ import path from "path";
 import express from "express";
 import { aiManager } from "./ai-providers/ai-manager";
 import { usdaService } from "./services/usda-service";
+import { imageAnalysisCache } from "./services/image-analysis-cache";
 
 // Configure multer for image uploads
 const upload = multer({ 
@@ -24,12 +25,78 @@ const upload = multer({
   }
 });
 
+// Request queue management for concurrent handling
+class RequestQueue {
+  private activeRequests = 0;
+  private readonly maxConcurrent = 5; // Limit concurrent AI requests
+  private waitingQueue: Array<() => void> = [];
+
+  async acquire(): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.activeRequests < this.maxConcurrent) {
+        this.activeRequests++;
+        resolve();
+      } else {
+        this.waitingQueue.push(() => {
+          this.activeRequests++;
+          resolve();
+        });
+      }
+    });
+  }
+
+  release(): void {
+    this.activeRequests--;
+    const next = this.waitingQueue.shift();
+    if (next) {
+      next();
+    }
+  }
+
+  getStats() {
+    return {
+      active: this.activeRequests,
+      waiting: this.waitingQueue.length,
+      maxConcurrent: this.maxConcurrent
+    };
+  }
+}
+
+const analysisQueue = new RequestQueue();
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded images as static files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
   // Setup authentication
   await setupAuth(app);
+
+  // Cache and monitoring endpoints
+  app.get('/api/cache/stats', isAuthenticated, async (req, res) => {
+    try {
+      const cacheStats = imageAnalysisCache.getStats();
+      const queueStats = analysisQueue.getStats();
+      
+      res.json({
+        cache: cacheStats,
+        queue: queueStats,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('Failed to get cache stats:', error);
+      res.status(500).json({ error: 'Failed to get cache statistics' });
+    }
+  });
+
+  app.post('/api/cache/clear', isAuthenticated, async (req, res) => {
+    try {
+      await imageAnalysisCache.clear();
+      res.json({ message: 'Cache cleared successfully' });
+    } catch (error: any) {
+      console.error('Failed to clear cache:', error);
+      res.status(500).json({ error: 'Failed to clear cache' });
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -127,10 +194,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Analyze food image
   app.post("/api/analyze", isAuthenticated, upload.single('image'), async (req: any, res) => {
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const requestStartTime = Date.now();
+    
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided" });
       }
+
+      console.log(`🔄 [${requestId}] Starting image analysis request`);
+      
+      // Add cache and queue statistics to response headers for monitoring
+      const cacheStats = imageAnalysisCache.getStats();
+      const queueStats = analysisQueue.getStats();
+      
+      res.setHeader('X-Cache-Stats', JSON.stringify({
+        hitRate: cacheStats.hitRate,
+        size: cacheStats.currentSize,
+        maxSize: cacheStats.maxSize
+      }));
+      
+      res.setHeader('X-Queue-Stats', JSON.stringify(queueStats));
+      res.setHeader('X-Request-ID', requestId);
 
       // Process image with Sharp for optimization (resilient processing)
       const processedImagePath = `uploads/processed_${req.file.filename}.jpg`;
@@ -175,11 +260,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail the request if cleanup fails
       }
 
-      // Real food recognition and nutrition analysis using multi-AI provider system
-      const foodAnalysisData = await aiManager.analyzeFoodImage(processedImagePath);
+      // Acquire queue slot for concurrent request management
+      console.log(`⏳ [${requestId}] Waiting for queue slot (active: ${queueStats.active}, waiting: ${queueStats.waiting})`);
+      await analysisQueue.acquire();
+      
+      try {
+        // Real food recognition and nutrition analysis using multi-AI provider system with timeout
+        console.log(`🧠 [${requestId}] Starting AI analysis...`);
+        const analysisStartTime = Date.now();
+        
+        const foodAnalysisData = await Promise.race([
+          aiManager.analyzeFoodImage(processedImagePath),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Analysis timeout after 60 seconds')), 60000)
+          )
+        ]);
+        
+        const analysisTime = Date.now() - analysisStartTime;
+        console.log(`✅ [${requestId}] AI analysis completed in ${analysisTime}ms`);
+        
+        // Add analysis timing to response headers
+        res.setHeader('X-Analysis-Time', analysisTime.toString());
 
-      // CONFIDENCE THRESHOLD CHECK: If confidence < 80%, create confirmation workflow
-      if (foodAnalysisData.confidence < 80) {
+        // CONFIDENCE THRESHOLD CHECK: If confidence < 80%, create confirmation workflow
+        if (foodAnalysisData.confidence < 80) {
         console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for image analysis - creating food confirmation`);
         
         // Create food confirmation for user review
@@ -257,8 +361,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.json(analysis);
       }
+      
+      } finally {
+        // Always release queue slot regardless of success or failure
+        analysisQueue.release();
+      }
+      
+      // Log total request time
+      const totalTime = Date.now() - requestStartTime;
+      console.log(`🏁 [${requestId}] Request completed in ${totalTime}ms`);
+      
     } catch (error) {
-      console.error("Analysis error:", error);
+      const totalTime = Date.now() - requestStartTime;
+      console.error(`❌ [${requestId}] Request failed after ${totalTime}ms:`, error);
       res.status(500).json({ error: "Failed to analyze image" });
     }
   });

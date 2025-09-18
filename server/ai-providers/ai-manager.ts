@@ -2,6 +2,7 @@ import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, 
 import { OpenAIProvider } from "./openai-provider";
 import { GeminiProvider } from "./gemini-provider";
 import { usdaService } from "../services/usda-service";
+import { imageAnalysisCache } from "../services/image-analysis-cache";
 
 export class AIManager {
   private providers: AIProvider[] = [];
@@ -167,25 +168,78 @@ export class AIManager {
   }
 
   /**
-   * Enhanced food analysis workflow: AI detection with portions + USDA nutrition lookup
+   * Enhanced food analysis workflow with caching: Check cache first, then AI detection with portions + USDA nutrition lookup
    */
   async analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult> {
+    const startTime = Date.now();
+    
     try {
-      // Step 1: Get full AI analysis with portions using legacy providers  
+      // Step 1: Check cache first to avoid duplicate analysis
+      console.log(`🔍 Checking cache for image: ${imagePath}`);
+      const cachedResult = await imageAnalysisCache.get(imagePath);
+      
+      if (cachedResult) {
+        const cacheTime = Date.now() - startTime;
+        console.log(`✅ Cache HIT! Returning cached analysis in ${cacheTime}ms`);
+        return cachedResult;
+      }
+      
+      console.log(`📝 Cache MISS. Proceeding with AI analysis...`);
+      const analysisStartTime = Date.now();
+      
+      // Step 2: Get full AI analysis with portions using legacy providers  
       const fullAnalysis = await this.legacyAnalyzeFoodImage(imagePath);
       
-      // Step 2: Extract food names for USDA lookup
+      // Step 3: Extract food names for USDA lookup
       const foodNames = fullAnalysis.detectedFoods.map(food => food.name);
       
-      // Step 3: Get accurate nutrition from USDA for detected foods
+      // Step 4: Get accurate nutrition from USDA for detected foods
       const nutritionData = await this.getNutritionFromUSDA(foodNames);
       
-      // Step 4: Combine AI portions with USDA nutrition data
-      return this.combineAIPortionsWithUSDANutrition(imagePath, fullAnalysis, nutritionData);
+      // Step 5: Combine AI portions with USDA nutrition data
+      const finalResult = await this.combineAIPortionsWithUSDANutrition(imagePath, fullAnalysis, nutritionData);
+      
+      // Step 6: Store result in cache for future use
+      const analysisTime = Date.now() - analysisStartTime;
+      console.log(`💾 Storing analysis result in cache (analysis took ${analysisTime}ms)`);
+      
+      try {
+        await imageAnalysisCache.set(imagePath, finalResult);
+      } catch (cacheError: any) {
+        console.warn('Failed to store result in cache (non-critical):', cacheError.message);
+        // Don't fail the analysis if cache storage fails
+      }
+      
+      const totalTime = Date.now() - startTime;
+      console.log(`✅ Food analysis completed in ${totalTime}ms (${cachedResult ? 'cached' : 'fresh'})`);
+      
+      return finalResult;
       
     } catch (error: any) {
       console.warn('Enhanced analysis failed, falling back to simple legacy method:', error.message);
-      return this.legacyAnalyzeFoodImage(imagePath);
+      
+      // Try cache for legacy method as well
+      try {
+        const cachedLegacyResult = await imageAnalysisCache.get(imagePath);
+        if (cachedLegacyResult) {
+          console.log('🔄 Using cached result for legacy fallback');
+          return cachedLegacyResult;
+        }
+      } catch (legacyCacheError) {
+        console.warn('Cache check failed for legacy fallback:', legacyCacheError);
+      }
+      
+      // Run legacy analysis and cache the result
+      const legacyResult = await this.legacyAnalyzeFoodImage(imagePath);
+      
+      // Try to cache legacy result too
+      try {
+        await imageAnalysisCache.set(imagePath, legacyResult);
+      } catch (legacyCacheError) {
+        console.warn('Failed to cache legacy result:', legacyCacheError);
+      }
+      
+      return legacyResult;
     }
   }
 
