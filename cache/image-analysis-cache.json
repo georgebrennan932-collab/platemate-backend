@@ -1,0 +1,13 @@
+{
+  "entries": [],
+  "stats": {
+    "totalRequests": 1,
+    "cacheHits": 0,
+    "cacheMisses": 1,
+    "hitRate": 0,
+    "currentSize": 0,
+    "maxSize": 1000,
+    "totalEvictions": 0
+  },
+  "timestamp": 1758180470958
+}

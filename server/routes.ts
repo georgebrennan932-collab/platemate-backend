@@ -264,6 +264,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`⏳ [${requestId}] Waiting for queue slot (active: ${queueStats.active}, waiting: ${queueStats.waiting})`);
       await analysisQueue.acquire();
       
+      // Variables to store response data and status - prevents early returns from bypassing finally
+      let responseData: any = null;
+      let responseStatus = 200;
+      let analysisError: any = null;
+      
       try {
         // Real food recognition and nutrition analysis using multi-AI provider system with timeout
         console.log(`🧠 [${requestId}] Starting AI analysis...`);
@@ -284,87 +289,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // CONFIDENCE THRESHOLD CHECK: If confidence < 80%, create confirmation workflow
         if (foodAnalysisData.confidence < 80) {
-        console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for image analysis - creating food confirmation`);
-        
-        // Create food confirmation for user review
-        const userId = req.user.claims.sub;
-        const confirmationData = {
-          userId,
-          imageUrl: `/uploads/processed_${req.file.filename}.jpg`, // Use processed image path
-          originalConfidence: foodAnalysisData.confidence,
-          suggestedFoods: foodAnalysisData.detectedFoods,
-          alternativeOptions: [], // Could be populated with USDA alternatives
-          status: 'pending' as const
-        };
-        
-        // Validate confirmation data with schema
-        try {
-          const validatedConfirmation = insertFoodConfirmationSchema.parse(confirmationData);
-          const confirmation = await storage.createFoodConfirmation(validatedConfirmation);
+          console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for image analysis - creating food confirmation`);
           
-          return res.status(202).json({
-            type: 'confirmation_required',
-            confirmationId: confirmation.id,
-            confidence: foodAnalysisData.confidence,
-            message: 'Analysis requires confirmation due to low confidence',
-            suggestedFoods: foodAnalysisData.detectedFoods,
-            imageUrl: confirmationData.imageUrl
-          });
-        } catch (validationError: any) {
-          if (validationError.name === 'ZodError') {
-            console.error('Image analysis confirmation validation error:', validationError.errors);
-            return res.status(400).json({
-              error: 'Invalid confirmation data for image analysis',
-              details: validationError.errors
-            });
-          }
-          throw validationError; // Re-throw non-validation errors
-        }
-      }
-
-      // High confidence (≥80%) - proceed with immediate analysis
-      console.log(`✅ High confidence (${foodAnalysisData.confidence}%) for image analysis - creating food analysis`);
-      const analysis = await storage.createFoodAnalysis(foodAnalysisData);
-
-      // Optional: Auto-add to diary if user is authenticated and requests it
-      if (req.user && req.body.autoAddToDiary === 'true') {
-        try {
+          // Create food confirmation for user review
           const userId = req.user.claims.sub;
-          const diaryData = {
+          const confirmationData = {
             userId,
-            analysisId: analysis.id,
-            mealType: req.body.mealType || 'snack',
-            mealDate: req.body.mealDate || new Date().toISOString().split('T')[0],
-            notes: req.body.notes || '',
-            customMealName: req.body.customMealName || null
+            imageUrl: `/uploads/processed_${req.file.filename}.jpg`, // Use processed image path
+            originalConfidence: foodAnalysisData.confidence,
+            suggestedFoods: foodAnalysisData.detectedFoods,
+            alternativeOptions: [], // Could be populated with USDA alternatives
+            status: 'pending' as const
           };
           
-          const validatedDiaryEntry = insertDiaryEntrySchema.parse(diaryData);
-          const diaryEntry = await storage.createDiaryEntry(validatedDiaryEntry);
-          
-          console.log(`✅ Auto-added analysis ${analysis.id} to diary for user ${userId}`);
-          
-          // Return both analysis and diary entry info
-          res.json({
-            ...analysis,
-            diaryEntry: {
-              id: diaryEntry.id,
-              mealType: diaryEntry.mealType,
-              mealDate: diaryEntry.mealDate
+          // Validate confirmation data with schema
+          try {
+            const validatedConfirmation = insertFoodConfirmationSchema.parse(confirmationData);
+            const confirmation = await storage.createFoodConfirmation(validatedConfirmation);
+            
+            responseStatus = 202;
+            responseData = {
+              type: 'confirmation_required',
+              confirmationId: confirmation.id,
+              confidence: foodAnalysisData.confidence,
+              message: 'Analysis requires confirmation due to low confidence',
+              suggestedFoods: foodAnalysisData.detectedFoods,
+              imageUrl: confirmationData.imageUrl
+            };
+          } catch (validationError: any) {
+            if (validationError.name === 'ZodError') {
+              console.error('Image analysis confirmation validation error:', validationError.errors);
+              responseStatus = 400;
+              responseData = {
+                error: 'Invalid confirmation data for image analysis',
+                details: validationError.errors
+              };
+            } else {
+              throw validationError; // Re-throw non-validation errors
             }
-          });
-        } catch (diaryError) {
-          console.error("Failed to auto-add to diary:", diaryError);
-          // Still return the analysis even if diary add fails
-          res.json(analysis);
+          }
+        } else {
+          // High confidence (≥80%) - proceed with immediate analysis
+          console.log(`✅ High confidence (${foodAnalysisData.confidence}%) for image analysis - creating food analysis`);
+          const analysis = await storage.createFoodAnalysis(foodAnalysisData);
+
+          // Optional: Auto-add to diary if user is authenticated and requests it
+          if (req.user && req.body.autoAddToDiary === 'true') {
+            try {
+              const userId = req.user.claims.sub;
+              const diaryData = {
+                userId,
+                analysisId: analysis.id,
+                mealType: req.body.mealType || 'snack',
+                mealDate: req.body.mealDate || new Date().toISOString().split('T')[0],
+                notes: req.body.notes || '',
+                customMealName: req.body.customMealName || null
+              };
+              
+              const validatedDiaryEntry = insertDiaryEntrySchema.parse(diaryData);
+              const diaryEntry = await storage.createDiaryEntry(validatedDiaryEntry);
+              
+              console.log(`✅ Auto-added analysis ${analysis.id} to diary for user ${userId}`);
+              
+              // Return both analysis and diary entry info
+              responseData = {
+                ...analysis,
+                diaryEntry: {
+                  id: diaryEntry.id,
+                  mealType: diaryEntry.mealType,
+                  mealDate: diaryEntry.mealDate
+                }
+              };
+            } catch (diaryError) {
+              console.error("Failed to auto-add to diary:", diaryError);
+              // Still return the analysis even if diary add fails
+              responseData = analysis;
+            }
+          } else {
+            responseData = analysis;
+          }
         }
-      } else {
-        res.json(analysis);
-      }
-      
+      } catch (error) {
+        analysisError = error;
       } finally {
         // Always release queue slot regardless of success or failure
         analysisQueue.release();
+      }
+      
+      // Handle response after queue is properly released
+      if (analysisError) {
+        throw analysisError;
+      }
+      
+      if (responseData) {
+        return res.status(responseStatus).json(responseData);
       }
       
       // Log total request time
