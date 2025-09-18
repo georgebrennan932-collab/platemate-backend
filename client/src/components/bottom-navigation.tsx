@@ -58,7 +58,7 @@ export function BottomNavigation() {
                     "hover:bg-primary/10 hover:scale-105",
                     item.isActive 
                       ? "text-primary bg-primary/10 scale-105" 
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-black dark:text-white hover:text-foreground"
                   )}
                   data-testid={`nav-${item.label.toLowerCase()}`}
                 >

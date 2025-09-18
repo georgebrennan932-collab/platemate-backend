@@ -103,7 +103,7 @@ export function BottomHelpSection() {
       {/* Help Section */}
       <Card className="bg-muted/30 border-dashed">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium text-black dark:text-white">
             <HelpCircle className="h-4 w-4" />
             Need Help?
           </CardTitle>
@@ -120,7 +120,7 @@ export function BottomHelpSection() {
                 <FileText className="h-5 w-5" />
                 <div className="text-center">
                   <div className="font-medium text-xs">User Guide</div>
-                  <div className="text-xs text-muted-foreground">How to use PlateMate</div>
+                  <div className="text-xs text-black dark:text-white">How to use PlateMate</div>
                 </div>
               </Button>
             </Link>
@@ -135,7 +135,7 @@ export function BottomHelpSection() {
               <MessageCircle className="h-5 w-5" />
               <div className="text-center">
                 <div className="font-medium text-xs">Contact Support</div>
-                <div className="text-xs text-muted-foreground">Get personalized help</div>
+                <div className="text-xs text-black dark:text-white">Get personalized help</div>
               </div>
             </Button>
             
