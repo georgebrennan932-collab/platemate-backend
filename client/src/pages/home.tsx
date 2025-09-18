@@ -549,7 +549,7 @@ export default function Home() {
             <div className="space-y-6">
               {/* Text Input Field */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 border border-green-200/30 dark:border-green-700/30">
-                <label className="block text-sm font-semibold mb-3 text-green-700 dark:text-green-300">What did you eat?</label>
+                <label className="block text-sm font-semibold mb-3 text-black dark:text-white">What did you eat?</label>
                 <input
                   type="text"
                   value={textInput}
