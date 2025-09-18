@@ -173,16 +173,19 @@ export function CameraInterface({
   return (
     <div className="relative p-1">
       {/* Camera View Container */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 aspect-square overflow-hidden rounded-[2.5rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.8)] border border-slate-600/30 backdrop-blur-xl">
-        {/* Subtle inner glow */}
-        <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5"></div>
+      <div 
+        className="relative aspect-square overflow-hidden rounded-3xl shadow-2xl border border-slate-600/20 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-3xl" 
+        style={{backgroundColor: '#1F2937'}}
+        onClick={handleCameraCapture}
+        data-testid="camera-panel-clickable"
+      >
         
         {/* Static Image Preview */}
         {previewUrl && (
           <img 
             src={previewUrl} 
             alt="Selected food image" 
-            className="w-full h-full object-cover rounded-[2.5rem]"
+            className="w-full h-full object-cover rounded-3xl"
             data-testid="img-preview"
           />
         )}
@@ -190,11 +193,11 @@ export function CameraInterface({
         {/* Default Camera Icon */}
         {!previewUrl && (
           <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
-            <div className="relative z-10 text-center">
-              <div className="w-16 h-16 mx-auto bg-slate-700/80 rounded-xl flex items-center justify-center border border-slate-600/50">
-                <Camera className="text-white h-8 w-8" />
+            <div className="relative z-10 text-center transition-all duration-200 hover:scale-110">
+              <div className="w-20 h-20 mx-auto bg-slate-600/60 rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-slate-500/70">
+                <Camera className="text-white h-10 w-10 transition-all duration-200 hover:scale-110" />
               </div>
-              <p className="text-white/70 text-sm mt-2">
+              <p className="text-white/90 text-base mt-4 font-medium transition-all duration-200 hover:text-white">
                 Tap to take photo
               </p>
             </div>

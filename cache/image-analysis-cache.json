@@ -1,13 +1,98 @@
 {
-  "entries": [],
+  "entries": [
+    [
+      "582b576042ecb15a70109ac0aa35b40fbe35ab10b8bf51d168495e09844f2646",
+      {
+        "imageHash": "582b576042ecb15a70109ac0aa35b40fbe35ab10b8bf51d168495e09844f2646",
+        "analysis": {
+          "imageUrl": "uploads/processed_fe293cd681c7794d13d6e96132e555b2.jpg",
+          "confidence": 90,
+          "totalCalories": 1023,
+          "totalProtein": 51,
+          "totalCarbs": 45,
+          "totalFat": 71,
+          "detectedFoods": [
+            {
+              "name": "Egg, whole, fried no added fat",
+              "portion": "1 large egg",
+              "calories": 72,
+              "protein": 6,
+              "carbs": 1,
+              "fat": 5,
+              "icon": "egg"
+            },
+            {
+              "name": "Sausage, smoked link sausage, pork",
+              "portion": "1 sausage (approximately 75g)",
+              "calories": 232,
+              "protein": 9,
+              "carbs": 1,
+              "fat": 21,
+              "icon": "bacon"
+            },
+            {
+              "name": "Blood sausage",
+              "portion": "1 slice (approximately 50g)",
+              "calories": 190,
+              "protein": 7,
+              "carbs": 1,
+              "fat": 17,
+              "icon": "bacon"
+            },
+            {
+              "name": "Baked beans",
+              "portion": "100g",
+              "calories": 105,
+              "protein": 5,
+              "carbs": 22,
+              "fat": 1,
+              "icon": "bread-slice"
+            },
+            {
+              "name": "Mushrooms, raw",
+              "portion": "100g",
+              "calories": 31,
+              "protein": 3,
+              "carbs": 4,
+              "fat": 0,
+              "icon": "bread-slice"
+            },
+            {
+              "name": "CHICK-FIL-A, hash browns",
+              "portion": "1 piece (approximately 50g)",
+              "calories": 151,
+              "protein": 2,
+              "carbs": 15,
+              "fat": 9,
+              "icon": "bread-slice"
+            },
+            {
+              "name": "Pork bacon, NS as to fresh, smoked or cured, cooked",
+              "portion": "1 slice (approximately 50g)",
+              "calories": 242,
+              "protein": 19,
+              "carbs": 1,
+              "fat": 18,
+              "icon": "bacon"
+            }
+          ]
+        },
+        "timestamp": 1758191194019,
+        "accessCount": 1,
+        "lastAccessed": 1758191194019
+      }
+    ]
+  ],
   "stats": {
     "totalRequests": 1,
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 0,
+    "currentSize": 1,
     "maxSize": 1000,
-    "totalEvictions": 0
+    "totalEvictions": 0,
+    "oldestEntry": 1758191194019,
+    "newestEntry": 1758191194019
   },
-  "timestamp": 1758180470958
+  "timestamp": 1758191194020
 }

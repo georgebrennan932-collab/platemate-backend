@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/app-header";
 import { soundService } from "@/lib/sound-service";
 import { CameraInterface } from "@/components/camera-interface";
@@ -10,7 +11,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
@@ -21,9 +22,14 @@ type AppState = 'camera' | 'processing' | 'results' | 'error';
 export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, isAuthenticated } = useAuth();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  
+  // Navigation state
+  const [showProfile, setShowProfile] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
   
   // Voice input state
   const [isListening, setIsListening] = useState(false);
@@ -58,6 +64,23 @@ export default function Home() {
     };
     checkSpeechSupport();
   }, []);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfile(false);
+      }
+    };
+
+    if (showProfile) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfile]);
 
   // Check for achieved goals and trigger persistent confetti
   useEffect(() => {
@@ -255,63 +278,127 @@ export default function Home() {
   });
 
   return (
-    <div className="bg-background text-foreground min-h-screen">
-      <AppHeader />
+    <div className="min-h-screen text-foreground" style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}>
+      {/* Custom Header for New Design */}
+      <div className="px-4 pt-8 pb-6 text-center relative">
+        <h1 className="text-5xl font-bold mb-2" style={{color: '#22D3EE'}}>PlateMate</h1>
+        <p className="text-lg text-white opacity-90">Voice-powered nutrition companion</p>
+        
+        {/* Navigation Menu */}
+        {isAuthenticated && (
+          <div className="absolute top-8 right-4 flex items-center space-x-2">
+            <Link href="/diary">
+              <button 
+                className="p-3 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
+                data-testid="button-nav-history"
+                title="View Diary"
+              >
+                <History className="h-5 w-5 text-white" />
+              </button>
+            </Link>
+            
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setShowProfile(!showProfile)}
+                className="flex items-center space-x-1 p-3 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
+                data-testid="button-nav-profile"
+                title="Profile"
+              >
+                <User className="h-5 w-5 text-white" />
+                {showProfile ? (
+                  <ChevronUp className="h-3 w-3 text-white/80" />
+                ) : (
+                  <ChevronDown className="h-3 w-3 text-white/80" />
+                )}
+              </button>
+              
+              {showProfile && (
+                <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[200px] backdrop-blur-md z-50">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <User className="h-4 w-4 text-foreground/80" />
+                    <span className="text-sm font-medium text-foreground/90">
+                      {user?.firstName || user?.email || 'User'}
+                    </span>
+                  </div>
+                  {user?.email && user?.firstName && (
+                    <div className="text-xs text-foreground/60 mb-3 ml-6">
+                      {user?.email}
+                    </div>
+                  )}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <a href="/api/logout" className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" data-testid="button-nav-logout">
+                      <LogOut className="h-4 w-4" />
+                      <span className="text-sm font-medium">Logout</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
       
-      {/* Voice and Type Add Buttons */}
+      {/* 2x2 Action Buttons Grid */}
       {currentState === 'camera' && (
-        <div className="max-w-md mx-auto px-4 mb-4">
-          <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="max-w-md mx-auto px-6 mb-6">
+          <div className="grid grid-cols-2 gap-4">
+            {/* Voice Add Button */}
             <button
               onClick={handleVoiceInput}
               disabled={!speechSupported}
-              className={`py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 ${
+              className={`py-4 px-6 rounded-2xl font-semibold flex items-center justify-center space-x-3 transition-all duration-200 ${
                 isListening
                   ? 'bg-red-500 text-white'
                   : speechSupported
-                  ? 'bg-slate-700 text-white hover:bg-slate-600'
+                  ? 'text-white hover:opacity-90 transform hover:scale-105'
                   : 'bg-gray-400 text-gray-600 cursor-not-allowed'
               }`}
+              style={{
+                backgroundColor: isListening ? '#EF4444' : speechSupported ? '#374151' : '#9CA3AF'
+              }}
               data-testid="button-add-voice"
             >
               {isListening ? (
-                <MicOff className="h-4 w-4" />
+                <MicOff className="h-5 w-5" />
               ) : (
-                <Mic className="h-4 w-4" />
+                <Mic className="h-5 w-5" />
               )}
-              <span className="text-sm">
+              <span className="text-base font-bold">
                 {isListening ? 'Listening...' : 'Voice Add'}
               </span>
             </button>
             
+            {/* Type Button */}
             <button
               onClick={() => setShowTextMealDialog(true)}
-              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-blue-600 text-white hover:bg-blue-500"
+              className="py-4 px-6 rounded-2xl font-semibold flex items-center justify-center space-x-3 transition-all duration-200 text-white hover:opacity-90 transform hover:scale-105"
+              style={{backgroundColor: '#3B82F6'}}
               data-testid="button-add-type"
             >
-              <Plus className="h-4 w-4" />
-              <span className="text-sm">Type</span>
+              <Plus className="h-5 w-5" />
+              <span className="text-base font-bold">Type</span>
             </button>
-          </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-3">
+            {/* Weigh In Button */}
             <Link 
               href="/diary?tab=weight"
-              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-orange-500 text-white hover:bg-orange-600 hover:scale-[1.02] no-underline"
+              className="py-4 px-6 rounded-2xl font-semibold flex items-center justify-center space-x-3 transition-all duration-200 text-white hover:opacity-90 transform hover:scale-105 no-underline"
+              style={{backgroundColor: '#F97316'}}
               data-testid="button-weigh-in"
             >
-              <Scale className="h-4 w-4" />
-              <span className="text-sm">Weigh In</span>
+              <Scale className="h-5 w-5" />
+              <span className="text-base font-bold">Weigh In</span>
             </Link>
 
+            {/* AI Advice Button */}
             <Link href="/advice">
               <button 
-                className="w-full gradient-button hover:scale-[1.02] py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2"
+                className="w-full py-4 px-6 rounded-2xl font-semibold flex items-center justify-center space-x-3 transition-all duration-200 text-white hover:opacity-90 transform hover:scale-105"
+                style={{backgroundColor: '#14B8A6'}}
                 data-testid="button-diet-advice"
               >
-                <Lightbulb className="h-4 w-4" />
-                <span className="text-sm">AI Advice</span>
+                <Lightbulb className="h-5 w-5" />
+                <span className="text-base font-bold">AI Advice</span>
               </button>
             </Link>
           </div>
