@@ -45,69 +45,122 @@ export function CameraInterface({
 
   const analysisMutation = useMutation({
     mutationFn: async (file: File) => {
-      console.log("📸 Starting image analysis:", {
+      const isAndroid = navigator.userAgent.includes('Android');
+      console.log(`📸 Starting image analysis (${isAndroid ? 'Android' : 'Browser'}):`, {
         fileName: file.name,
         fileSize: file.size,
-        fileType: file.type
+        fileType: file.type,
+        platform: isAndroid ? 'Android WebView' : 'Desktop Browser'
       });
       
       const formData = new FormData();
       formData.append('image', file);
       
       console.log("🚀 Sending request to /api/analyze...");
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        body: formData,
-      });
-
-      console.log("📡 Response received:", {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Array.from(response.headers.entries()),
-        url: response.url
-      });
-
-      // Parse the response regardless of status to see what we got
-      const result = await response.json();
-      console.log("📄 Raw response data:", result);
       
-      if (!response.ok) {
-        console.error("❌ API Error - but checking if we still have analysis data:", {
-          hasResult: !!result,
-          hasDetectedFoods: !!(result?.detectedFoods),
-          confidence: result?.confidence,
-          needsConfirmation: result?.needsConfirmation,
-          errorMessage: result?.error
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          body: formData,
         });
+
+        console.log("📡 Response received:", {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          platform: isAndroid ? 'Android' : 'Browser',
+          headers: Array.from(response.headers.entries()),
+          url: response.url
+        });
+
+        // Always parse the response body first
+        let result;
+        try {
+          result = await response.json();
+          console.log("📄 Raw response data:", {
+            ...result,
+            platform: isAndroid ? 'Android' : 'Browser'
+          });
+        } catch (parseError) {
+          console.error("❌ Failed to parse JSON response:", parseError);
+          throw new Error('Invalid response from server');
+        }
         
-        // If we have food analysis data despite the error status, use it
-        if (result && result.detectedFoods && result.detectedFoods.length > 0) {
-          console.log("🔧 Found food analysis data in error response - treating as low confidence result");
+        // Critical Android fix: Check for valid analysis data regardless of HTTP status
+        const hasValidAnalysisData = result && 
+                                   result.detectedFoods && 
+                                   Array.isArray(result.detectedFoods) && 
+                                   result.detectedFoods.length > 0;
+        
+        if (hasValidAnalysisData) {
+          console.log("✅ Valid food analysis data found:", {
+            confidence: result.confidence,
+            needsConfirmation: result.needsConfirmation,
+            foodCount: result.detectedFoods.length,
+            isAIUnavailable: result.isAITemporarilyUnavailable,
+            platform: isAndroid ? 'Android' : 'Browser',
+            httpStatus: response.status
+          });
+          
+          // Ensure needsConfirmation is set for low confidence
+          if (typeof result.confidence === 'number' && result.confidence < 90) {
+            result.needsConfirmation = true;
+            if (!result.confirmationMessage) {
+              result.confirmationMessage = `AI confidence is ${result.confidence}% - please review the detected foods`;
+            }
+            console.log(`⚠️ Low confidence (${result.confidence}%) detected - ensuring needsConfirmation is set`);
+          }
+          
           return result;
         }
         
-        throw new Error(result?.error || 'Analysis failed');
-      }
+        // If no valid analysis data and response is not ok, treat as error
+        if (!response.ok) {
+          console.error("❌ No valid analysis data and HTTP error:", {
+            status: response.status,
+            error: result?.error,
+            platform: isAndroid ? 'Android' : 'Browser'
+          });
+          throw new Error(result?.error || 'Analysis failed');
+        }
 
-      console.log("✅ Analysis successful:", {
-        confidence: result.confidence,
-        needsConfirmation: result.needsConfirmation,
-        foodCount: result.detectedFoods?.length,
-        isAIUnavailable: result.isAITemporarilyUnavailable
-      });
-      return result;
+        console.log("✅ Analysis successful:", {
+          confidence: result.confidence,
+          needsConfirmation: result.needsConfirmation,
+          foodCount: result.detectedFoods?.length,
+          isAIUnavailable: result.isAITemporarilyUnavailable
+        });
+        return result;
+        
+      } catch (fetchError) {
+        console.error("❌ Network/fetch error:", {
+          error: fetchError,
+          platform: isAndroid ? 'Android' : 'Browser'
+        });
+        throw fetchError;
+      }
     },
     onMutate: () => {
       console.log("🔄 Analysis mutation starting...");
       onAnalysisStart();
     },
     onSuccess: (data: FoodAnalysis) => {
-      console.log("🎉 Analysis success callback triggered:", data);
+      console.log("🎉 Analysis success callback triggered:", {
+        hasData: !!data,
+        confidence: data?.confidence,
+        needsConfirmation: data?.needsConfirmation,
+        hasDetectedFoods: !!(data?.detectedFoods?.length),
+        foodCount: data?.detectedFoods?.length,
+        platform: navigator.userAgent.includes('Android') ? 'Android' : 'Browser'
+      });
       onAnalysisSuccess(data);
     },
     onError: (error: Error) => {
-      console.error("💥 Analysis error callback triggered:", error);
+      console.error("💥 Analysis error callback triggered:", {
+        errorMessage: error.message,
+        platform: navigator.userAgent.includes('Android') ? 'Android' : 'Browser',
+        stack: error.stack
+      });
       onAnalysisError(error.message);
     },
   });
