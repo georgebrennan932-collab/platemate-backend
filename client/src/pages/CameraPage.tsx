@@ -66,19 +66,51 @@ export function CameraPage() {
   };
 
   const handleAnalysisSuccess = (data: FoodAnalysis) => {
+    const isAndroid = navigator.userAgent.includes('Android');
+    console.log(`🎉 handleAnalysisSuccess called on ${isAndroid ? 'Android' : 'Browser'}:`, {
+      hasData: !!data,
+      confidence: data?.confidence,
+      needsConfirmation: data?.needsConfirmation,
+      currentState: currentState,
+      platform: isAndroid ? 'Android' : 'Browser'
+    });
+    
     soundService.playSuccess();
     
     // Check if AI requires confirmation due to low confidence
     if (data.needsConfirmation) {
-      console.log('⚠️ Low confidence detected, showing confirmation UI:', data);
+      console.log(`⚠️ Low confidence detected, showing confirmation UI (${isAndroid ? 'Android' : 'Browser'}):`, {
+        confidence: data.confidence,
+        willSetState: 'confirmation',
+        currentState: currentState
+      });
+      
       setConfirmationData(data);
       setCurrentState('confirmation');
+      
+      // Add delay for Android state update
+      if (isAndroid) {
+        console.log('🤖 Android detected - adding state update delay');
+        setTimeout(() => {
+          console.log('🤖 Android confirmation state check:', {
+            currentState: currentState,
+            confirmationData: !!confirmationData
+          });
+          // Force re-render if needed
+          if (currentState !== 'confirmation') {
+            console.log('🔧 Force setting confirmation state on Android');
+            setCurrentState('confirmation');
+          }
+        }, 100);
+      }
+      
       toast({
         title: `Low Confidence (${data.confidence}%)`,
         description: "AI analysis needs your confirmation. Please review the detected foods.",
         variant: "default",
       });
     } else {
+      console.log(`✅ High confidence result on ${isAndroid ? 'Android' : 'Browser'}, showing results`);
       setAnalysisData(data);
       setCurrentState('results');
     }
@@ -322,6 +354,13 @@ export function CameraPage() {
       )}
 
       <div className="max-w-md mx-auto">
+        {/* Debug UI State for Android */}
+        {navigator.userAgent.includes('Android') && (
+          <div className="p-2 mb-4 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+            <strong>Debug:</strong> currentState: {currentState}, hasConfirmationData: {!!confirmationData}, hasAnalysisData: {!!analysisData}, errorMessage: {errorMessage || 'none'}
+          </div>
+        )}
+        
         {currentState === 'camera' && (
           <CameraInterface
             onAnalysisStart={handleAnalysisStart}
@@ -427,10 +466,17 @@ export function CameraPage() {
         )}
         
         {currentState === 'error' && (
-          <ErrorState 
-            message={errorMessage}
-            onRetry={handleRetry}
-          />
+          <>
+            {navigator.userAgent.includes('Android') && (
+              <div className="p-2 mb-2 bg-red-100 dark:bg-red-800 rounded text-xs">
+                <strong>Android Error Debug:</strong> errorMessage: "{errorMessage}", currentState: {currentState}
+              </div>
+            )}
+            <ErrorState 
+              message={errorMessage}
+              onRetry={handleRetry}
+            />
+          </>
         )}
       </div>
 
