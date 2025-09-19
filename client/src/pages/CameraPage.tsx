@@ -75,33 +75,50 @@ export function CameraPage() {
       platform: isAndroid ? 'Android' : 'Browser'
     });
     
+    // Clear any existing error state first
+    setErrorMessage('');
+    
     soundService.playSuccess();
     
     // Check if AI requires confirmation due to low confidence
-    if (data.needsConfirmation) {
-      console.log(`⚠️ Low confidence detected, showing confirmation UI (${isAndroid ? 'Android' : 'Browser'}):`, {
+    if (data.needsConfirmation || (typeof data.confidence === 'number' && data.confidence < 90)) {
+      console.log(`⚠️ ANDROID FIX: Forcing confirmation state (${isAndroid ? 'Android' : 'Browser'}):`, {
         confidence: data.confidence,
+        needsConfirmation: data.needsConfirmation,
         willSetState: 'confirmation',
         currentState: currentState
       });
       
+      // Critical Android fix: Set both data and state atomically
       setConfirmationData(data);
+      setAnalysisData(null); // Clear any previous analysis data
       setCurrentState('confirmation');
       
-      // Add delay for Android state update
+      // Android WebView state enforcement
       if (isAndroid) {
-        console.log('🤖 Android detected - adding state update delay');
+        console.log('🤖 Android - enforcing confirmation state with multiple attempts');
+        // Immediate double-set for Android WebView
         setTimeout(() => {
-          console.log('🤖 Android confirmation state check:', {
-            currentState: currentState,
-            confirmationData: !!confirmationData
-          });
-          // Force re-render if needed
-          if (currentState !== 'confirmation') {
-            console.log('🔧 Force setting confirmation state on Android');
-            setCurrentState('confirmation');
-          }
+          setConfirmationData(data);
+          setCurrentState('confirmation');
+          console.log('🔧 Android state enforcement 1: confirmation');
+        }, 10);
+        
+        // Backup enforcement
+        setTimeout(() => {
+          setConfirmationData(data);
+          setCurrentState('confirmation');
+          console.log('🔧 Android state enforcement 2: confirmation');
         }, 100);
+        
+        // Final check
+        setTimeout(() => {
+          console.log('🤖 Android final state check:', {
+            currentState: currentState,
+            hasConfirmationData: !!confirmationData,
+            hasAnalysisData: !!analysisData
+          });
+        }, 200);
       }
       
       toast({
@@ -112,6 +129,7 @@ export function CameraPage() {
     } else {
       console.log(`✅ High confidence result on ${isAndroid ? 'Android' : 'Browser'}, showing results`);
       setAnalysisData(data);
+      setConfirmationData(null); // Clear confirmation data
       setCurrentState('results');
     }
   };
