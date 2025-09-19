@@ -154,6 +154,8 @@ export type InsertFoodAnalysis = z.infer<typeof insertFoodAnalysisSchema> & {
 export type UpdateFoodAnalysis = z.infer<typeof updateFoodAnalysisSchema>;
 export type FoodAnalysis = typeof foodAnalyses.$inferSelect & {
   isAITemporarilyUnavailable?: boolean;
+  needsConfirmation?: boolean;
+  confirmationMessage?: string;
 };
 
 export const insertDiaryEntrySchema = createInsertSchema(diaryEntries).omit({
