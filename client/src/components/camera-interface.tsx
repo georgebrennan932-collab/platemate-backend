@@ -6,7 +6,6 @@ import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capa
 import { Capacitor } from '@capacitor/core';
 import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
-import { nanoid } from 'nanoid';
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -27,7 +26,6 @@ export function CameraInterface({
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const currentRequestIdRef = useRef<string | null>(null);
 
   // Initialize media service
   useEffect(() => {
@@ -46,10 +44,7 @@ export function CameraInterface({
   }, [toast]);
 
   const { mutate: analyzeFood, isPending } = useMutation({
-    mutationFn: async (file: File) => {
-      const requestId = nanoid();
-      currentRequestIdRef.current = requestId;
-      
+    mutationFn: async (file: File): Promise<FoodAnalysis> => {
       const formData = new FormData();
       formData.append('image', file);
       
@@ -63,31 +58,19 @@ export function CameraInterface({
         throw new Error(errorData.error || 'Analysis failed');
       }
 
-      const data = await response.json();
-      return { data, requestId };
+      return response.json();
     },
     onMutate: () => {
       console.log('🔄 Analysis mutation starting...');
       onAnalysisStart();
     },
-    onSuccess: ({ data, requestId }) => {
-      console.log(`🎉 SUCCESS [${requestId}]: Confidence=${data?.confidence}% Foods=${data?.detectedFoods?.length}`);
-      
-      // Race condition protection - only latest request can set state
-      if (requestId !== currentRequestIdRef.current) {
-        console.log(`⏭️ IGNORING old response [${requestId}] - current is [${currentRequestIdRef.current}]`);
-        return;
-      }
-      
+    onSuccess: (data: FoodAnalysis) => {
+      console.log('🎉 Analysis success callback triggered:', data);
       onAnalysisSuccess(data);
     },
     onError: (error: Error) => {
       console.error('❌ Analysis failed:', error);
-      
-      // Only show error if this is the current request (not cancelled/superseded)
-      if (currentRequestIdRef.current) {
-        onAnalysisError(error.message);
-      }
+      onAnalysisError(error.message);
     },
     onSettled: () => {
       console.log('🧹 Media service cleaned up');
@@ -203,9 +186,10 @@ export function CameraInterface({
     <div className="relative p-1">
       {/* Camera View Container */}
       <div 
-        className="relative aspect-square overflow-hidden rounded-3xl shadow-2xl border border-slate-600/20 transition-all duration-200" 
+        className="relative aspect-square overflow-hidden rounded-3xl shadow-2xl border border-slate-600/20 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-3xl" 
         style={{backgroundColor: '#1F2937'}}
-        data-testid="camera-panel"
+        onClick={handleCameraCapture}
+        data-testid="camera-panel-clickable"
       >
         
         {/* Static Image Preview */}
@@ -225,13 +209,9 @@ export function CameraInterface({
               <div className="w-20 h-20 mx-auto bg-slate-600/60 rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-slate-500/70">
                 <Camera className="text-white h-10 w-10 transition-all duration-200 hover:scale-110" />
               </div>
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleCameraCapture(); }}
-                className="text-white/90 text-base mt-4 font-medium transition-all duration-200 hover:text-white bg-transparent border-none cursor-pointer"
-                data-testid="button-camera-main"
-              >
+              <p className="text-white/90 text-base mt-4 font-medium transition-all duration-200 hover:text-white">
                 Tap to take photo
-              </button>
+              </p>
             </div>
           </div>
         )}
