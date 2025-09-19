@@ -66,25 +66,42 @@ export function CameraPage() {
   };
 
   const handleAnalysisSuccess = (data: FoodAnalysis) => {
+    console.log('🎯 handleAnalysisSuccess called with data:', data);
+    
+    // Clear any previous error state
+    setErrorMessage('');
+    
     soundService.playSuccess();
     
-    // MINIMAL FIX: Check if this is low confidence and needs confirmation
-    if (data.needsConfirmation || (typeof data.confidence === 'number' && data.confidence < 90)) {
+    // Always check for low confidence first
+    const isLowConfidence = data.needsConfirmation || (data.confidence && data.confidence < 90);
+    
+    if (isLowConfidence) {
+      console.log('📋 Showing confirmation screen for low confidence');
       setConfirmationData(data);
+      setAnalysisData(null);
       setCurrentState('confirmation');
       
       toast({
-        title: `Low Confidence (${data.confidence}%)`,
-        description: "AI analysis needs your confirmation. Please review the detected foods.",
+        title: `Low Confidence Detection (${data.confidence}%)`,
+        description: "Please review and confirm the detected foods.",
         variant: "default",
       });
     } else {
+      console.log('✅ Showing results for high confidence');
       setAnalysisData(data);
+      setConfirmationData(null);
       setCurrentState('results');
     }
   };
 
   const handleAnalysisError = (error: string) => {
+    console.log('❌ handleAnalysisError called with:', error);
+    
+    // Clear any previous success state
+    setAnalysisData(null);
+    setConfirmationData(null);
+    
     soundService.playError();
     setErrorMessage(error);
     setCurrentState('error');
