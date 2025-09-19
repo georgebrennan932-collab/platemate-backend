@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, generateToken } from "./replitAuth";
 import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
@@ -64,12 +64,42 @@ class RequestQueue {
 
 const analysisQueue = new RequestQueue();
 
+// Helper function to get user ID from request (handles both cookie and token auth)
+function getUserId(req: any): string {
+  if (req.user?.fromToken) {
+    // Token-based authentication
+    return req.user.userId;
+  } else {
+    // Cookie-based authentication
+    return req.user?.claims?.sub;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded images as static files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
   // Setup authentication
   await setupAuth(app);
+
+  // Mobile token endpoint for development - generates JWT token
+  app.post('/api/auth/mobile-token', async (req, res) => {
+    try {
+      // For development, use a hardcoded user ID
+      // In production, this should be properly authenticated
+      const userId = '47337218'; // Your current user ID from logs
+      const token = generateToken(userId);
+      
+      res.json({ 
+        token,
+        userId,
+        message: 'Mobile authentication token generated'
+      });
+    } catch (error) {
+      console.error('Error generating mobile token:', error);
+      res.status(500).json({ message: 'Failed to generate token' });
+    }
+  });
 
   // Cache and monitoring endpoints
   app.get('/api/cache/stats', isAuthenticated, async (req, res) => {
@@ -101,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {

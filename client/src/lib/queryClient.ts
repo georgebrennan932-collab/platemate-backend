@@ -17,15 +17,31 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Get mobile auth token from localStorage
+function getMobileAuthToken(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('platemate_mobile_token');
+  }
+  return null;
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
   const resolvedUrl = resolveApiUrl(url);
+  const headers: HeadersInit = data ? { "Content-Type": "application/json" } : {};
+  
+  // Add Authorization header for mobile builds
+  const mobileToken = getMobileAuthToken();
+  if (mobileToken) {
+    headers['Authorization'] = `Bearer ${mobileToken}`;
+  }
+  
   const res = await fetch(resolvedUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -42,7 +58,17 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const url = queryKey.join("/") as string;
     const resolvedUrl = resolveApiUrl(url);
+    
+    const headers: HeadersInit = {};
+    
+    // Add Authorization header for mobile builds
+    const mobileToken = getMobileAuthToken();
+    if (mobileToken) {
+      headers['Authorization'] = `Bearer ${mobileToken}`;
+    }
+    
     const res = await fetch(resolvedUrl, {
+      headers,
       credentials: "include",
     });
 
