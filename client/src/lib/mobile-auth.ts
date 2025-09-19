@@ -101,14 +101,10 @@ export class MobileAuthService {
   }
   
   private static getApiBaseUrl(): string {
-    // Use the deployed Replit URL for mobile apps (accessible from anywhere)
-    const replitUrl = 'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev';
-    
-    // For development and production, always use the deployed URL for mobile
-    // This ensures mobile apps can always reach the server
-    const apiBase = import.meta.env.VITE_API_BASE || replitUrl;
-    console.log('🔗 Mobile API base URL resolved to:', apiBase);
-    return apiBase;
+    // For mobile apps, use current domain with proper protocol
+    const currentOrigin = window.location.origin;
+    console.log('🔗 Mobile API base URL resolved to current origin:', currentOrigin);
+    return currentOrigin;
   }
   
   static getToken(): string | null {
