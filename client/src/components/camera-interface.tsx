@@ -100,7 +100,6 @@ export function CameraInterface({
       const file = event.target.files?.[0];
       if (!file) {
         console.log("❌ No file selected - user may have canceled");
-        // Don't show error for canceled selection - this is normal user behavior
         return;
       }
       
@@ -130,6 +129,9 @@ export function CameraInterface({
       // Auto-analyze the selected image immediately
       console.log("🔄 Starting auto-analysis...");
       analysisMutation.mutate(file);
+      
+      // Reset input value after processing
+      event.target.value = '';
     } catch (error) {
       console.error("💥 Error in handleFileSelect:", error);
       toast({
@@ -137,6 +139,17 @@ export function CameraInterface({
         description: "Failed to process the selected photo. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  // Add a simple polling check for file input
+  const checkFileInput = () => {
+    if (cameraInputRef.current && cameraInputRef.current.files && cameraInputRef.current.files.length > 0) {
+      console.log("🔍 Polling detected file in input:", cameraInputRef.current.files.length);
+      const mockEvent = {
+        target: cameraInputRef.current
+      } as React.ChangeEvent<HTMLInputElement>;
+      handleFileSelect(mockEvent);
     }
   };
 
@@ -203,6 +216,21 @@ export function CameraInterface({
           console.log("✅ Camera input ref exists, clicking...");
           cameraInputRef.current.click();
           console.log("🎯 Camera input clicked, waiting for user to take photo...");
+          
+          // Start polling for files since onChange might not fire on some mobile browsers
+          const pollInterval = setInterval(() => {
+            if (cameraInputRef.current && cameraInputRef.current.files && cameraInputRef.current.files.length > 0) {
+              console.log("🔍 Polling detected file - triggering analysis");
+              clearInterval(pollInterval);
+              checkFileInput();
+            }
+          }, 500);
+          
+          // Stop polling after 30 seconds
+          setTimeout(() => {
+            clearInterval(pollInterval);
+            console.log("⏰ Camera polling timeout reached");
+          }, 30000);
         } else {
           console.error("❌ Camera input ref is null!");
           toast({
