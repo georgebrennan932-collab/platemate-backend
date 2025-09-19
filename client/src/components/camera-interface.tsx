@@ -357,6 +357,7 @@ export function CameraInterface({
                 onChange={handleFileSelect}
                 className="hidden"
                 data-testid="input-direct-camera"
+                key={Date.now()} // Force recreation to avoid cached issues
               />
             </label>
             
