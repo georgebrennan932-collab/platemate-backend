@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowLeft } from "lucide-react";
 
 interface ErrorStateProps {
   message: string;
@@ -24,13 +24,23 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
           <li>• Remove any obstructions</li>
           <li>• Take photo from above the plate</li>
         </ul>
-        <button 
-          className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-          onClick={onRetry}
-          data-testid="button-retry"
-        >
-          Try Again
-        </button>
+        <div className="flex gap-3 justify-center">
+          <button 
+            className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            onClick={onRetry}
+            data-testid="button-back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+          <button 
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            onClick={onRetry}
+            data-testid="button-retry"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     </div>
   );
