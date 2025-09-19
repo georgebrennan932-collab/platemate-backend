@@ -156,19 +156,61 @@ export function CameraInterface({
         return;
       }
       
-      // For web browsers, use camera input
-      console.log("🌐 Using web camera input...");
-      if (cameraInputRef.current) {
-        console.log("✅ Camera input ref exists, clicking...");
-        cameraInputRef.current.click();
-        console.log("🎯 Camera input clicked, waiting for user to take photo...");
+      // Use Capacitor Camera for native/PWA apps
+      if (Capacitor.isNativePlatform()) {
+        try {
+          console.log("📱 Using Capacitor camera...");
+          const image = await CapacitorCamera.getPhoto({
+            quality: 85,
+            allowEditing: false,
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera,
+            correctOrientation: true,
+            saveToGallery: false
+          });
+          
+          console.log("📸 Photo captured via Capacitor:", image.webPath);
+          
+          // Convert to blob and file for analysis
+          const response = await fetch(image.webPath!);
+          const blob = await response.blob();
+          const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+          
+          console.log("📄 File created from Capacitor:", {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type
+          });
+          
+          setSelectedFile(file);
+          const url = URL.createObjectURL(file);
+          setPreviewUrl(url);
+          
+          console.log("🔄 Starting analysis with Capacitor photo...");
+          analysisMutation.mutate(file);
+        } catch (error) {
+          console.error('❌ Capacitor camera error:', error);
+          // Fall back to web input
+          console.log("🔄 Falling back to web camera input...");
+          if (cameraInputRef.current) {
+            cameraInputRef.current.click();
+          }
+        }
       } else {
-        console.error("❌ Camera input ref is null!");
-        toast({
-          title: "Camera Error",
-          description: "Camera not available. Please try again.",
-          variant: "destructive",
-        });
+        // For web browsers, use camera input
+        console.log("🌐 Using web camera input...");
+        if (cameraInputRef.current) {
+          console.log("✅ Camera input ref exists, clicking...");
+          cameraInputRef.current.click();
+          console.log("🎯 Camera input clicked, waiting for user to take photo...");
+        } else {
+          console.error("❌ Camera input ref is null!");
+          toast({
+            title: "Camera Error",
+            description: "Camera not available. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error('💥 Error in handleCameraCapture:', error);
@@ -302,15 +344,17 @@ export function CameraInterface({
       <input
         ref={cameraInputRef}
         type="file"
-        accept="image/*"
-        capture="environment"
+        accept="image/*;capture=camera"
         onChange={handleFileSelect}
-        onClick={(e) => {
-          console.log("📱 Camera input clicked");
-          // Reset the input value so the same file can be selected again
-          e.currentTarget.value = '';
+        onInput={handleFileSelect}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+          left: '-9999px'
         }}
-        className="hidden"
         data-testid="input-camera"
       />
     </div>
