@@ -81,6 +81,70 @@
         "accessCount": 1,
         "lastAccessed": 1758191194019
       }
+    ],
+    [
+      "a3dd331800c51652b5f22b52de28ae26e53a8821cde4228d9d13e8aaa58f7c52",
+      {
+        "imageHash": "a3dd331800c51652b5f22b52de28ae26e53a8821cde4228d9d13e8aaa58f7c52",
+        "analysis": {
+          "imageUrl": "uploads/processed_a8a2c008c678e0cea8cb25160fb9f29f.jpg",
+          "confidence": 85,
+          "totalCalories": 413,
+          "totalProtein": 32,
+          "totalCarbs": 59,
+          "totalFat": 6,
+          "detectedFoods": [
+            {
+              "name": "Spinach, raw",
+              "portion": "100g",
+              "calories": 23,
+              "protein": 3,
+              "carbs": 4,
+              "fat": 0,
+              "icon": "leaf"
+            },
+            {
+              "name": "Cherries, raw",
+              "portion": "150g",
+              "calories": 107,
+              "protein": 2,
+              "carbs": 24,
+              "fat": 0,
+              "icon": "apple-alt"
+            },
+            {
+              "name": "Ham, prosciutto",
+              "portion": "50g",
+              "calories": 98,
+              "protein": 14,
+              "carbs": 0,
+              "fat": 4,
+              "icon": "bacon"
+            },
+            {
+              "name": "Parmesan cheese topping, fat free",
+              "portion": "30g",
+              "calories": 111,
+              "protein": 12,
+              "carbs": 12,
+              "fat": 2,
+              "icon": "cheese"
+            },
+            {
+              "name": "Figs, raw",
+              "portion": "100g",
+              "calories": 74,
+              "protein": 1,
+              "carbs": 19,
+              "fat": 0,
+              "icon": "apple-alt"
+            }
+          ]
+        },
+        "timestamp": 1758275638328,
+        "accessCount": 1,
+        "lastAccessed": 1758275638328
+      }
     ]
   ],
   "stats": {
@@ -88,11 +152,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 1,
+    "currentSize": 2,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1758191194019,
-    "newestEntry": 1758191194019
+    "newestEntry": 1758275638328
   },
-  "timestamp": 1758191194020
+  "timestamp": 1758275638330
 }

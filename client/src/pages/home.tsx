@@ -11,13 +11,13 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 
-type AppState = 'camera' | 'processing' | 'results' | 'error';
+type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
 export default function Home() {
   const { toast } = useToast();
@@ -26,6 +26,7 @@ export default function Home() {
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [confirmationData, setConfirmationData] = useState<any>(null);
   
   // Navigation state
   const [showProfile, setShowProfile] = useState(false);
@@ -136,10 +137,27 @@ export default function Home() {
     setCurrentState('processing');
   };
 
-  const handleAnalysisSuccess = (data: FoodAnalysis) => {
-    soundService.playSuccess();
-    setAnalysisData(data);
-    setCurrentState('results');
+  const handleAnalysisSuccess = (data: any) => {
+    // Check if this is a confirmation request (low confidence)
+    if (data.type === 'confirmation_required') {
+      console.log("⚠️ Low confidence detected, showing confirmation UI:", data);
+      soundService.playError(); // Different sound for confirmation needed
+      setConfirmationData(data);
+      setCurrentState('confirmation');
+      
+      // Show user-friendly toast about low confidence
+      toast({
+        title: `Low Confidence (${data.confidence}%)`,
+        description: "AI analysis needs your confirmation. Please review the detected foods.",
+        duration: 5000,
+      });
+    } else {
+      // Normal high-confidence analysis
+      console.log("✅ High confidence analysis, showing results:", data);
+      soundService.playSuccess();
+      setAnalysisData(data as FoodAnalysis);
+      setCurrentState('results');
+    }
   };
 
   const handleAnalysisError = (error: string) => {
@@ -152,11 +170,51 @@ export default function Home() {
     setCurrentState('camera');
     setAnalysisData(null);
     setErrorMessage('');
+    setConfirmationData(null);
   };
 
   const handleScanAnother = () => {
     setCurrentState('camera');
     setAnalysisData(null);
+    setConfirmationData(null);
+  };
+
+  const handleConfirmAnalysis = async () => {
+    if (!confirmationData) return;
+    
+    try {
+      // Call the API to confirm the analysis
+      const response = await apiRequest('POST', `/api/food-confirmations/${confirmationData.confirmationId}/confirm`, {});
+      const confirmedAnalysis = await response.json();
+      
+      // Show the confirmed analysis as results
+      soundService.playSuccess();
+      setAnalysisData(confirmedAnalysis);
+      setConfirmationData(null);
+      setCurrentState('results');
+      
+      toast({
+        title: "Analysis Confirmed",
+        description: "Your food analysis has been confirmed and saved.",
+      });
+    } catch (error: any) {
+      console.error("Failed to confirm analysis:", error);
+      toast({
+        title: "Confirmation Failed",
+        description: "Failed to confirm the analysis. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectAnalysis = () => {
+    setConfirmationData(null);
+    setCurrentState('camera');
+    
+    toast({
+      title: "Analysis Rejected",
+      description: "You can take a new photo or try again with better lighting.",
+    });
   };
 
   const handleVoiceInput = async () => {
@@ -435,6 +493,90 @@ export default function Home() {
         )}
         
         {currentState === 'processing' && <ProcessingState />}
+        
+        {currentState === 'confirmation' && confirmationData && (
+          <div className="bg-card rounded-3xl p-6 shadow-2xl border border-border/20">
+            {/* Confidence Alert */}
+            <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/50 rounded-2xl">
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0">
+                  <AlertTriangle className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200">
+                    Low Confidence Detection ({confirmationData.confidence}%)
+                  </h3>
+                  <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
+                    The AI analysis has lower confidence. Please review the detected foods and confirm if they look correct.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Image Preview */}
+            {confirmationData.imageUrl && (
+              <div className="mb-6">
+                <img 
+                  src={confirmationData.imageUrl} 
+                  alt="Food to confirm" 
+                  className="w-full h-48 object-cover rounded-2xl border border-border/20"
+                />
+              </div>
+            )}
+
+            {/* Suggested Foods */}
+            <div className="mb-6">
+              <h4 className="text-lg font-semibold mb-4 flex items-center space-x-2">
+                <Utensils className="h-5 w-5" />
+                <span>Detected Foods</span>
+              </h4>
+              <div className="space-y-3">
+                {confirmationData.suggestedFoods?.map((food: any, index: number) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-secondary/50 rounded-xl">
+                    <div className="flex-1">
+                      <div className="font-medium">{food.name}</div>
+                      <div className="text-sm text-muted-foreground">{food.portion}</div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {food.calories} cal
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Confirmation Actions */}
+            <div className="space-y-3">
+              <button
+                onClick={handleConfirmAnalysis}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center space-x-2"
+                data-testid="button-confirm-analysis"
+              >
+                <Check className="h-5 w-5" />
+                <span>Confirm Analysis</span>
+              </button>
+              
+              <button
+                onClick={handleRejectAnalysis}
+                className="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center space-x-2"
+                data-testid="button-reject-analysis"
+              >
+                <X className="h-5 w-5" />
+                <span>Take New Photo</span>
+              </button>
+            </div>
+
+            {/* Help Text */}
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 rounded-xl">
+              <div className="flex items-start space-x-2">
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-blue-700 dark:text-blue-300">
+                  <strong>Tip:</strong> For better accuracy, ensure good lighting and place a reference object (like a fork or coin) in the photo for scale.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {currentState === 'results' && analysisData && (
           <ResultsDisplay 

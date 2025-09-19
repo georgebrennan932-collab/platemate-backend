@@ -97,8 +97,8 @@ export function CameraInterface({
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       
-      // Auto-analyze the selected file
-      analysisMutation.mutate(file);
+      // Don't auto-analyze - user needs to press capture button
+      // This makes gallery selection work like camera capture
     }
   };
 
@@ -109,6 +109,13 @@ export function CameraInterface({
       isNative: Capacitor.isNativePlatform(),
       platform: Capacitor.getPlatform()
     });
+    
+    // If user has already selected a file from gallery, analyze it
+    if (selectedFile) {
+      console.log("🖼️ Gallery image selected, starting analysis...");
+      analysisMutation.mutate(selectedFile);
+      return;
+    }
     
     // Use Capacitor Camera API if available (native app)
     if (Capacitor.isNativePlatform()) {

@@ -271,7 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         // Real food recognition and nutrition analysis using multi-AI provider system with timeout
-        console.log(`🧠 [${requestId}] Starting AI analysis...`);
+        console.log(`🧠 [${requestId}] Starting AI analysis (includes cache check)...`);
         const analysisStartTime = Date.now();
         
         const foodAnalysisData = await Promise.race([
@@ -282,13 +282,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ]);
         
         const analysisTime = Date.now() - analysisStartTime;
-        console.log(`✅ [${requestId}] AI analysis completed in ${analysisTime}ms`);
+        console.log(`✅ [${requestId}] Analysis completed in ${analysisTime}ms`);
         
         // Add analysis timing to response headers
         res.setHeader('X-Analysis-Time', analysisTime.toString());
 
-        // CONFIDENCE THRESHOLD CHECK: If confidence < 80%, create confirmation workflow
-        if (foodAnalysisData.confidence < 80) {
+        // CONFIDENCE THRESHOLD CHECK: Apply to ALL analysis results (cached and fresh)
+        console.log(`🔍 [${requestId}] Checking confidence threshold: ${foodAnalysisData.confidence}% (threshold: 90%)`);
+        if (foodAnalysisData.confidence < 90) {
           console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for image analysis - creating food confirmation`);
           
           // Create food confirmation for user review
@@ -316,6 +317,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               suggestedFoods: foodAnalysisData.detectedFoods,
               imageUrl: confirmationData.imageUrl
             };
+            
+            console.log(`🔄 [${requestId}] Created confirmation ${confirmation.id} - returning 202 confirmation_required`);
           } catch (validationError: any) {
             if (validationError.name === 'ZodError') {
               console.error('Image analysis confirmation validation error:', validationError.errors);
@@ -329,8 +332,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         } else {
-          // High confidence (≥80%) - proceed with immediate analysis
-          console.log(`✅ High confidence (${foodAnalysisData.confidence}%) for image analysis - creating food analysis`);
+          // High confidence (≥90%) - proceed with immediate analysis
+          console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - creating food analysis and returning 200 OK`);
           const analysis = await storage.createFoodAnalysis(foodAnalysisData);
 
           // Optional: Auto-add to diary if user is authenticated and requests it
@@ -408,8 +411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use AI manager to analyze text-based food description
       const foodAnalysisData = await aiManager.analyzeFoodText(foodDescription.trim());
 
-      // CONFIDENCE THRESHOLD CHECK: If confidence < 80%, create confirmation workflow
-      if (foodAnalysisData.confidence < 80) {
+      // CONFIDENCE THRESHOLD CHECK: If confidence < 90%, create confirmation workflow
+      if (foodAnalysisData.confidence < 90) {
         console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for text analysis - creating food confirmation`);
         
         // Create food confirmation for user review
@@ -447,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // High confidence (≥80%) - proceed with immediate analysis
+      // High confidence (≥90%) - proceed with immediate analysis
       console.log(`✅ High confidence (${foodAnalysisData.confidence}%) for text analysis - creating food analysis`);
       const analysis = await storage.createFoodAnalysis(foodAnalysisData);
 
@@ -582,7 +585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === FOOD CONFIRMATION API ENDPOINTS (for confidence threshold workflow) ===
   
-  // Create food confirmation for low confidence analysis (<80%)
+  // Create food confirmation for low confidence analysis (<90%)
   app.post("/api/food-confirmations", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
