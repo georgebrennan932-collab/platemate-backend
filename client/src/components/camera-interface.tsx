@@ -91,15 +91,35 @@ export function CameraInterface({
   });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      
-      // Don't auto-analyze - user needs to press capture button
-      // This makes both camera and gallery work consistently
-      console.log("📷 Image selected (camera or gallery), ready for analysis");
+    try {
+      console.log("📁 File select triggered:", event.target.files?.length, "files");
+      const file = event.target.files?.[0];
+      if (file) {
+        console.log("📄 File details:", {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        });
+        
+        setSelectedFile(file);
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+        
+        console.log("✅ File processed successfully, ready for analysis");
+        
+        // Auto-analyze the selected image immediately (both camera and gallery)
+        console.log("🔄 Starting auto-analysis...");
+        analysisMutation.mutate(file);
+      } else {
+        console.log("❌ No file selected");
+      }
+    } catch (error) {
+      console.error("💥 Error in handleFileSelect:", error);
+      toast({
+        title: "Photo Error",
+        description: "Failed to process the selected photo. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
