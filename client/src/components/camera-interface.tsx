@@ -176,55 +176,23 @@ export function CameraInterface({
   });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const isAndroid = navigator.userAgent.includes('Android');
-      console.log(`📁 ANDROID=[${isAndroid}] File select triggered: files=${event.target.files?.length || 0}`);
-      
-      const file = event.target.files?.[0];
-      if (!file) {
-        console.log("❌ No file selected");
-        return;
-      }
-      
-      console.log(`📄 ANDROID=[${isAndroid}] File: ${file.name} ${file.size} bytes ${file.type}`);
-      
-      // Skip image type validation on Android - some devices report wrong MIME types
-      if (!isAndroid && !file.type.startsWith('image/')) {
-        console.error("❌ Invalid file type:", file.type);
-        toast({
-          title: "Invalid File",
-          description: "Please select an image file.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      
-      // Single-flight protection
-      if (isAnalyzingRef.current) {
-        console.log('⏭️ Analysis already in progress');
-        return;
-      }
-      
-      const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      console.log(`🚀 ANDROID=[${isAndroid}] Starting analysis [${requestId}]`);
-      
-      // ANDROID DIRECT FIX: Start analysis immediately
-      analysisMutation.mutate({ file, requestId });
-      
-      // Reset input
-      event.target.value = '';
-    } catch (error) {
-      console.error("💥 File select error:", error);
-      toast({
-        title: "Camera Error",
-        description: "Please try taking the photo again.",
-        variant: "destructive",
-      });
-    }
+    const file = event.target.files?.[0];
+    const isAndroid = navigator.userAgent.includes('Android');
+    
+    console.log(`📱 MOBILE CAMERA: Android=${isAndroid} File=${!!file} Size=${file?.size || 0}`);
+    
+    if (!file) return;
+    
+    // Show preview immediately  
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    
+    // Start analysis immediately - bypass ALL checks
+    const requestId = `mobile_${Date.now()}`;
+    console.log(`🚀 MOBILE: Immediate analysis start [${requestId}]`);
+    
+    analysisMutation.mutate({ file, requestId });
+    event.target.value = '';
   };
 
   // Add a simple polling check for file input
