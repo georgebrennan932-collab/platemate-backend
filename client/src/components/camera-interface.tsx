@@ -92,27 +92,44 @@ export function CameraInterface({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      console.log("📁 File select triggered:", event.target.files?.length, "files");
+      console.log("📁 File select triggered:", {
+        filesCount: event.target.files?.length || 0,
+        hasFiles: !!event.target.files?.length
+      });
+      
       const file = event.target.files?.[0];
-      if (file) {
-        console.log("📄 File details:", {
-          name: file.name,
-          size: file.size,
-          type: file.type
-        });
-        
-        setSelectedFile(file);
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-        
-        console.log("✅ File processed successfully, ready for analysis");
-        
-        // Auto-analyze the selected image immediately (both camera and gallery)
-        console.log("🔄 Starting auto-analysis...");
-        analysisMutation.mutate(file);
-      } else {
-        console.log("❌ No file selected");
+      if (!file) {
+        console.log("❌ No file selected - user may have canceled");
+        // Don't show error for canceled selection - this is normal user behavior
+        return;
       }
+      
+      console.log("📄 File details:", {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        console.error("❌ Invalid file type:", file.type);
+        toast({
+          title: "Invalid File",
+          description: "Please select an image file.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      
+      console.log("✅ File processed successfully, starting analysis...");
+      
+      // Auto-analyze the selected image immediately
+      console.log("🔄 Starting auto-analysis...");
+      analysisMutation.mutate(file);
     } catch (error) {
       console.error("💥 Error in handleFileSelect:", error);
       toast({
@@ -288,6 +305,11 @@ export function CameraInterface({
         accept="image/*"
         capture="environment"
         onChange={handleFileSelect}
+        onClick={(e) => {
+          console.log("📱 Camera input clicked");
+          // Reset the input value so the same file can be selected again
+          e.currentTarget.value = '';
+        }}
         className="hidden"
         data-testid="input-camera"
       />
