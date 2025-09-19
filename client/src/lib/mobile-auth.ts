@@ -5,29 +5,37 @@ export class MobileAuthService {
   private static API_BASE_KEY = 'platemate_api_base';
   
   static async initialize() {
-    console.log('🔍 Platform check:', { 
-      isNative: Capacitor.isNativePlatform(), 
-      platform: Capacitor.getPlatform() 
-    });
-    
-    // Debug mode: Force mobile auth testing on web with URL parameter
-    const forceDebug = window.location.search.includes('debug=mobile');
-    
-    if (!Capacitor.isNativePlatform() && !forceDebug) {
-      console.log('🌐 Web platform - skipping mobile auth');
-      return true;
-    }
-    
-    if (forceDebug) {
-      console.log('🧪 Debug mode: Testing mobile auth on web platform');
-    }
-
-    console.log('📱 Native platform detected - setting up mobile auth');
-    
-    const apiBase = this.getApiBaseUrl();
-    console.log('🔗 Using API base URL:', apiBase);
-    
     try {
+      console.log('🔍 Platform check:', { 
+        isNative: Capacitor.isNativePlatform(), 
+        platform: Capacitor.getPlatform(),
+        userAgent: navigator.userAgent
+      });
+      
+      // Debug mode: Force mobile auth testing on web with URL parameter
+      const forceDebug = window.location.search.includes('debug=mobile');
+      
+      if (!Capacitor.isNativePlatform() && !forceDebug) {
+        console.log('🌐 Web platform - skipping mobile auth');
+        return true;
+      }
+      
+      if (forceDebug) {
+        console.log('🧪 Debug mode: Testing mobile auth on web platform');
+      }
+
+      console.log('📱 Native platform detected - setting up mobile auth');
+      
+      const apiBase = this.getApiBaseUrl();
+      console.log('🔗 Using API base URL:', apiBase);
+      
+      // Test API connectivity first
+      console.log('🧪 Testing API connectivity...');
+      const connectivityTest = await this.testApiConnectivity(apiBase);
+      if (!connectivityTest) {
+        console.warn('⚠️ API connectivity test failed, but continuing with auth setup');
+      }
+      
       // Get stored token
       let token = localStorage.getItem(this.TOKEN_KEY);
       
@@ -39,25 +47,46 @@ export class MobileAuthService {
           localStorage.setItem(this.TOKEN_KEY, token);
           console.log('✅ Mobile token generated and stored');
         } else {
-          console.error('❌ Failed to generate mobile token');
-          return false;
+          console.error('❌ Failed to generate mobile token - app will continue without auth');
+          // Don't return false here, let the app continue without auth
+          return true;
         }
       } else {
         console.log('✅ Mobile token found in storage');
       }
 
       // Set API base URL for mobile
-      const apiBase = this.getApiBaseUrl();
       localStorage.setItem(this.API_BASE_KEY, apiBase);
       console.log('🔗 API base URL configured:', apiBase);
       
       return true;
     } catch (error) {
       console.error('❌ Mobile auth initialization failed:', error);
-      return false;
+      // Return true to allow app to continue even if auth fails
+      console.log('🔄 Allowing app to continue without mobile auth');
+      return true;
     }
   }
   
+  private static async testApiConnectivity(apiBase: string): Promise<boolean> {
+    try {
+      console.log('🌐 Testing connectivity to:', apiBase);
+      const response = await fetch(`${apiBase}/api/auth/user`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📶 Connectivity test result:', response.status);
+      // Even 401 is ok, it means the API is reachable
+      return response.status === 401 || response.ok;
+    } catch (error) {
+      console.error('📶 Connectivity test failed:', error);
+      return false;
+    }
+  }
+
   private static async generateMobileToken(): Promise<string | null> {
     try {
       const apiBase = this.getApiBaseUrl();
@@ -95,7 +124,9 @@ export class MobileAuthService {
     
     // For development and production, always use the deployed URL for mobile
     // This ensures mobile apps can always reach the server
-    return import.meta.env.VITE_API_BASE || replitUrl;
+    const apiBase = import.meta.env.VITE_API_BASE || replitUrl;
+    console.log('🔗 Mobile API base URL resolved to:', apiBase);
+    return apiBase;
   }
   
   static getToken(): string | null {

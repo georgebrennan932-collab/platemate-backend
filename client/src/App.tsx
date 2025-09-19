@@ -22,14 +22,23 @@ import NotFound from "./pages/not-found";
 function App() {
   useEffect(() => {
     console.log("App loaded");
+    console.log("🔧 Environment check:", {
+      userAgent: navigator.userAgent,
+      online: navigator.onLine,
+      language: navigator.language,
+      platform: navigator.platform
+    });
     
     // Initialize mobile authentication for native apps
     MobileAuthService.initialize().then((success) => {
       if (success) {
         console.log("✅ Mobile auth initialized successfully");
       } else {
-        console.log("⚠️ Mobile auth initialization failed");
+        console.log("⚠️ Mobile auth initialization failed - but app will continue");
       }
+    }).catch((error) => {
+      console.error("❌ Mobile auth crashed:", error);
+      console.log("🔄 App continuing despite auth error");
     });
   }, []);
 
