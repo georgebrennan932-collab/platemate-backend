@@ -9,9 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
-  onAnalysisStart: (requestId: string) => void;
-  onAnalysisSuccess: (data: FoodAnalysis, requestId: string) => void;
-  onAnalysisError: (error: string, requestId: string) => void;
+  onAnalysisStart: () => void;
+  onAnalysisSuccess: (data: FoodAnalysis) => void;
+  onAnalysisError: (error: string) => void;
 }
 
 export function CameraInterface({
@@ -26,9 +26,6 @@ export function CameraInterface({
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  
-  // Single-flight protection for Android WebView race conditions
-  const isAnalyzingRef = useRef(false);
 
   // Initialize media service
   useEffect(() => {
@@ -46,200 +43,126 @@ export function CameraInterface({
     };
   }, [toast]);
 
-  const analysisMutation = useMutation({
-    mutationFn: async ({ file, requestId }: { file: File; requestId: string }) => {
-      const isAndroid = navigator.userAgent.includes('Android');
-      console.log(`📸 Starting image analysis [${requestId}] (${isAndroid ? 'Android' : 'Browser'}):`, {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        platform: isAndroid ? 'Android WebView' : 'Desktop Browser'
-      });
-      
+  const { mutate: analyzeFood, isPending } = useMutation({
+    mutationFn: async (file: File): Promise<FoodAnalysis> => {
       const formData = new FormData();
       formData.append('image', file);
       
-      console.log("🚀 Sending request to /api/analyze...");
-      
-      try {
-        const response = await fetch('/api/analyze', {
-          method: 'POST',
-          body: formData,
-        });
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        body: formData,
+      });
 
-        console.log("📡 Response received:", {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-          platform: isAndroid ? 'Android' : 'Browser',
-          headers: Array.from(response.headers.entries()),
-          url: response.url
-        });
-
-        // Always parse the response body first
-        let result;
-        try {
-          result = await response.json();
-          console.log("📄 Raw response data:", {
-            ...result,
-            platform: isAndroid ? 'Android' : 'Browser'
-          });
-        } catch (parseError) {
-          console.error("❌ Failed to parse JSON response:", parseError);
-          throw new Error('Invalid response from server');
-        }
-        
-        // Critical Android fix: Check for valid analysis data regardless of HTTP status
-        const hasValidAnalysisData = result && 
-                                   result.detectedFoods && 
-                                   Array.isArray(result.detectedFoods) && 
-                                   result.detectedFoods.length > 0;
-        
-        if (hasValidAnalysisData) {
-          console.log("✅ Valid food analysis data found:", {
-            confidence: result.confidence,
-            needsConfirmation: result.needsConfirmation,
-            foodCount: result.detectedFoods.length,
-            isAIUnavailable: result.isAITemporarilyUnavailable,
-            platform: isAndroid ? 'Android' : 'Browser',
-            httpStatus: response.status
-          });
-          
-          // Ensure needsConfirmation is set for low confidence
-          if (typeof result.confidence === 'number' && result.confidence < 90) {
-            result.needsConfirmation = true;
-            if (!result.confirmationMessage) {
-              result.confirmationMessage = `AI confidence is ${result.confidence}% - please review the detected foods`;
-            }
-            console.log(`⚠️ Low confidence (${result.confidence}%) detected - ensuring needsConfirmation is set`);
-          }
-          
-          return result;
-        }
-        
-        // If no valid analysis data and response is not ok, treat as error
-        if (!response.ok) {
-          console.error("❌ No valid analysis data and HTTP error:", {
-            status: response.status,
-            error: result?.error,
-            platform: isAndroid ? 'Android' : 'Browser'
-          });
-          throw new Error(result?.error || 'Analysis failed');
-        }
-
-        console.log("✅ Analysis successful:", {
-          confidence: result.confidence,
-          needsConfirmation: result.needsConfirmation,
-          foodCount: result.detectedFoods?.length,
-          isAIUnavailable: result.isAITemporarilyUnavailable
-        });
-        return result;
-        
-      } catch (fetchError) {
-        console.error("❌ Network/fetch error:", {
-          error: fetchError,
-          platform: isAndroid ? 'Android' : 'Browser'
-        });
-        throw fetchError;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Analysis failed');
       }
+
+      return response.json();
     },
-    onMutate: ({ requestId }) => {
-      console.log(`🔄 Analysis mutation starting... [${requestId}]`);
-      isAnalyzingRef.current = true;
-      onAnalysisStart(requestId);
+    onMutate: () => {
+      console.log('🔄 Analysis mutation starting...');
+      onAnalysisStart();
     },
-    onSuccess: (data: FoodAnalysis, variables) => {
-      const { requestId } = variables;
-      console.log(`🎉 Analysis success callback triggered [${requestId}]:`, {
-        hasData: !!data,
-        confidence: data?.confidence,
-        needsConfirmation: data?.needsConfirmation,
-        hasDetectedFoods: !!(data?.detectedFoods?.length),
-        foodCount: data?.detectedFoods?.length,
-        platform: navigator.userAgent.includes('Android') ? 'Android' : 'Browser'
-      });
-      onAnalysisSuccess(data, requestId);
+    onSuccess: (data: FoodAnalysis) => {
+      console.log('🎉 Analysis success callback triggered:', data);
+      onAnalysisSuccess(data);
     },
-    onError: (error: Error, variables) => {
-      const { requestId } = variables;
-      console.error(`💥 Analysis error callback triggered [${requestId}]:`, {
-        errorMessage: error.message,
-        platform: navigator.userAgent.includes('Android') ? 'Android' : 'Browser',
-        stack: error.stack
-      });
-      onAnalysisError(error.message, requestId);
+    onError: (error: Error) => {
+      console.error('❌ Analysis failed:', error);
+      onAnalysisError(error.message);
     },
     onSettled: () => {
-      console.log('🧹 Analysis settled, clearing single-flight guard');
-      isAnalyzingRef.current = false;
+      console.log('🧹 Media service cleaned up');
+      mediaService.cleanup();
     }
   });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    const isAndroid = navigator.userAgent.includes('Android');
-    
-    console.log(`📱 MOBILE CAMERA: Android=${isAndroid} File=${!!file} Size=${file?.size || 0}`);
-    
-    if (!file) return;
-    
-    // Show preview immediately  
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    
-    // Start analysis immediately - bypass ALL checks
-    const requestId = `mobile_${Date.now()}`;
-    console.log(`🚀 MOBILE: Immediate analysis start [${requestId}]`);
-    
-    analysisMutation.mutate({ file, requestId });
-    event.target.value = '';
-  };
-
-  // Add a simple polling check for file input
-  const checkFileInput = () => {
-    if (cameraInputRef.current && cameraInputRef.current.files && cameraInputRef.current.files.length > 0) {
-      console.log("🔍 Polling detected file in input:", cameraInputRef.current.files.length);
-      const mockEvent = {
-        target: cameraInputRef.current
-      } as React.ChangeEvent<HTMLInputElement>;
-      handleFileSelect(mockEvent);
+    try {
+      console.log("📁 File select triggered:", {
+        filesCount: event.target.files?.length || 0,
+        hasFiles: !!event.target.files?.length
+      });
+      
+      const file = event.target.files?.[0];
+      if (!file) {
+        console.log("❌ No file selected - user may have canceled");
+        return;
+      }
+      
+      console.log("📄 File details:", {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        console.error("❌ Invalid file type:", file.type);
+        toast({
+          title: "Invalid File",
+          description: "Please select an image file.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      
+      console.log("✅ File processed successfully, starting analysis...");
+      
+      // Auto-analyze the selected image immediately
+      console.log("🔄 Starting auto-analysis...");
+      analyzeFood(file);
+      
+      // Reset input value after processing
+      event.target.value = '';
+    } catch (error) {
+      console.error("💥 Error in handleFileSelect:", error);
+      toast({
+        title: "Photo Error",
+        description: "Failed to process the selected photo. Please try again.",
+        variant: "destructive",
+      });
     }
   };
-
 
   const handleCameraCapture = async () => {
-    const isAndroid = navigator.userAgent.includes('Android');
-    console.log(`📷 ANDROID=[${isAndroid}] Camera capture requested`);
-    
-    // If there's already a selected file, analyze it
-    if (selectedFile && !isAnalyzingRef.current) {
-      const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      console.log(`🖼️ ANDROID=[${isAndroid}] Analyzing existing file [${requestId}]`);
-      analysisMutation.mutate({ file: selectedFile, requestId });
-      return;
-    }
-    
-    // Direct camera approach - especially important for Android
-    console.log(`🌐 ANDROID=[${isAndroid}] Opening camera/file picker...`);
-    
-    // For Android, use the direct capture button which has worked better
-    const directCameraInput = document.querySelector('[data-testid="input-direct-camera"]') as HTMLInputElement;
-    if (directCameraInput) {
-      console.log(`✅ ANDROID=[${isAndroid}] Using direct camera input`);
-      directCameraInput.click();
-      return;
-    }
-    
-    // Fallback to regular camera input
-    if (cameraInputRef.current) {
-      cameraInputRef.current.value = '';
-      cameraInputRef.current.click();
-      console.log(`🎯 ANDROID=[${isAndroid}] Camera input clicked`);
-    } else {
-      console.error(`❌ ANDROID=[${isAndroid}] No camera input available!`);
+    try {
+      console.log("📷 Camera capture requested");
+      
+      // If user has already selected a file from gallery, analyze it
+      if (selectedFile) {
+        console.log("🖼️ Gallery image selected, starting analysis...");
+        analyzeFood(selectedFile);
+        return;
+      }
+      
+      // Simple direct approach for web browsers
+      console.log("🌐 Opening camera selection...");
+      if (cameraInputRef.current) {
+        console.log("✅ Camera input ref exists, resetting and clicking...");
+        
+        // Reset input
+        cameraInputRef.current.value = '';
+        cameraInputRef.current.click();
+        console.log("🎯 Camera input clicked, waiting for user to take photo...");
+      } else {
+        console.error("❌ Camera input ref is null!");
+        toast({
+          title: "Camera Error",
+          description: "Camera not available. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('💥 Error in handleCameraCapture:', error);
       toast({
-        title: "Camera Error",
-        description: "Camera not available. Please try the gallery button instead.",
+        title: "Camera Error", 
+        description: "Failed to open camera. Please try again.",
         variant: "destructive",
       });
     }
@@ -325,7 +248,6 @@ export function CameraInterface({
                 onChange={handleFileSelect}
                 className="hidden"
                 data-testid="input-direct-camera"
-                key={Date.now()} // Force recreation to avoid cached issues
               />
             </label>
             
@@ -371,6 +293,16 @@ export function CameraInterface({
         onChange={handleFileSelect}
         className="hidden"
         data-testid="input-file"
+      />
+      
+      {/* Hidden camera input */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileSelect}
+        className="hidden"
       />
     </div>
   );

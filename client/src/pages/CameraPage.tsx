@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -25,9 +25,6 @@ export function CameraPage() {
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [confirmationData, setConfirmationData] = useState<FoodAnalysis | null>(null);
-  
-  // Request ID gating to prevent race conditions on Android WebView
-  const latestRequestIdRef = useRef<string | null>(null);
   
   // Voice input state
   const [isListening, setIsListening] = useState(false);
@@ -63,47 +60,17 @@ export function CameraPage() {
     checkSpeechSupport();
   }, []);
 
-  const handleAnalysisStart = (requestId: string) => {
-    console.log(`🚀 Starting analysis with requestId: ${requestId}`);
-    latestRequestIdRef.current = requestId;
+  const handleAnalysisStart = () => {
     soundService.playScan();
     setCurrentState('processing');
   };
 
-  const handleAnalysisSuccess = (data: FoodAnalysis, requestId: string) => {
-    const isAndroid = navigator.userAgent.includes('Android');
-    console.log(`🎉 SUCCESS: Android=[${isAndroid}] RequestId=[${requestId}] Confidence=${data?.confidence}% Foods=${data?.detectedFoods?.length}`);
-    
-    // Race condition protection
-    if (requestId !== latestRequestIdRef.current) {
-      console.log(`⏭️ IGNORING old request [${requestId}]`);
-      return;
-    }
-    
-    // ANDROID FIX: Force ALL successful responses to confirmation screen
-    if (isAndroid) {
-      console.log(`🤖 ANDROID: Forcing confirmation screen for ANY successful response`);
-      setErrorMessage(''); // Clear error state
-      setConfirmationData(data);
-      setAnalysisData(null);
-      setCurrentState('confirmation');
-      soundService.playSuccess();
-      
-      toast({
-        title: data.confidence ? `Confidence: ${data.confidence}%` : "Analysis Complete",
-        description: "Please review and confirm the detected foods.",
-        variant: "default",
-      });
-      return;
-    }
-    
-    // Browser logic (original)
-    setErrorMessage('');
+  const handleAnalysisSuccess = (data: FoodAnalysis) => {
     soundService.playSuccess();
     
+    // MINIMAL FIX: Check if this is low confidence and needs confirmation
     if (data.needsConfirmation || (typeof data.confidence === 'number' && data.confidence < 90)) {
       setConfirmationData(data);
-      setAnalysisData(null);
       setCurrentState('confirmation');
       
       toast({
@@ -113,24 +80,11 @@ export function CameraPage() {
       });
     } else {
       setAnalysisData(data);
-      setConfirmationData(null);
       setCurrentState('results');
     }
   };
 
-  const handleAnalysisError = (error: string, requestId: string) => {
-    console.log(`❌ handleAnalysisError called [${requestId}]:`, {
-      error,
-      currentState,
-      isLatestRequest: requestId === latestRequestIdRef.current
-    });
-    
-    // Race condition protection - only allow latest request to update state
-    if (requestId !== latestRequestIdRef.current) {
-      console.log(`⏭️ Ignoring error from old request [${requestId}] - latest is [${latestRequestIdRef.current}]`);
-      return;
-    }
-    
+  const handleAnalysisError = (error: string) => {
     soundService.playError();
     setErrorMessage(error);
     setCurrentState('error');
