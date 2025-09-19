@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
   appName: 'PlateMate',
   webDir: 'dist/public',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'http',
+    url: process.env.NODE_ENV === 'development' ? 'http://10.0.2.2:5000' : undefined,
+    cleartext: true
   },
   plugins: {
     SplashScreen: {
