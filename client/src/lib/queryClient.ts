@@ -1,9 +1,11 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // API base URL for mobile builds - points to actual Express server
-const API_BASE = import.meta.env.VITE_API_BASE || "";
-
 function resolveApiUrl(url: string): string {
+  // Check for mobile API base first, then fallback to environment variable
+  const mobileApiBase = getMobileApiBase();
+  const API_BASE = mobileApiBase || import.meta.env.VITE_API_BASE || "";
+  
   if (API_BASE && !url.startsWith('http')) {
     return new URL(url, API_BASE).toString();
   }
@@ -17,10 +19,17 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Get mobile auth token from localStorage
+// Get mobile auth token and API base from mobile auth service
 function getMobileAuthToken(): string | null {
   if (typeof window !== 'undefined') {
     return localStorage.getItem('platemate_mobile_token');
+  }
+  return null;
+}
+
+function getMobileApiBase(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('platemate_api_base');
   }
   return null;
 }

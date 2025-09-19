@@ -1,5 +1,6 @@
 import { Switch, Route } from "wouter";
 import { useEffect } from "react";
+import { MobileAuthService } from "./lib/mobile-auth";
 
 // ✅ Pages in your /pages folder
 import CameraPage from "./pages/CameraPage";
@@ -21,6 +22,15 @@ import NotFound from "./pages/not-found";
 function App() {
   useEffect(() => {
     console.log("App loaded");
+    
+    // Initialize mobile authentication for native apps
+    MobileAuthService.initialize().then((success) => {
+      if (success) {
+        console.log("✅ Mobile auth initialized successfully");
+      } else {
+        console.log("⚠️ Mobile auth initialization failed");
+      }
+    });
   }, []);
 
   return (

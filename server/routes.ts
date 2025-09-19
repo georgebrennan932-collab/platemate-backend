@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
 
-  // Mobile token endpoint for development - generates JWT token
+  // Mobile token endpoint for development - generates JWT token (no auth required)
   app.post('/api/auth/mobile-token', async (req, res) => {
     try {
       // For development, use a hardcoded user ID
