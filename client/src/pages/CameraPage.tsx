@@ -72,42 +72,39 @@ export function CameraPage() {
 
   const handleAnalysisSuccess = (data: FoodAnalysis, requestId: string) => {
     const isAndroid = navigator.userAgent.includes('Android');
-    console.log(`🎉 handleAnalysisSuccess called [${requestId}] on ${isAndroid ? 'Android' : 'Browser'}:`, {
-      hasData: !!data,
-      confidence: data?.confidence,
-      needsConfirmation: data?.needsConfirmation,
-      currentState: currentState,
-      platform: isAndroid ? 'Android' : 'Browser',
-      isLatestRequest: requestId === latestRequestIdRef.current
-    });
+    console.log(`🎉 SUCCESS: Android=[${isAndroid}] RequestId=[${requestId}] Confidence=${data?.confidence}% Foods=${data?.detectedFoods?.length}`);
     
-    // Race condition protection - only allow latest request to update state
+    // Race condition protection
     if (requestId !== latestRequestIdRef.current) {
-      console.log(`⏭️ Ignoring success from old request [${requestId}] - latest is [${latestRequestIdRef.current}]`);
+      console.log(`⏭️ IGNORING old request [${requestId}]`);
       return;
     }
     
-    // Clear any existing error state first
-    setErrorMessage('');
+    // ANDROID FIX: Force ALL successful responses to confirmation screen
+    if (isAndroid) {
+      console.log(`🤖 ANDROID: Forcing confirmation screen for ANY successful response`);
+      setErrorMessage(''); // Clear error state
+      setConfirmationData(data);
+      setAnalysisData(null);
+      setCurrentState('confirmation');
+      soundService.playSuccess();
+      
+      toast({
+        title: data.confidence ? `Confidence: ${data.confidence}%` : "Analysis Complete",
+        description: "Please review and confirm the detected foods.",
+        variant: "default",
+      });
+      return;
+    }
     
+    // Browser logic (original)
+    setErrorMessage('');
     soundService.playSuccess();
     
-    // Check if AI requires confirmation due to low confidence
     if (data.needsConfirmation || (typeof data.confidence === 'number' && data.confidence < 90)) {
-      console.log(`⚠️ ANDROID FIX: Forcing confirmation state (${isAndroid ? 'Android' : 'Browser'}):`, {
-        confidence: data.confidence,
-        needsConfirmation: data.needsConfirmation,
-        willSetState: 'confirmation',
-        currentState: currentState
-      });
-      
-      // Critical Android fix: Set both data and state atomically
       setConfirmationData(data);
-      setAnalysisData(null); // Clear any previous analysis data
+      setAnalysisData(null);
       setCurrentState('confirmation');
-      
-      // Request gating eliminates need for Android-specific workarounds
-      console.log(`✅ Request [${requestId}] confirmed - setting confirmation state`);
       
       toast({
         title: `Low Confidence (${data.confidence}%)`,
@@ -115,9 +112,8 @@ export function CameraPage() {
         variant: "default",
       });
     } else {
-      console.log(`✅ High confidence result on ${isAndroid ? 'Android' : 'Browser'}, showing results`);
       setAnalysisData(data);
-      setConfirmationData(null); // Clear confirmation data
+      setConfirmationData(null);
       setCurrentState('results');
     }
   };
