@@ -10,9 +10,16 @@ export class MobileAuthService {
       platform: Capacitor.getPlatform() 
     });
     
-    if (!Capacitor.isNativePlatform()) {
+    // Debug mode: Force mobile auth testing on web with URL parameter
+    const forceDebug = window.location.search.includes('debug=mobile');
+    
+    if (!Capacitor.isNativePlatform() && !forceDebug) {
       console.log('🌐 Web platform - skipping mobile auth');
       return true;
+    }
+    
+    if (forceDebug) {
+      console.log('🧪 Debug mode: Testing mobile auth on web platform');
     }
 
     console.log('📱 Native platform detected - setting up mobile auth');
