@@ -125,62 +125,41 @@ export function CameraInterface({
 
 
   const handleCameraCapture = async () => {
-    console.log("📷 Camera capture requested");
-    console.log("🔍 Platform check:", {
-      isNative: Capacitor.isNativePlatform(),
-      platform: Capacitor.getPlatform()
-    });
-    
-    // If user has already selected a file from gallery, analyze it
-    if (selectedFile) {
-      console.log("🖼️ Gallery image selected, starting analysis...");
-      analysisMutation.mutate(selectedFile);
-      return;
-    }
-    
-    // Use Capacitor Camera API if available (native app)
-    if (Capacitor.isNativePlatform()) {
-      try {
-        console.log("📱 Using Capacitor camera...");
-        const image = await CapacitorCamera.getPhoto({
-          quality: 90,
-          allowEditing: false,
-          resultType: CameraResultType.Base64,
-          source: CameraSource.Camera,
-        });
-        
-        console.log("📸 Photo captured successfully:", {
-          hasBase64: !!image.base64String,
-          base64Length: image.base64String?.length || 0
-        });
-        
-        // Convert base64 to File object
-        const response = await fetch(`data:image/jpeg;base64,${image.base64String}`);
-        const blob = await response.blob();
-        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-        
-        console.log("📄 File created:", {
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: file.type
-        });
-        
-        setSelectedFile(file);
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-        
-        console.log("🎯 Starting auto-analysis...");
-        // Auto-analyze the captured photo
-        analysisMutation.mutate(file);
-      } catch (error) {
-        console.error('❌ Error taking photo:', error);
-        // Fall back to web camera input
-        cameraInputRef.current?.click();
+    try {
+      console.log("📷 Camera capture requested");
+      console.log("🔍 Platform check:", {
+        isNative: Capacitor.isNativePlatform(),
+        platform: Capacitor.getPlatform()
+      });
+      
+      // If user has already selected a file from gallery, analyze it
+      if (selectedFile) {
+        console.log("🖼️ Gallery image selected, starting analysis...");
+        analysisMutation.mutate(selectedFile);
+        return;
       }
-    } else {
+      
       // For web browsers, use camera input
       console.log("🌐 Using web camera input...");
-      cameraInputRef.current?.click();
+      if (cameraInputRef.current) {
+        console.log("✅ Camera input ref exists, clicking...");
+        cameraInputRef.current.click();
+        console.log("🎯 Camera input clicked, waiting for user to take photo...");
+      } else {
+        console.error("❌ Camera input ref is null!");
+        toast({
+          title: "Camera Error",
+          description: "Camera not available. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('💥 Error in handleCameraCapture:', error);
+      toast({
+        title: "Camera Error", 
+        description: "Failed to open camera. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
