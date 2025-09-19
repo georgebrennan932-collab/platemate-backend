@@ -80,9 +80,16 @@ export function CameraInterface({
       formData.append('image', file);
       
       console.log("🚀 Sending request to /api/analyze...");
+      console.log("🔍 Platform info:", {
+        isNative: Capacitor.isNativePlatform(),
+        platform: Capacitor.getPlatform(),
+        origin: window.location.origin
+      });
       
       // Use mobile-aware API system with proper authentication
       const resolvedUrl = resolveApiUrl('/api/analyze');
+      console.log("🎯 Resolved API URL:", resolvedUrl);
+      
       const headers: HeadersInit = {};
       
       // Add Authorization header for mobile builds
@@ -90,6 +97,8 @@ export function CameraInterface({
       if (mobileToken) {
         headers['Authorization'] = `Bearer ${mobileToken}`;
         console.log("🔑 Added mobile auth token to request");
+      } else {
+        console.log("⚠️ No mobile token found!");
       }
       
       const response = await fetch(resolvedUrl, {

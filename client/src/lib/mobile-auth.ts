@@ -101,9 +101,18 @@ export class MobileAuthService {
   }
   
   private static getApiBaseUrl(): string {
-    // For mobile apps, use current domain with proper protocol
+    // For mobile apps, use the deployed Replit URL
+    const replitUrl = 'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev';
+    
+    // On native platforms, always use the Replit URL
+    if (Capacitor.isNativePlatform()) {
+      console.log('📱 Native platform - using Replit URL:', replitUrl);
+      return replitUrl;
+    }
+    
+    // On web, use current origin
     const currentOrigin = window.location.origin;
-    console.log('🔗 Mobile API base URL resolved to current origin:', currentOrigin);
+    console.log('🌐 Web platform - using current origin:', currentOrigin);
     return currentOrigin;
   }
   
