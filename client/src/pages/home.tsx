@@ -530,7 +530,7 @@ export default function Home() {
                 <span>Detected Foods</span>
               </h4>
               <div className="space-y-3">
-                {confirmationData.suggestedFoods?.map((food: any, index: number) => (
+                {analysisData?.detectedFoods?.map((food: any, index: number) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-secondary/50 rounded-xl">
                     <div className="flex-1">
                       <div className="font-medium">{food.name}</div>
