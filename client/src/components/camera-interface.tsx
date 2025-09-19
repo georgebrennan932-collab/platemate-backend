@@ -63,17 +63,39 @@ export function CameraInterface({
       console.log("📡 Response received:", {
         status: response.status,
         statusText: response.statusText,
-        ok: response.ok
+        ok: response.ok,
+        headers: Array.from(response.headers.entries()),
+        url: response.url
       });
 
+      // Parse the response regardless of status to see what we got
+      const result = await response.json();
+      console.log("📄 Raw response data:", result);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ API Error:", errorData);
-        throw new Error(errorData.error || 'Analysis failed');
+        console.error("❌ API Error - but checking if we still have analysis data:", {
+          hasResult: !!result,
+          hasDetectedFoods: !!(result?.detectedFoods),
+          confidence: result?.confidence,
+          needsConfirmation: result?.needsConfirmation,
+          errorMessage: result?.error
+        });
+        
+        // If we have food analysis data despite the error status, use it
+        if (result && result.detectedFoods && result.detectedFoods.length > 0) {
+          console.log("🔧 Found food analysis data in error response - treating as low confidence result");
+          return result;
+        }
+        
+        throw new Error(result?.error || 'Analysis failed');
       }
 
-      const result = await response.json();
-      console.log("✅ Analysis successful:", result);
+      console.log("✅ Analysis successful:", {
+        confidence: result.confidence,
+        needsConfirmation: result.needsConfirmation,
+        foodCount: result.detectedFoods?.length,
+        isAIUnavailable: result.isAITemporarilyUnavailable
+      });
       return result;
     },
     onMutate: () => {
