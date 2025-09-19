@@ -1,8 +1,4 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { Capacitor } from '@capacitor/core';
-
-// API base URL for mobile vs web
-const API_BASE = Capacitor.isNativePlatform() ? 'https://workspace-georgebrennan93.replit.app' : '';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -16,7 +12,7 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(`${API_BASE}${url}`, {
+  const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -33,7 +29,7 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(`${API_BASE}${queryKey.join("/")}`, {
+    const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
     });
 
@@ -44,26 +40,6 @@ export const getQueryFn: <T>(options: {
     await throwIfResNotOk(res);
     return await res.json();
   };
-
-// Helper for multipart form requests
-export async function apiFetchForm(
-  method: string,
-  path: string,
-  formData: FormData,
-): Promise<Response> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    body: formData,
-    credentials: "include",
-  });
-  
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || `Request failed with status ${res.status}`);
-  }
-  
-  return res;
-}
 
 export const queryClient = new QueryClient({
   defaultOptions: {

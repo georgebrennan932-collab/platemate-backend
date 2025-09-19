@@ -145,52 +145,6 @@
         "accessCount": 1,
         "lastAccessed": 1758275638328
       }
-    ],
-    [
-      "42355ac05e40da5037f594bfa8293b21b733bb0a1f2eb3ccdd325e2af9677e0c",
-      {
-        "imageHash": "42355ac05e40da5037f594bfa8293b21b733bb0a1f2eb3ccdd325e2af9677e0c",
-        "analysis": {
-          "imageUrl": "uploads/processed_8d54c09d4b4b3f7f151feab7ddb7a127.jpg",
-          "confidence": 80,
-          "totalCalories": 352,
-          "totalProtein": 20,
-          "totalCarbs": 41,
-          "totalFat": 11,
-          "detectedFoods": [
-            {
-              "name": "Pasta, cooked",
-              "portion": "100g",
-              "calories": 157,
-              "protein": 6,
-              "carbs": 31,
-              "fat": 1,
-              "icon": "bread-slice"
-            },
-            {
-              "name": "Chicken, back",
-              "portion": "50g",
-              "calories": 149,
-              "protein": 13,
-              "carbs": 0,
-              "fat": 10,
-              "icon": "egg"
-            },
-            {
-              "name": "Tomato chili sauce",
-              "portion": "50ml",
-              "calories": 46,
-              "protein": 1,
-              "carbs": 10,
-              "fat": 0,
-              "icon": "apple-alt"
-            }
-          ]
-        },
-        "timestamp": 1758284057967,
-        "accessCount": 1,
-        "lastAccessed": 1758284057967
-      }
     ]
   ],
   "stats": {
@@ -198,11 +152,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 3,
+    "currentSize": 2,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1758191194019,
-    "newestEntry": 1758284057967
+    "newestEntry": 1758275638328
   },
-  "timestamp": 1758284057967
+  "timestamp": 1758275638330
 }

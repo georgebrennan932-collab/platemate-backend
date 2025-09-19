@@ -6,7 +6,6 @@ import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capa
 import { Capacitor } from '@capacitor/core';
 import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
-import { apiFetchForm } from '@/lib/queryClient';
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -44,142 +43,123 @@ export function CameraInterface({
     };
   }, [toast]);
 
-  const { mutate: analyzeFood, isPending } = useMutation({
-    mutationFn: async (file: File): Promise<FoodAnalysis> => {
-      const formData = new FormData();
-      formData.append('image', file);
-      
-      console.log('📤 Sending analysis request:', {
-        isNative: Capacitor.isNativePlatform(),
+  const analysisMutation = useMutation({
+    mutationFn: async (file: File) => {
+      console.log("📸 Starting image analysis:", {
+        fileName: file.name,
         fileSize: file.size,
         fileType: file.type
       });
       
-      const response = await apiFetchForm('POST', '/api/analyze', formData);
-      return response.json();
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      console.log("🚀 Sending request to /api/analyze...");
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        body: formData,
+      });
+
+      console.log("📡 Response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("❌ API Error:", errorData);
+        throw new Error(errorData.error || 'Analysis failed');
+      }
+
+      const result = await response.json();
+      console.log("✅ Analysis successful:", result);
+      return result;
     },
     onMutate: () => {
-      console.log('🔄 Analysis mutation starting...');
+      console.log("🔄 Analysis mutation starting...");
       onAnalysisStart();
     },
     onSuccess: (data: FoodAnalysis) => {
-      console.log('🎉 Analysis success callback triggered:', data);
+      console.log("🎉 Analysis success callback triggered:", data);
       onAnalysisSuccess(data);
     },
     onError: (error: Error) => {
-      console.error('❌ Analysis failed:', error);
+      console.error("💥 Analysis error callback triggered:", error);
       onAnalysisError(error.message);
     },
-    onSettled: () => {
-      console.log('🧹 Media service cleaned up');
-      mediaService.cleanup();
-    }
   });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      console.log("📁 File select triggered:", {
-        filesCount: event.target.files?.length || 0,
-        hasFiles: !!event.target.files?.length
-      });
-      
-      const file = event.target.files?.[0];
-      if (!file) {
-        console.log("❌ No file selected - user may have canceled");
-        return;
-      }
-      
-      console.log("📄 File details:", {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
-      
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        console.error("❌ Invalid file type:", file.type);
-        toast({
-          title: "Invalid File",
-          description: "Please select an image file.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
+    const file = event.target.files?.[0];
+    if (file) {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       
-      console.log("✅ File processed successfully, starting analysis...");
-      
-      // Auto-analyze the selected image immediately
-      console.log("🔄 Starting auto-analysis...");
-      analyzeFood(file);
-      
-      // Reset input value after processing
-      event.target.value = '';
-    } catch (error) {
-      console.error("💥 Error in handleFileSelect:", error);
-      toast({
-        title: "Photo Error",
-        description: "Failed to process the selected photo. Please try again.",
-        variant: "destructive",
-      });
+      // Don't auto-analyze - user needs to press capture button
+      // This makes gallery selection work like camera capture
     }
   };
 
+
   const handleCameraCapture = async () => {
-    try {
-      console.log("📷 Camera capture requested");
-      
-      // Use native camera on mobile, fallback to file input on web
-      if (Capacitor.isNativePlatform()) {
-        console.log("📱 Using native Capacitor camera...");
-        try {
-          const photo = await CapacitorCamera.getPhoto({
-            resultType: CameraResultType.Uri,
-            quality: 90,
-            source: CameraSource.Camera,
-            allowEditing: false,
-            width: 1024,
-            height: 1024
-          });
-          
-          if (photo.webPath) {
-            console.log('📸 Photo captured, converting to blob...');
-            const response = await fetch(photo.webPath);
-            const blob = await response.blob();
-            const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-            
-            setSelectedFile(file);
-            setPreviewUrl(photo.webPath);
-            
-            console.log("✅ Native photo processed, starting analysis...");
-            analyzeFood(file);
-          }
-        } catch (capacitorError) {
-          console.error('❌ Capacitor camera failed:', capacitorError);
-          toast({
-            title: "Camera Error",
-            description: "Failed to access native camera. Please try again.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        // Web fallback
-        console.log("🌐 Using web camera input...");
-        if (cameraInputRef.current) {
-          cameraInputRef.current.value = '';
-          cameraInputRef.current.click();
-        }
+    console.log("📷 Camera capture requested");
+    console.log("🔍 Platform check:", {
+      isNative: Capacitor.isNativePlatform(),
+      platform: Capacitor.getPlatform()
+    });
+    
+    // If user has already selected a file from gallery, analyze it
+    if (selectedFile) {
+      console.log("🖼️ Gallery image selected, starting analysis...");
+      analysisMutation.mutate(selectedFile);
+      return;
+    }
+    
+    // Use Capacitor Camera API if available (native app)
+    if (Capacitor.isNativePlatform()) {
+      try {
+        console.log("📱 Using Capacitor camera...");
+        const image = await CapacitorCamera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.Base64,
+          source: CameraSource.Camera,
+        });
+        
+        console.log("📸 Photo captured successfully:", {
+          hasBase64: !!image.base64String,
+          base64Length: image.base64String?.length || 0
+        });
+        
+        // Convert base64 to File object
+        const response = await fetch(`data:image/jpeg;base64,${image.base64String}`);
+        const blob = await response.blob();
+        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+        
+        console.log("📄 File created:", {
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type
+        });
+        
+        setSelectedFile(file);
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+        
+        console.log("🎯 Starting auto-analysis...");
+        // Auto-analyze the captured photo
+        analysisMutation.mutate(file);
+      } catch (error) {
+        console.error('❌ Error taking photo:', error);
+        // Fall back to web camera input
+        cameraInputRef.current?.click();
       }
-    } catch (error) {
-      console.error('💥 Error in handleCameraCapture:', error);
-      toast({
-        title: "Camera Error", 
-        description: "Failed to open camera. Please try again.",
-        variant: "destructive",
-      });
+    } else {
+      // For web browsers, use camera input
+      console.log("🌐 Using web camera input...");
+      cameraInputRef.current?.click();
     }
   };
 
@@ -242,29 +222,22 @@ export function CameraInterface({
             {/* Gallery button */}
             <button 
               className="w-12 h-12 bg-slate-700/80 rounded-xl flex items-center justify-center border border-slate-600/50 hover:bg-slate-600/80 transition-colors duration-200"
-              onClick={(e) => { e.stopPropagation(); handleGallerySelect(); }}
+              onClick={handleGallerySelect}
               data-testid="button-gallery"
               title="Select from Gallery"
             >
               <Images className="text-white h-5 w-5" />
             </button>
             
-            {/* Main Capture button - Direct file input trigger */}
-            <label 
-              className="w-16 h-16 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center border-2 border-white/20 transition-all duration-200 cursor-pointer"
+            {/* Main Capture button */}
+            <button 
+              className="w-16 h-16 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center border-2 border-white/20 transition-all duration-200"
+              onClick={handleCameraCapture}
               data-testid="button-capture"
               title="Take Photo"
             >
               <Camera className="text-white h-8 w-8" />
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileSelect}
-                className="hidden"
-                data-testid="input-direct-camera"
-              />
-            </label>
+            </button>
             
             {/* Flash toggle button */}
             <button 
@@ -300,7 +273,7 @@ export function CameraInterface({
         </Link>
       </div>
 
-      {/* Hidden file input for gallery */}
+      {/* Hidden file inputs */}
       <input
         ref={fileInputRef}
         type="file"
@@ -309,8 +282,6 @@ export function CameraInterface({
         className="hidden"
         data-testid="input-file"
       />
-      
-      {/* Hidden camera input */}
       <input
         ref={cameraInputRef}
         type="file"
