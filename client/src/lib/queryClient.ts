@@ -2,7 +2,7 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { Capacitor } from '@capacitor/core';
 
 // API base URL for mobile vs web
-const API_BASE = Capacitor.isNativePlatform() ? (import.meta.env.VITE_API_BASE_URL || 'https://your-replit.replit.app') : '';
+const API_BASE = Capacitor.isNativePlatform() ? 'https://workspace-georgebrennan93.replit.app' : '';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

@@ -1,8 +1,25 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Configure CORS for mobile app
+app.use(cors({
+  origin: [
+    'capacitor://localhost',
+    'ionic://localhost', 
+    'http://localhost',
+    'https://localhost',
+    /^https:\/\/.*\.replit\.app$/,
+    /^https:\/\/.*\.repl\.co$/
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

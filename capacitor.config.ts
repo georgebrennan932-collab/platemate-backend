@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
   appName: 'PlateMate',
   webDir: 'dist/public',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    url: 'https://workspace-georgebrennan93.replit.app',
+    cleartext: false
   },
   plugins: {
     SplashScreen: {
