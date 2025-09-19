@@ -289,59 +289,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // CONFIDENCE THRESHOLD CHECK: Apply to ALL analysis results (cached and fresh)
         console.log(`🔍 [${requestId}] Checking confidence threshold: ${foodAnalysisData.confidence}% (threshold: 90%)`);
+        
+        // Always create and return the analysis, but mark low confidence ones for user confirmation
+        const analysis = await storage.createFoodAnalysis(foodAnalysisData);
+        
         if (foodAnalysisData.confidence < 90) {
-          console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for image analysis - creating food confirmation`);
+          console.log(`⚠️ [${requestId}] Low confidence (${foodAnalysisData.confidence}%) - returning analysis with confirmation request`);
           
-          // Create food confirmation for user review
-          const userId = req.user.claims.sub;
-          const confirmationData = {
-            userId,
-            imageUrl: `/uploads/processed_${req.file.filename}.jpg`, // Use processed image path
-            originalConfidence: foodAnalysisData.confidence,
-            suggestedFoods: foodAnalysisData.detectedFoods,
-            alternativeOptions: [], // Could be populated with USDA alternatives
-            status: 'pending' as const
+          responseStatus = 200;
+          responseData = {
+            ...analysis,
+            needsConfirmation: true,
+            confidence: foodAnalysisData.confidence,
+            confirmationMessage: `AI confidence is ${foodAnalysisData.confidence}% - please review the detected foods`
           };
-          
-          // Validate confirmation data with schema
-          try {
-            const validatedConfirmation = insertFoodConfirmationSchema.parse(confirmationData);
-            const confirmation = await storage.createFoodConfirmation(validatedConfirmation);
-            
-            responseStatus = 202;
-            responseData = {
-              type: 'confirmation_required',
-              confirmationId: confirmation.id,
-              confidence: foodAnalysisData.confidence,
-              message: 'Analysis requires confirmation due to low confidence',
-              suggestedFoods: foodAnalysisData.detectedFoods,
-              imageUrl: confirmationData.imageUrl
-            };
-            
-            console.log(`🔄 [${requestId}] Created confirmation ${confirmation.id} - returning 202 confirmation_required`);
-          } catch (validationError: any) {
-            if (validationError.name === 'ZodError') {
-              console.error('Image analysis confirmation validation error:', validationError.errors);
-              responseStatus = 400;
-              responseData = {
-                error: 'Invalid confirmation data for image analysis',
-                details: validationError.errors
-              };
-            } else {
-              throw validationError; // Re-throw non-validation errors
-            }
-          }
         } else {
-          // High confidence (≥90%) - proceed with immediate analysis
-          console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - creating food analysis and returning 200 OK`);
-          const analysis = await storage.createFoodAnalysis(foodAnalysisData);
+          // High confidence (≥90%) - return analysis normally
+          console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - returning analysis normally`);
+          
+          responseStatus = 200;
+          responseData = analysis;
 
-          // Optional: Auto-add to diary if user is authenticated and requests it
-          if (req.user && req.body.autoAddToDiary === 'true') {
-            try {
-              const userId = req.user.claims.sub;
-              const diaryData = {
-                userId,
+        }
+
+        // Optional: Auto-add to diary if user is authenticated and requests it (only for high confidence)
+        if (req.user && req.body.autoAddToDiary === 'true' && responseData && !responseData.needsConfirmation) {
+          try {
+            const userId = req.user.claims.sub;
+            const diaryData = {
+              userId,
                 analysisId: analysis.id,
                 mealType: req.body.mealType || 'snack',
                 mealDate: req.body.mealDate || new Date().toISOString().split('T')[0],
@@ -366,11 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } catch (diaryError) {
               console.error("Failed to auto-add to diary:", diaryError);
               // Still return the analysis even if diary add fails
-              responseData = analysis;
             }
-          } else {
-            responseData = analysis;
-          }
         }
       } catch (error) {
         analysisError = error;

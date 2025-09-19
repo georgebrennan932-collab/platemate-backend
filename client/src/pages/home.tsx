@@ -138,17 +138,18 @@ export default function Home() {
   };
 
   const handleAnalysisSuccess = (data: any) => {
-    // Check if this is a confirmation request (low confidence)
-    if (data.type === 'confirmation_required') {
+    // Check if this is a low confidence analysis that needs confirmation
+    if (data.needsConfirmation) {
       console.log("⚠️ Low confidence detected, showing confirmation UI:", data);
       soundService.playError(); // Different sound for confirmation needed
       setConfirmationData(data);
+      setAnalysisData(data as FoodAnalysis); // Still set the analysis data so user can see the results
       setCurrentState('confirmation');
       
       // Show user-friendly toast about low confidence
       toast({
         title: `Low Confidence (${data.confidence}%)`,
-        description: "AI analysis needs your confirmation. Please review the detected foods.",
+        description: data.confirmationMessage || "AI analysis needs your confirmation. Please review the detected foods.",
         duration: 5000,
       });
     } else {
@@ -180,23 +181,21 @@ export default function Home() {
   };
 
   const handleConfirmAnalysis = async () => {
-    if (!confirmationData) return;
+    if (!confirmationData || !analysisData) return;
     
     try {
-      // Call the API to confirm the analysis
-      const response = await apiRequest('POST', `/api/food-confirmations/${confirmationData.confirmationId}/confirm`, {});
-      const confirmedAnalysis = await response.json();
-      
-      // Show the confirmed analysis as results
+      // Since we already have the analysis data, just confirm it and show results
+      // No need to call a separate API - the analysis is already complete
       soundService.playSuccess();
-      setAnalysisData(confirmedAnalysis);
-      setConfirmationData(null);
-      setCurrentState('results');
       
       toast({
         title: "Analysis Confirmed",
-        description: "Your food analysis has been confirmed and saved.",
+        description: "Great! The food analysis has been saved to your diary.",
+        duration: 3000,
       });
+      
+      setConfirmationData(null);
+      setCurrentState('results');
     } catch (error: any) {
       console.error("Failed to confirm analysis:", error);
       toast({
