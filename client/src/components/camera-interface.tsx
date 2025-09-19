@@ -303,6 +303,7 @@ export function CameraInterface({
         capture="environment"
         onChange={handleFileSelect}
         className="hidden"
+        data-testid="input-camera"
       />
     </div>
   );
