@@ -157,10 +157,6 @@ export function CameraInterface({
   const handleCameraCapture = async () => {
     try {
       console.log("📷 Camera capture requested");
-      console.log("🔍 Platform check:", {
-        isNative: Capacitor.isNativePlatform(),
-        platform: Capacitor.getPlatform()
-      });
       
       // If user has already selected a file from gallery, analyze it
       if (selectedFile) {
@@ -169,76 +165,52 @@ export function CameraInterface({
         return;
       }
       
-      // Use Capacitor Camera for native/PWA apps
-      if (Capacitor.isNativePlatform()) {
-        try {
-          console.log("📱 Using Capacitor camera...");
-          const image = await CapacitorCamera.getPhoto({
-            quality: 85,
-            allowEditing: false,
-            resultType: CameraResultType.Uri,
-            source: CameraSource.Camera,
-            correctOrientation: true,
-            saveToGallery: false
-          });
-          
-          console.log("📸 Photo captured via Capacitor:", image.webPath);
-          
-          // Convert to blob and file for analysis
-          const response = await fetch(image.webPath!);
-          const blob = await response.blob();
-          const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-          
-          console.log("📄 File created from Capacitor:", {
-            fileName: file.name,
-            fileSize: file.size,
-            fileType: file.type
-          });
-          
-          setSelectedFile(file);
-          const url = URL.createObjectURL(file);
-          setPreviewUrl(url);
-          
-          console.log("🔄 Starting analysis with Capacitor photo...");
-          analysisMutation.mutate(file);
-        } catch (error) {
-          console.error('❌ Capacitor camera error:', error);
-          // Fall back to web input
-          console.log("🔄 Falling back to web camera input...");
-          if (cameraInputRef.current) {
-            cameraInputRef.current.click();
+      // Simple direct approach for web browsers
+      console.log("🌐 Opening camera selection...");
+      if (cameraInputRef.current) {
+        console.log("✅ Camera input ref exists, resetting and clicking...");
+        
+        // Reset input
+        cameraInputRef.current.value = '';
+        
+        // Add event listener for when files are detected
+        const checkForFiles = () => {
+          console.log("🔍 Checking for files...");
+          if (cameraInputRef.current?.files?.length) {
+            console.log("🎯 Files detected:", cameraInputRef.current.files.length);
+            handleFileSelect({
+              target: cameraInputRef.current
+            } as React.ChangeEvent<HTMLInputElement>);
           }
-        }
+        };
+        
+        // Listen for focus back to window (user returns from camera)
+        const handleVisibilityChange = () => {
+          if (!document.hidden) {
+            console.log("📱 Window focus returned, checking for files...");
+            setTimeout(checkForFiles, 100);
+            setTimeout(checkForFiles, 500);
+            setTimeout(checkForFiles, 1000);
+          }
+        };
+        
+        document.addEventListener('visibilitychange', handleVisibilityChange, { once: true });
+        
+        // Cleanup listener after 10 seconds
+        setTimeout(() => {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          console.log("🧹 Cleaned up visibility listener");
+        }, 10000);
+        
+        cameraInputRef.current.click();
+        console.log("🎯 Camera input clicked, waiting for user to take photo...");
       } else {
-        // For web browsers, use camera input
-        console.log("🌐 Using web camera input...");
-        if (cameraInputRef.current) {
-          console.log("✅ Camera input ref exists, clicking...");
-          cameraInputRef.current.click();
-          console.log("🎯 Camera input clicked, waiting for user to take photo...");
-          
-          // Start polling for files since onChange might not fire on some mobile browsers
-          const pollInterval = setInterval(() => {
-            if (cameraInputRef.current && cameraInputRef.current.files && cameraInputRef.current.files.length > 0) {
-              console.log("🔍 Polling detected file - triggering analysis");
-              clearInterval(pollInterval);
-              checkFileInput();
-            }
-          }, 500);
-          
-          // Stop polling after 30 seconds
-          setTimeout(() => {
-            clearInterval(pollInterval);
-            console.log("⏰ Camera polling timeout reached");
-          }, 30000);
-        } else {
-          console.error("❌ Camera input ref is null!");
-          toast({
-            title: "Camera Error",
-            description: "Camera not available. Please try again.",
-            variant: "destructive",
-          });
-        }
+        console.error("❌ Camera input ref is null!");
+        toast({
+          title: "Camera Error",
+          description: "Camera not available. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('💥 Error in handleCameraCapture:', error);
