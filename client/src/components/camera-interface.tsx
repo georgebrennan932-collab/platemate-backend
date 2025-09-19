@@ -131,41 +131,9 @@ export function CameraInterface({
   };
 
   const handleCameraCapture = async () => {
-    try {
-      console.log("📷 Camera capture requested");
-      
-      // If user has already selected a file from gallery, analyze it
-      if (selectedFile) {
-        console.log("🖼️ Gallery image selected, starting analysis...");
-        analyzeFood(selectedFile);
-        return;
-      }
-      
-      // Simple direct approach for web browsers
-      console.log("🌐 Opening camera selection...");
-      if (cameraInputRef.current) {
-        console.log("✅ Camera input ref exists, resetting and clicking...");
-        
-        // Reset input
-        cameraInputRef.current.value = '';
-        cameraInputRef.current.click();
-        console.log("🎯 Camera input clicked, waiting for user to take photo...");
-      } else {
-        console.error("❌ Camera input ref is null!");
-        toast({
-          title: "Camera Error",
-          description: "Camera not available. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('💥 Error in handleCameraCapture:', error);
-      toast({
-        title: "Camera Error", 
-        description: "Failed to open camera. Please try again.",
-        variant: "destructive",
-      });
-    }
+    console.log("📷 Camera capture requested");
+    // Force the camera input to be clicked
+    cameraInputRef.current?.click();
   };
 
   // Toggle flash for camera
