@@ -288,15 +288,22 @@ export function CameraInterface({
               <Images className="text-white h-5 w-5" />
             </button>
             
-            {/* Main Capture button */}
-            <button 
-              className="w-16 h-16 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center border-2 border-white/20 transition-all duration-200"
-              onClick={handleCameraCapture}
+            {/* Main Capture button - Direct file input trigger */}
+            <label 
+              className="w-16 h-16 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center border-2 border-white/20 transition-all duration-200 cursor-pointer"
               data-testid="button-capture"
               title="Take Photo"
             >
               <Camera className="text-white h-8 w-8" />
-            </button>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileSelect}
+                className="hidden"
+                data-testid="input-direct-camera"
+              />
+            </label>
             
             {/* Flash toggle button */}
             <button 
@@ -332,7 +339,7 @@ export function CameraInterface({
         </Link>
       </div>
 
-      {/* Hidden file inputs */}
+      {/* Hidden file input for gallery */}
       <input
         ref={fileInputRef}
         type="file"
@@ -340,22 +347,6 @@ export function CameraInterface({
         onChange={handleFileSelect}
         className="hidden"
         data-testid="input-file"
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*;capture=camera"
-        onChange={handleFileSelect}
-        onInput={handleFileSelect}
-        style={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          opacity: 0,
-          pointerEvents: 'none',
-          left: '-9999px'
-        }}
-        data-testid="input-camera"
       />
     </div>
   );
