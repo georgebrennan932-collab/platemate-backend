@@ -13,7 +13,9 @@ app.use(cors({
     'capacitor://localhost',
     'ionic://localhost',
     'http://10.0.2.2:5000', // Android emulator
-    'http://127.0.0.1:5000'
+    'http://127.0.0.1:5000',
+    'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev', // Deployed Replit URL
+    /^https:\/\/.*\.replit\.dev$/ // Allow all Replit dev domains
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

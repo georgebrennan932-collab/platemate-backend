@@ -5,12 +5,20 @@ export class MobileAuthService {
   private static API_BASE_KEY = 'platemate_api_base';
   
   static async initialize() {
+    console.log('🔍 Platform check:', { 
+      isNative: Capacitor.isNativePlatform(), 
+      platform: Capacitor.getPlatform() 
+    });
+    
     if (!Capacitor.isNativePlatform()) {
       console.log('🌐 Web platform - skipping mobile auth');
       return true;
     }
 
     console.log('📱 Native platform detected - setting up mobile auth');
+    
+    const apiBase = this.getApiBaseUrl();
+    console.log('🔗 Using API base URL:', apiBase);
     
     try {
       // Get stored token
@@ -46,19 +54,26 @@ export class MobileAuthService {
   private static async generateMobileToken(): Promise<string | null> {
     try {
       const apiBase = this.getApiBaseUrl();
-      const response = await fetch(`${apiBase}/api/auth/mobile-token`, {
+      const url = `${apiBase}/api/auth/mobile-token`;
+      
+      console.log('🚀 Generating mobile token from:', url);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         }
       });
       
+      console.log('📡 Token response status:', response.status, response.statusText);
+      
       if (response.ok) {
         const data = await response.json();
         console.log('🎯 Mobile token response:', data);
         return data.token;
       } else {
-        console.error('❌ Token generation failed:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('❌ Token generation failed:', response.status, response.statusText, errorText);
         return null;
       }
     } catch (error) {
@@ -68,13 +83,12 @@ export class MobileAuthService {
   }
   
   private static getApiBaseUrl(): string {
-    // For development, use the development server URL
-    if (import.meta.env.DEV) {
-      return 'http://10.0.2.2:5000'; // Android emulator host
-    }
+    // Use the deployed Replit URL for mobile apps (accessible from anywhere)
+    const replitUrl = 'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev';
     
-    // For production, use the deployed URL
-    return import.meta.env.VITE_API_BASE || 'https://your-app.replit.app';
+    // For development and production, always use the deployed URL for mobile
+    // This ensures mobile apps can always reach the server
+    return import.meta.env.VITE_API_BASE || replitUrl;
   }
   
   static getToken(): string | null {
