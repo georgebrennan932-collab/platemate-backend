@@ -97,9 +97,9 @@ export function CameraInterface({
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       
-      // Auto-analyze gallery selected image immediately
-      console.log("🖼️ Gallery image selected, starting analysis...");
-      analysisMutation.mutate(file);
+      // Don't auto-analyze - user needs to press capture button
+      // This makes both camera and gallery work consistently
+      console.log("📷 Image selected (camera or gallery), ready for analysis");
     }
   };
 
