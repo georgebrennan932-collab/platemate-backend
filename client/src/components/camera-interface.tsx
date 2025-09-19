@@ -8,6 +8,31 @@ import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
 import type { FoodAnalysis } from "@shared/schema";
 
+// Mobile API helpers
+function resolveApiUrl(url: string): string {
+  const mobileApiBase = getMobileApiBase();
+  const API_BASE = mobileApiBase || import.meta.env.VITE_API_BASE || "";
+  
+  if (API_BASE && !url.startsWith('http')) {
+    return new URL(url, API_BASE).toString();
+  }
+  return url;
+}
+
+function getMobileAuthToken(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('platemate_mobile_token');
+  }
+  return null;
+}
+
+function getMobileApiBase(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('platemate_api_base');
+  }
+  return null;
+}
+
 interface CameraInterfaceProps {
   onAnalysisStart: () => void;
   onAnalysisSuccess: (data: FoodAnalysis) => void;
@@ -55,9 +80,23 @@ export function CameraInterface({
       formData.append('image', file);
       
       console.log("🚀 Sending request to /api/analyze...");
-      const response = await fetch('/api/analyze', {
+      
+      // Use mobile-aware API system with proper authentication
+      const resolvedUrl = resolveApiUrl('/api/analyze');
+      const headers: HeadersInit = {};
+      
+      // Add Authorization header for mobile builds
+      const mobileToken = getMobileAuthToken();
+      if (mobileToken) {
+        headers['Authorization'] = `Bearer ${mobileToken}`;
+        console.log("🔑 Added mobile auth token to request");
+      }
+      
+      const response = await fetch(resolvedUrl, {
         method: 'POST',
+        headers,
         body: formData,
+        credentials: 'include',
       });
 
       console.log("📡 Response received:", {

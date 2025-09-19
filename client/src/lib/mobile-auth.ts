@@ -19,12 +19,28 @@ export class MobileAuthService {
         return true;
       }
       
-      console.log('📱 Native platform detected - minimal setup');
+      console.log('📱 Native platform detected - setting up mobile auth');
       
-      // Just set the API base URL, don't try to connect yet
       const apiBase = this.getApiBaseUrl();
       localStorage.setItem(this.API_BASE_KEY, apiBase);
-      console.log('✅ Mobile auth setup complete - deferred token generation');
+      
+      // Generate JWT token for mobile authentication
+      let token = localStorage.getItem(this.TOKEN_KEY);
+      
+      if (!token) {
+        console.log('🔑 No mobile token found, generating new one...');
+        token = await this.generateMobileToken();
+        
+        if (token) {
+          localStorage.setItem(this.TOKEN_KEY, token);
+          console.log('✅ Mobile token generated and stored');
+        } else {
+          console.error('❌ Failed to generate mobile token');
+          return false;
+        }
+      } else {
+        console.log('✅ Mobile token found in storage');
+      }
       
       return true;
     } catch (error) {
