@@ -274,12 +274,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`🧠 [${requestId}] Starting AI analysis (includes cache check)...`);
         const analysisStartTime = Date.now();
         
-        const foodAnalysisData = await Promise.race([
-          aiManager.analyzeFoodImage(processedImagePath),
-          new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('Analysis timeout after 60 seconds')), 60000)
-          )
-        ]);
+        let foodAnalysisData;
+        try {
+          foodAnalysisData = await Promise.race([
+            aiManager.analyzeFoodImage(processedImagePath),
+            new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error('Analysis timeout after 60 seconds')), 60000)
+            )
+          ]);
+        } catch (analysisTimeoutError: any) {
+          // If analysis fails completely, use emergency fallback to avoid showing error to user
+          console.log(`⚠️ [${requestId}] Analysis failed/timeout: ${analysisTimeoutError.message} - using emergency fallback`);
+          foodAnalysisData = {
+            confidence: 0,
+            totalCalories: 300,
+            totalProtein: 15,
+            totalCarbs: 30,
+            totalFat: 12,
+            detectedFoods: [
+              {
+                name: "Food Item",
+                portion: "1 serving",
+                calories: 300,
+                protein: 15,
+                carbs: 30,
+                fat: 12,
+                icon: "utensils"
+              }
+            ],
+            isAITemporarilyUnavailable: true
+          };
+        }
         
         const analysisTime = Date.now() - analysisStartTime;
         console.log(`✅ [${requestId}] Analysis completed in ${analysisTime}ms`);
@@ -288,12 +313,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('X-Analysis-Time', analysisTime.toString());
 
         // CONFIDENCE THRESHOLD CHECK: Apply to ALL analysis results (cached and fresh)
+        // IMPORTANT: Never treat low confidence as an error - always return with needsConfirmation
         console.log(`🔍 [${requestId}] Checking confidence threshold: ${foodAnalysisData.confidence}% (threshold: 90%)`);
         
         // Always create and return the analysis, but mark low confidence ones for user confirmation
         const analysis = await storage.createFoodAnalysis(foodAnalysisData);
         
-        if (foodAnalysisData.confidence < 90) {
+        if (foodAnalysisData.confidence < 90 || foodAnalysisData.isAITemporarilyUnavailable) {
           console.log(`⚠️ [${requestId}] Low confidence (${foodAnalysisData.confidence}%) - returning analysis with confirmation request`);
           
           responseStatus = 200;
@@ -301,7 +327,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...analysis,
             needsConfirmation: true,
             confidence: foodAnalysisData.confidence,
-            confirmationMessage: `AI confidence is ${foodAnalysisData.confidence}% - please review the detected foods`
+            confirmationMessage: foodAnalysisData.isAITemporarilyUnavailable 
+              ? 'AI services temporarily unavailable - please review the estimated values'
+              : `AI confidence is ${foodAnalysisData.confidence}% - please review the detected foods`,
+            isAITemporarilyUnavailable: foodAnalysisData.isAITemporarilyUnavailable || false
           };
         } else {
           // High confidence (≥90%) - return analysis normally
@@ -353,7 +382,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle response after queue is properly released
       if (analysisError) {
-        throw analysisError;
+        // Even if there's an error, try to provide fallback data instead of failing completely
+        console.log(`⚠️ [${requestId}] Analysis had errors, but attempting to provide fallback response`);
+        
+        // If we don't have responseData yet, create emergency fallback
+        if (!responseData) {
+          const emergencyFallback = {
+            confidence: 0,
+            totalCalories: 350,
+            totalProtein: 18,
+            totalCarbs: 35,
+            totalFat: 15,
+            detectedFoods: [
+              {
+                name: "Estimated Food",
+                portion: "1 serving",
+                calories: 350,
+                protein: 18,
+                carbs: 35,
+                fat: 15,
+                icon: "utensils"
+              }
+            ],
+            isAITemporarilyUnavailable: true
+          };
+          
+          try {
+            const analysis = await storage.createFoodAnalysis(emergencyFallback);
+            responseData = {
+              ...analysis,
+              needsConfirmation: true,
+              confidence: 0,
+              confirmationMessage: 'AI services temporarily unavailable - please review the estimated values',
+              isAITemporarilyUnavailable: true
+            };
+            responseStatus = 200;
+            console.log(`✅ [${requestId}] Created emergency fallback analysis instead of error`);
+          } catch (storageError) {
+            // Only if we can't even create a fallback analysis should we throw an error
+            console.error(`❌ [${requestId}] Could not create even emergency fallback:`, storageError);
+            throw analysisError;
+          }
+        }
       }
       
       if (responseData) {
@@ -366,8 +436,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error) {
       const totalTime = Date.now() - requestStartTime;
-      console.error(`❌ [${requestId}] Request failed after ${totalTime}ms:`, error);
-      res.status(500).json({ error: "Failed to analyze image" });
+      console.error(`❌ [${requestId}] Request completely failed after ${totalTime}ms:`, error);
+      
+      // Only return error if we absolutely cannot provide any analysis results
+      res.status(500).json({ 
+        error: "Unable to analyze image - please try again",
+        details: "All analysis methods failed including fallback options"
+      });
     }
   });
 
