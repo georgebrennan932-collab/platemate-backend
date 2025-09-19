@@ -6,6 +6,7 @@ import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capa
 import { Capacitor } from '@capacitor/core';
 import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
+import { apiFetchForm } from '@/lib/queryClient';
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -48,16 +49,13 @@ export function CameraInterface({
       const formData = new FormData();
       formData.append('image', file);
       
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        body: formData,
+      console.log('📤 Sending analysis request:', {
+        isNative: Capacitor.isNativePlatform(),
+        fileSize: file.size,
+        fileType: file.type
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Analysis failed');
-      }
-
+      
+      const response = await apiFetchForm('POST', '/api/analyze', formData);
       return response.json();
     },
     onMutate: () => {
@@ -134,22 +132,46 @@ export function CameraInterface({
     try {
       console.log("📷 Camera capture requested");
       
-      // Simple direct approach for web browsers
-      console.log("🌐 Opening camera selection...");
-      if (cameraInputRef.current) {
-        console.log("✅ Camera input ref exists, resetting and clicking...");
-        
-        // Reset input
-        cameraInputRef.current.value = '';
-        cameraInputRef.current.click();
-        console.log("🎯 Camera input clicked, waiting for user to take photo...");
+      // Use native camera on mobile, fallback to file input on web
+      if (Capacitor.isNativePlatform()) {
+        console.log("📱 Using native Capacitor camera...");
+        try {
+          const photo = await CapacitorCamera.getPhoto({
+            resultType: CameraResultType.Uri,
+            quality: 90,
+            source: CameraSource.Camera,
+            allowEditing: false,
+            width: 1024,
+            height: 1024
+          });
+          
+          if (photo.webPath) {
+            console.log('📸 Photo captured, converting to blob...');
+            const response = await fetch(photo.webPath);
+            const blob = await response.blob();
+            const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+            
+            setSelectedFile(file);
+            setPreviewUrl(photo.webPath);
+            
+            console.log("✅ Native photo processed, starting analysis...");
+            analyzeFood(file);
+          }
+        } catch (capacitorError) {
+          console.error('❌ Capacitor camera failed:', capacitorError);
+          toast({
+            title: "Camera Error",
+            description: "Failed to access native camera. Please try again.",
+            variant: "destructive",
+          });
+        }
       } else {
-        console.error("❌ Camera input ref is null!");
-        toast({
-          title: "Camera Error",
-          description: "Camera not available. Please try again.",
-          variant: "destructive",
-        });
+        // Web fallback
+        console.log("🌐 Using web camera input...");
+        if (cameraInputRef.current) {
+          cameraInputRef.current.value = '';
+          cameraInputRef.current.click();
+        }
       }
     } catch (error) {
       console.error('💥 Error in handleCameraCapture:', error);
