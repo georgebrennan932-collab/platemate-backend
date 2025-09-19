@@ -8,11 +8,10 @@ export class MobileAuthService {
     try {
       console.log('🔍 Platform check:', { 
         isNative: Capacitor.isNativePlatform(), 
-        platform: Capacitor.getPlatform(),
-        userAgent: navigator.userAgent
+        platform: Capacitor.getPlatform()
       });
       
-      // Debug mode: Force mobile auth testing on web with URL parameter
+      // Debug mode: Force mobile auth testing on web with URL parameter  
       const forceDebug = window.location.search.includes('debug=mobile');
       
       if (!Capacitor.isNativePlatform() && !forceDebug) {
@@ -20,49 +19,16 @@ export class MobileAuthService {
         return true;
       }
       
-      if (forceDebug) {
-        console.log('🧪 Debug mode: Testing mobile auth on web platform');
-      }
-
-      console.log('📱 Native platform detected - setting up mobile auth');
+      console.log('📱 Native platform detected - minimal setup');
       
+      // Just set the API base URL, don't try to connect yet
       const apiBase = this.getApiBaseUrl();
-      console.log('🔗 Using API base URL:', apiBase);
-      
-      // Test API connectivity first
-      console.log('🧪 Testing API connectivity...');
-      const connectivityTest = await this.testApiConnectivity(apiBase);
-      if (!connectivityTest) {
-        console.warn('⚠️ API connectivity test failed, but continuing with auth setup');
-      }
-      
-      // Get stored token
-      let token = localStorage.getItem(this.TOKEN_KEY);
-      
-      if (!token) {
-        console.log('🔑 No mobile token found, generating new one...');
-        token = await this.generateMobileToken();
-        
-        if (token) {
-          localStorage.setItem(this.TOKEN_KEY, token);
-          console.log('✅ Mobile token generated and stored');
-        } else {
-          console.error('❌ Failed to generate mobile token - app will continue without auth');
-          // Don't return false here, let the app continue without auth
-          return true;
-        }
-      } else {
-        console.log('✅ Mobile token found in storage');
-      }
-
-      // Set API base URL for mobile
       localStorage.setItem(this.API_BASE_KEY, apiBase);
-      console.log('🔗 API base URL configured:', apiBase);
+      console.log('✅ Mobile auth setup complete - deferred token generation');
       
       return true;
     } catch (error) {
       console.error('❌ Mobile auth initialization failed:', error);
-      // Return true to allow app to continue even if auth fails
       console.log('🔄 Allowing app to continue without mobile auth');
       return true;
     }

@@ -1,6 +1,6 @@
 import { Switch, Route } from "wouter";
 import { useEffect } from "react";
-import { MobileAuthService } from "./lib/mobile-auth";
+// import { MobileAuthService } from "./lib/mobile-auth";
 
 // ✅ Pages in your /pages folder
 import CameraPage from "./pages/CameraPage";
@@ -21,25 +21,15 @@ import NotFound from "./pages/not-found";
 
 function App() {
   useEffect(() => {
-    console.log("App loaded");
-    console.log("🔧 Environment check:", {
-      userAgent: navigator.userAgent,
-      online: navigator.onLine,
-      language: navigator.language,
-      platform: navigator.platform
-    });
+    console.log("App loaded - mobile auth disabled for debug");
     
-    // Initialize mobile authentication for native apps
-    MobileAuthService.initialize().then((success) => {
-      if (success) {
-        console.log("✅ Mobile auth initialized successfully");
-      } else {
-        console.log("⚠️ Mobile auth initialization failed - but app will continue");
-      }
-    }).catch((error) => {
-      console.error("❌ Mobile auth crashed:", error);
-      console.log("🔄 App continuing despite auth error");
-    });
+    // Mobile auth temporarily disabled to debug native app crash
+    // try {
+    //   MobileAuthService.initialize();
+    //   console.log("✅ Mobile auth initialized successfully");
+    // } catch (error) {
+    //   console.error("❌ Mobile auth error:", error);
+    // }
   }, []);
 
   return (
