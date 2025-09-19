@@ -11,7 +11,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Edit2, Trash2 } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
@@ -27,6 +27,8 @@ export default function Home() {
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [confirmationData, setConfirmationData] = useState<any>(null);
+  const [editingFoodIndex, setEditingFoodIndex] = useState<number | null>(null);
+  const [editingFood, setEditingFood] = useState<any>(null);
   
   // Navigation state
   const [showProfile, setShowProfile] = useState(false);
@@ -214,6 +216,83 @@ export default function Home() {
       title: "Analysis Rejected",
       description: "You can take a new photo or try again with better lighting.",
     });
+  };
+
+  const handleEditFood = (index: number) => {
+    if (analysisData?.detectedFoods?.[index]) {
+      setEditingFoodIndex(index);
+      setEditingFood({ ...analysisData.detectedFoods[index] });
+    }
+  };
+
+  const handleSaveEditedFood = () => {
+    if (editingFoodIndex !== null && editingFood && analysisData) {
+      const updatedFoods = [...analysisData.detectedFoods];
+      updatedFoods[editingFoodIndex] = editingFood;
+      
+      // Recalculate totals
+      const totalCalories = updatedFoods.reduce((sum, food) => sum + food.calories, 0);
+      const totalProtein = updatedFoods.reduce((sum, food) => sum + food.protein, 0);
+      const totalCarbs = updatedFoods.reduce((sum, food) => sum + food.carbs, 0);
+      const totalFat = updatedFoods.reduce((sum, food) => sum + food.fat, 0);
+      
+      setAnalysisData({
+        ...analysisData,
+        detectedFoods: updatedFoods,
+        totalCalories,
+        totalProtein,
+        totalCarbs,
+        totalFat
+      });
+      
+      setEditingFoodIndex(null);
+      setEditingFood(null);
+      
+      toast({
+        title: "Food Updated",
+        description: "The food item has been updated successfully.",
+      });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingFoodIndex(null);
+    setEditingFood(null);
+  };
+
+  const handleDeleteFood = (index: number) => {
+    if (analysisData?.detectedFoods) {
+      const updatedFoods = analysisData.detectedFoods.filter((_, i) => i !== index);
+      
+      if (updatedFoods.length === 0) {
+        toast({
+          title: "Cannot Delete",
+          description: "You need at least one food item in the analysis.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Recalculate totals
+      const totalCalories = updatedFoods.reduce((sum, food) => sum + food.calories, 0);
+      const totalProtein = updatedFoods.reduce((sum, food) => sum + food.protein, 0);
+      const totalCarbs = updatedFoods.reduce((sum, food) => sum + food.carbs, 0);
+      const totalFat = updatedFoods.reduce((sum, food) => sum + food.fat, 0);
+      
+      setAnalysisData({
+        ...analysisData,
+        detectedFoods: updatedFoods,
+        totalCalories,
+        totalProtein,
+        totalCarbs,
+        totalFat
+      });
+      
+      toast({
+        title: "Food Removed",
+        description: "The food item has been removed from the analysis.",
+      });
+    }
   };
 
   const handleVoiceInput = async () => {
@@ -531,14 +610,123 @@ export default function Home() {
               </h4>
               <div className="space-y-3">
                 {analysisData?.detectedFoods?.map((food: any, index: number) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-secondary/50 rounded-xl">
-                    <div className="flex-1">
-                      <div className="font-medium">{food.name}</div>
-                      <div className="text-sm text-muted-foreground">{food.portion}</div>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {food.calories} cal
-                    </div>
+                  <div key={index} className="p-3 bg-secondary/50 rounded-xl">
+                    {editingFoodIndex === index ? (
+                      // Edit mode
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Food Name</label>
+                          <input
+                            type="text"
+                            value={editingFood?.name || ''}
+                            onChange={(e) => setEditingFood({ ...editingFood, name: e.target.value })}
+                            className="w-full p-2 border border-border rounded-lg bg-background"
+                            data-testid={`input-food-name-${index}`}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Portion</label>
+                            <input
+                              type="text"
+                              value={editingFood?.portion || ''}
+                              onChange={(e) => setEditingFood({ ...editingFood, portion: e.target.value })}
+                              className="w-full p-2 border border-border rounded-lg bg-background"
+                              data-testid={`input-food-portion-${index}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Calories</label>
+                            <input
+                              type="number"
+                              value={editingFood?.calories || 0}
+                              onChange={(e) => setEditingFood({ ...editingFood, calories: parseInt(e.target.value) || 0 })}
+                              className="w-full p-2 border border-border rounded-lg bg-background"
+                              data-testid={`input-food-calories-${index}`}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Protein (g)</label>
+                            <input
+                              type="number"
+                              value={editingFood?.protein || 0}
+                              onChange={(e) => setEditingFood({ ...editingFood, protein: parseInt(e.target.value) || 0 })}
+                              className="w-full p-2 border border-border rounded-lg bg-background"
+                              data-testid={`input-food-protein-${index}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Carbs (g)</label>
+                            <input
+                              type="number"
+                              value={editingFood?.carbs || 0}
+                              onChange={(e) => setEditingFood({ ...editingFood, carbs: parseInt(e.target.value) || 0 })}
+                              className="w-full p-2 border border-border rounded-lg bg-background"
+                              data-testid={`input-food-carbs-${index}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Fat (g)</label>
+                            <input
+                              type="number"
+                              value={editingFood?.fat || 0}
+                              onChange={(e) => setEditingFood({ ...editingFood, fat: parseInt(e.target.value) || 0 })}
+                              className="w-full p-2 border border-border rounded-lg bg-background"
+                              data-testid={`input-food-fat-${index}`}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={handleSaveEditedFood}
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-1"
+                            data-testid={`button-save-food-${index}`}
+                          >
+                            <Check className="h-4 w-4" />
+                            <span>Save</span>
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="flex-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground py-2 px-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-1"
+                            data-testid={`button-cancel-edit-${index}`}
+                          >
+                            <X className="h-4 w-4" />
+                            <span>Cancel</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Display mode
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-1">
+                          <div className="font-medium">{food.name}</div>
+                          <div className="text-sm text-muted-foreground">{food.portion}</div>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {food.calories} cal
+                        </div>
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={() => handleEditFood(index)}
+                            className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                            data-testid={`button-edit-food-${index}`}
+                            title="Edit food item"
+                          >
+                            <Edit2 className="h-4 w-4 text-blue-600" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFood(index)}
+                            className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                            data-testid={`button-delete-food-${index}`}
+                            title="Delete food item"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
