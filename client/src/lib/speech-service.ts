@@ -1,3 +1,6 @@
+import { Capacitor } from '@capacitor/core';
+import { SpeechRecognition as CapacitorSpeechRecognition } from '@capacitor-community/speech-recognition';
+
 export interface VoiceCommand {
   command: string;
   phrases: string[];
@@ -25,82 +28,104 @@ class SpeechService {
   private continuousMode = false;
   private lastCommandTime = 0;
   private commandTimeout = 5000; // 5 seconds timeout between commands
+  private isNativePlatform = false;
 
   async initialize(): Promise<boolean> {
     try {
-      // Check if Web Speech API is supported
-      const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      this.isNativePlatform = Capacitor.isNativePlatform();
       
-      if (!SpeechRecognition) {
-        console.warn('Speech recognition not supported in this browser');
-        return false;
+      if (this.isNativePlatform) {
+        // Use Capacitor Speech Recognition for mobile
+        try {
+          await CapacitorSpeechRecognition.requestPermissions();
+          const available = await CapacitorSpeechRecognition.available();
+          
+          if (!available) {
+            console.warn('Native speech recognition not available');
+            return false;
+          }
+          
+          console.log('✓ Native speech recognition initialized');
+          return true;
+        } catch (error) {
+          console.error('Failed to initialize native speech recognition:', error);
+          return false;
+        }
+      } else {
+        // Use Web Speech API for web browsers
+        const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+          console.warn('Speech recognition not supported in this browser');
+          return false;
+        }
+
+        this.recognition = new SpeechRecognition();
+        
+        // Configure recognition
+        this.recognition.continuous = false;
+        this.recognition.interimResults = false;
+        this.recognition.lang = 'en-US';
+        this.recognition.maxAlternatives = 3;
+
+        // Set up event handlers for Web Speech API
+        this.recognition.onstart = () => {
+          this.isListening = true;
+          this.triggerEvent({ type: 'listening-start' });
+          console.log('🎤 Speech recognition started');
+        };
+
+        this.recognition.onend = () => {
+          this.isListening = false;
+          this.triggerEvent({ type: 'listening-end' });
+          console.log('🎤 Speech recognition ended');
+          
+          // Restart if in continuous mode and still enabled
+          if (this.continuousMode && this.isEnabled) {
+            setTimeout(() => {
+              if (this.isEnabled && !this.isListening) {
+                this.startListening();
+              }
+            }, 1000);
+          }
+        };
+
+        this.recognition.onresult = (event: any) => {
+          const results = Array.from(event.results);
+          const lastResult = results[results.length - 1] as any;
+          const transcript = lastResult?.[0]?.transcript?.toLowerCase() || '';
+          const confidence = lastResult?.[0]?.confidence || 0;
+
+          console.log(`🎤 Speech recognized: "${transcript}" (confidence: ${confidence.toFixed(2)})`);
+          
+          if (transcript) {
+            this.processVoiceCommand(transcript, confidence);
+          }
+        };
+
+        this.recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          
+          // Don't treat 'aborted' as an error if we deliberately stopped
+          if (event.error === 'aborted' && !this.isEnabled) {
+            console.log('🎤 Speech recognition properly stopped');
+            return;
+          }
+          
+          this.triggerEvent({ 
+            type: 'error', 
+            error: event.error 
+          });
+        };
+
+        this.recognition.onnomatch = () => {
+          console.log('🎤 No speech match found');
+          this.triggerEvent({ type: 'no-match' });
+        };
+
+        console.log('✓ Web speech recognition service initialized');
+        return true;
       }
-
-      this.recognition = new SpeechRecognition();
-      
-      // Configure recognition
-      this.recognition.continuous = false;
-      this.recognition.interimResults = false;
-      this.recognition.lang = 'en-US';
-      this.recognition.maxAlternatives = 3;
-
-      // Set up event handlers
-      this.recognition.onstart = () => {
-        this.isListening = true;
-        this.triggerEvent({ type: 'listening-start' });
-        console.log('🎤 Speech recognition started');
-      };
-
-      this.recognition.onend = () => {
-        this.isListening = false;
-        this.triggerEvent({ type: 'listening-end' });
-        console.log('🎤 Speech recognition ended');
-        
-        // Restart if in continuous mode and still enabled
-        if (this.continuousMode && this.isEnabled) {
-          setTimeout(() => {
-            if (this.isEnabled && !this.isListening) {
-              this.startListening();
-            }
-          }, 1000);
-        }
-      };
-
-      this.recognition.onresult = (event: any) => {
-        const results = Array.from(event.results);
-        const lastResult = results[results.length - 1] as any;
-        const transcript = lastResult?.[0]?.transcript?.toLowerCase() || '';
-        const confidence = lastResult?.[0]?.confidence || 0;
-
-        console.log(`🎤 Speech recognized: "${transcript}" (confidence: ${confidence.toFixed(2)})`);
-        
-        if (transcript) {
-          this.processVoiceCommand(transcript, confidence);
-        }
-      };
-
-      this.recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        
-        // Don't treat 'aborted' as an error if we deliberately stopped
-        if (event.error === 'aborted' && !this.isEnabled) {
-          console.log('🎤 Speech recognition properly stopped');
-          return;
-        }
-        
-        this.triggerEvent({ 
-          type: 'error', 
-          error: event.error 
-        });
-      };
-
-      this.recognition.onnomatch = () => {
-        console.log('🎤 No speech match found');
-        this.triggerEvent({ type: 'no-match' });
-      };
-
-      console.log('✓ Speech recognition service initialized');
-      return true;
     } catch (error) {
       console.error('Failed to initialize speech recognition:', error);
       return false;
@@ -169,37 +194,80 @@ class SpeechService {
   }
 
   async startListening(continuous = false): Promise<boolean> {
-    if (!this.recognition || this.isListening) {
+    if (this.isListening) {
       return false;
     }
 
     try {
       this.continuousMode = continuous;
       this.isEnabled = true;
-      this.recognition.start();
-      return true;
+
+      if (this.isNativePlatform) {
+        // Use native speech recognition
+        this.isListening = true;
+        this.triggerEvent({ type: 'listening-start' });
+        
+        const result = await CapacitorSpeechRecognition.start({
+          language: 'en-US',
+          maxResults: 3,
+          prompt: 'Speak a command',
+          partialResults: false,
+          popup: true
+        });
+
+        // Handle result
+        if (result.matches && result.matches.length > 0) {
+          const transcript = result.matches[0].toLowerCase();
+          const confidence = 0.8; // Native doesn't provide confidence, use default
+          
+          console.log(`🎤 Native speech recognized: "${transcript}"`);
+          this.processVoiceCommand(transcript, confidence);
+        }
+
+        this.isListening = false;
+        this.triggerEvent({ type: 'listening-end' });
+        return true;
+      } else {
+        // Use Web Speech API
+        if (!this.recognition) {
+          return false;
+        }
+        
+        this.recognition.start();
+        return true;
+      }
     } catch (error) {
       console.error('Failed to start speech recognition:', error);
+      this.isListening = false;
+      this.triggerEvent({ type: 'error', error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
 
   stopListening() {
-    if (this.recognition) {
-      this.isEnabled = false;
-      this.continuousMode = false;
-      
-      // Force stop regardless of current state
+    this.isEnabled = false;
+    this.continuousMode = false;
+    
+    if (this.isNativePlatform) {
+      // Stop native speech recognition
+      try {
+        CapacitorSpeechRecognition.stop();
+        console.log('🛑 Native speech recognition stop requested');
+      } catch (error) {
+        console.warn('Native speech recognition stop error:', error);
+      }
+    } else if (this.recognition) {
+      // Stop Web Speech API
       try {
         this.recognition.stop();
-        console.log('🛑 Speech recognition stop requested');
+        console.log('🛑 Web speech recognition stop requested');
       } catch (error) {
-        console.warn('Speech recognition stop error (expected):', error);
+        console.warn('Web speech recognition stop error (expected):', error);
       }
-      
-      // Ensure state is updated
-      this.isListening = false;
     }
+    
+    // Ensure state is updated
+    this.isListening = false;
   }
 
   isCurrentlyListening(): boolean {
@@ -211,6 +279,9 @@ class SpeechService {
   }
 
   isSupported(): boolean {
+    if (this.isNativePlatform) {
+      return true; // Assume native support is available after initialization
+    }
     return !!(window.SpeechRecognition || (window as any).webkitSpeechRecognition);
   }
 
