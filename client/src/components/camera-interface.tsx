@@ -177,25 +177,19 @@ export function CameraInterface({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      console.log("📁 File select triggered:", {
-        filesCount: event.target.files?.length || 0,
-        hasFiles: !!event.target.files?.length
-      });
+      const isAndroid = navigator.userAgent.includes('Android');
+      console.log(`📁 ANDROID=[${isAndroid}] File select triggered: files=${event.target.files?.length || 0}`);
       
       const file = event.target.files?.[0];
       if (!file) {
-        console.log("❌ No file selected - user may have canceled");
+        console.log("❌ No file selected");
         return;
       }
       
-      console.log("📄 File details:", {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
+      console.log(`📄 ANDROID=[${isAndroid}] File: ${file.name} ${file.size} bytes ${file.type}`);
       
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
+      // Skip image type validation on Android - some devices report wrong MIME types
+      if (!isAndroid && !file.type.startsWith('image/')) {
         console.error("❌ Invalid file type:", file.type);
         toast({
           title: "Invalid File",
@@ -209,26 +203,25 @@ export function CameraInterface({
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       
-      // Single-flight protection - prevent concurrent requests on Android WebView
+      // Single-flight protection
       if (isAnalyzingRef.current) {
-        console.log('⏭️ Skipping analysis - already in progress (Android race condition protection)');
+        console.log('⏭️ Analysis already in progress');
         return;
       }
       
       const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      console.log(`✅ File processed successfully, starting analysis... [${requestId}]`);
+      console.log(`🚀 ANDROID=[${isAndroid}] Starting analysis [${requestId}]`);
       
-      // Auto-analyze the selected image immediately
-      console.log(`🔄 Starting auto-analysis... [${requestId}]`);
+      // ANDROID DIRECT FIX: Start analysis immediately
       analysisMutation.mutate({ file, requestId });
       
-      // Reset input value after processing
+      // Reset input
       event.target.value = '';
     } catch (error) {
-      console.error("💥 Error in handleFileSelect:", error);
+      console.error("💥 File select error:", error);
       toast({
-        title: "Photo Error",
-        description: "Failed to process the selected photo. Please try again.",
+        title: "Camera Error",
+        description: "Please try taking the photo again.",
         variant: "destructive",
       });
     }
@@ -247,74 +240,38 @@ export function CameraInterface({
 
 
   const handleCameraCapture = async () => {
-    try {
-      console.log("📷 Camera capture requested");
-      
-      // If user has already selected a file from gallery, analyze it
-      if (selectedFile) {
-        // Single-flight protection
-        if (isAnalyzingRef.current) {
-          console.log('⏭️ Skipping gallery analysis - already in progress');
-          return;
-        }
-        const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        console.log(`🖼️ Gallery image selected, starting analysis... [${requestId}]`);
-        analysisMutation.mutate({ file: selectedFile, requestId });
-        return;
-      }
-      
-      // Simple direct approach for web browsers
-      console.log("🌐 Opening camera selection...");
-      if (cameraInputRef.current) {
-        console.log("✅ Camera input ref exists, resetting and clicking...");
-        
-        // Reset input
-        cameraInputRef.current.value = '';
-        
-        // Add event listener for when files are detected
-        const checkForFiles = () => {
-          console.log("🔍 Checking for files...");
-          if (cameraInputRef.current?.files?.length) {
-            console.log("🎯 Files detected:", cameraInputRef.current.files.length);
-            handleFileSelect({
-              target: cameraInputRef.current
-            } as React.ChangeEvent<HTMLInputElement>);
-          }
-        };
-        
-        // Listen for focus back to window (user returns from camera)
-        const handleVisibilityChange = () => {
-          if (!document.hidden) {
-            console.log("📱 Window focus returned, checking for files...");
-            setTimeout(checkForFiles, 100);
-            setTimeout(checkForFiles, 500);
-            setTimeout(checkForFiles, 1000);
-          }
-        };
-        
-        document.addEventListener('visibilitychange', handleVisibilityChange, { once: true });
-        
-        // Cleanup listener after 10 seconds
-        setTimeout(() => {
-          document.removeEventListener('visibilitychange', handleVisibilityChange);
-          console.log("🧹 Cleaned up visibility listener");
-        }, 10000);
-        
-        cameraInputRef.current.click();
-        console.log("🎯 Camera input clicked, waiting for user to take photo...");
-      } else {
-        console.error("❌ Camera input ref is null!");
-        toast({
-          title: "Camera Error",
-          description: "Camera not available. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('💥 Error in handleCameraCapture:', error);
+    const isAndroid = navigator.userAgent.includes('Android');
+    console.log(`📷 ANDROID=[${isAndroid}] Camera capture requested`);
+    
+    // If there's already a selected file, analyze it
+    if (selectedFile && !isAnalyzingRef.current) {
+      const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log(`🖼️ ANDROID=[${isAndroid}] Analyzing existing file [${requestId}]`);
+      analysisMutation.mutate({ file: selectedFile, requestId });
+      return;
+    }
+    
+    // Direct camera approach - especially important for Android
+    console.log(`🌐 ANDROID=[${isAndroid}] Opening camera/file picker...`);
+    
+    // For Android, use the direct capture button which has worked better
+    const directCameraInput = document.querySelector('[data-testid="input-direct-camera"]') as HTMLInputElement;
+    if (directCameraInput) {
+      console.log(`✅ ANDROID=[${isAndroid}] Using direct camera input`);
+      directCameraInput.click();
+      return;
+    }
+    
+    // Fallback to regular camera input
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = '';
+      cameraInputRef.current.click();
+      console.log(`🎯 ANDROID=[${isAndroid}] Camera input clicked`);
+    } else {
+      console.error(`❌ ANDROID=[${isAndroid}] No camera input available!`);
       toast({
-        title: "Camera Error", 
-        description: "Failed to open camera. Please try again.",
+        title: "Camera Error",
+        description: "Camera not available. Please try the gallery button instead.",
         variant: "destructive",
       });
     }
