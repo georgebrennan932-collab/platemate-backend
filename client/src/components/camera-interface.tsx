@@ -9,9 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
-  onAnalysisStart: () => void;
-  onAnalysisSuccess: (data: FoodAnalysis) => void;
-  onAnalysisError: (error: string) => void;
+  onAnalysisStart: (requestId: string) => void;
+  onAnalysisSuccess: (data: FoodAnalysis, requestId: string) => void;
+  onAnalysisError: (error: string, requestId: string) => void;
 }
 
 export function CameraInterface({
@@ -26,6 +26,9 @@ export function CameraInterface({
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  
+  // Single-flight protection for Android WebView race conditions
+  const isAnalyzingRef = useRef(false);
 
   // Initialize media service
   useEffect(() => {
@@ -44,9 +47,9 @@ export function CameraInterface({
   }, [toast]);
 
   const analysisMutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async ({ file, requestId }: { file: File; requestId: string }) => {
       const isAndroid = navigator.userAgent.includes('Android');
-      console.log(`📸 Starting image analysis (${isAndroid ? 'Android' : 'Browser'}):`, {
+      console.log(`📸 Starting image analysis [${requestId}] (${isAndroid ? 'Android' : 'Browser'}):`, {
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type,
@@ -140,12 +143,14 @@ export function CameraInterface({
         throw fetchError;
       }
     },
-    onMutate: () => {
-      console.log("🔄 Analysis mutation starting...");
-      onAnalysisStart();
+    onMutate: ({ requestId }) => {
+      console.log(`🔄 Analysis mutation starting... [${requestId}]`);
+      isAnalyzingRef.current = true;
+      onAnalysisStart(requestId);
     },
-    onSuccess: (data: FoodAnalysis) => {
-      console.log("🎉 Analysis success callback triggered:", {
+    onSuccess: (data: FoodAnalysis, variables) => {
+      const { requestId } = variables;
+      console.log(`🎉 Analysis success callback triggered [${requestId}]:`, {
         hasData: !!data,
         confidence: data?.confidence,
         needsConfirmation: data?.needsConfirmation,
@@ -153,16 +158,21 @@ export function CameraInterface({
         foodCount: data?.detectedFoods?.length,
         platform: navigator.userAgent.includes('Android') ? 'Android' : 'Browser'
       });
-      onAnalysisSuccess(data);
+      onAnalysisSuccess(data, requestId);
     },
-    onError: (error: Error) => {
-      console.error("💥 Analysis error callback triggered:", {
+    onError: (error: Error, variables) => {
+      const { requestId } = variables;
+      console.error(`💥 Analysis error callback triggered [${requestId}]:`, {
         errorMessage: error.message,
         platform: navigator.userAgent.includes('Android') ? 'Android' : 'Browser',
         stack: error.stack
       });
-      onAnalysisError(error.message);
+      onAnalysisError(error.message, requestId);
     },
+    onSettled: () => {
+      console.log('🧹 Analysis settled, clearing single-flight guard');
+      isAnalyzingRef.current = false;
+    }
   });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,11 +209,18 @@ export function CameraInterface({
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       
-      console.log("✅ File processed successfully, starting analysis...");
+      // Single-flight protection - prevent concurrent requests on Android WebView
+      if (isAnalyzingRef.current) {
+        console.log('⏭️ Skipping analysis - already in progress (Android race condition protection)');
+        return;
+      }
+      
+      const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log(`✅ File processed successfully, starting analysis... [${requestId}]`);
       
       // Auto-analyze the selected image immediately
-      console.log("🔄 Starting auto-analysis...");
-      analysisMutation.mutate(file);
+      console.log(`🔄 Starting auto-analysis... [${requestId}]`);
+      analysisMutation.mutate({ file, requestId });
       
       // Reset input value after processing
       event.target.value = '';
@@ -235,8 +252,14 @@ export function CameraInterface({
       
       // If user has already selected a file from gallery, analyze it
       if (selectedFile) {
-        console.log("🖼️ Gallery image selected, starting analysis...");
-        analysisMutation.mutate(selectedFile);
+        // Single-flight protection
+        if (isAnalyzingRef.current) {
+          console.log('⏭️ Skipping gallery analysis - already in progress');
+          return;
+        }
+        const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        console.log(`🖼️ Gallery image selected, starting analysis... [${requestId}]`);
+        analysisMutation.mutate({ file: selectedFile, requestId });
         return;
       }
       

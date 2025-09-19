@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +25,9 @@ export function CameraPage() {
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [confirmationData, setConfirmationData] = useState<FoodAnalysis | null>(null);
+  
+  // Request ID gating to prevent race conditions on Android WebView
+  const latestRequestIdRef = useRef<string | null>(null);
   
   // Voice input state
   const [isListening, setIsListening] = useState(false);
@@ -60,20 +63,29 @@ export function CameraPage() {
     checkSpeechSupport();
   }, []);
 
-  const handleAnalysisStart = () => {
+  const handleAnalysisStart = (requestId: string) => {
+    console.log(`🚀 Starting analysis with requestId: ${requestId}`);
+    latestRequestIdRef.current = requestId;
     soundService.playScan();
     setCurrentState('processing');
   };
 
-  const handleAnalysisSuccess = (data: FoodAnalysis) => {
+  const handleAnalysisSuccess = (data: FoodAnalysis, requestId: string) => {
     const isAndroid = navigator.userAgent.includes('Android');
-    console.log(`🎉 handleAnalysisSuccess called on ${isAndroid ? 'Android' : 'Browser'}:`, {
+    console.log(`🎉 handleAnalysisSuccess called [${requestId}] on ${isAndroid ? 'Android' : 'Browser'}:`, {
       hasData: !!data,
       confidence: data?.confidence,
       needsConfirmation: data?.needsConfirmation,
       currentState: currentState,
-      platform: isAndroid ? 'Android' : 'Browser'
+      platform: isAndroid ? 'Android' : 'Browser',
+      isLatestRequest: requestId === latestRequestIdRef.current
     });
+    
+    // Race condition protection - only allow latest request to update state
+    if (requestId !== latestRequestIdRef.current) {
+      console.log(`⏭️ Ignoring success from old request [${requestId}] - latest is [${latestRequestIdRef.current}]`);
+      return;
+    }
     
     // Clear any existing error state first
     setErrorMessage('');
@@ -94,32 +106,8 @@ export function CameraPage() {
       setAnalysisData(null); // Clear any previous analysis data
       setCurrentState('confirmation');
       
-      // Android WebView state enforcement
-      if (isAndroid) {
-        console.log('🤖 Android - enforcing confirmation state with multiple attempts');
-        // Immediate double-set for Android WebView
-        setTimeout(() => {
-          setConfirmationData(data);
-          setCurrentState('confirmation');
-          console.log('🔧 Android state enforcement 1: confirmation');
-        }, 10);
-        
-        // Backup enforcement
-        setTimeout(() => {
-          setConfirmationData(data);
-          setCurrentState('confirmation');
-          console.log('🔧 Android state enforcement 2: confirmation');
-        }, 100);
-        
-        // Final check
-        setTimeout(() => {
-          console.log('🤖 Android final state check:', {
-            currentState: currentState,
-            hasConfirmationData: !!confirmationData,
-            hasAnalysisData: !!analysisData
-          });
-        }, 200);
-      }
+      // Request gating eliminates need for Android-specific workarounds
+      console.log(`✅ Request [${requestId}] confirmed - setting confirmation state`);
       
       toast({
         title: `Low Confidence (${data.confidence}%)`,
@@ -134,7 +122,19 @@ export function CameraPage() {
     }
   };
 
-  const handleAnalysisError = (error: string) => {
+  const handleAnalysisError = (error: string, requestId: string) => {
+    console.log(`❌ handleAnalysisError called [${requestId}]:`, {
+      error,
+      currentState,
+      isLatestRequest: requestId === latestRequestIdRef.current
+    });
+    
+    // Race condition protection - only allow latest request to update state
+    if (requestId !== latestRequestIdRef.current) {
+      console.log(`⏭️ Ignoring error from old request [${requestId}] - latest is [${latestRequestIdRef.current}]`);
+      return;
+    }
+    
     soundService.playError();
     setErrorMessage(error);
     setCurrentState('error');
