@@ -97,9 +97,14 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  console.log(`🔍 Environment check: app.get("env") = "${app.get("env")}", NODE_ENV = "${process.env.NODE_ENV}"`);
+  
+  // Force development mode for React app to work
+  if (app.get("env") === "development" || process.env.NODE_ENV !== "production") {
+    console.log("✅ Using Vite dev server for React app");
     await setupVite(app, server);
   } else {
+    console.log("❌ Using static server (would show landing page)");
     serveStatic(app);
   }
 
