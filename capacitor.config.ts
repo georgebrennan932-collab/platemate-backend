@@ -4,6 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.platemate.app',
   appName: 'PlateMate',
   webDir: 'dist/public',
+  server: {
+    url: 'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev',
+    cleartext: false
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
