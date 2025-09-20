@@ -447,8 +447,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Text-based food analysis for voice input
-  app.post("/api/analyze-text", isAuthenticated, async (req: any, res) => {
+  // Text-based food analysis for voice input - bypass auth in deployment like image analysis
+  app.post("/api/analyze-text", authMiddleware, async (req: any, res) => {
     try {
       const { foodDescription } = req.body;
       
@@ -463,8 +463,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (foodAnalysisData.confidence < 90) {
         console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for text analysis - creating food confirmation`);
         
-        // Create food confirmation for user review
-        const userId = req.user.claims.sub;
+        // In deployment without auth, skip confirmation and proceed with analysis
+        if (!req.user) {
+          console.log(`📝 No user context in deployment - proceeding with low-confidence text analysis`);
+          const analysis = await storage.createFoodAnalysis(foodAnalysisData);
+          return res.json(analysis);
+        } else {
+          // Create food confirmation for authenticated user review
+          const userId = req.user.claims.sub;
         const confirmationData = {
           userId,
           imageUrl: 'text://analysis', // Placeholder for text-based analysis
@@ -495,6 +501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
           throw validationError; // Re-throw non-validation errors
+        }
         }
       }
 
