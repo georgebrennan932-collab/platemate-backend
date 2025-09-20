@@ -12,9 +12,20 @@ import { aiManager } from "./ai-providers/ai-manager";
 import { usdaService } from "./services/usda-service";
 import { imageAnalysisCache } from "./services/image-analysis-cache";
 
-// Configure multer for image uploads
+// Configure multer for image uploads with deployment-aware storage
+const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true';
+const uploadDir = process.env.UPLOAD_DIR ?? (isDeployment ? '/tmp/uploads' : 'uploads');
+
+// Ensure upload directory exists
+try {
+  await fs.mkdir(uploadDir, { recursive: true });
+  console.log(`📁 Upload directory created/verified: ${uploadDir}`);
+} catch (error) {
+  console.error(`❌ Failed to create upload directory ${uploadDir}:`, error);
+}
+
 const upload = multer({ 
-  dest: 'uploads/',
+  dest: uploadDir,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -65,8 +76,8 @@ class RequestQueue {
 const analysisQueue = new RequestQueue();
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Serve uploaded images as static files
-  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  // Serve uploaded images as static files from the correct upload directory
+  app.use('/uploads', express.static(uploadDir));
   
   // Setup authentication
   await setupAuth(app);
@@ -239,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('X-Request-ID', requestId);
 
       // Process image with Sharp for optimization (resilient processing)
-      const processedImagePath = `uploads/processed_${req.file.filename}.jpg`;
+      const processedImagePath = path.join(uploadDir, `processed_${req.file.filename}.jpg`);
       
       try {
         // Attempt to process the image with Sharp (more resilient approach)
