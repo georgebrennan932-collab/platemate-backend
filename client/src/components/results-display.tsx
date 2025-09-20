@@ -23,6 +23,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [voiceInput, setVoiceInput] = useState('');
   const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
+  const [showLowConfidenceDialog, setShowLowConfidenceDialog] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -35,6 +36,13 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     };
     checkSpeechSupport();
   }, []);
+
+  // Check for low confidence on mount
+  useEffect(() => {
+    if (!data.isAITemporarilyUnavailable && data.confidence < 90) {
+      setShowLowConfidenceDialog(true);
+    }
+  }, [data.confidence, data.isAITemporarilyUnavailable]);
 
   // Handle voice input for adding food items
   const handleVoiceInput = async () => {
@@ -1134,6 +1142,67 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                     <span>Add Food</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Low Confidence Warning Dialog */}
+      {showLowConfidenceDialog && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="bg-gradient-to-br from-white via-orange-50 to-red-50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-orange-200/50 dark:border-orange-700/50 animate-in slide-in-from-bottom-4 duration-300">
+            
+            {/* Warning Header */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg mb-4">
+                <AlertTriangle className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                Low Confidence Detection
+              </h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                AI confidence: <span className="font-semibold text-orange-600 dark:text-orange-400">{data.confidence}%</span>
+              </p>
+            </div>
+            
+            {/* Warning Content */}
+            <div className="space-y-4 mb-6">
+              <div className="p-4 bg-orange-100 dark:bg-orange-900/30 rounded-xl border border-orange-200 dark:border-orange-700">
+                <div className="flex items-start space-x-3">
+                  <Info className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-orange-800 dark:text-orange-200">
+                    <p className="font-medium mb-1">The AI is less confident about this analysis.</p>
+                    <p>Please review the detected foods and portions. You can edit them before saving to your diary.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-sm text-muted-foreground">
+                <p>Tip: Taking photos with better lighting and closer angles helps improve accuracy.</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowLowConfidenceDialog(false)}
+                className="flex-1 py-3 px-4 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-xl font-semibold hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md border border-orange-200 dark:border-orange-700"
+                data-testid="button-review-foods"
+              >
+                <Edit3 className="h-4 w-4 mr-2 inline" />
+                Review & Edit
+              </button>
+              <button
+                onClick={() => {
+                  setShowLowConfidenceDialog(false);
+                  setShowDiaryDialog(true);
+                }}
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                data-testid="button-proceed-anyway"
+              >
+                <Check className="h-4 w-4 mr-2 inline" />
+                Use Anyway
               </button>
             </div>
           </div>
