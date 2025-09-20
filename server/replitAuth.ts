@@ -6,7 +6,6 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
-import jwt from "jsonwebtoken";
 import { storage } from "./storage";
 
 if (!process.env.REPLIT_DOMAINS) {
@@ -128,50 +127,7 @@ export async function setupAuth(app: Express) {
   });
 }
 
-// JWT secret - in production this should be from environment variable
-const JWT_SECRET = process.env.JWT_SECRET || 'platemate-dev-secret-2024';
-
-// Generate JWT token for mobile authentication
-export function generateToken(userId: string): string {
-  return jwt.sign(
-    { 
-      userId,
-      type: 'mobile_auth',
-      iat: Math.floor(Date.now() / 1000)
-    },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-}
-
-// Verify JWT token
-function verifyToken(token: string): { userId: string } | null {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    return { userId: decoded.userId };
-  } catch (error) {
-    return null;
-  }
-}
-
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // Check for bearer token first (mobile apps)
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    const decoded = verifyToken(token);
-    
-    if (decoded) {
-      // Attach user info to request for mobile authentication
-      (req as any).user = { 
-        userId: decoded.userId,
-        fromToken: true 
-      };
-      return next();
-    }
-  }
-
-  // Fall back to cookie-based authentication (web app)
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {

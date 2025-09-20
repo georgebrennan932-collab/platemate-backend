@@ -1,15 +1,5 @@
 package com.platemate.app;
 
-import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
-public class MainActivity extends BridgeActivity {
-    
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        // Enable WebView debugging
-        android.webkit.WebView.setWebContentsDebuggingEnabled(true);
-    }
-}
+public class MainActivity extends BridgeActivity {}

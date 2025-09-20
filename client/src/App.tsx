@@ -1,6 +1,5 @@
 import { Switch, Route } from "wouter";
 import { useEffect } from "react";
-import { MobileAuthService } from "./lib/mobile-auth";
 
 // ✅ Pages in your /pages folder
 import CameraPage from "./pages/CameraPage";
@@ -21,20 +20,7 @@ import NotFound from "./pages/not-found";
 
 function App() {
   useEffect(() => {
-    console.log("App loaded - mobile auth re-enabled");
-    
-    // Mobile auth re-enabled with safe initialization
-    setTimeout(() => {
-      try {
-        MobileAuthService.initialize().then(() => {
-          console.log("✅ Mobile auth initialized successfully");
-        }).catch((error) => {
-          console.error("❌ Mobile auth error:", error);
-        });
-      } catch (error) {
-        console.error("❌ Mobile auth sync error:", error);
-      }
-    }, 100); // Small delay to ensure app fully loads first
+    console.log("App loaded");
   }, []);
 
   return (

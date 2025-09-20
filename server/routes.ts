@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, generateToken } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
@@ -64,42 +64,12 @@ class RequestQueue {
 
 const analysisQueue = new RequestQueue();
 
-// Helper function to get user ID from request (handles both cookie and token auth)
-function getUserId(req: any): string {
-  if (req.user?.fromToken) {
-    // Token-based authentication
-    return req.user.userId;
-  } else {
-    // Cookie-based authentication
-    return req.user?.claims?.sub;
-  }
-}
-
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded images as static files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
   // Setup authentication
   await setupAuth(app);
-
-  // Mobile token endpoint for development - generates JWT token (no auth required)
-  app.post('/api/auth/mobile-token', async (req, res) => {
-    try {
-      // For development, use a hardcoded user ID
-      // In production, this should be properly authenticated
-      const userId = '47337218'; // Your current user ID from logs
-      const token = generateToken(userId);
-      
-      res.json({ 
-        token,
-        userId,
-        message: 'Mobile authentication token generated'
-      });
-    } catch (error) {
-      console.error('Error generating mobile token:', error);
-      res.status(500).json({ message: 'Failed to generate token' });
-    }
-  });
 
   // Cache and monitoring endpoints
   app.get('/api/cache/stats', isAuthenticated, async (req, res) => {
@@ -131,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = getUserId(req);
+      const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -319,35 +289,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // CONFIDENCE THRESHOLD CHECK: Apply to ALL analysis results (cached and fresh)
         console.log(`🔍 [${requestId}] Checking confidence threshold: ${foodAnalysisData.confidence}% (threshold: 90%)`);
-        
-        // Always create and return the analysis, but mark low confidence ones for user confirmation
-        const analysis = await storage.createFoodAnalysis(foodAnalysisData);
-        
         if (foodAnalysisData.confidence < 90) {
-          console.log(`⚠️ [${requestId}] Low confidence (${foodAnalysisData.confidence}%) - returning analysis with confirmation request`);
+          console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for image analysis - creating food confirmation`);
           
-          responseStatus = 200;
-          responseData = {
-            ...analysis,
-            needsConfirmation: true,
-            confidence: foodAnalysisData.confidence,
-            confirmationMessage: `AI confidence is ${foodAnalysisData.confidence}% - please review the detected foods`
+          // Create food confirmation for user review
+          const userId = req.user.claims.sub;
+          const confirmationData = {
+            userId,
+            imageUrl: `/uploads/processed_${req.file.filename}.jpg`, // Use processed image path
+            originalConfidence: foodAnalysisData.confidence,
+            suggestedFoods: foodAnalysisData.detectedFoods,
+            alternativeOptions: [], // Could be populated with USDA alternatives
+            status: 'pending' as const
           };
-        } else {
-          // High confidence (≥90%) - return analysis normally
-          console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - returning analysis normally`);
           
-          responseStatus = 200;
-          responseData = analysis;
-
-        }
-
-        // Optional: Auto-add to diary if user is authenticated and requests it (only for high confidence)
-        if (req.user && req.body.autoAddToDiary === 'true' && responseData && !responseData.needsConfirmation) {
+          // Validate confirmation data with schema
           try {
-            const userId = req.user.claims.sub;
-            const diaryData = {
-              userId,
+            const validatedConfirmation = insertFoodConfirmationSchema.parse(confirmationData);
+            const confirmation = await storage.createFoodConfirmation(validatedConfirmation);
+            
+            responseStatus = 202;
+            responseData = {
+              type: 'confirmation_required',
+              confirmationId: confirmation.id,
+              confidence: foodAnalysisData.confidence,
+              message: 'Analysis requires confirmation due to low confidence',
+              suggestedFoods: foodAnalysisData.detectedFoods,
+              imageUrl: confirmationData.imageUrl
+            };
+            
+            console.log(`🔄 [${requestId}] Created confirmation ${confirmation.id} - returning 202 confirmation_required`);
+          } catch (validationError: any) {
+            if (validationError.name === 'ZodError') {
+              console.error('Image analysis confirmation validation error:', validationError.errors);
+              responseStatus = 400;
+              responseData = {
+                error: 'Invalid confirmation data for image analysis',
+                details: validationError.errors
+              };
+            } else {
+              throw validationError; // Re-throw non-validation errors
+            }
+          }
+        } else {
+          // High confidence (≥90%) - proceed with immediate analysis
+          console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - creating food analysis and returning 200 OK`);
+          const analysis = await storage.createFoodAnalysis(foodAnalysisData);
+
+          // Optional: Auto-add to diary if user is authenticated and requests it
+          if (req.user && req.body.autoAddToDiary === 'true') {
+            try {
+              const userId = req.user.claims.sub;
+              const diaryData = {
+                userId,
                 analysisId: analysis.id,
                 mealType: req.body.mealType || 'snack',
                 mealDate: req.body.mealDate || new Date().toISOString().split('T')[0],
@@ -372,7 +366,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } catch (diaryError) {
               console.error("Failed to auto-add to diary:", diaryError);
               // Still return the analysis even if diary add fails
+              responseData = analysis;
             }
+          } else {
+            responseData = analysis;
+          }
         }
       } catch (error) {
         analysisError = error;

@@ -55,31 +55,21 @@ export function CameraInterface({
       formData.append('image', file);
       
       console.log("🚀 Sending request to /api/analyze...");
-      console.log("🔍 Platform:", Capacitor.getPlatform());
-      console.log("📂 FormData contents:", formData.get('image'));
-      
-      let response: Response;
-      try {
-        response = await fetch('/api/analyze', {
-          method: 'POST',
-          body: formData,
-        });
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        body: formData,
+      });
 
-        console.log("📡 Response received:", {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok
-        });
+      console.log("📡 Response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("❌ API Error:", errorData);
-          throw new Error(errorData.error || 'Analysis failed');
-        }
-      } catch (networkError) {
-        console.error("🌐 Network Error:", networkError);
-        const errorMessage = networkError instanceof Error ? networkError.message : 'Unknown network error';
-        throw new Error(`Network request failed: ${errorMessage}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("❌ API Error:", errorData);
+        throw new Error(errorData.error || 'Analysis failed');
       }
 
       const result = await response.json();
