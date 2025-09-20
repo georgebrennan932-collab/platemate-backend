@@ -7,19 +7,38 @@ const app = express();
 
 // CORS configuration for mobile app support
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5000', 
-    'capacitor://localhost',
-    'ionic://localhost',
-    'http://10.0.2.2:5000', // Android emulator
-    'http://127.0.0.1:5000',
-    'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev', // Deployed Replit URL
-    /^https:\/\/.*\.replit\.dev$/ // Allow all Replit dev domains
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5000', 
+      'capacitor://localhost',
+      'ionic://localhost',
+      'http://10.0.2.2:5000', // Android emulator
+      'http://127.0.0.1:5000',
+      'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev', // Deployed Replit URL
+    ];
+    
+    // Check exact matches
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Check Replit dev domain pattern
+    if (/^https:\/\/.*\.replit\.dev$/.test(origin)) {
+      return callback(null, true);
+    }
+    
+    // Log rejected origins for debugging
+    console.log(`❌ CORS rejected origin: ${origin}`);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'User-Agent', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie']
 }));
 
 app.use(express.json());
@@ -29,6 +48,15 @@ app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+  // Log mobile/WebView requests for debugging
+  const userAgent = req.get('User-Agent') || '';
+  const origin = req.get('Origin');
+  const referer = req.get('Referer');
+  
+  if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('wv')) {
+    console.log(`📱 Mobile request: ${req.method} ${path} | Origin: ${origin} | UA: ${userAgent.substring(0, 50)}...`);
+  }
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
