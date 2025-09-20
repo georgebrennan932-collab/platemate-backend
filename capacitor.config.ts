@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.platemate.app',
   appName: 'PlateMate',
-  webDir: 'dist/public',
+  webDir: 'public',
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
