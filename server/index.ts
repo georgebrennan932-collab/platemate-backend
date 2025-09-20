@@ -64,9 +64,16 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  
+  // Use REPLIT_DEPLOYMENT to detect if we're in deployment mode
+  const isDeployment = process.env.REPLIT_DEPLOYMENT === "true";
+  console.log(`🔧 Deployment detection: REPLIT_DEPLOYMENT=${process.env.REPLIT_DEPLOYMENT}, isDeployment=${isDeployment}`);
+  
+  if (!isDeployment) {
+    console.log("🔧 Setting up Vite for development mode");
     await setupVite(app, server);
   } else {
+    console.log("🔧 Serving static files for deployment mode");
     serveStatic(app);
   }
 
