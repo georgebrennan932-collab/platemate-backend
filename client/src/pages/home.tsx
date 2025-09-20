@@ -415,6 +415,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen text-foreground" style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}>
+      {/* Debug info - always visible */}
+      <div className="fixed top-0 left-0 bg-red-500 text-white p-2 text-xs z-50">
+        State: {currentState} | Auth: {isAuthenticated ? 'yes' : 'no'}
+      </div>
+      
       {/* Custom Header for New Design */}
       <div className="px-4 pt-8 pb-6 text-center relative">
         <h1 className="text-5xl font-bold mb-2" style={{color: '#22D3EE'}}>PlateMate</h1>
