@@ -414,22 +414,27 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen text-foreground" style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}>
-      {/* EMERGENCY DEBUG - HUGE VISIBLE INDICATOR */}
+    <div>
+      {/* ABSOLUTE BASIC HTML TEST - NO CSS CLASSES */}
       <div style={{
-        position: 'fixed', 
-        top: '50%', 
-        left: '50%', 
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'red', 
-        color: 'white', 
-        padding: '20px', 
-        fontSize: '24px',
+        position: 'fixed',
+        top: '0', 
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'lime',
+        color: 'black',
+        fontSize: '48px',
         fontWeight: 'bold',
-        zIndex: 9999,
-        border: '5px solid yellow'
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center'
       }}>
-        APP IS WORKING! State: {currentState} | Auth: {isAuthenticated ? 'YES' : 'NO'}
+        🎯 REACT IS WORKING!<br/>
+        State: {currentState}<br/>
+        Auth: {isAuthenticated ? 'YES' : 'NO'}
       </div>
       
       {/* Custom Header for New Design */}

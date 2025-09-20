@@ -111,7 +111,6 @@ app.use((req, res, next) => {
   server.listen({
     port: PORT,
     host: "0.0.0.0",
-    reusePort: true,
   }, () => {
     console.log(`✅ PlateMate running on port ${PORT}`);
   });
