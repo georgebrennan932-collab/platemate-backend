@@ -65,8 +65,9 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   
-  // Use REPLIT_DEPLOYMENT to detect if we're in deployment mode
-  const isDeployment = process.env.REPLIT_DEPLOYMENT === "true";
+  // Use REPLIT_DEPLOYMENT to detect if we're in deployment mode  
+  // Replit sets REPLIT_DEPLOYMENT to "1" during actual deployments, workspace uses "true"
+  const isDeployment = process.env.REPLIT_DEPLOYMENT === "1" || process.env.REPLIT_DEPLOYMENT === "true";
   console.log(`🔧 Deployment detection: REPLIT_DEPLOYMENT=${process.env.REPLIT_DEPLOYMENT}, isDeployment=${isDeployment}`);
   
   if (!isDeployment) {
@@ -88,6 +89,6 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
-    console.log(`\n🌍 Server ready! Environment: ${process.env.REPLIT_DEPLOYMENT ? 'DEPLOYMENT' : 'DEVELOPMENT'}\n`);
+    console.log(`\n🌍 Server ready! Environment: ${(process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true') ? 'DEPLOYMENT' : 'DEVELOPMENT'}\n`);
   });
 })();
