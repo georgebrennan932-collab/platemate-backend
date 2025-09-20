@@ -32,6 +32,25 @@ window.addEventListener('unhandledrejection', function(event) {
   event.preventDefault();
 });
 
+// EMERGENCY: Direct DOM test bypassing React entirely
+document.body.innerHTML = `
+  <div style="
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100vw; height: 100vh; 
+    background: red; 
+    color: white; 
+    font-size: 50px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    z-index: 999999;
+    font-family: Arial;
+  ">
+    🚨 DIRECT DOM TEST WORKING!
+  </div>
+`;
+
 try {
   console.log('🚀 Starting React app render...');
   createRoot(document.getElementById("root")!).render(
