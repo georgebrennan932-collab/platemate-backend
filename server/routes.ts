@@ -16,14 +16,6 @@ import { imageAnalysisCache } from "./services/image-analysis-cache";
 const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true';
 const uploadDir = process.env.UPLOAD_DIR ?? (isDeployment ? '/tmp/uploads' : 'uploads');
 
-// Ensure upload directory exists
-try {
-  await fs.mkdir(uploadDir, { recursive: true });
-  console.log(`📁 Upload directory created/verified: ${uploadDir}`);
-} catch (error) {
-  console.error(`❌ Failed to create upload directory ${uploadDir}:`, error);
-}
-
 const upload = multer({ 
   dest: uploadDir,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
@@ -76,6 +68,14 @@ class RequestQueue {
 const analysisQueue = new RequestQueue();
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Ensure upload directory exists
+  try {
+    await fs.mkdir(uploadDir, { recursive: true });
+    console.log(`📁 Upload directory created/verified: ${uploadDir}`);
+  } catch (error) {
+    console.error(`❌ Failed to create upload directory ${uploadDir}:`, error);
+  }
+
   // Serve uploaded images as static files from the correct upload directory
   app.use('/uploads', express.static(uploadDir));
   
