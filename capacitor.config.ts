@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.platemate.app',
   appName: 'PlateMate',
   webDir: 'dist/public',
-  server: {
-    androidScheme: 'http',
-    cleartext: true
-  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
