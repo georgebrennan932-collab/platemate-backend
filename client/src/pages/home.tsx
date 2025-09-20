@@ -27,6 +27,8 @@ export default function Home() {
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [confirmationData, setConfirmationData] = useState<any>(null);
+  const [editableFoods, setEditableFoods] = useState<any[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   
   // Navigation state
   const [showProfile, setShowProfile] = useState(false);
@@ -143,6 +145,7 @@ export default function Home() {
       console.log("⚠️ Low confidence detected, showing confirmation UI:", data);
       soundService.playError(); // Different sound for confirmation needed
       setConfirmationData(data);
+      setEditableFoods(Array.isArray(data.suggestedFoods) ? [...data.suggestedFoods] : []); // Initialize editable foods safely
       setCurrentState('confirmation');
       
       // Show user-friendly toast about low confidence
@@ -183,14 +186,18 @@ export default function Home() {
     if (!confirmationData) return;
     
     try {
-      // Call the API to confirm the analysis
-      const response = await apiRequest('POST', `/api/food-confirmations/${confirmationData.confirmationId}/confirm`, {});
+      // Call the API to confirm the analysis with edited foods
+      const response = await apiRequest('POST', `/api/food-confirmations/${confirmationData.confirmationId}/confirm`, {
+        editedFoods: editableFoods // Include the edited foods in the confirmation
+      });
       const confirmedAnalysis = await response.json();
       
       // Show the confirmed analysis as results
       soundService.playSuccess();
       setAnalysisData(confirmedAnalysis);
       setConfirmationData(null);
+      setEditableFoods([]); // Clear edited foods
+      setEditingIndex(null); // Clear editing state
       setCurrentState('results');
       
       toast({
@@ -209,6 +216,8 @@ export default function Home() {
 
   const handleRejectAnalysis = () => {
     setConfirmationData(null);
+    setEditableFoods([]); // Clear edited foods
+    setEditingIndex(null); // Clear editing state
     setCurrentState('camera');
     
     toast({
@@ -524,25 +533,131 @@ export default function Home() {
               </div>
             )}
 
-            {/* Suggested Foods */}
+            {/* Editable Foods */}
             <div className="mb-6">
               <h4 className="text-lg font-semibold mb-4 flex items-center space-x-2">
                 <Utensils className="h-5 w-5" />
                 <span>Detected Foods</span>
               </h4>
               <div className="space-y-3">
-                {confirmationData.suggestedFoods?.map((food: any, index: number) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-secondary/50 rounded-xl">
-                    <div className="flex-1">
-                      <div className="font-medium">{food.name}</div>
-                      <div className="text-sm text-muted-foreground">{food.portion}</div>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {food.calories} cal
+                {editableFoods.map((food: any, index: number) => (
+                  <div 
+                    key={index} 
+                    className={`p-3 rounded-xl transition-all ${
+                      editingIndex === index 
+                        ? 'bg-primary/10 border-2 border-primary/30' 
+                        : 'bg-secondary/50 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <div className="flex-1">
+                          {editingIndex === index ? (
+                            <input
+                              type="text"
+                              value={food.name}
+                              onChange={(e) => {
+                                const updated = [...editableFoods];
+                                updated[index] = { ...updated[index], name: e.target.value };
+                                setEditableFoods(updated);
+                              }}
+                              className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background font-medium"
+                              placeholder="e.g., Jacket Potato with Ham and Cheese"
+                            />
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <div className="font-medium">{food.name}</div>
+                              <button
+                                onClick={() => setEditingIndex(index)}
+                                className="p-1 text-blue-600 hover:bg-blue-100 rounded opacity-70 hover:opacity-100 transition-opacity"
+                                title="Edit food name"
+                                data-testid={`button-edit-name-${index}`}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                          {editingIndex === index ? (
+                            <div className="flex items-center space-x-2 mt-2">
+                              <input
+                                type="text"
+                                value={food.portion}
+                                onChange={(e) => {
+                                  const updated = [...editableFoods];
+                                  updated[index] = { ...updated[index], portion: e.target.value };
+                                  setEditableFoods(updated);
+                                }}
+                                className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
+                                placeholder="e.g., 200g, 1 cup"
+                              />
+                              <button
+                                onClick={() => setEditingIndex(null)}
+                                className="p-1 text-green-600 hover:bg-green-100 rounded"
+                                data-testid={`button-save-edit-${index}`}
+                              >
+                                <Check className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const updated = [...editableFoods];
+                                  updated.splice(index, 1);
+                                  setEditableFoods(updated);
+                                  setEditingIndex(null);
+                                }}
+                                className="p-1 text-red-600 hover:bg-red-100 rounded"
+                                title="Remove this food item"
+                                data-testid={`button-remove-food-${index}`}
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <div className="text-sm text-muted-foreground">{food.portion}</div>
+                              <button
+                                onClick={() => setEditingIndex(index)}
+                                className="p-1 text-blue-600 hover:bg-blue-100 rounded opacity-70 hover:opacity-100 transition-opacity"
+                                title="Edit portion"
+                                data-testid={`button-edit-portion-${index}`}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">{food.calories} cal</div>
+                        <div className="text-xs text-muted-foreground">
+                          {food.protein}g protein
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
+              
+              {/* Add Missing Food Button */}
+              <button
+                onClick={() => {
+                  const newFood = {
+                    name: "New Food Item",
+                    portion: "1 serving",
+                    calories: 0,
+                    protein: 0,
+                    carbs: 0,
+                    fat: 0,
+                    icon: "utensils"
+                  };
+                  setEditableFoods([...editableFoods, newFood]);
+                  setEditingIndex(editableFoods.length);
+                }}
+                className="w-full mt-3 py-3 px-4 border-2 border-dashed border-primary/30 text-primary hover:border-primary/50 hover:bg-primary/5 rounded-xl font-medium transition-all flex items-center justify-center space-x-2"
+                data-testid="button-add-missing-food"
+              >
+                <Plus className="h-5 w-5" />
+                <span>Add Missing Food Item</span>
+              </button>
             </div>
 
             {/* Confirmation Actions */}
