@@ -198,10 +198,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const requestStartTime = Date.now();
     
     try {
+      // Enhanced deployment debugging
+      console.log(`\n🔄 [${requestId}] ===== IMAGE ANALYSIS START =====`);
+      console.log(`🌍 Environment: ${process.env.REPLIT_DEPLOYMENT ? 'DEPLOYMENT' : 'DEVELOPMENT'}`);
+      console.log(`👤 User: ${req.user?.claims?.sub || 'Unknown'}`);
+      console.log(`📱 Request Headers:`, {
+        'content-type': req.headers['content-type'],
+        'user-agent': req.headers['user-agent'],
+        origin: req.headers.origin,
+        referer: req.headers.referer
+      });
+      
       if (!req.file) {
+        console.log(`❌ [${requestId}] No image file provided in request`);
         return res.status(400).json({ error: "No image file provided" });
       }
 
+      // Log detailed file information
+      console.log(`📸 [${requestId}] File details:`, {
+        originalName: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        filename: req.file.filename,
+        path: req.file.path
+      });
+      
       console.log(`🔄 [${requestId}] Starting image analysis request`);
       
       // Add cache and queue statistics to response headers for monitoring
@@ -272,6 +293,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Real food recognition and nutrition analysis using multi-AI provider system with timeout
         console.log(`🧠 [${requestId}] Starting AI analysis (includes cache check)...`);
+        console.log(`🔑 [${requestId}] API Keys available:`, {
+          openai: !!process.env.OPENAI_API_KEY,
+          google: !!process.env.GOOGLE_API_KEY,
+          gemini: !!process.env.GEMINI_API_KEY,
+          usda: !!process.env.USDA_API_KEY
+        });
         const analysisStartTime = Date.now();
         
         const foodAnalysisData = await Promise.race([
