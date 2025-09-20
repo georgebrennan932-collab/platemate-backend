@@ -335,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const validatedConfirmation = insertFoodConfirmationSchema.parse(confirmationData);
             const confirmation = await storage.createFoodConfirmation(validatedConfirmation);
             
-            responseStatus = 202;
+            responseStatus = 200;
             responseData = {
               type: 'confirmation_required',
               confirmationId: confirmation.id,
@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               imageUrl: confirmationData.imageUrl
             };
             
-            console.log(`🔄 [${requestId}] Created confirmation ${confirmation.id} - returning 202 confirmation_required`);
+            console.log(`🔄 [${requestId}] Created confirmation ${confirmation.id} - returning 200 confirmation_required`);
           } catch (validationError: any) {
             if (validationError.name === 'ZodError') {
               console.error('Image analysis confirmation validation error:', validationError.errors);
@@ -458,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const validatedConfirmation = insertFoodConfirmationSchema.parse(confirmationData);
           const confirmation = await storage.createFoodConfirmation(validatedConfirmation);
           
-          return res.status(202).json({
+          return res.status(200).json({
             type: 'confirmation_required',
             confirmationId: confirmation.id,
             confidence: foodAnalysisData.confidence,
