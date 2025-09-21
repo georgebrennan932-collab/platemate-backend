@@ -767,11 +767,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                             e.stopPropagation();
                             setEditingIndex(index);
                           }}
-                          className="w-3 h-3 text-gray-300 hover:text-gray-500 transition-all"
-                          title="Edit"
+                          className="inline-flex items-center justify-center rounded-md h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                          title="Edit food name"
                           data-testid={`button-edit-name-${index}`}
                         >
-                          ✏
+                          <Edit3 className="h-3 w-3" />
                         </button>
                       </div>
                     )}
