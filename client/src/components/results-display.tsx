@@ -305,7 +305,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     };
     setEditableFoods(updatedFoods);
     console.log('📞 About to call scheduleNutritionUpdate...');
-    scheduleNutritionUpdate(updatedFoods);
+    
+    // Immediately update nutrition for real-time feedback
+    updateNutritionValues(updatedFoods, Date.now());
   };
 
   const removeFoodItem = (index: number) => {
@@ -907,6 +909,26 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           </div>
         </div>
         
+        {/* TEST: Direct nutrition update button */}
+        <div className="mt-4">
+          <button
+            onClick={() => {
+              console.log('🧪 TEST: Manual nutrition update triggered');
+              const testFoods = [...editableFoods];
+              if (testFoods.length > 3) {
+                testFoods[3] = { ...testFoods[3], name: 'chicken breast' };
+                console.log('🧪 TEST: Changed baked beans to chicken breast');
+                setEditableFoods(testFoods);
+                updateNutritionValues(testFoods, Date.now());
+              }
+            }}
+            className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg font-semibold"
+            data-testid="button-test-nutrition"
+          >
+            🧪 TEST: Change Baked Beans → Chicken Breast
+          </button>
+        </div>
+
         {/* Save Changes Button */}
         {hasChanges() && (
           <div className="mt-4 flex space-x-3">
