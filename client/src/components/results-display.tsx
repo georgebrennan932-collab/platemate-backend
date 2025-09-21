@@ -297,12 +297,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   }, [nutritionUpdateTimer, updateNutritionValues, nutritionRequestId]);
 
   const updateFoodName = (index: number, newName: string) => {
+    console.log(`🔧 updateFoodName called: index=${index}, newName="${newName}"`);
     const updatedFoods = [...editableFoods];
     updatedFoods[index] = {
       ...updatedFoods[index],
       name: newName,
     };
     setEditableFoods(updatedFoods);
+    console.log('📞 About to call scheduleNutritionUpdate...');
     scheduleNutritionUpdate(updatedFoods);
   };
 
