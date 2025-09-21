@@ -1,6 +1,6 @@
 import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2, Mic, MicOff, ArrowLeft } from "lucide-react";
 import type { FoodAnalysis, DetectedFood } from "@shared/schema";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +24,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
   const [showLowConfidenceDialog, setShowLowConfidenceDialog] = useState(false);
+  const [nutritionUpdateTimer, setNutritionUpdateTimer] = useState<NodeJS.Timeout | null>(null);
+  const [nutritionUpdateController, setNutritionUpdateController] = useState<AbortController | null>(null);
+  const [nutritionRequestId, setNutritionRequestId] = useState<number>(0);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -35,6 +38,16 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       setSpeechSupported(supported);
     };
     checkSpeechSupport();
+    
+    // Cleanup function to clear any pending nutrition updates
+    return () => {
+      if (nutritionUpdateTimer) {
+        clearTimeout(nutritionUpdateTimer);
+      }
+      if (nutritionUpdateController) {
+        nutritionUpdateController.abort();
+      }
+    };
   }, []);
 
   // Check for low confidence on mount
@@ -189,7 +202,92 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     };
     
     setEditableFoods(updatedFoods);
+    scheduleNutritionUpdate(updatedFoods);
   };
+
+  // Debounced nutrition calculation function with race condition protection
+  const updateNutritionValues = useCallback(async (foodsToUpdate: DetectedFood[], requestId: number) => {
+    try {
+      // Cancel previous request if it exists
+      if (nutritionUpdateController) {
+        nutritionUpdateController.abort();
+      }
+      
+      // Create new AbortController for this request
+      const controller = new AbortController();
+      setNutritionUpdateController(controller);
+      
+      const response = await fetch('/api/calculate-nutrition', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ foods: foodsToUpdate }),
+        credentials: 'include',
+        signal: controller.signal
+      });
+      
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Only update if this is still the latest request
+      if (requestId === nutritionRequestId && data.foods) {
+        // Merge nutrition data while preserving current user edits
+        setEditableFoods(currentFoods => {
+          return currentFoods.map((currentFood, index) => {
+            const updatedFood = data.foods[index];
+            if (updatedFood) {
+              // Preserve user-edited name and portion, update only nutrition values
+              return {
+                ...currentFood,
+                calories: updatedFood.calories || currentFood.calories,
+                protein: updatedFood.protein || currentFood.protein,
+                carbs: updatedFood.carbs || currentFood.carbs,
+                fat: updatedFood.fat || currentFood.fat
+              };
+            }
+            return currentFood;
+          });
+        });
+      }
+      
+      // Clear the controller reference
+      setNutritionUpdateController(null);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('Nutrition request was cancelled');
+        return;
+      }
+      
+      console.error('Failed to update nutrition values:', error);
+      setNutritionUpdateController(null);
+      
+      // Show subtle error indication without disrupting user flow
+      if (error.message && (error.message.includes('401') || error.message.includes('403'))) {
+        console.warn('Authentication required for nutrition updates');
+      }
+    }
+  }, [nutritionUpdateController, nutritionRequestId]);
+
+  // Debounced function to trigger nutrition updates with request versioning
+  const scheduleNutritionUpdate = useCallback((foods: DetectedFood[]) => {
+    // Clear existing timer
+    if (nutritionUpdateTimer) {
+      clearTimeout(nutritionUpdateTimer);
+    }
+    
+    // Increment request ID for race condition protection
+    const newRequestId = nutritionRequestId + 1;
+    setNutritionRequestId(newRequestId);
+    
+    // Set new timer with 1 second delay
+    const timer = setTimeout(() => {
+      updateNutritionValues(foods, newRequestId);
+    }, 1000);
+    
+    setNutritionUpdateTimer(timer);
+  }, [nutritionUpdateTimer, updateNutritionValues, nutritionRequestId]);
 
   const updateFoodName = (index: number, newName: string) => {
     const updatedFoods = [...editableFoods];
@@ -198,6 +296,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       name: newName,
     };
     setEditableFoods(updatedFoods);
+    scheduleNutritionUpdate(updatedFoods);
   };
 
   const removeFoodItem = (index: number) => {
@@ -219,6 +318,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     const updatedFoods = [...editableFoods, newFood];
     setEditableFoods(updatedFoods);
     setEditingIndex(updatedFoods.length - 1); // Start editing the new item immediately
+    scheduleNutritionUpdate(updatedFoods);
   };
 
   const hasChanges = () => {
