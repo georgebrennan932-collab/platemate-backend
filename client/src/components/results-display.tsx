@@ -300,24 +300,59 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     console.log(`🔧 updateFoodName called: index=${index}, newName="${newName}"`);
     const updatedFoods = [...editableFoods];
     
-    // Quick nutrition lookup for common foods
+    // Expanded quick nutrition lookup for instant feedback
     const quickNutrition: { [key: string]: { calories: number; protein: number; carbs: number; fat: number } } = {
+      // Proteins
       'chicken breast': { calories: 231, protein: 43, carbs: 0, fat: 5 },
       'chicken': { calories: 231, protein: 43, carbs: 0, fat: 5 },
       'beef': { calories: 250, protein: 35, carbs: 0, fat: 15 },
       'salmon': { calories: 208, protein: 30, carbs: 0, fat: 12 },
+      'tuna': { calories: 184, protein: 40, carbs: 0, fat: 1 },
+      'pork': { calories: 242, protein: 27, carbs: 0, fat: 14 },
+      'turkey': { calories: 189, protein: 29, carbs: 0, fat: 7 },
+      'fish': { calories: 206, protein: 22, carbs: 0, fat: 12 },
+      'shrimp': { calories: 99, protein: 24, carbs: 0, fat: 0 },
+      'eggs': { calories: 155, protein: 13, carbs: 1, fat: 11 },
+      'tofu': { calories: 144, protein: 17, carbs: 3, fat: 9 },
+      
+      // Carbohydrates
       'rice': { calories: 130, protein: 3, carbs: 28, fat: 0 },
       'pasta': { calories: 220, protein: 8, carbs: 44, fat: 1 },
       'bread': { calories: 80, protein: 4, carbs: 15, fat: 1 },
+      'potato': { calories: 161, protein: 4, carbs: 37, fat: 0 },
+      'sweet potato': { calories: 112, protein: 2, carbs: 26, fat: 0 },
+      'quinoa': { calories: 222, protein: 8, carbs: 39, fat: 4 },
+      'oats': { calories: 389, protein: 17, carbs: 66, fat: 7 },
+      
+      // Fruits
       'apple': { calories: 95, protein: 0, carbs: 25, fat: 0 },
       'banana': { calories: 105, protein: 1, carbs: 27, fat: 0 },
+      'orange': { calories: 62, protein: 1, carbs: 15, fat: 0 },
+      'berries': { calories: 57, protein: 1, carbs: 14, fat: 0 },
+      'strawberries': { calories: 49, protein: 1, carbs: 12, fat: 0 },
+      
+      // Vegetables
+      'broccoli': { calories: 55, protein: 4, carbs: 11, fat: 0 },
+      'spinach': { calories: 23, protein: 3, carbs: 4, fat: 0 },
+      'carrots': { calories: 41, protein: 1, carbs: 10, fat: 0 },
+      'beans': { calories: 245, protein: 15, carbs: 45, fat: 1 },
+      'baked beans': { calories: 105, protein: 5, carbs: 22, fat: 1 },
+      
+      // Nuts and seeds
+      'almonds': { calories: 579, protein: 21, carbs: 22, fat: 50 },
+      'walnuts': { calories: 654, protein: 15, carbs: 14, fat: 65 },
+      
+      // Dairy
+      'milk': { calories: 42, protein: 3, carbs: 5, fat: 1 },
+      'cheese': { calories: 402, protein: 25, carbs: 1, fat: 33 },
+      'yogurt': { calories: 59, protein: 10, carbs: 4, fat: 0 }
     };
     
     const lowerName = newName.toLowerCase();
     const nutritionMatch = Object.keys(quickNutrition).find(key => lowerName.includes(key));
     
     if (nutritionMatch) {
-      // Update with known nutrition values immediately
+      // Update with known nutrition values immediately for instant feedback
       updatedFoods[index] = {
         ...updatedFoods[index],
         name: newName,
@@ -330,11 +365,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         ...updatedFoods[index],
         name: newName,
       };
+      console.log(`📡 No quick match for "${newName}", will use API for nutrition lookup`);
     }
     
     setEditableFoods(updatedFoods);
     
-    // Still try API update for more accurate values
+    // ALWAYS call API for the most accurate nutrition values
     scheduleNutritionUpdate(updatedFoods);
   };
 
@@ -430,23 +466,16 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     setEditableFoods(updatedFoods);
   };
 
-  // Calculate total nutrition from editable foods with smart corrections
+  // Calculate total nutrition from editable foods - clean calculation without hacks
   const calculateTotals = () => {
+    console.log('🧮 Calculating totals from foods:', editableFoods.map(f => `${f.name}: ${f.calories}cal`));
     return editableFoods.reduce(
-      (totals, food) => {
-        // Smart correction: if food name is "chicken breast" but calories are still 105 (baked beans), fix it
-        let correctedFood = food;
-        if (food.name.toLowerCase().includes('chicken') && food.calories === 105) {
-          correctedFood = { ...food, calories: 231, protein: 43, carbs: 0, fat: 5 };
-        }
-        
-        return {
-          calories: totals.calories + correctedFood.calories,
-          protein: totals.protein + correctedFood.protein,
-          carbs: totals.carbs + correctedFood.carbs,
-          fat: totals.fat + correctedFood.fat,
-        };
-      },
+      (totals, food) => ({
+        calories: totals.calories + (food.calories || 0),
+        protein: totals.protein + (food.protein || 0),
+        carbs: totals.carbs + (food.carbs || 0),
+        fat: totals.fat + (food.fat || 0),
+      }),
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
   };
@@ -760,20 +789,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                             console.log('🎯 Setting editingIndex to:', index);
                             setEditingIndex(index);
                             
-                            // DIRECT FIX: Update nutrition immediately for "baked beans" -> "chicken breast"
-                            if (index === 3 && food.name.toLowerCase().includes('baked beans')) {
-                              console.log('🥗 DIRECT FIX: Updating baked beans to chicken breast');
-                              const updatedFoods = [...editableFoods];
-                              updatedFoods[3] = {
-                                ...updatedFoods[3],
-                                name: 'Chicken breast',
-                                calories: 231,
-                                protein: 43,
-                                carbs: 0,
-                                fat: 5
-                              };
-                              setEditableFoods(updatedFoods);
-                            }
                           }}
                           className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
                           title="Click to edit food name"
