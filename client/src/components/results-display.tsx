@@ -207,6 +207,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   // Debounced nutrition calculation function with race condition protection
   const updateNutritionValues = useCallback(async (foodsToUpdate: DetectedFood[], requestId: number) => {
+    console.log('🧮 Starting nutrition calculation for:', foodsToUpdate.length, 'foods');
     try {
       // Cancel previous request if it exists
       if (nutritionUpdateController) {
@@ -217,6 +218,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       const controller = new AbortController();
       setNutritionUpdateController(controller);
       
+      console.log('🚀 Sending nutrition calculation request to /api/calculate-nutrition');
       const response = await fetch('/api/calculate-nutrition', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -230,9 +232,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       }
       
       const data = await response.json();
+      console.log('✅ Nutrition calculation response received:', data);
       
       // Only update if this is still the latest request
       if (requestId === nutritionRequestId && data.foods) {
+        console.log('🔄 Updating nutrition values with new data');
         // Merge nutrition data while preserving current user edits
         setEditableFoods(currentFoods => {
           return currentFoods.map((currentFood, index) => {
@@ -260,7 +264,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         return;
       }
       
-      console.error('Failed to update nutrition values:', error);
+      console.error('❌ Failed to update nutrition values:', error);
       setNutritionUpdateController(null);
       
       // Show subtle error indication without disrupting user flow
@@ -272,6 +276,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   // Debounced function to trigger nutrition updates with request versioning
   const scheduleNutritionUpdate = useCallback((foods: DetectedFood[]) => {
+    console.log('🔄 Scheduling nutrition update for foods:', foods.map(f => f.name));
+    
     // Clear existing timer
     if (nutritionUpdateTimer) {
       clearTimeout(nutritionUpdateTimer);
@@ -283,6 +289,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     
     // Set new timer with 1 second delay
     const timer = setTimeout(() => {
+      console.log('⏰ Timer triggered, calling updateNutritionValues...');
       updateNutritionValues(foods, newRequestId);
     }, 1000);
     
@@ -591,6 +598,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           </AlertDescription>
         </Alert>
       )}
+      
+      {/* Editing Instructions */}
+      <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+        <Info className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-700 dark:text-blue-300">
+          <strong>💡 Tip:</strong> Click the pencil icon <Edit3 className="h-3 w-3 inline mx-1" /> next to food names or portions to edit them. Nutrition values will update automatically!
+        </AlertDescription>
+      </Alert>
       {/* Photo thumbnail and actions */}
       <div className="modern-card glass-card p-6">
         <div className="flex items-center space-x-4">
