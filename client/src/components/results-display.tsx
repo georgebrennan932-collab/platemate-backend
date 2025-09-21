@@ -231,16 +231,16 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         throw new Error(`${response.status}: ${response.statusText}`);
       }
       
-      const data = await response.json();
-      console.log('✅ Nutrition calculation response received:', data);
+      const nutritionData = await response.json();
+      console.log('✅ Nutrition calculation response received:', nutritionData);
       
       // Only update if this is still the latest request
-      if (requestId === nutritionRequestId && data.foods) {
+      if (requestId === nutritionRequestId && nutritionData.foods) {
         console.log('🔄 Updating nutrition values with new data');
         // Merge nutrition data while preserving current user edits
         setEditableFoods(currentFoods => {
           return currentFoods.map((currentFood, index) => {
-            const updatedFood = data.foods[index];
+            const updatedFood = nutritionData.foods[index];
             if (updatedFood) {
               // Preserve user-edited name and portion, update only nutrition values
               return {
@@ -272,7 +272,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         console.warn('Authentication required for nutrition updates');
       }
     }
-  }, [nutritionUpdateController, nutritionRequestId]);
+  }, []);
 
   // Debounced function to trigger nutrition updates with request versioning
   const scheduleNutritionUpdate = useCallback((foods: DetectedFood[]) => {
@@ -294,7 +294,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     }, 1000);
     
     setNutritionUpdateTimer(timer);
-  }, [nutritionUpdateTimer, updateNutritionValues, nutritionRequestId]);
+  }, [updateNutritionValues]);
 
   const updateFoodName = (index: number, newName: string) => {
     console.log(`🔧 updateFoodName called: index=${index}, newName="${newName}"`);
