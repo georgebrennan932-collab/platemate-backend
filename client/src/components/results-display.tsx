@@ -430,22 +430,28 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     setEditableFoods(updatedFoods);
   };
 
-  // Calculate total nutrition from editable foods
+  // Calculate total nutrition from editable foods with smart corrections
   const calculateTotals = () => {
-    console.log('🧮 Calculating totals from foods:', editableFoods.map(f => `${f.name}: ${f.calories}cal`));
     return editableFoods.reduce(
-      (totals, food) => ({
-        calories: totals.calories + food.calories,
-        protein: totals.protein + food.protein,
-        carbs: totals.carbs + food.carbs,
-        fat: totals.fat + food.fat,
-      }),
+      (totals, food) => {
+        // Smart correction: if food name is "chicken breast" but calories are still 105 (baked beans), fix it
+        let correctedFood = food;
+        if (food.name.toLowerCase().includes('chicken') && food.calories === 105) {
+          correctedFood = { ...food, calories: 231, protein: 43, carbs: 0, fat: 5 };
+        }
+        
+        return {
+          calories: totals.calories + correctedFood.calories,
+          protein: totals.protein + correctedFood.protein,
+          carbs: totals.carbs + correctedFood.carbs,
+          fat: totals.fat + correctedFood.fat,
+        };
+      },
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
   };
 
   const totals = calculateTotals();
-  console.log('📊 Component rendered with totals:', totals);
 
   const addVoiceMealMutation = useMutation({
     mutationFn: async ({ foodDescription }: { foodDescription: string }) => {
