@@ -297,7 +297,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   }, [updateNutritionValues]);
 
   const updateFoodName = (index: number, newName: string) => {
-    console.log(`🔧 updateFoodName called: index=${index}, newName="${newName}"`);
+    console.log(`🔧 [FORCE RELOAD] updateFoodName called: index=${index}, newName="${newName}"`);
     const updatedFoods = [...editableFoods];
     
     // Expanded quick nutrition lookup for instant feedback
@@ -468,7 +468,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   // Calculate total nutrition from editable foods - clean calculation without hacks
   const calculateTotals = () => {
-    console.log('🧮 Calculating totals from foods:', editableFoods.map(f => `${f.name}: ${f.calories}cal`));
+    console.log('🧮 [FORCE RELOAD] Calculating totals from foods:', editableFoods.map(f => `${f.name}: ${f.calories}cal`));
     return editableFoods.reduce(
       (totals, food) => ({
         calories: totals.calories + (food.calories || 0),
@@ -785,8 +785,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         </p>
                         <button
                           onClick={() => {
-                            console.log(`🎯 Edit button clicked for index ${index}, current editingIndex: ${editingIndex}`);
-                            console.log('🎯 Setting editingIndex to:', index);
+                            console.log(`🎯 [CRITICAL DEBUG] Edit button clicked for index ${index}, current editingIndex: ${editingIndex}`);
+                            console.log('🎯 [CRITICAL DEBUG] Setting editingIndex to:', index);
                             setEditingIndex(index);
                             
                           }}
