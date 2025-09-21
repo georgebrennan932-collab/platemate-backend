@@ -299,15 +299,43 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const updateFoodName = (index: number, newName: string) => {
     console.log(`🔧 updateFoodName called: index=${index}, newName="${newName}"`);
     const updatedFoods = [...editableFoods];
-    updatedFoods[index] = {
-      ...updatedFoods[index],
-      name: newName,
-    };
-    setEditableFoods(updatedFoods);
-    console.log('📞 About to call scheduleNutritionUpdate...');
     
-    // Immediately update nutrition for real-time feedback
-    updateNutritionValues(updatedFoods, Date.now());
+    // Quick nutrition lookup for common foods
+    const quickNutrition: { [key: string]: { calories: number; protein: number; carbs: number; fat: number } } = {
+      'chicken breast': { calories: 231, protein: 43, carbs: 0, fat: 5 },
+      'chicken': { calories: 231, protein: 43, carbs: 0, fat: 5 },
+      'beef': { calories: 250, protein: 35, carbs: 0, fat: 15 },
+      'salmon': { calories: 208, protein: 30, carbs: 0, fat: 12 },
+      'rice': { calories: 130, protein: 3, carbs: 28, fat: 0 },
+      'pasta': { calories: 220, protein: 8, carbs: 44, fat: 1 },
+      'bread': { calories: 80, protein: 4, carbs: 15, fat: 1 },
+      'apple': { calories: 95, protein: 0, carbs: 25, fat: 0 },
+      'banana': { calories: 105, protein: 1, carbs: 27, fat: 0 },
+    };
+    
+    const lowerName = newName.toLowerCase();
+    const nutritionMatch = Object.keys(quickNutrition).find(key => lowerName.includes(key));
+    
+    if (nutritionMatch) {
+      // Update with known nutrition values immediately
+      updatedFoods[index] = {
+        ...updatedFoods[index],
+        name: newName,
+        ...quickNutrition[nutritionMatch]
+      };
+      console.log(`🥗 Quick nutrition update: ${newName} -> ${quickNutrition[nutritionMatch].calories} calories`);
+    } else {
+      // Just update name, nutrition will be calculated by API
+      updatedFoods[index] = {
+        ...updatedFoods[index],
+        name: newName,
+      };
+    }
+    
+    setEditableFoods(updatedFoods);
+    
+    // Still try API update for more accurate values
+    scheduleNutritionUpdate(updatedFoods);
   };
 
   const removeFoodItem = (index: number) => {
@@ -909,25 +937,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           </div>
         </div>
         
-        {/* TEST: Direct nutrition update button */}
-        <div className="mt-4">
-          <button
-            onClick={() => {
-              console.log('🧪 TEST: Manual nutrition update triggered');
-              const testFoods = [...editableFoods];
-              if (testFoods.length > 3) {
-                testFoods[3] = { ...testFoods[3], name: 'chicken breast' };
-                console.log('🧪 TEST: Changed baked beans to chicken breast');
-                setEditableFoods(testFoods);
-                updateNutritionValues(testFoods, Date.now());
-              }
-            }}
-            className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg font-semibold"
-            data-testid="button-test-nutrition"
-          >
-            🧪 TEST: Change Baked Beans → Chicken Breast
-          </button>
-        </div>
 
         {/* Save Changes Button */}
         {hasChanges() && (
