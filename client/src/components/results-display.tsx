@@ -757,7 +757,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         data-testid={`input-food-name-${index}`}
                       />
                     ) : (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1.5">
                         <p className="font-medium" data-testid={`text-food-name-${index}`}>
                           {food.name}
                         </p>
@@ -767,12 +767,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                             e.stopPropagation();
                             setEditingIndex(index);
                           }}
-                          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors font-medium"
+                          className="inline-flex items-center justify-center rounded-md h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                           title="Edit food name"
                           data-testid={`button-edit-name-${index}`}
                         >
-                          <Edit3 className="h-3 w-3 inline mr-1" />
-                          Edit
+                          <Edit3 className="h-3 w-3" />
                         </button>
                       </div>
                     )}
