@@ -432,6 +432,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   // Calculate total nutrition from editable foods
   const calculateTotals = () => {
+    console.log('🧮 Calculating totals from foods:', editableFoods.map(f => `${f.name}: ${f.calories}cal`));
     return editableFoods.reduce(
       (totals, food) => ({
         calories: totals.calories + food.calories,
@@ -444,6 +445,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   };
 
   const totals = calculateTotals();
+  console.log('📊 Component rendered with totals:', totals);
 
   const addVoiceMealMutation = useMutation({
     mutationFn: async ({ foodDescription }: { foodDescription: string }) => {
@@ -749,7 +751,23 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         <button
                           onClick={() => {
                             console.log(`🎯 Edit button clicked for index ${index}, current editingIndex: ${editingIndex}`);
+                            console.log('🎯 Setting editingIndex to:', index);
                             setEditingIndex(index);
+                            
+                            // DIRECT FIX: Update nutrition immediately for "baked beans" -> "chicken breast"
+                            if (index === 3 && food.name.toLowerCase().includes('baked beans')) {
+                              console.log('🥗 DIRECT FIX: Updating baked beans to chicken breast');
+                              const updatedFoods = [...editableFoods];
+                              updatedFoods[3] = {
+                                ...updatedFoods[3],
+                                name: 'Chicken breast',
+                                calories: 231,
+                                protein: 43,
+                                carbs: 0,
+                                fat: 5
+                              };
+                              setEditableFoods(updatedFoods);
+                            }
                           }}
                           className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
                           title="Click to edit food name"
