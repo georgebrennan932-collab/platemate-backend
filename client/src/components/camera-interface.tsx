@@ -92,13 +92,27 @@ export function CameraInterface({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    const inputType = event.target.getAttribute('capture') ? 'camera' : 'gallery';
+    
+    console.log("📁 File selected:", {
+      hasFile: !!file,
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
+      inputType: inputType
+    });
+    
     if (file) {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       
+      console.log(`✅ ${inputType} file processed successfully`);
+      
       // Don't auto-analyze - user needs to press capture button
       // This makes gallery selection work like camera capture
+    } else {
+      console.warn(`⚠️ No file was selected from ${inputType}`);
     }
   };
 
@@ -159,7 +173,38 @@ export function CameraInterface({
     } else {
       // For web browsers, use camera input
       console.log("🌐 Using web camera input...");
-      cameraInputRef.current?.click();
+      
+      // Check if the camera input element exists
+      if (!cameraInputRef.current) {
+        console.error("❌ Camera input ref is null");
+        toast({
+          title: "Camera Error",
+          description: "Camera input not available. Please refresh the page.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log("📱 Camera input element found, triggering click...");
+      
+      try {
+        // Add click event listener to detect if camera dialog opens
+        const handleCameraDialogOpen = () => {
+          console.log("📸 Camera dialog opened successfully");
+        };
+        
+        cameraInputRef.current.addEventListener('click', handleCameraDialogOpen, { once: true });
+        cameraInputRef.current?.click();
+        
+        console.log("✅ Camera input click triggered");
+      } catch (error) {
+        console.error("❌ Error triggering camera input:", error);
+        toast({
+          title: "Camera Error", 
+          description: "Failed to open camera. Your browser may not support camera access.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
