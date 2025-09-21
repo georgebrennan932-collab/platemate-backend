@@ -701,6 +701,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                           console.log(`🍎 Food name onInput fired: ${(e.target as HTMLInputElement).value}`);
                           updateFoodName(index, (e.target as HTMLInputElement).value);
                         }}
+                        onFocus={() => {
+                          console.log(`🎯 Food name input focused for index ${index}`);
+                        }}
+                        onKeyDown={(e) => {
+                          console.log(`⌨️ KeyDown in food name input: ${e.key}`);
+                        }}
                         className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background font-medium"
                         placeholder="e.g., Jacket Potato with Ham and Cheese"
                         data-testid={`input-food-name-${index}`}
@@ -711,7 +717,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                           {food.name}
                         </p>
                         <button
-                          onClick={() => setEditingIndex(index)}
+                          onClick={() => {
+                            console.log(`🎯 Edit button clicked for index ${index}, current editingIndex: ${editingIndex}`);
+                            setEditingIndex(index);
+                          }}
                           className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
                           title="Click to edit food name"
                           data-testid={`button-edit-name-${index}`}
