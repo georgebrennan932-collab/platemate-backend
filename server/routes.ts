@@ -69,45 +69,64 @@ const analysisQueue = new RequestQueue();
 
 // Utility function to parse portion strings to grams
 function parsePortionToGrams(portion: string): number {
-  const portionLower = portion.toLowerCase();
+  const portionLower = portion.toLowerCase().trim();
   
-  // Extract numbers from the portion string
-  const numberMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
-  const amount = numberMatch ? parseFloat(numberMatch[1]) : 100;
+  // Extract numbers including fractions from the portion string
+  const fractionMatch = portionLower.match(/(\d+)\s*\/\s*(\d+)/);
+  const decimalMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
   
-  // Handle different units
-  if (portionLower.includes('kg') || portionLower.includes('kilogram')) {
+  let amount = 100; // default
+  
+  if (fractionMatch) {
+    // Handle fractions like "1/2 cup", "2 1/2 tbsp"
+    const numerator = parseFloat(fractionMatch[1]);
+    const denominator = parseFloat(fractionMatch[2]);
+    const wholeNumberMatch = portionLower.match(/(\d+)\s+\d+\s*\/\s*\d+/);
+    const wholeNumber = wholeNumberMatch ? parseFloat(wholeNumberMatch[1]) : 0;
+    amount = wholeNumber + (numerator / denominator);
+  } else if (decimalMatch) {
+    amount = parseFloat(decimalMatch[1]);
+  }
+  
+  // Handle different units using word boundaries to avoid false matches
+  if (/\b(kg|kilograms?)\b/.test(portionLower)) {
     return amount * 1000;
   }
-  if (portionLower.includes('g') && !portionLower.includes('kg')) {
+  if (/\b(g|grams?)\b/.test(portionLower)) {
     return amount;
   }
-  if (portionLower.includes('oz') || portionLower.includes('ounce')) {
+  if (/\b(oz|ounces?)\b/.test(portionLower)) {
     return amount * 28.35; // 1 oz = 28.35g
   }
-  if (portionLower.includes('lb') || portionLower.includes('pound')) {
+  if (/\b(lb|lbs|pounds?)\b/.test(portionLower)) {
     return amount * 453.592; // 1 lb = 453.592g
   }
-  if (portionLower.includes('cup')) {
+  if (/\b(cups?)\b/.test(portionLower)) {
     return amount * 240; // 1 cup ≈ 240g (varies by food)
   }
-  if (portionLower.includes('tbsp') || portionLower.includes('tablespoon')) {
+  if (/\b(tbsp|tablespoons?)\b/.test(portionLower)) {
     return amount * 15; // 1 tbsp ≈ 15g
   }
-  if (portionLower.includes('tsp') || portionLower.includes('teaspoon')) {
+  if (/\b(tsp|teaspoons?)\b/.test(portionLower)) {
     return amount * 5; // 1 tsp ≈ 5g
   }
-  if (portionLower.includes('slice')) {
+  if (/\b(ml|milliliters?)\b/.test(portionLower)) {
+    return amount; // 1 ml ≈ 1g for most liquids
+  }
+  if (/\b(l|liters?)\b/.test(portionLower)) {
+    return amount * 1000; // 1 L = 1000g for most liquids
+  }
+  if (/\b(slices?)\b/.test(portionLower)) {
     return amount * 30; // 1 slice ≈ 30g (bread)
   }
-  if (portionLower.includes('piece') || portionLower.includes('item')) {
+  if (/\b(pieces?|items?)\b/.test(portionLower)) {
     return amount * 50; // 1 piece ≈ 50g average
   }
-  if (portionLower.includes('serving')) {
+  if (/\b(servings?)\b/.test(portionLower)) {
     return amount * 100; // 1 serving ≈ 100g
   }
   
-  // Default: assume it's already in grams or treat as 100g per serving
+  // Default: assume it's already in grams or treat as specified amount
   return amount > 0 ? amount : 100;
 }
 
