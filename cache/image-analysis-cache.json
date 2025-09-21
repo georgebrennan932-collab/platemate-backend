@@ -87,63 +87,72 @@
       {
         "imageHash": "a3dd331800c51652b5f22b52de28ae26e53a8821cde4228d9d13e8aaa58f7c52",
         "analysis": {
-          "imageUrl": "/tmp/uploads/processed_c88068c5b926c6b9c0bbde0400633fd8.jpg",
-          "confidence": 85,
-          "totalCalories": 413,
-          "totalProtein": 32,
-          "totalCarbs": 59,
-          "totalFat": 6,
+          "imageUrl": "/tmp/uploads/processed_0738fc5045fa71b1259f34e638a28dfa.jpg",
+          "confidence": 95,
+          "totalCalories": 587,
+          "totalProtein": 37,
+          "totalCarbs": 79,
+          "totalFat": 19,
           "detectedFoods": [
             {
-              "name": "Spinach, raw",
-              "portion": "100g",
-              "calories": 23,
-              "protein": 3,
-              "carbs": 4,
-              "fat": 0,
-              "icon": "leaf"
+              "name": "Grape leaves, raw",
+              "portion": "120g",
+              "calories": 112,
+              "protein": 7,
+              "carbs": 21,
+              "fat": 3,
+              "icon": "apple-alt"
             },
             {
-              "name": "Cherries, raw",
-              "portion": "150g",
-              "calories": 107,
+              "name": "Figs, raw",
+              "portion": "220g (approx. 4-5 medium figs)",
+              "calories": 163,
               "protein": 2,
-              "carbs": 24,
-              "fat": 0,
+              "carbs": 42,
+              "fat": 1,
               "icon": "apple-alt"
             },
             {
               "name": "Ham, prosciutto",
-              "portion": "50g",
-              "calories": 98,
-              "protein": 14,
+              "portion": "60g",
+              "calories": 117,
+              "protein": 17,
               "carbs": 0,
-              "fat": 4,
+              "fat": 5,
               "icon": "bacon"
             },
             {
-              "name": "Parmesan cheese topping, fat free",
-              "portion": "30g",
-              "calories": 111,
-              "protein": 12,
-              "carbs": 12,
-              "fat": 2,
-              "icon": "cheese"
+              "name": "Cheese, parmesan, grated",
+              "portion": "35g",
+              "calories": 147,
+              "protein": 10,
+              "carbs": 5,
+              "fat": 10,
+              "icon": "bread-slice"
             },
             {
-              "name": "Figs, raw",
-              "portion": "100g",
-              "calories": 74,
+              "name": "Cherries, raw",
+              "portion": "50g (approx. 2-3 whole tomatoes)",
+              "calories": 36,
               "protein": 1,
-              "carbs": 19,
+              "carbs": 8,
+              "fat": 0,
+              "icon": "apple-alt"
+            },
+            {
+              "name": "Onions, raw",
+              "portion": "30g",
+              "calories": 12,
+              "protein": 0,
+              "carbs": 3,
               "fat": 0,
               "icon": "apple-alt"
             }
           ]
         },
-        "timestamp": 1758442487852,
+        "timestamp": 1758442509945,
         "accessCount": 1,
-        "lastAccessed": 1758442487852
+        "lastAccessed": 1758442509945
       }
     ]
   ],
@@ -156,7 +165,7 @@
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1758374641562,
-    "newestEntry": 1758442487852
+    "newestEntry": 1758442509945
   },
-  "timestamp": 1758442487852
+  "timestamp": 1758442509945
 }
