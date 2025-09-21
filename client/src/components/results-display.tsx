@@ -676,7 +676,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                       <input
                         type="text"
                         value={food.name}
-                        onChange={(e) => updateFoodName(index, e.target.value)}
+                        onChange={(e) => {
+                          console.log(`🍎 Food name changed: ${e.target.value}`);
+                          updateFoodName(index, e.target.value);
+                        }}
                         className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background font-medium"
                         placeholder="e.g., Jacket Potato with Ham and Cheese"
                         data-testid={`input-food-name-${index}`}
@@ -701,7 +704,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         <input
                           type="text"
                           value={food.portion}
-                          onChange={(e) => updateFoodPortion(index, e.target.value)}
+                          onChange={(e) => {
+                            console.log(`⚖️ Portion changed: ${e.target.value}`);
+                            updateFoodPortion(index, e.target.value);
+                          }}
                           className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                           placeholder="e.g., 200g, 1 cup"
                           data-testid={`input-food-portion-${index}`}

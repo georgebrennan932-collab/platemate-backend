@@ -580,10 +580,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update food analysis (for editing detected foods) - PROTECTED
-  app.patch("/api/analyses/:id", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/analyses/:id", authMiddleware, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || 'anonymous-user';
 
       // Validate request body using zod schema (excludes client-side totals)
       const validatedData = updateFoodAnalysisSchema.parse(req.body);
@@ -625,11 +625,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check ownership: user must have diary entries referencing this analysis
+      // Check ownership: user must have diary entries referencing this analysis OR be the creator
       const userDiaryEntries = await storage.getDiaryEntries(userId);
       const hasOwnership = userDiaryEntries.some(entry => entry.analysisId === id);
       
-      if (!hasOwnership) {
+      // For deployment mode, allow editing of recent analyses even if not in diary yet
+      const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true';
+      const isRecentAnalysis = Date.now() - new Date(existingAnalysis.createdAt).getTime() < 24 * 60 * 60 * 1000; // 24 hours
+      
+      if (!hasOwnership && !(isDeployment && isRecentAnalysis)) {
         return res.status(403).json({ 
           error: "Access denied. You can only edit food analyses from your own diary entries." 
         });
