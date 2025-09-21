@@ -694,8 +694,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         type="text"
                         value={food.name}
                         onChange={(e) => {
-                          console.log(`🍎 Food name changed: ${e.target.value}`);
+                          console.log(`🍎 Food name onChange fired: ${e.target.value}`);
                           updateFoodName(index, e.target.value);
+                        }}
+                        onInput={(e) => {
+                          console.log(`🍎 Food name onInput fired: ${(e.target as HTMLInputElement).value}`);
+                          updateFoodName(index, (e.target as HTMLInputElement).value);
                         }}
                         className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background font-medium"
                         placeholder="e.g., Jacket Potato with Ham and Cheese"
