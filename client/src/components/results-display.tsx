@@ -706,11 +706,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         </p>
                         <button
                           onClick={() => setEditingIndex(index)}
-                          className="p-1 text-blue-600 hover:bg-blue-100 rounded opacity-70 hover:opacity-100 transition-opacity"
-                          title="Edit food name"
+                          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                          title="Click to edit food name"
                           data-testid={`button-edit-name-${index}`}
                         >
-                          <Edit3 className="h-3 w-3" />
+                          <Edit3 className="h-3 w-3 inline mr-1" />
+                          Edit
                         </button>
                       </div>
                     )}
@@ -761,11 +762,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         </p>
                         <button
                           onClick={() => setEditingIndex(index)}
-                          className="p-1 text-blue-600 hover:bg-blue-100 rounded opacity-70 hover:opacity-100 transition-opacity"
-                          title="Edit portion"
+                          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                          title="Click to edit portion size"
                           data-testid={`button-edit-portion-${index}`}
                         >
-                          <Edit3 className="h-3 w-3" />
+                          <Edit3 className="h-3 w-3 inline mr-1" />
+                          Edit
                         </button>
                         <button
                           onClick={() => removeFoodItem(index)}
