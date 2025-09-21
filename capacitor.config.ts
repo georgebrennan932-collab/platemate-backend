@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.platemate.app',
   appName: 'PlateMate',
-  webDir: 'dist/public',
+  webDir: 'server/public',
   server: {
     androidScheme: 'https'
   },
