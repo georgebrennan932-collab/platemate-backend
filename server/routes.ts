@@ -1036,7 +1036,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === NUTRITION CALCULATION API ENDPOINTS ===
   
-  app.post("/api/calculate-nutrition", isAuthenticated, async (req: any, res) => {
+  app.post("/api/calculate-nutrition", authMiddleware, async (req: any, res) => {
     try {
       const { foods } = req.body;
       
