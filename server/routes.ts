@@ -67,6 +67,50 @@ class RequestQueue {
 
 const analysisQueue = new RequestQueue();
 
+// Utility function to parse portion strings to grams
+function parsePortionToGrams(portion: string): number {
+  const portionLower = portion.toLowerCase();
+  
+  // Extract numbers from the portion string
+  const numberMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
+  const amount = numberMatch ? parseFloat(numberMatch[1]) : 100;
+  
+  // Handle different units
+  if (portionLower.includes('kg') || portionLower.includes('kilogram')) {
+    return amount * 1000;
+  }
+  if (portionLower.includes('g') && !portionLower.includes('kg')) {
+    return amount;
+  }
+  if (portionLower.includes('oz') || portionLower.includes('ounce')) {
+    return amount * 28.35; // 1 oz = 28.35g
+  }
+  if (portionLower.includes('lb') || portionLower.includes('pound')) {
+    return amount * 453.592; // 1 lb = 453.592g
+  }
+  if (portionLower.includes('cup')) {
+    return amount * 240; // 1 cup ≈ 240g (varies by food)
+  }
+  if (portionLower.includes('tbsp') || portionLower.includes('tablespoon')) {
+    return amount * 15; // 1 tbsp ≈ 15g
+  }
+  if (portionLower.includes('tsp') || portionLower.includes('teaspoon')) {
+    return amount * 5; // 1 tsp ≈ 5g
+  }
+  if (portionLower.includes('slice')) {
+    return amount * 30; // 1 slice ≈ 30g (bread)
+  }
+  if (portionLower.includes('piece') || portionLower.includes('item')) {
+    return amount * 50; // 1 piece ≈ 50g average
+  }
+  if (portionLower.includes('serving')) {
+    return amount * 100; // 1 serving ≈ 100g
+  }
+  
+  // Default: assume it's already in grams or treat as 100g per serving
+  return amount > 0 ? amount : 100;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Ensure upload directory exists
   try {
@@ -968,6 +1012,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete diary entry error:", error);
       res.status(500).json({ error: "Failed to delete diary entry" });
+    }
+  });
+
+  // === NUTRITION CALCULATION API ENDPOINTS ===
+  
+  app.post("/api/calculate-nutrition", isAuthenticated, async (req: any, res) => {
+    try {
+      const { foods } = req.body;
+      
+      if (!foods || !Array.isArray(foods)) {
+        return res.status(400).json({ error: "Foods array is required" });
+      }
+
+      const calculatedFoods = [];
+
+      for (const food of foods) {
+        try {
+          // Find best match in USDA database
+          const match = await usdaService.findBestMatch(food.name);
+          
+          if (match) {
+            // Parse portion to extract grams for accurate calculation
+            const portionGrams = parsePortionToGrams(food.portion);
+            
+            // Extract nutrition data scaled to the portion
+            const nutritionData = usdaService.extractNutritionData(match.usdaFood, portionGrams);
+            
+            calculatedFoods.push({
+              ...food,
+              calories: nutritionData.calories,
+              protein: nutritionData.protein,
+              carbs: nutritionData.carbs,
+              fat: nutritionData.fat
+            });
+          } else {
+            // Fallback to original values if no match found
+            console.warn(`No USDA match found for: ${food.name}`);
+            calculatedFoods.push(food);
+          }
+        } catch (error) {
+          console.error(`Error calculating nutrition for ${food.name}:`, error);
+          // Keep original food data if calculation fails
+          calculatedFoods.push(food);
+        }
+      }
+
+      res.json({ foods: calculatedFoods });
+    } catch (error) {
+      console.error("Nutrition calculation error:", error);
+      res.status(500).json({ error: "Failed to calculate nutrition" });
     }
   });
 
