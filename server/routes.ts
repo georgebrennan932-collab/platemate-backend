@@ -763,9 +763,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Confirm or reject food analysis (user decision)
-  app.patch("/api/food-confirmations/:id", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/food-confirmations/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const { id } = req.params;
       
       // Verify ownership first

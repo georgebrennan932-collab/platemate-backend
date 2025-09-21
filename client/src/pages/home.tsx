@@ -199,15 +199,18 @@ export default function Home() {
     if (!confirmationData) return;
     
     try {
-      // Call the API to confirm the analysis with edited foods
-      const response = await apiRequest('POST', `/api/food-confirmations/${confirmationData.confirmationId}/confirm`, {
-        editedFoods: editableFoods // Include the edited foods in the confirmation
+      // Call the API to confirm the analysis with edited foods using correct endpoint
+      const response = await apiRequest('PATCH', `/api/food-confirmations/${confirmationData.confirmationId}`, {
+        status: 'confirmed',
+        finalFoods: editableFoods.length > 0 ? editableFoods : confirmationData.suggestedFoods,
+        userFeedback: null
       });
-      const confirmedAnalysis = await response.json();
+      const result = await response.json();
       
-      // Show the confirmed analysis as results
+      // Show the confirmed analysis as results - use finalAnalysis if available
+      const analysisToShow = result.finalAnalysis || result.confirmation;
       soundService.playSuccess();
-      setAnalysisData(confirmedAnalysis);
+      setAnalysisData(analysisToShow);
       setConfirmationData(null);
       setEditableFoods([]); // Clear edited foods
       setEditingIndex(null); // Clear editing state
