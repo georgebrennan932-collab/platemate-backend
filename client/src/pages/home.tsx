@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +29,7 @@ export default function Home() {
   const [confirmationData, setConfirmationData] = useState<any>(null);
   const [editableFoods, setEditableFoods] = useState<any[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [nutritionUpdateTimer, setNutritionUpdateTimer] = useState<NodeJS.Timeout | null>(null);
   
   // Navigation state
   const [showProfile, setShowProfile] = useState(false);
@@ -220,11 +221,49 @@ export default function Home() {
     setEditingIndex(null); // Clear editing state
     setCurrentState('camera');
     
+    // Clear any pending nutrition updates
+    if (nutritionUpdateTimer) {
+      clearTimeout(nutritionUpdateTimer);
+      setNutritionUpdateTimer(null);
+    }
+    
     toast({
       title: "Analysis Rejected",
       description: "You can take a new photo or try again with better lighting.",
     });
   };
+
+  // Debounced nutrition calculation function
+  const updateNutritionValues = useCallback(async (foodsToUpdate: any[]) => {
+    try {
+      const response = await apiRequest('POST', '/api/calculate-nutrition', {
+        foods: foodsToUpdate
+      });
+      const data = await response.json();
+      
+      if (data.foods) {
+        setEditableFoods(data.foods);
+      }
+    } catch (error) {
+      console.error('Failed to update nutrition values:', error);
+      // Don't show error to user as this is a background operation
+    }
+  }, []);
+
+  // Debounced function to trigger nutrition updates
+  const scheduleNutritionUpdate = useCallback((foods: any[]) => {
+    // Clear existing timer
+    if (nutritionUpdateTimer) {
+      clearTimeout(nutritionUpdateTimer);
+    }
+    
+    // Set new timer with 1 second delay
+    const timer = setTimeout(() => {
+      updateNutritionValues(foods);
+    }, 1000);
+    
+    setNutritionUpdateTimer(timer);
+  }, [nutritionUpdateTimer, updateNutritionValues]);
 
   const handleVoiceInput = async () => {
     if (!speechSupported) {
@@ -560,6 +599,7 @@ export default function Home() {
                                 const updated = [...editableFoods];
                                 updated[index] = { ...updated[index], name: e.target.value };
                                 setEditableFoods(updated);
+                                scheduleNutritionUpdate(updated);
                               }}
                               className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background font-medium"
                               placeholder="e.g., Jacket Potato with Ham and Cheese"
@@ -586,6 +626,7 @@ export default function Home() {
                                   const updated = [...editableFoods];
                                   updated[index] = { ...updated[index], portion: e.target.value };
                                   setEditableFoods(updated);
+                                  scheduleNutritionUpdate(updated);
                                 }}
                                 className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                                 placeholder="e.g., 200g, 1 cup"
@@ -649,8 +690,10 @@ export default function Home() {
                     fat: 0,
                     icon: "utensils"
                   };
-                  setEditableFoods([...editableFoods, newFood]);
+                  const updated = [...editableFoods, newFood];
+                  setEditableFoods(updated);
                   setEditingIndex(editableFoods.length);
+                  scheduleNutritionUpdate(updated);
                 }}
                 className="w-full mt-3 py-3 px-4 border-2 border-dashed border-primary/30 text-primary hover:border-primary/50 hover:bg-primary/5 rounded-xl font-medium transition-all flex items-center justify-center space-x-2"
                 data-testid="button-add-missing-food"
