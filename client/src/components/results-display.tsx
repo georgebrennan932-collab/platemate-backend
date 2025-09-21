@@ -207,7 +207,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   // Debounced nutrition calculation function with race condition protection
   const updateNutritionValues = useCallback(async (foodsToUpdate: DetectedFood[], requestId: number) => {
-    console.log('🧮 Starting nutrition calculation for:', foodsToUpdate.length, 'foods');
     try {
       // Cancel previous request if it exists
       if (nutritionUpdateController) {
@@ -218,7 +217,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       const controller = new AbortController();
       setNutritionUpdateController(controller);
       
-      console.log('🚀 Sending nutrition calculation request to /api/calculate-nutrition');
       const response = await fetch('/api/calculate-nutrition', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -232,11 +230,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       }
       
       const nutritionData = await response.json();
-      console.log('✅ Nutrition calculation response received:', nutritionData);
       
       // Only update if this is still the latest request
       if (requestId === nutritionRequestId && nutritionData.foods) {
-        console.log('🔄 Updating nutrition values with new data');
         // Merge nutrition data while preserving current user edits
         setEditableFoods(currentFoods => {
           return currentFoods.map((currentFood, index) => {
@@ -260,23 +256,15 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       setNutritionUpdateController(null);
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('Nutrition request was cancelled');
         return;
       }
-      
-      console.error('❌ Failed to update nutrition values:', error);
       setNutritionUpdateController(null);
       
-      // Show subtle error indication without disrupting user flow
-      if (error.message && (error.message.includes('401') || error.message.includes('403'))) {
-        console.warn('Authentication required for nutrition updates');
-      }
     }
   }, []);
 
   // Debounced function to trigger nutrition updates with request versioning
   const scheduleNutritionUpdate = useCallback((foods: DetectedFood[]) => {
-    console.log('🔄 Scheduling nutrition update for foods:', foods.map(f => f.name));
     
     // Clear existing timer
     if (nutritionUpdateTimer) {
@@ -289,7 +277,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     
     // Set new timer with 1 second delay
     const timer = setTimeout(() => {
-      console.log('⏰ Timer triggered, calling updateNutritionValues...');
       updateNutritionValues(foods, newRequestId);
     }, 1000);
     
@@ -297,7 +284,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   }, [updateNutritionValues]);
 
   const updateFoodName = (index: number, newName: string) => {
-    console.log(`🔧 [FORCE RELOAD] updateFoodName called: index=${index}, newName="${newName}"`);
     const updatedFoods = [...editableFoods];
     
     // Expanded quick nutrition lookup for instant feedback
@@ -358,14 +344,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         name: newName,
         ...quickNutrition[nutritionMatch]
       };
-      console.log(`🥗 Quick nutrition update: ${newName} -> ${quickNutrition[nutritionMatch].calories} calories`);
     } else {
       // Just update name, nutrition will be calculated by API
       updatedFoods[index] = {
         ...updatedFoods[index],
         name: newName,
       };
-      console.log(`📡 No quick match for "${newName}", will use API for nutrition lookup`);
     }
     
     setEditableFoods(updatedFoods);
@@ -466,9 +450,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     setEditableFoods(updatedFoods);
   };
 
-  // Calculate total nutrition from editable foods - clean calculation without hacks
+  // Calculate total nutrition from editable foods
   const calculateTotals = () => {
-    console.log('🧮 [FORCE RELOAD] Calculating totals from foods:', editableFoods.map(f => `${f.name}: ${f.calories}cal`));
     return editableFoods.reduce(
       (totals, food) => ({
         calories: totals.calories + (food.calories || 0),
@@ -760,19 +743,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                       <input
                         type="text"
                         value={food.name}
-                        onChange={(e) => {
-                          console.log(`🍎 Food name onChange fired: ${e.target.value}`);
-                          updateFoodName(index, e.target.value);
-                        }}
-                        onInput={(e) => {
-                          console.log(`🍎 Food name onInput fired: ${(e.target as HTMLInputElement).value}`);
-                          updateFoodName(index, (e.target as HTMLInputElement).value);
-                        }}
-                        onFocus={() => {
-                          console.log(`🎯 Food name input focused for index ${index}`);
-                        }}
+                        onChange={(e) => updateFoodName(index, e.target.value)}
                         onKeyDown={(e) => {
-                          console.log(`⌨️ KeyDown in food name input: ${e.key}`);
+                          if (e.key === 'Enter') {
+                            setEditingIndex(null);
+                          } else if (e.key === 'Escape') {
+                            setEditableFoods([...data.detectedFoods]);
+                            setEditingIndex(null);
+                          }
                         }}
                         className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background font-medium"
                         placeholder="e.g., Jacket Potato with Ham and Cheese"
@@ -787,31 +765,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log(`🎯 [DIRECT FIX v2] Edit button clicked for index ${index}!`);
-                            
-                            // FORCE the state change
                             setEditingIndex(index);
-                            
-                            // If this is the "Baked beans" item, immediately update it to chicken breast
-                            if (food.name.toLowerCase().includes('baked beans')) {
-                              console.log('🥗 [DIRECT FIX v2] Detected baked beans, updating to chicken breast');
-                              const updatedFoods = [...editableFoods];
-                              updatedFoods[index] = {
-                                ...updatedFoods[index],
-                                name: 'Chicken breast',
-                                calories: 231,
-                                protein: 43,
-                                carbs: 0,
-                                fat: 5
-                              };
-                              setEditableFoods(updatedFoods);
-                            }
                           }}
-                          className="px-3 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors shadow-sm"
-                          title="Click to edit food name"
+                          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors font-medium"
+                          title="Edit food name"
                           data-testid={`button-edit-name-${index}`}
                         >
-                          ✏️ Edit Now
+                          <Edit3 className="h-3 w-3 inline mr-1" />
+                          Edit
                         </button>
                       </div>
                     )}
@@ -820,9 +781,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         <input
                           type="text"
                           value={food.portion}
-                          onChange={(e) => {
-                            console.log(`⚖️ Portion changed: ${e.target.value}`);
-                            updateFoodPortion(index, e.target.value);
+                          onChange={(e) => updateFoodPortion(index, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              setEditingIndex(null);
+                            }
                           }}
                           className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                           placeholder="e.g., 200g, 1 cup"
