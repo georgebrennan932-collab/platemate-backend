@@ -498,12 +498,12 @@ export default function Home() {
                   <div className="flex items-center space-x-2 mb-3">
                     <User className="h-4 w-4 text-foreground/80" />
                     <span className="text-sm font-medium text-foreground/90">
-                      {user?.firstName || user?.email || 'User'}
+                      User
                     </span>
                   </div>
-                  {user?.email && user?.firstName && (
+                  {false && (
                     <div className="text-xs text-foreground/60 mb-3 ml-6">
-                      {user?.email}
+                      user@example.com
                     </div>
                   )}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
