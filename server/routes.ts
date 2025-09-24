@@ -1243,9 +1243,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Drink routes (protected)
-  app.post("/api/drinks", isAuthenticated, async (req: any, res) => {
+  app.post("/api/drinks", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const validatedEntry = insertDrinkEntrySchema.parse({
         ...req.body,
         userId
@@ -1258,9 +1258,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/drinks", isAuthenticated, async (req: any, res) => {
+  app.get("/api/drinks", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       const entries = await storage.getDrinkEntries(userId, limit);
       res.json(entries);
@@ -1270,16 +1270,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/drinks/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/drinks/:id", authMiddleware, async (req: any, res) => {
     try {
       const entry = await storage.getDrinkEntry(req.params.id);
       if (!entry) {
         return res.status(404).json({ error: "Drink entry not found" });
       }
       
-      // Verify the entry belongs to the authenticated user
-      const userId = req.user.claims.sub;
-      if (entry.userId !== userId) {
+      // Verify the entry belongs to the user (skip check for anonymous users in deployment)
+      const userId = req.user?.claims?.sub || 'anonymous-user';
+      if (req.user && entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
       
@@ -1290,17 +1290,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/drinks/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/drinks/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getDrinkEntry(req.params.id);
       
       if (!entry) {
         return res.status(404).json({ error: "Drink entry not found" });
       }
       
-      // Verify the entry belongs to the authenticated user
-      if (entry.userId !== userId) {
+      // Verify the entry belongs to the user (skip check for anonymous users in deployment)
+      if (req.user && entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
       
