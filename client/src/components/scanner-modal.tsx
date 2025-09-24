@@ -72,14 +72,17 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
     setIsScanning(true);
     
     try {
+      console.log('🚀 Starting camera scanner...');
       await scannerRef.current.startScanning(videoRef.current);
       setScannerReady(true);
+      console.log('✅ Camera scanner started successfully');
       
       // Check torch support
       const supported = await scannerRef.current.isTorchSupported();
       setTorchSupported(supported);
     } catch (error) {
-      console.error('Failed to start scanning:', error);
+      console.error('❌ Failed to start scanning:', error);
+      setError(`Camera error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsScanning(false);
       setScannerReady(false);
     }
