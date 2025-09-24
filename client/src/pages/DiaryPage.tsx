@@ -20,6 +20,7 @@ import { WeightForm } from "@/components/weight-form";
 import { WeightList } from "@/components/weight-list";
 import { WeightEditDialog } from "@/components/weight-edit-dialog";
 import { WeightChart } from "@/components/weight-chart";
+import { DrinksBar } from "@/components/drinks-bar";
 import type { WeightEntry } from "@shared/schema";
 
 export function DiaryPage() {
@@ -708,6 +709,9 @@ export function DiaryPage() {
                 ))}
               </div>
             )}
+            
+            {/* Drinks Bar */}
+            <DrinksBar />
             
             {/* Today's Summary */}
             <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6">
