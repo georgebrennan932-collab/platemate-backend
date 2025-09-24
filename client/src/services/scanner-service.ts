@@ -38,18 +38,46 @@ class WebBarcodeScanner implements ScannerService {
 
   async startScanning(videoElement: HTMLVideoElement): Promise<void> {
     try {
+      console.log('🎥 Starting camera scanner...');
+      console.log('🔐 Security context:', {
+        isSecureContext: window.isSecureContext,
+        location: window.location.href,
+        protocol: window.location.protocol
+      });
+
       // Check if we're in a secure context
       if (!window.isSecureContext) {
         throw new Error('Camera access requires HTTPS');
       }
 
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera API not available in this browser');
+      }
+
+      // Check permissions first
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const permission = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          console.log('🔍 Camera permission state:', permission.state);
+          
+          if (permission.state === 'denied') {
+            throw new Error('Camera permission has been denied. Please enable camera access in your browser settings.');
+          }
+        } catch (permError) {
+          console.log('⚠️ Could not check camera permission:', permError);
+        }
+      }
+
       // Try BarcodeDetector API first (Chrome, Edge, Android Chrome)
       if ('BarcodeDetector' in window) {
+        console.log('📱 Using BarcodeDetector API');
         await this.startBarcodeDetectorScanning(videoElement);
         return;
       }
 
       // Fallback to ZXing
+      console.log('📷 Using ZXing fallback');
       await this.startZXingScanning(videoElement);
     } catch (error) {
       this.handleError(error);
@@ -183,27 +211,40 @@ class WebBarcodeScanner implements ScannerService {
   }
 
   private handleError(error: any): void {
+    console.log('🔍 Scanner error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      constraint: error.constraint,
+      stack: error.stack?.split('\n')[0]
+    });
+
     let scannerError: ScannerError;
 
     if (error.name === 'NotAllowedError') {
       scannerError = {
         type: 'permission',
-        message: 'Camera permission denied. Please allow camera access to scan barcodes.'
+        message: 'Camera access was blocked. Please check your browser settings and allow camera access for this site.'
       };
     } else if (error.name === 'NotFoundError') {
       scannerError = {
         type: 'not_found',
-        message: 'No camera found on this device.'
+        message: 'No camera found. Please make sure your device has a camera.'
       };
-    } else if (error.name === 'NotSupportedError' || error.message?.includes('HTTPS')) {
+    } else if (error.name === 'NotSupportedError') {
       scannerError = {
         type: 'not_supported',
-        message: 'Camera access requires a secure connection (HTTPS).'
+        message: 'Camera not supported. This feature requires a modern browser with camera support.'
+      };
+    } else if (!window.isSecureContext) {
+      scannerError = {
+        type: 'not_supported',
+        message: 'Camera requires a secure connection (HTTPS). Please check your connection.'
       };
     } else {
       scannerError = {
         type: 'unknown',
-        message: error.message || 'An error occurred while accessing the camera.'
+        message: `Camera error: ${error.message || 'Unknown error occurred'}`
       };
     }
 

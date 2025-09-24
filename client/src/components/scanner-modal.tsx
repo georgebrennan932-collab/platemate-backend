@@ -182,16 +182,32 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
               <div className="text-center max-w-sm mx-4">
                 <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
                 <h3 className="text-white text-lg font-semibold mb-2">Camera Access Required</h3>
-                <p className="text-white/80 text-sm mb-4" data-testid="text-error-message">
+                <p className="text-white/80 text-sm mb-6" data-testid="text-error-message">
                   {error}
                 </p>
-                <Button 
-                  onClick={startScanning}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  data-testid="button-retry-camera"
-                >
-                  Try Again
-                </Button>
+                <div className="space-y-3">
+                  <Button 
+                    onClick={startScanning}
+                    className="bg-blue-600 hover:bg-blue-700 w-full"
+                    data-testid="button-retry-camera"
+                  >
+                    Try Again
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      handleClose();
+                      // Trigger manual entry
+                      setTimeout(() => {
+                        const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
+                        window.dispatchEvent(event);
+                      }, 100);
+                    }}
+                    className="border-white/20 bg-white/10 hover:bg-white/20 text-white w-full"
+                  >
+                    Enter Barcode Manually
+                  </Button>
+                </div>
               </div>
             </div>
           )}
