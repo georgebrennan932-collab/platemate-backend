@@ -25,8 +25,10 @@ interface OpenFoodFactsResponse {
 
 export class OpenFoodFactsService {
   private cache = new Map<string, CachedFood>();
+  private barcodeCache = new Map<string, CachedFood>();
   private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   private readonly BASE_URL = 'https://world.openfoodfacts.org/api/v2/search';
+  private readonly PRODUCT_URL = 'https://world.openfoodfacts.org/api/v0/product';
   private readonly USER_AGENT = 'PlateMate/1.0 (platemate@replit.app)';
 
   /**
@@ -155,6 +157,116 @@ export class OpenFoodFactsService {
   }
 
   /**
+   * Lookup product by barcode
+   */
+  async lookupByBarcode(barcode: string): Promise<{ food: string; nutrition_per_100g: NutritionData | "not found"; brand?: string; imageUrl?: string }> {
+    // Check barcode cache first
+    const cached = this.getBarcodeCache(barcode);
+    if (cached) {
+      return {
+        food: cached.food,
+        nutrition_per_100g: cached.nutrition_per_100g,
+        brand: cached.food.split(' (')[1]?.replace(')', ''),
+        imageUrl: undefined // We don't cache images for now
+      };
+    }
+
+    try {
+      console.log(`🔍 Looking up barcode: ${barcode}`);
+      
+      const url = `${this.PRODUCT_URL}/${barcode}.json`;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': this.USER_AGENT
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 0 || !data.product) {
+        console.log(`❌ Product not found for barcode: ${barcode}`);
+        this.setBarcodeCache(barcode, `Unknown Product (${barcode})`, "not found");
+        return {
+          food: `Unknown Product (${barcode})`,
+          nutrition_per_100g: "not found"
+        };
+      }
+
+      const product = data.product;
+      const productName = product.product_name_en || product.product_name || `Product ${barcode}`;
+      const brand = product.brands?.split(',')[0]?.trim();
+      const nutriments = product.nutriments || {};
+      
+      // Extract nutrition data per 100g
+      const nutrition: NutritionData = {
+        calories: Math.round(nutriments['energy-kcal_100g'] || 0),
+        protein: Math.round((nutriments['proteins_100g'] || 0) * 10) / 10,
+        carbs: Math.round((nutriments['carbohydrates_100g'] || 0) * 10) / 10,
+        fat: Math.round((nutriments['fat_100g'] || 0) * 10) / 10
+      };
+
+      const displayName = brand ? `${productName} (${brand})` : productName;
+      
+      console.log(`✅ Found product: ${displayName}`);
+      
+      // Cache the result
+      this.setBarcodeCache(barcode, displayName, nutrition);
+      
+      return {
+        food: displayName,
+        nutrition_per_100g: nutrition,
+        brand,
+        imageUrl: product.image_front_url || product.image_url
+      };
+      
+    } catch (error) {
+      console.error(`❌ Error looking up barcode ${barcode}:`, error);
+      this.setBarcodeCache(barcode, `Unknown Product (${barcode})`, "not found");
+      return {
+        food: `Unknown Product (${barcode})`,
+        nutrition_per_100g: "not found"
+      };
+    }
+  }
+
+  /**
+   * Get cached barcode data if valid
+   */
+  private getBarcodeCache(barcode: string): CachedFood | null {
+    const cached = this.barcodeCache.get(barcode);
+    
+    if (!cached) {
+      return null;
+    }
+
+    // Check if cache is still valid (24 hours)
+    const now = Date.now();
+    if (now - cached.cachedAt > this.CACHE_DURATION) {
+      console.log(`⏰ Barcode cache expired for: ${barcode}`);
+      this.barcodeCache.delete(barcode);
+      return null;
+    }
+
+    console.log(`💾 Using cached barcode data for: ${barcode}`);
+    return cached;
+  }
+
+  /**
+   * Cache barcode data
+   */
+  private setBarcodeCache(barcode: string, productName: string, nutrition: NutritionData | "not found"): void {
+    this.barcodeCache.set(barcode, {
+      food: productName,
+      nutrition_per_100g: nutrition,
+      cachedAt: Date.now()
+    });
+  }
+
+  /**
    * Clear expired cache entries
    */
   clearExpiredCache(): number {
@@ -164,6 +276,14 @@ export class OpenFoodFactsService {
     for (const [key, value] of Array.from(this.cache.entries())) {
       if (now - value.cachedAt > this.CACHE_DURATION) {
         this.cache.delete(key);
+        cleared++;
+      }
+    }
+    
+    // Clear barcode cache too
+    for (const [key, value] of Array.from(this.barcodeCache.entries())) {
+      if (now - value.cachedAt > this.CACHE_DURATION) {
+        this.barcodeCache.delete(key);
         cleared++;
       }
     }

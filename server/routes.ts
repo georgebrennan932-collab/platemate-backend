@@ -11,6 +11,7 @@ import express from "express";
 import { aiManager } from "./ai-providers/ai-manager";
 import { usdaService } from "./services/usda-service";
 import { imageAnalysisCache } from "./services/image-analysis-cache";
+import { openFoodFactsService } from "./services/openfoodfacts-service";
 
 // Configure multer for image uploads with deployment-aware storage
 const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true';
@@ -507,6 +508,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalTime = Date.now() - requestStartTime;
       console.error(`❌ [${requestId}] Request failed after ${totalTime}ms:`, error);
       res.status(500).json({ error: "Failed to analyze image" });
+    }
+  });
+
+  // Barcode lookup endpoint - bypass auth in deployment like other food endpoints
+  app.post("/api/barcode", authMiddleware, async (req: any, res) => {
+    try {
+      const { barcode } = req.body;
+      
+      if (!barcode || typeof barcode !== 'string') {
+        return res.status(400).json({ error: "Barcode is required" });
+      }
+
+      console.log(`🔍 Barcode lookup request: ${barcode}`);
+      
+      // Look up product using OpenFoodFacts
+      const productData = await openFoodFactsService.lookupByBarcode(barcode);
+      
+      if (productData.nutrition_per_100g === "not found") {
+        return res.status(404).json({ 
+          error: "Product not found",
+          barcode,
+          message: "This barcode was not found in our food database"
+        });
+      }
+
+      // Convert to standard food analysis format
+      const nutrition = productData.nutrition_per_100g as any;
+      const analysisData = {
+        imageUrl: productData.imageUrl || '/uploads/barcode-placeholder.jpg',
+        confidence: 95, // High confidence for barcode scans
+        totalCalories: nutrition.calories,
+        totalProtein: nutrition.protein,
+        totalCarbs: nutrition.carbs,
+        totalFat: nutrition.fat,
+        detectedFoods: [{
+          name: productData.food,
+          portion: "100g",
+          calories: nutrition.calories,
+          protein: nutrition.protein,
+          carbs: nutrition.carbs,
+          fat: nutrition.fat,
+          icon: "package"
+        }]
+      };
+
+      // Create food analysis entry
+      const analysis = await storage.createFoodAnalysis(analysisData);
+      
+      console.log(`✅ Barcode analysis created: ${analysis.id} for ${productData.food}`);
+      res.json(analysis);
+      
+    } catch (error) {
+      console.error("Barcode lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup barcode" });
     }
   });
 

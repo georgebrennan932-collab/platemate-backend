@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { Images, Zap, Camera, CloudUpload, Syringe } from "lucide-react";
+import { Images, Zap, Camera, CloudUpload, Syringe, QrCode } from "lucide-react";
 import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
+import { BarcodeScanner } from "@/components/barcode-scanner";
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -23,6 +24,7 @@ export function CameraInterface({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [flashEnabled, setFlashEnabled] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -89,6 +91,53 @@ export function CameraInterface({
       onAnalysisError(error.message);
     },
   });
+
+  const barcodeMutation = useMutation({
+    mutationFn: async (barcode: string) => {
+      console.log("🔍 Looking up barcode:", barcode);
+      
+      const response = await fetch('/api/barcode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ barcode }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Barcode lookup failed');
+      }
+
+      const result = await response.json();
+      console.log("✅ Barcode lookup successful:", result);
+      return result;
+    },
+    onMutate: () => {
+      console.log("🔄 Barcode lookup starting...");
+      onAnalysisStart();
+    },
+    onSuccess: (data: FoodAnalysis) => {
+      console.log("🎉 Barcode lookup success:", data);
+      setShowBarcodeScanner(false);
+      onAnalysisSuccess(data);
+    },
+    onError: (error: Error) => {
+      console.error("💥 Barcode lookup error:", error);
+      toast({
+        title: "Barcode Not Found",
+        description: error.message,
+        variant: "destructive",
+      });
+      setShowBarcodeScanner(false);
+      onAnalysisError(error.message);
+    },
+  });
+
+  const handleBarcodeScanned = (barcode: string) => {
+    console.log("📷 Barcode scanned in camera interface:", barcode);
+    barcodeMutation.mutate(barcode);
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -263,7 +312,7 @@ export function CameraInterface({
         
         {/* Camera Controls */}
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
-          <div className="flex items-center justify-center space-x-4">
+          <div className="flex items-center justify-center space-x-3">
             {/* Gallery button */}
             <button 
               className="w-12 h-12 bg-slate-700/80 rounded-xl flex items-center justify-center border border-slate-600/50 hover:bg-slate-600/80 transition-colors duration-200"
@@ -272,6 +321,16 @@ export function CameraInterface({
               title="Select from Gallery"
             >
               <Images className="text-white h-5 w-5" />
+            </button>
+            
+            {/* Barcode scanner button */}
+            <button 
+              className="w-12 h-12 bg-purple-600/80 rounded-xl flex items-center justify-center border border-purple-600/50 hover:bg-purple-500/80 transition-colors duration-200"
+              onClick={() => setShowBarcodeScanner(true)}
+              data-testid="button-barcode"
+              title="Scan Barcode"
+            >
+              <QrCode className="text-white h-5 w-5" />
             </button>
             
             {/* Main Capture button */}
@@ -335,6 +394,13 @@ export function CameraInterface({
         onChange={handleFileSelect}
         className="hidden"
         data-testid="input-camera"
+      />
+
+      {/* Barcode Scanner Modal */}
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onScanSuccess={handleBarcodeScanned}
+        onClose={() => setShowBarcodeScanner(false)}
       />
     </div>
   );

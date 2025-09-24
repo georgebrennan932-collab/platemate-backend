@@ -56,7 +56,7 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
 
         // Start scanning
         codeReaderRef.current.decodeFromVideoDevice(
-          undefined, // Use default camera
+          null, // Use default camera
           videoRef.current,
           (result, error) => {
             if (result) {
