@@ -17,6 +17,34 @@
         "accessCount": 1,
         "lastAccessed": 1758713020230
       }
+    ],
+    [
+      "f544c804a565610343129c6b6f66bf664bd8b2c816b3768894f7d180de5379e0",
+      {
+        "imageHash": "f544c804a565610343129c6b6f66bf664bd8b2c816b3768894f7d180de5379e0",
+        "analysis": {
+          "imageUrl": "/tmp/uploads/processed_7c3c337897d39476a80bba68f463e996.jpg",
+          "confidence": 100,
+          "totalCalories": 596,
+          "totalProtein": 27,
+          "totalCarbs": 36,
+          "totalFat": 38,
+          "detectedFoods": [
+            {
+              "name": "Chicken nuggets, from frozen",
+              "portion": "200g",
+              "calories": 596,
+              "protein": 27,
+              "carbs": 36,
+              "fat": 38,
+              "icon": "bacon"
+            }
+          ]
+        },
+        "timestamp": 1758714919819,
+        "accessCount": 1,
+        "lastAccessed": 1758714919819
+      }
     ]
   ],
   "stats": {
@@ -24,11 +52,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 1,
+    "currentSize": 2,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1758713020230,
-    "newestEntry": 1758713020230
+    "newestEntry": 1758714919819
   },
-  "timestamp": 1758713020230
+  "timestamp": 1758714919819
 }
