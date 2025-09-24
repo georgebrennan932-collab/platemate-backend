@@ -134,7 +134,7 @@ class WebBarcodeScanner implements ScannerService {
         if (!this.isActive) return;
         
         try {
-          const result = await this.reader!.decodeOnceFromVideoDevice(videoElement);
+          const result = await this.reader!.decodeOnceFromVideoDevice();
           if (result) {
             const normalized = this.normalizeBarcode(result.getText());
             if (normalized) {

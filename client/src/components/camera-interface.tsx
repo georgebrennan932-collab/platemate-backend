@@ -6,7 +6,7 @@ import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capa
 import { Capacitor } from '@capacitor/core';
 import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
-import { BarcodeScanner } from "@/components/barcode-scanner";
+import { ScannerModal } from "@/components/scanner-modal";
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -396,8 +396,8 @@ export function CameraInterface({
         data-testid="input-camera"
       />
 
-      {/* Barcode Scanner Modal */}
-      <BarcodeScanner
+      {/* Camera Barcode Scanner Modal */}
+      <ScannerModal
         isOpen={showBarcodeScanner}
         onScanSuccess={handleBarcodeScanned}
         onClose={() => setShowBarcodeScanner(false)}
