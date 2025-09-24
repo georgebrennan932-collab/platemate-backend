@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, jsonb, timestamp, integer, index, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, jsonb, timestamp, integer, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -59,10 +59,10 @@ export const foodAnalyses = pgTable("food_analyses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   imageUrl: text("image_url").notNull(),
   confidence: integer("confidence").notNull(), // 0-100
-  totalCalories: decimal("total_calories", { precision: 8, scale: 2 }).notNull(),
-  totalProtein: decimal("total_protein", { precision: 8, scale: 2 }).notNull(), // in grams
-  totalCarbs: decimal("total_carbs", { precision: 8, scale: 2 }).notNull(), // in grams
-  totalFat: decimal("total_fat", { precision: 8, scale: 2 }).notNull(), // in grams
+  totalCalories: integer("total_calories").notNull(),
+  totalProtein: integer("total_protein").notNull(), // in grams (rounded)
+  totalCarbs: integer("total_carbs").notNull(), // in grams (rounded)
+  totalFat: integer("total_fat").notNull(), // in grams (rounded)
   detectedFoods: jsonb("detected_foods").notNull().$type<DetectedFood[]>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

@@ -560,17 +560,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const analysisData = {
         imageUrl: productData.imageUrl || '/uploads/barcode-placeholder.jpg',
         confidence: 95, // High confidence for barcode scans
-        totalCalories: nutrition.calories,
-        totalProtein: nutrition.protein,
-        totalCarbs: nutrition.carbs,
-        totalFat: nutrition.fat,
+        totalCalories: Math.round(nutrition.calories),
+        totalProtein: Math.round(nutrition.protein),
+        totalCarbs: Math.round(nutrition.carbs),
+        totalFat: Math.round(nutrition.fat),
         detectedFoods: [{
           name: productData.food,
           portion: "100g",
-          calories: nutrition.calories,
-          protein: nutrition.protein,
-          carbs: nutrition.carbs,
-          fat: nutrition.fat,
+          calories: Math.round(nutrition.calories),
+          protein: Math.round(nutrition.protein),
+          carbs: Math.round(nutrition.carbs),
+          fat: Math.round(nutrition.fat),
           icon: "package"
         }]
       };
