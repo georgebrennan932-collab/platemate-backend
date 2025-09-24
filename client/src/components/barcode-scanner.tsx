@@ -33,30 +33,21 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
 
   const startScanner = async () => {
     try {
-      setIsScanning(true);
       setScanError(null);
 
       // Create code reader instance
       codeReaderRef.current = new BrowserMultiFormatReader();
 
-      // Get user media for camera
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment', // Use back camera on mobile
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
-
-      setStream(mediaStream);
-
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
-
-        // Start scanning
-        codeReaderRef.current.decodeFromVideoDevice(
-          null, // Use default camera
+        // Let ZXing handle camera access entirely to avoid conflicts
+        await codeReaderRef.current.decodeFromConstraints(
+          {
+            video: {
+              facingMode: { ideal: 'environment' }, // Use back camera on mobile
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            }
+          },
           videoRef.current,
           (result, error) => {
             if (result) {
@@ -80,30 +71,46 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
             }
           }
         );
+        
+        // Only set scanning to true after successful camera access
+        setIsScanning(true);
       }
     } catch (error: any) {
       console.error('Failed to start barcode scanner:', error);
-      setScanError(error.message || 'Failed to access camera');
-      toast({
-        title: "Camera Error",
-        description: "Unable to access camera. Please check permissions.",
-        variant: "destructive",
-      });
+      setIsScanning(false);
+      
+      // Better error messaging based on error type
+      if (error.name === 'NotAllowedError') {
+        setScanError('Camera permission denied. Please allow camera access and try again.');
+        toast({
+          title: "Camera Permission Required",
+          description: "Please allow camera access to scan barcodes.",
+          variant: "destructive",
+        });
+      } else if (error.name === 'NotReadableError') {
+        setScanError('Camera is being used by another app. Please close other camera apps and try again.');
+        toast({
+          title: "Camera In Use",
+          description: "Camera is being used by another app.",
+          variant: "destructive",
+        });
+      } else {
+        setScanError(error.message || 'Failed to access camera');
+        toast({
+          title: "Camera Error",
+          description: "Unable to access camera. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const stopScanner = () => {
     try {
-      // Stop the code reader
+      // Stop the code reader (this will also stop the video stream)
       if (codeReaderRef.current) {
         codeReaderRef.current.reset();
         codeReaderRef.current = null;
-      }
-
-      // Stop the video stream
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        setStream(null);
       }
 
       // Clear video element
@@ -113,6 +120,7 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
 
       setIsScanning(false);
       setLastScannedCode(null);
+      setStream(null);
     } catch (error) {
       console.error('Error stopping scanner:', error);
     }
@@ -218,7 +226,10 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
             Cancel
           </Button>
           <Button
-            onClick={startScanner}
+            onClick={() => {
+              stopScanner();
+              setTimeout(startScanner, 100); // Small delay to ensure camera is released
+            }}
             disabled={isScanning}
             className="flex-1"
             data-testid="button-restart-scan"
