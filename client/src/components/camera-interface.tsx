@@ -28,6 +28,7 @@ export function CameraInterface({
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [barcodeScanningMode, setBarcodeScanningMode] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -133,6 +134,7 @@ export function CameraInterface({
       if (error.message.includes("Product not found") || error.message.includes("not found")) {
         console.log("🔄 Product not found, opening manual entry fallback");
         setShowBarcodeScanner(false);
+        setBarcodeScanningMode(false);
         setShowManualEntry(true);
         toast({
           title: "Product Not Found",
@@ -147,6 +149,7 @@ export function CameraInterface({
           variant: "destructive",
         });
         setShowBarcodeScanner(false);
+        setBarcodeScanningMode(false);
         onAnalysisError(error.message);
       }
     },
@@ -204,14 +207,35 @@ export function CameraInterface({
     console.log("📷 Camera capture requested");
     console.log("🔍 Platform check:", {
       isNative: Capacitor.isNativePlatform(),
-      platform: Capacitor.getPlatform()
+      platform: Capacitor.getPlatform(),
+      barcodeScanningMode
     });
     
-    // If user has already selected a file from gallery, analyze it
+    // If user has already selected a file from gallery
     if (selectedFile) {
-      console.log("🖼️ Gallery image selected, starting analysis...");
-      analysisMutation.mutate(selectedFile);
-      return;
+      if (barcodeScanningMode) {
+        console.log("🔍 Barcode scanning mode: Scanning image for barcode...");
+        try {
+          const result = await scanBarcodeFromImage(selectedFile);
+          console.log("✅ Barcode found in image:", result.barcode);
+          handleBarcodeScanned(result.barcode);
+          return;
+        } catch (error) {
+          console.log("❌ No barcode found in image, falling back to manual entry");
+          setBarcodeScanningMode(false);
+          setShowManualEntry(true);
+          toast({
+            title: "No Barcode Found",
+            description: "We couldn't detect a barcode in this image. Please enter the barcode manually.",
+            variant: "default",
+          });
+          return;
+        }
+      } else {
+        console.log("🖼️ Gallery image selected, starting food analysis...");
+        analysisMutation.mutate(selectedFile);
+        return;
+      }
     }
     
     // Use Capacitor Camera API if available (native app)
@@ -245,9 +269,29 @@ export function CameraInterface({
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
         
-        console.log("🎯 Starting auto-analysis...");
-        // Auto-analyze the captured photo
-        analysisMutation.mutate(file);
+        if (barcodeScanningMode) {
+          console.log("🔍 Barcode scanning mode: Scanning captured photo for barcode...");
+          try {
+            const result = await scanBarcodeFromImage(file);
+            console.log("✅ Barcode found in captured photo:", result.barcode);
+            handleBarcodeScanned(result.barcode);
+            return;
+          } catch (error) {
+            console.log("❌ No barcode found in captured photo, falling back to manual entry");
+            setBarcodeScanningMode(false);
+            setShowManualEntry(true);
+            toast({
+              title: "No Barcode Found",
+              description: "We couldn't detect a barcode in this photo. Please enter the barcode manually.",
+              variant: "default",
+            });
+            return;
+          }
+        } else {
+          console.log("🎯 Starting food analysis...");
+          // Auto-analyze the captured photo for food
+          analysisMutation.mutate(file);
+        }
       } catch (error) {
         console.error('❌ Error taking photo:', error);
         // Fall back to web camera input
@@ -362,6 +406,7 @@ export function CameraInterface({
               className="w-12 h-12 bg-purple-600/80 rounded-xl flex items-center justify-center border border-purple-600/50 hover:bg-purple-500/80 transition-colors duration-200"
               onClick={() => {
                 console.log("🔍 BARCODE BUTTON CLICKED - Opening camera scanner");
+                setBarcodeScanningMode(true);
                 setShowBarcodeScanner(true);
               }}
               data-testid="button-barcode"
@@ -439,8 +484,14 @@ export function CameraInterface({
       {/* Camera Barcode Scanner Modal */}
       <ScannerModal
         isOpen={showBarcodeScanner}
-        onScanSuccess={handleBarcodeScanned}
-        onClose={() => setShowBarcodeScanner(false)}
+        onScanSuccess={(barcode: string) => {
+          setBarcodeScanningMode(false);
+          handleBarcodeScanned(barcode);
+        }}
+        onClose={() => {
+          setShowBarcodeScanner(false);
+          setBarcodeScanningMode(false);
+        }}
       />
 
       {/* Manual Barcode Entry */}
@@ -448,9 +499,13 @@ export function CameraInterface({
         isOpen={showManualEntry}
         onScanSuccess={(barcode: string) => {
           setShowManualEntry(false);
+          setBarcodeScanningMode(false);
           handleBarcodeScanned(barcode);
         }}
-        onClose={() => setShowManualEntry(false)}
+        onClose={() => {
+          setShowManualEntry(false);
+          setBarcodeScanningMode(false);
+        }}
       />
     </div>
   );
