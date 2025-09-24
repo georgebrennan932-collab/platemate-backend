@@ -296,7 +296,7 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
         </div>
       </DialogContent>
       
-      {/* Debug Modal */}
+      {/* Debug Modal - render outside Dialog to avoid z-index conflicts */}
       {showDebugger && (
         <PermissionDebugger onClose={() => setShowDebugger(false)} />
       )}

@@ -114,8 +114,8 @@ export function PermissionDebugger({ onClose }: PermissionDebuggerProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 text-white rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999] p-4">
+      <div className="bg-gray-900 text-white rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">📋 Camera Permission Diagnostics</h2>
           <Button variant="outline" onClick={onClose} className="text-white border-white/20">
