@@ -11,6 +11,94 @@ export interface ScannerError {
   message: string;
 }
 
+// Add image-based barcode scanning
+export async function scanBarcodeFromImage(imageFile: File | HTMLImageElement): Promise<ScannerResult> {
+  console.log('📷 Starting barcode detection from image...');
+  
+  let imageElement: HTMLImageElement;
+  
+  if (imageFile instanceof File) {
+    imageElement = new Image();
+    const imageUrl = URL.createObjectURL(imageFile);
+    
+    await new Promise((resolve, reject) => {
+      imageElement.onload = resolve;
+      imageElement.onerror = reject;
+      imageElement.src = imageUrl;
+    });
+  } else {
+    imageElement = imageFile;
+  }
+  
+  // Try BarcodeDetector API first (Chrome, Edge, Android Chrome)
+  if ('BarcodeDetector' in window) {
+    console.log('🔍 Using BarcodeDetector API for image scanning');
+    try {
+      const detector = new (window as any).BarcodeDetector();
+      const barcodes = await detector.detect(imageElement);
+      
+      if (barcodes && barcodes.length > 0) {
+        const barcode = barcodes[0];
+        console.log('✅ Barcode detected from image:', barcode.rawValue);
+        const normalized = normalizeBarcodeValue(barcode.rawValue);
+        if (normalized) {
+          return {
+            barcode: normalized,
+            format: barcode.format || 'unknown'
+          };
+        }
+      }
+    } catch (error) {
+      console.log('📷 BarcodeDetector failed, trying ZXing...', error);
+    }
+  }
+  
+  // Fallback to ZXing for image scanning
+  console.log('📷 Using ZXing for image barcode detection');
+  try {
+    const { BrowserMultiFormatReader } = await import('@zxing/library');
+    const reader = new BrowserMultiFormatReader();
+    
+    const result = await reader.decodeFromImageElement(imageElement);
+    console.log('✅ ZXing detected barcode from image:', result.getText());
+    
+    const normalized = normalizeBarcodeValue(result.getText());
+    if (normalized) {
+      return {
+        barcode: normalized,
+        format: result.getBarcodeFormat()?.toString() || 'unknown'
+      };
+    }
+    throw new Error('Invalid barcode format detected');
+  } catch (error) {
+    console.error('❌ Failed to detect barcode from image:', error);
+    throw new Error('No barcode detected in image. Make sure the barcode is clearly visible and well-lit.');
+  } finally {
+    // Clean up object URL if we created one
+    if (imageFile instanceof File) {
+      URL.revokeObjectURL(imageElement.src);
+    }
+  }
+}
+
+// Helper function to normalize barcode values
+function normalizeBarcodeValue(barcode: string): string | null {
+  // Remove any non-digit characters
+  const digits = barcode.replace(/\D/g, '');
+  
+  // Validate length (8-14 digits for most retail barcodes)
+  if (digits.length < 8 || digits.length > 14) {
+    return null;
+  }
+
+  // Handle UPC-A to EAN-13 conversion (add leading zero)
+  if (digits.length === 12) {
+    return '0' + digits;
+  }
+
+  return digits;
+}
+
 export interface ScannerService {
   startScanning(videoElement: HTMLVideoElement): Promise<void>;
   stopScanning(): void;

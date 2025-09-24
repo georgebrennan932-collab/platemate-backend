@@ -8,6 +8,7 @@ import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
 import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
+import { scanBarcodeFromImage } from "@/services/scanner-service";
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -94,6 +95,36 @@ export function CameraInterface({
     },
   });
 
+  // Add image-based barcode scanning mutation
+  const imageBarcodeScannngMutation = useMutation({
+    mutationFn: async (file: File) => {
+      console.log("📷 Scanning barcode from image...");
+      try {
+        const result = await scanBarcodeFromImage(file);
+        console.log("✅ Barcode detected from image:", result.barcode);
+        return result.barcode;
+      } catch (error) {
+        console.log("❌ No barcode detected in image, falling back to manual entry");
+        throw error;
+      }
+    },
+    onSuccess: (barcode: string) => {
+      console.log("🎉 Image barcode scan successful, looking up product...");
+      // Trigger barcode lookup
+      barcodeMutation.mutate(barcode);
+    },
+    onError: (error: Error) => {
+      console.log("📝 Image scan failed, opening manual entry:", error.message);
+      // Fall back to manual barcode entry
+      setShowManualEntry(true);
+      toast({
+        title: "No barcode detected",
+        description: "Please enter the barcode manually or try taking a clearer photo",
+        variant: "default",
+      });
+    }
+  });
+
   const barcodeMutation = useMutation({
     mutationFn: async (barcode: string) => {
       console.log("🔍 Looking up barcode:", barcode);
@@ -141,6 +172,12 @@ export function CameraInterface({
     barcodeMutation.mutate(barcode);
   };
 
+  // Handle photo-based barcode scanning
+  const handlePhotoBarcodeScanning = (file: File) => {
+    console.log("📸 Photo taken for barcode scanning, analyzing...");
+    imageBarcodeScannngMutation.mutate(file);
+  };
+
   // Listen for manual barcode entry events
   useEffect(() => {
     const handleManualBarcodeEvent = () => {
@@ -155,24 +192,34 @@ export function CameraInterface({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     const inputType = event.target.getAttribute('capture') ? 'camera' : 'gallery';
+    const isBarcodeMode = event.target.getAttribute('data-barcode-mode') === 'true';
     
     console.log("📁 File selected:", {
       hasFile: !!file,
       fileName: file?.name,
       fileSize: file?.size,
       fileType: file?.type,
-      inputType: inputType
+      inputType: inputType,
+      barcodeMode: isBarcodeMode
     });
     
     if (file) {
-      setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      // Clear the barcode mode flag
+      event.target.removeAttribute('data-barcode-mode');
       
-      console.log(`✅ ${inputType} file processed successfully`);
-      
-      // Don't auto-analyze - user needs to press capture button
-      // This makes gallery selection work like camera capture
+      if (isBarcodeMode) {
+        console.log("📸 Photo selected for barcode scanning...");
+        handlePhotoBarcodeScanning(file);
+      } else {
+        setSelectedFile(file);
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+        
+        console.log(`✅ ${inputType} file processed successfully`);
+        
+        // Don't auto-analyze - user needs to press capture button
+        // This makes gallery selection work like camera capture
+      }
     } else {
       console.warn(`⚠️ No file was selected from ${inputType}`);
     }
@@ -337,14 +384,24 @@ export function CameraInterface({
             </button>
             
             {/* Barcode scanner button */}
-            <button 
-              className="w-12 h-12 bg-purple-600/80 rounded-xl flex items-center justify-center border border-purple-600/50 hover:bg-purple-500/80 transition-colors duration-200"
-              onClick={() => setShowBarcodeScanner(true)}
-              data-testid="button-barcode"
-              title="Scan Barcode"
-            >
-              <QrCode className="text-white h-5 w-5" />
-            </button>
+            <div className="relative">
+              <button 
+                className="w-12 h-12 bg-purple-600/80 rounded-xl flex items-center justify-center border border-purple-600/50 hover:bg-purple-500/80 transition-colors duration-200"
+                onClick={() => {
+                  if (cameraInputRef.current) {
+                    cameraInputRef.current.setAttribute('data-barcode-mode', 'true');
+                    cameraInputRef.current.click();
+                  }
+                }}
+                data-testid="button-barcode"
+                title="📷 Photo Scan Barcode"
+              >
+                <QrCode className="text-white h-5 w-5" />
+              </button>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                <Camera className="text-white h-2 w-2" />
+              </div>
+            </div>
             
             {/* Main Capture button */}
             <button 
