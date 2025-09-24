@@ -1,6 +1,12 @@
-import { useState, useRef } from "react";
-import { QrCode, X, Scan, AlertCircle, CheckCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import type { KeyboardEvent } from "react";
+// Icons for the interface
+const QrCode = ({ className }: { className?: string }) => <div className={`${className} inline-block`}>🏷️</div>;
+const X = ({ className }: { className?: string }) => <div className={`${className} inline-block`}>❌</div>;
+const Scan = ({ className }: { className?: string }) => <div className={`${className} inline-block`}>🔍</div>;
+const AlertCircle = ({ className }: { className?: string }) => <div className={`${className} inline-block`}>⚠️</div>;
+const CheckCircle = ({ className }: { className?: string }) => <div className={`${className} inline-block`}>✅</div>;
+// Removed Button import to fix dependency issues
 import { useToast } from "@/hooks/use-toast";
 
 interface BarcodeScannerProps {
@@ -41,15 +47,15 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
       });
       
       onScanSuccess(barcodeValue);
+      // Keep isSubmitting true - parent will close modal on success/error
     } catch (error: any) {
       console.error('Error submitting barcode:', error);
       setScanError('Failed to look up product. Please try again.');
-    } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleManualSubmit();
     }
@@ -66,14 +72,13 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
             <QrCode className="h-6 w-6 text-blue-600" />
             <h3 className="text-xl font-bold">Enter Barcode</h3>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 px-3"
             onClick={onClose}
             data-testid="button-close-scanner"
           >
             <X className="h-5 w-5" />
-          </Button>
+          </button>
         </div>
 
         {/* Manual Entry */}
@@ -124,19 +129,18 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
 
         {/* Action buttons */}
         <div className="flex space-x-3">
-          <Button
-            variant="outline"
+          <button
+            className="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
             onClick={onClose}
-            className="flex-1"
             data-testid="button-cancel-scan"
             disabled={isSubmitting}
           >
             Cancel
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={handleManualSubmit}
             disabled={!manualBarcode.trim() || isSubmitting}
-            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white"
+            className="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-500 h-10 px-4 py-2"
             data-testid="button-submit-barcode"
           >
             {isSubmitting ? (
@@ -150,7 +154,7 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
                 <span>Look Up Product</span>
               </div>
             )}
-          </Button>
+          </button>
         </div>
 
         {/* Sample barcodes for testing */}
