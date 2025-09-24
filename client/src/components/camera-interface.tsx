@@ -464,51 +464,6 @@ export function CameraInterface({
         </p>
       </div>
 
-      {/* DEBUG: Test Barcode Detection Button */}
-      <div className="mt-4 text-center">
-        <button 
-          onClick={() => {
-            console.log("🧪 DEBUG: Testing browser barcode detection capabilities");
-            console.log("🧪 Browser info:", {
-              userAgent: navigator.userAgent,
-              hasBarcodeDetector: 'BarcodeDetector' in window,
-              isSecureContext: window.isSecureContext,
-              protocol: window.location.protocol,
-              mediaDevicesAvailable: !!navigator.mediaDevices,
-              getUserMediaAvailable: !!navigator.mediaDevices?.getUserMedia
-            });
-            
-            // Test if we can create a test image and try to scan it
-            const testCanvas = document.createElement('canvas');
-            testCanvas.width = 100;
-            testCanvas.height = 100;
-            const ctx = testCanvas.getContext('2d');
-            ctx!.fillStyle = '#000';
-            ctx!.fillRect(0, 0, 100, 100);
-            
-            testCanvas.toBlob((blob) => {
-              if (blob) {
-                console.log("🧪 Created test blob:", {
-                  size: blob.size,
-                  type: blob.type
-                });
-                
-                // Try to create a File and test image loading
-                const testFile = new File([blob], 'test.png', { type: 'image/png' });
-                console.log("🧪 Created test file:", {
-                  name: testFile.name,
-                  size: testFile.size,
-                  type: testFile.type
-                });
-              }
-            });
-          }}
-          className="bg-red-600 text-white py-2 px-4 rounded-lg text-sm"
-        >
-          🧪 Test Browser Capabilities
-        </button>
-      </div>
-
       {/* Injection Advice Quick Access */}
       <div className="mt-4 text-center">
         <Link href="/injection-advice">
