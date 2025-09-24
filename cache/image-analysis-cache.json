@@ -1,189 +1,34 @@
 {
   "entries": [
     [
-      "582b576042ecb15a70109ac0aa35b40fbe35ab10b8bf51d168495e09844f2646",
+      "bef6bf4cabe72baa194efac1ee10f3cd382775791d9a06c3d34d5f55992db488",
       {
-        "imageHash": "582b576042ecb15a70109ac0aa35b40fbe35ab10b8bf51d168495e09844f2646",
+        "imageHash": "bef6bf4cabe72baa194efac1ee10f3cd382775791d9a06c3d34d5f55992db488",
         "analysis": {
-          "imageUrl": "uploads/processed_de9a60f3c7e5d9e5a81506891eaf8ead.jpg",
-          "confidence": 90,
-          "totalCalories": 1692,
-          "totalProtein": 76,
-          "totalCarbs": 47,
-          "totalFat": 133,
-          "detectedFoods": [
-            {
-              "name": "Egg, whole, fried no added fat",
-              "portion": "2 large eggs",
-              "calories": 143,
-              "protein": 12,
-              "carbs": 1,
-              "fat": 10,
-              "icon": "egg"
-            },
-            {
-              "name": "Sausage, smoked link sausage, pork",
-              "portion": "1 large sausage",
-              "calories": 927,
-              "protein": 36,
-              "carbs": 3,
-              "fat": 85,
-              "icon": "bacon"
-            },
-            {
-              "name": "Blood sausage",
-              "portion": "1 slice (approx. 50g)",
-              "calories": 190,
-              "protein": 7,
-              "carbs": 1,
-              "fat": 17,
-              "icon": "bacon"
-            },
-            {
-              "name": "Baked beans",
-              "portion": "100g",
-              "calories": 105,
-              "protein": 5,
-              "carbs": 22,
-              "fat": 1,
-              "icon": "bread-slice"
-            },
-            {
-              "name": "Mushrooms, raw",
-              "portion": "100g",
-              "calories": 31,
-              "protein": 3,
-              "carbs": 4,
-              "fat": 0,
-              "icon": "bread-slice"
-            },
-            {
-              "name": "CHICK-FIL-A, hash browns",
-              "portion": "1 piece (approx. 50g)",
-              "calories": 151,
-              "protein": 2,
-              "carbs": 15,
-              "fat": 9,
-              "icon": "bread-slice"
-            },
-            {
-              "name": "Pork bacon, NS as to fresh, smoked or cured, cooked",
-              "portion": "1 slice",
-              "calories": 145,
-              "protein": 11,
-              "carbs": 1,
-              "fat": 11,
-              "icon": "bacon"
-            }
-          ]
-        },
-        "timestamp": 1758374641562,
-        "accessCount": 1,
-        "lastAccessed": 1758374641562
-      }
-    ],
-    [
-      "a3dd331800c51652b5f22b52de28ae26e53a8821cde4228d9d13e8aaa58f7c52",
-      {
-        "imageHash": "a3dd331800c51652b5f22b52de28ae26e53a8821cde4228d9d13e8aaa58f7c52",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_0738fc5045fa71b1259f34e638a28dfa.jpg",
-          "confidence": 95,
-          "totalCalories": 587,
-          "totalProtein": 37,
-          "totalCarbs": 79,
-          "totalFat": 19,
-          "detectedFoods": [
-            {
-              "name": "Grape leaves, raw",
-              "portion": "120g",
-              "calories": 112,
-              "protein": 7,
-              "carbs": 21,
-              "fat": 3,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Figs, raw",
-              "portion": "220g (approx. 4-5 medium figs)",
-              "calories": 163,
-              "protein": 2,
-              "carbs": 42,
-              "fat": 1,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Ham, prosciutto",
-              "portion": "60g",
-              "calories": 117,
-              "protein": 17,
-              "carbs": 0,
-              "fat": 5,
-              "icon": "bacon"
-            },
-            {
-              "name": "Cheese, parmesan, grated",
-              "portion": "35g",
-              "calories": 147,
-              "protein": 10,
-              "carbs": 5,
-              "fat": 10,
-              "icon": "bread-slice"
-            },
-            {
-              "name": "Cherries, raw",
-              "portion": "50g (approx. 2-3 whole tomatoes)",
-              "calories": 36,
-              "protein": 1,
-              "carbs": 8,
-              "fat": 0,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Onions, raw",
-              "portion": "30g",
-              "calories": 12,
-              "protein": 0,
-              "carbs": 3,
-              "fat": 0,
-              "icon": "apple-alt"
-            }
-          ]
-        },
-        "timestamp": 1758442509945,
-        "accessCount": 1,
-        "lastAccessed": 1758442509945
-      }
-    ],
-    [
-      "9272a3404764a3b9e850734eb8eacd2da95818efe3974382c934d63c24bcd98d",
-      {
-        "imageHash": "9272a3404764a3b9e850734eb8eacd2da95818efe3974382c934d63c24bcd98d",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_e45d8287699aa9b0b52fe44492252778.jpg",
-          "confidence": 100,
+          "imageUrl": "/tmp/uploads/processed_b72f834981be5d5f49427473753df972.jpg",
+          "confidence": 85,
           "totalCalories": 0,
           "totalProtein": 0,
           "totalCarbs": 0,
           "totalFat": 0,
           "detectedFoods": []
         },
-        "timestamp": 1758452798099,
+        "timestamp": 1758713020230,
         "accessCount": 1,
-        "lastAccessed": 1758452798099
+        "lastAccessed": 1758713020230
       }
     ]
   ],
   "stats": {
-    "totalRequests": 2,
+    "totalRequests": 1,
     "cacheHits": 0,
-    "cacheMisses": 2,
+    "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 3,
+    "currentSize": 1,
     "maxSize": 1000,
     "totalEvictions": 0,
-    "oldestEntry": 1758374641562,
-    "newestEntry": 1758452798099
+    "oldestEntry": 1758713020230,
+    "newestEntry": 1758713020230
   },
-  "timestamp": 1758452798100
+  "timestamp": 1758713020230
 }
