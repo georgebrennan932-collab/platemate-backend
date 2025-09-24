@@ -14,42 +14,86 @@ export interface ScannerError {
 // Add image-based barcode scanning
 export async function scanBarcodeFromImage(imageFile: File | HTMLImageElement): Promise<ScannerResult> {
   console.log('📷 Starting barcode detection from image...');
+  console.log('🔍 Browser capabilities check:', {
+    hasBarcodeDetector: 'BarcodeDetector' in window,
+    hasZXing: typeof BrowserMultiFormatReader !== 'undefined',
+    userAgent: navigator.userAgent,
+    isSecureContext: window.isSecureContext
+  });
   
   let imageElement: HTMLImageElement;
   
   if (imageFile instanceof File) {
+    console.log('📁 Processing File:', {
+      name: imageFile.name,
+      size: imageFile.size,
+      type: imageFile.type
+    });
+    
     imageElement = new Image();
     const imageUrl = URL.createObjectURL(imageFile);
     
     await new Promise((resolve, reject) => {
-      imageElement.onload = resolve;
-      imageElement.onerror = reject;
+      imageElement.onload = () => {
+        console.log('🖼️ Image loaded successfully:', {
+          width: imageElement.width,
+          height: imageElement.height,
+          naturalWidth: imageElement.naturalWidth,
+          naturalHeight: imageElement.naturalHeight
+        });
+        resolve(imageElement);
+      };
+      imageElement.onerror = (error) => {
+        console.error('❌ Image load error:', error);
+        reject(error);
+      };
       imageElement.src = imageUrl;
     });
   } else {
     imageElement = imageFile;
+    console.log('🖼️ Using provided image element:', {
+      width: imageElement.width,
+      height: imageElement.height
+    });
   }
   
   // Try BarcodeDetector API first (Chrome, Edge, Android Chrome)
   if ('BarcodeDetector' in window) {
     console.log('🔍 Using BarcodeDetector API for image scanning');
     try {
-      const detector = new (window as any).BarcodeDetector();
+      const detector = new (window as any).BarcodeDetector({
+        formats: ['code_128', 'code_39', 'code_93', 'codabar', 'data_matrix', 'ean_13', 'ean_8', 'itf', 'pdf417', 'qr_code', 'upc_a', 'upc_e']
+      });
+      console.log('🔍 BarcodeDetector created successfully');
+      
       const barcodes = await detector.detect(imageElement);
+      console.log('🔍 BarcodeDetector scan results:', {
+        barcodesFound: barcodes?.length || 0,
+        barcodes: barcodes?.map((b: any) => ({
+          rawValue: b.rawValue,
+          format: b.format,
+          boundingBox: b.boundingBox
+        }))
+      });
       
       if (barcodes && barcodes.length > 0) {
         const barcode = barcodes[0];
         console.log('✅ Barcode detected from image:', barcode.rawValue);
         const normalized = normalizeBarcodeValue(barcode.rawValue);
         if (normalized) {
+          console.log('✅ Normalized barcode:', normalized);
           return {
             barcode: normalized,
             format: barcode.format || 'unknown'
           };
+        } else {
+          console.log('❌ Failed to normalize barcode:', barcode.rawValue);
         }
+      } else {
+        console.log('❌ No barcodes detected by BarcodeDetector API');
       }
     } catch (error) {
-      console.log('📷 BarcodeDetector failed, trying ZXing...', error);
+      console.error('❌ BarcodeDetector failed:', error);
     }
   }
   
@@ -57,45 +101,64 @@ export async function scanBarcodeFromImage(imageFile: File | HTMLImageElement): 
   console.log('📷 Using ZXing for image barcode detection');
   try {
     const { BrowserMultiFormatReader } = await import('@zxing/library');
+    console.log('📚 ZXing library imported successfully');
+    
     const reader = new BrowserMultiFormatReader();
+    console.log('📖 BrowserMultiFormatReader created');
     
     const result = await reader.decodeFromImageElement(imageElement);
-    console.log('✅ ZXing detected barcode from image:', result.getText());
+    console.log('✅ ZXing detected barcode from image:', {
+      text: result.getText(),
+      format: result.getBarcodeFormat()?.toString()
+    });
     
     const normalized = normalizeBarcodeValue(result.getText());
+    console.log('🔄 Barcode normalization:', {
+      original: result.getText(),
+      normalized
+    });
+    
     if (normalized) {
       return {
         barcode: normalized,
         format: result.getBarcodeFormat()?.toString() || 'unknown'
       };
     }
-    throw new Error('Invalid barcode format detected');
+    throw new Error(`Invalid barcode format detected: ${result.getText()}`);
   } catch (error) {
-    console.error('❌ Failed to detect barcode from image:', error);
+    console.error('❌ ZXing barcode detection failed:', error);
     throw new Error('No barcode detected in image. Make sure the barcode is clearly visible and well-lit.');
   } finally {
     // Clean up object URL if we created one
     if (imageFile instanceof File) {
       URL.revokeObjectURL(imageElement.src);
+      console.log('🧹 Cleaned up object URL');
     }
   }
 }
 
 // Helper function to normalize barcode values
 function normalizeBarcodeValue(barcode: string): string | null {
+  console.log('🔄 Normalizing barcode:', barcode);
+  
   // Remove any non-digit characters
   const digits = barcode.replace(/\D/g, '');
+  console.log('🔢 Extracted digits:', digits);
   
   // Validate length (8-14 digits for most retail barcodes)
   if (digits.length < 8 || digits.length > 14) {
+    console.log(`❌ Invalid barcode length: ${digits.length} (expected 8-14)`);
     return null;
   }
 
   // Handle UPC-A to EAN-13 conversion (add leading zero)
   if (digits.length === 12) {
-    return '0' + digits;
+    const converted = '0' + digits;
+    console.log('🔄 UPC-A to EAN-13 conversion:', converted);
+    return converted;
   }
 
+  console.log('✅ Normalized barcode:', digits);
   return digits;
 }
 
