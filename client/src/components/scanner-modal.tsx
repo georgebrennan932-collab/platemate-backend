@@ -127,9 +127,12 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-black/80 backdrop-blur-sm border-b border-white/10">
-          <h2 className="text-white text-lg font-semibold" data-testid="text-scanner-title">
-            Scan Barcode
-          </h2>
+          <div>
+            <h2 className="text-white text-lg font-semibold" data-testid="text-scanner-title">
+              Scan Barcode
+            </h2>
+            <p className="text-white/60 text-xs">Allow camera access when prompted</p>
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -181,17 +184,25 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
             <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
               <div className="text-center max-w-sm mx-4">
                 <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                <h3 className="text-white text-lg font-semibold mb-2">Camera Access Required</h3>
-                <p className="text-white/80 text-sm mb-6" data-testid="text-error-message">
+                <h3 className="text-white text-lg font-semibold mb-2">Camera Permission Needed</h3>
+                <p className="text-white/80 text-sm mb-4" data-testid="text-error-message">
                   {error}
                 </p>
+                <div className="bg-blue-900/30 border border-blue-600/30 rounded-lg p-4 mb-6">
+                  <h4 className="text-blue-300 font-semibold text-sm mb-2">📱 Enable Camera Access:</h4>
+                  <div className="text-white/80 text-xs space-y-1 text-left">
+                    <p>1. Look for camera icon in address bar</p>
+                    <p>2. Click "Allow" when prompted</p>
+                    <p>3. Or check browser settings for this site</p>
+                  </div>
+                </div>
                 <div className="space-y-3">
                   <Button 
                     onClick={startScanning}
                     className="bg-blue-600 hover:bg-blue-700 w-full"
                     data-testid="button-retry-camera"
                   >
-                    Try Again
+                    🎥 Allow Camera Access
                   </Button>
                   <Button 
                     variant="outline"

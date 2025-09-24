@@ -7,6 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
 import { ScannerModal } from "@/components/scanner-modal";
+import { BarcodeScanner } from "@/components/barcode-scanner";
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -418,7 +419,7 @@ export function CameraInterface({
       {/* Manual Barcode Entry */}
       <BarcodeScanner
         isOpen={showManualEntry}
-        onScanSuccess={(barcode) => {
+        onScanSuccess={(barcode: string) => {
           setShowManualEntry(false);
           handleBarcodeScanned(barcode);
         }}
