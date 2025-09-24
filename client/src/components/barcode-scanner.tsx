@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { QrCode, X, Scan, AlertCircle, CheckCircle } from "lucide-react";
+import { QrCode, X, Scan, AlertCircle, CheckCircle, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { BrowserMultiFormatReader, NotFoundException } from "@zxing/library";
 
 interface BarcodeScannerProps {
   onScanSuccess: (result: string) => void;
@@ -12,117 +11,18 @@ interface BarcodeScannerProps {
 
 export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScannerProps) {
   const { toast } = useToast();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualBarcode, setManualBarcode] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      startScanner();
-    } else {
-      stopScanner();
-    }
-
-    return () => {
-      stopScanner();
-    };
-  }, [isOpen]);
-
-  const startScanner = async () => {
-    try {
-      setScanError(null);
-
-      // Create code reader instance
-      codeReaderRef.current = new BrowserMultiFormatReader();
-
-      if (videoRef.current) {
-        // Let ZXing handle camera access entirely to avoid conflicts
-        await codeReaderRef.current.decodeFromConstraints(
-          {
-            video: {
-              facingMode: { ideal: 'environment' }, // Use back camera on mobile
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            }
-          },
-          videoRef.current,
-          (result, error) => {
-            if (result) {
-              const scannedText = result.getText();
-              console.log('📷 Barcode scanned:', scannedText);
-              
-              // Avoid duplicate scans of the same code
-              if (scannedText !== lastScannedCode) {
-                setLastScannedCode(scannedText);
-                toast({
-                  title: "Barcode Scanned!",
-                  description: `Found: ${scannedText}`,
-                });
-                onScanSuccess(scannedText);
-              }
-            }
-            
-            if (error && !(error instanceof NotFoundException)) {
-              console.warn('Scanning error:', error);
-              setScanError('Scanning error - try positioning the barcode differently');
-            }
-          }
-        );
-        
-        // Only set scanning to true after successful camera access
-        setIsScanning(true);
-      }
-    } catch (error: any) {
-      console.error('Failed to start barcode scanner:', error);
-      setIsScanning(false);
-      
-      // Better error messaging based on error type
-      if (error.name === 'NotAllowedError') {
-        setScanError('Camera permission denied. Please allow camera access and try again.');
-        toast({
-          title: "Camera Permission Required",
-          description: "Please allow camera access to scan barcodes.",
-          variant: "destructive",
-        });
-      } else if (error.name === 'NotReadableError') {
-        setScanError('Camera is being used by another app. Please close other camera apps and try again.');
-        toast({
-          title: "Camera In Use",
-          description: "Camera is being used by another app.",
-          variant: "destructive",
-        });
-      } else {
-        setScanError(error.message || 'Failed to access camera');
-        toast({
-          title: "Camera Error",
-          description: "Unable to access camera. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const stopScanner = () => {
-    try {
-      // Stop the code reader (this will also stop the video stream)
-      if (codeReaderRef.current) {
-        codeReaderRef.current.reset();
-        codeReaderRef.current = null;
-      }
-
-      // Clear video element
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-
-      setIsScanning(false);
-      setLastScannedCode(null);
-      setStream(null);
-    } catch (error) {
-      console.error('Error stopping scanner:', error);
+  const handleManualBarcodeSubmit = () => {
+    if (manualBarcode.trim()) {
+      console.log('📝 Manual barcode entered:', manualBarcode.trim());
+      toast({
+        title: "Barcode Entered!",
+        description: `Looking up: ${manualBarcode.trim()}`,
+      });
+      onScanSuccess(manualBarcode.trim());
     }
   };
 
@@ -135,7 +35,7 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
             <QrCode className="h-6 w-6 text-primary" />
-            <h3 className="text-xl font-bold">Scan Barcode</h3>
+            <h3 className="text-xl font-bold">Enter Product Barcode</h3>
           </div>
           <Button
             variant="ghost"
@@ -147,43 +47,20 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
           </Button>
         </div>
 
-        {/* Scanner View */}
-        <div className="relative aspect-square bg-gray-900 rounded-xl overflow-hidden mb-4">
-          {isScanning ? (
-            <>
-              <video
-                ref={videoRef}
-                className="w-full h-full object-cover"
-                autoPlay
-                muted
-                playsInline
-                data-testid="video-scanner"
-              />
-              
-              {/* Scanning overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-48 h-48 border-2 border-primary border-dashed rounded-lg animate-pulse">
-                  <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
-                  <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
-                  <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
-                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
-                </div>
-              </div>
-
-              {/* Status indicator */}
-              <div className="absolute top-4 left-4 flex items-center space-x-2 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
-                <Scan className="h-4 w-4 text-green-400 animate-pulse" />
-                <span className="text-white text-sm font-medium">Scanning...</span>
-              </div>
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center text-white">
-                <QrCode className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-lg font-medium">Camera Loading...</p>
-              </div>
-            </div>
-          )}
+        {/* Manual Barcode Input */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-2">Product Barcode Number</label>
+          <input
+            type="text"
+            value={manualBarcode}
+            onChange={(e) => setManualBarcode(e.target.value)}
+            placeholder="Enter barcode number (e.g., 1234567890123)"
+            className="w-full p-3 border rounded-lg text-center font-mono text-lg"
+            data-testid="input-manual-barcode"
+          />
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            Find the barcode number below the bars on the product packaging
+          </p>
         </div>
 
         {/* Error display */}
@@ -196,23 +73,14 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
           </div>
         )}
 
-        {/* Last scanned result */}
-        {lastScannedCode && (
-          <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-              <div>
-                <p className="text-sm font-medium text-green-700 dark:text-green-300">Last Scanned:</p>
-                <p className="text-xs text-green-600 dark:text-green-400 font-mono">{lastScannedCode}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Instructions */}
-        <div className="text-center text-sm text-muted-foreground mb-4">
-          <p>Point your camera at a product barcode</p>
-          <p>The scanner will automatically detect and read the code</p>
+        <div className="text-center text-sm text-muted-foreground mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+            <QrCode className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+            <p className="font-medium mb-1">How to find the barcode:</p>
+            <p>Look for the vertical black and white lines on the product packaging</p>
+            <p>The numbers below the lines are the barcode number to enter above</p>
+          </div>
         </div>
 
         {/* Action buttons */}
@@ -226,15 +94,12 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
             Cancel
           </Button>
           <Button
-            onClick={() => {
-              stopScanner();
-              setTimeout(startScanner, 100); // Small delay to ensure camera is released
-            }}
-            disabled={isScanning}
+            onClick={handleManualBarcodeSubmit}
+            disabled={!manualBarcode.trim()}
             className="flex-1"
-            data-testid="button-restart-scan"
+            data-testid="button-submit-barcode"
           >
-            {isScanning ? 'Scanning...' : 'Restart Scanner'}
+            Look Up Product
           </Button>
         </div>
       </div>
