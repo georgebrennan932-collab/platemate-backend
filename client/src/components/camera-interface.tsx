@@ -341,20 +341,26 @@ export function CameraInterface({
             
             {/* Barcode scanner button - SAFE manual entry only */}
             <button 
-              className="w-12 h-12 bg-purple-600/80 rounded-xl flex items-center justify-center border border-purple-600/50 hover:bg-purple-500/80 transition-colors duration-200"
-              onClick={() => setShowManualEntry(true)}
+              className="w-12 h-12 bg-orange-600/90 rounded-xl flex items-center justify-center border-2 border-orange-400/50 hover:bg-orange-500/90 transition-colors duration-200 shadow-lg"
+              onClick={() => {
+                console.log("🔍 BARCODE BUTTON CLICKED - Opening manual entry dialog");
+                setShowManualEntry(true);
+              }}
               data-testid="button-barcode"
-              title="Enter Barcode Manually"
+              title="📋 Enter Barcode Number"
             >
-              <QrCode className="text-white h-5 w-5" />
+              <QrCode className="text-white h-6 w-6" />
             </button>
             
             {/* Main Capture button */}
             <button 
               className="w-16 h-16 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center border-2 border-white/20 transition-all duration-200"
-              onClick={handleCameraCapture}
+              onClick={() => {
+                console.log("📷 MAIN CAMERA BUTTON CLICKED - Taking photo");
+                handleCameraCapture();
+              }}
               data-testid="button-capture"
-              title="Take Photo"
+              title="📷 Take Food Photo"
             >
               <Camera className="text-white h-8 w-8" />
             </button>
