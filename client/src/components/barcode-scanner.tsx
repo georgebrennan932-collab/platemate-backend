@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import { QrCode, X, Scan, AlertCircle, CheckCircle, Camera } from "lucide-react";
+import { useState, useRef } from "react";
+import { QrCode, X, Scan, AlertCircle, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
-import { BrowserMultiFormatReader, NotFoundException } from "@zxing/library";
+import { BrowserMultiFormatReader } from "@zxing/library";
 
 interface BarcodeScannerProps {
   onScanSuccess: (result: string) => void;
@@ -237,7 +237,7 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
           <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
             <QrCode className="h-8 w-8 mx-auto mb-2 text-blue-600" />
             <p className="font-medium mb-1">How to scan:</p>
-            <p>1. Tap the camera button above</p>
+            <p>1. Tap the camera area above</p>
             <p>2. Point your camera at the product barcode</p>
             <p>3. Take a clear photo of the barcode lines</p>
           </div>
