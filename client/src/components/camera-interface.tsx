@@ -25,6 +25,7 @@ export function CameraInterface({
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -138,6 +139,17 @@ export function CameraInterface({
     console.log("📷 Barcode scanned in camera interface:", barcode);
     barcodeMutation.mutate(barcode);
   };
+
+  // Listen for manual barcode entry events
+  useEffect(() => {
+    const handleManualBarcodeEvent = () => {
+      setShowBarcodeScanner(false);
+      setShowManualEntry(true);
+    };
+
+    window.addEventListener('open-manual-barcode', handleManualBarcodeEvent);
+    return () => window.removeEventListener('open-manual-barcode', handleManualBarcodeEvent);
+  }, []);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -401,6 +413,16 @@ export function CameraInterface({
         isOpen={showBarcodeScanner}
         onScanSuccess={handleBarcodeScanned}
         onClose={() => setShowBarcodeScanner(false)}
+      />
+
+      {/* Manual Barcode Entry */}
+      <BarcodeScanner
+        isOpen={showManualEntry}
+        onScanSuccess={(barcode) => {
+          setShowManualEntry(false);
+          handleBarcodeScanned(barcode);
+        }}
+        onClose={() => setShowManualEntry(false)}
       />
     </div>
   );
