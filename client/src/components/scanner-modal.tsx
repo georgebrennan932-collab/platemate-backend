@@ -3,6 +3,7 @@ import { X, Zap, ZapOff, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { createBarcodeScanner, ScannerResult, ScannerError } from '@/services/scanner-service';
+import { PermissionDebugger } from '@/components/permission-debugger';
 
 interface ScannerModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
   const [torchSupported, setTorchSupported] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scannerReady, setScannerReady] = useState(false);
+  const [showDebugger, setShowDebugger] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<ReturnType<typeof createBarcodeScanner> | null>(null);
@@ -188,13 +190,19 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
                 <p className="text-white/80 text-sm mb-4" data-testid="text-error-message">
                   {error}
                 </p>
-                <div className="bg-blue-900/30 border border-blue-600/30 rounded-lg p-4 mb-6">
-                  <h4 className="text-blue-300 font-semibold text-sm mb-2">📱 Enable Camera Access:</h4>
+                <div className="bg-blue-900/30 border border-blue-600/30 rounded-lg p-4 mb-4">
+                  <h4 className="text-blue-300 font-semibold text-sm mb-2">🔧 Troubleshooting Steps:</h4>
                   <div className="text-white/80 text-xs space-y-1 text-left">
-                    <p>1. Look for camera icon in address bar</p>
-                    <p>2. Click "Allow" when prompted</p>
-                    <p>3. Or check browser settings for this site</p>
+                    <p>• <strong>Replit Mobile App:</strong> Try "Open in Browser" button</p>
+                    <p>• <strong>Chrome:</strong> Look for 🎥 camera icon in address bar</p>
+                    <p>• <strong>Safari:</strong> Check Privacy & Security → Camera</p>
+                    <p>• <strong>Firefox:</strong> Click shield icon → Allow camera</p>
                   </div>
+                </div>
+                
+                <div className="bg-orange-900/30 border border-orange-600/30 rounded-lg p-3 mb-6">
+                  <h4 className="text-orange-300 font-semibold text-xs mb-1">⚠️ Replit App Limitation</h4>
+                  <p className="text-white/70 text-xs">Camera may be blocked in mobile app. Use "Enter Manually" or open in full browser.</p>
                 </div>
                 <div className="space-y-3">
                   <Button 
@@ -204,20 +212,29 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
                   >
                     🎥 Allow Camera Access
                   </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      handleClose();
-                      // Trigger manual entry
-                      setTimeout(() => {
-                        const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
-                        window.dispatchEvent(event);
-                      }, 100);
-                    }}
-                    className="border-white/20 bg-white/10 hover:bg-white/20 text-white w-full"
-                  >
-                    Enter Barcode Manually
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowDebugger(true)}
+                      className="border-white/20 bg-white/10 hover:bg-white/20 text-white flex-1"
+                    >
+                      🔧 Debug Issue
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        handleClose();
+                        // Trigger manual entry
+                        setTimeout(() => {
+                          const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
+                          window.dispatchEvent(event);
+                        }, 100);
+                      }}
+                      className="border-white/20 bg-white/10 hover:bg-white/20 text-white flex-1"
+                    >
+                      Enter Manually
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -278,6 +295,11 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
           </p>
         </div>
       </DialogContent>
+      
+      {/* Debug Modal */}
+      {showDebugger && (
+        <PermissionDebugger onClose={() => setShowDebugger(false)} />
+      )}
     </Dialog>
   );
 }

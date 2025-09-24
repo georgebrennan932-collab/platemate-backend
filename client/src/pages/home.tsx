@@ -51,15 +51,19 @@ export default function Home() {
   const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
   
   
-  // Fetch nutrition goals and diary entries to check for achievements
+  // Fetch nutrition goals and diary entries to check for achievements - only if authenticated
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
     retry: false,
+    enabled: false, // Disabled for camera troubleshooting
+    throwOnError: false,
   });
 
   const { data: diaryEntries } = useQuery<DiaryEntry[]>({
     queryKey: ['/api/diary'],
     retry: false,
+    enabled: false, // Disabled for camera troubleshooting
+    throwOnError: false,
   });
   
   // Initialize speech recognition
