@@ -14,7 +14,7 @@ import type { FoodAnalysis } from "@shared/schema";
 interface CameraInterfaceProps {
   onAnalysisStart: () => void;
   onAnalysisSuccess: (data: FoodAnalysis) => void;
-  onAnalysisError: (error: string) => void;
+  onAnalysisError: (error: string, errorType?: 'food' | 'barcode') => void;
 }
 
 export function CameraInterface({
@@ -92,7 +92,7 @@ export function CameraInterface({
     },
     onError: (error: Error) => {
       console.error("💥 Analysis error callback triggered:", error);
-      onAnalysisError(error.message);
+      onAnalysisError(error.message, 'food');
     },
   });
 
@@ -150,7 +150,7 @@ export function CameraInterface({
         });
         setShowBarcodeScanner(false);
         setBarcodeScanningMode(false);
-        onAnalysisError(error.message);
+        onAnalysisError(error.message, 'barcode');
       }
     },
   });

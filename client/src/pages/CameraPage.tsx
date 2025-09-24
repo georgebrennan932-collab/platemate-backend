@@ -24,6 +24,7 @@ export function CameraPage() {
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorType, setErrorType] = useState<'food' | 'barcode'>('food');
   
   // Voice input state
   const [isListening, setIsListening] = useState(false);
@@ -70,9 +71,10 @@ export function CameraPage() {
     setCurrentState('results');
   };
 
-  const handleAnalysisError = (error: string) => {
+  const handleAnalysisError = (error: string, errorType: 'food' | 'barcode' = 'food') => {
     soundService.playError();
     setErrorMessage(error);
+    setErrorType(errorType);
     setCurrentState('error');
   };
 
@@ -80,6 +82,7 @@ export function CameraPage() {
     setCurrentState('camera');
     setAnalysisData(null);
     setErrorMessage('');
+    setErrorType('food');
   };
 
   const handleScanAnother = () => {
@@ -310,6 +313,7 @@ export function CameraPage() {
           <ErrorState 
             message={errorMessage}
             onRetry={handleRetry}
+            type={errorType}
           />
         )}
       </div>

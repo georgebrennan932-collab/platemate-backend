@@ -26,6 +26,7 @@ export default function Home() {
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorType, setErrorType] = useState<'food' | 'barcode'>('food');
   const [confirmationData, setConfirmationData] = useState<any>(null);
   const [editableFoods, setEditableFoods] = useState<any[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -180,9 +181,10 @@ export default function Home() {
     }
   };
 
-  const handleAnalysisError = (error: string) => {
+  const handleAnalysisError = (error: string, errorType: 'food' | 'barcode' = 'food') => {
     soundService.playError();
     setErrorMessage(error);
+    setErrorType(errorType);
     setCurrentState('error');
   };
 
@@ -190,6 +192,7 @@ export default function Home() {
     setCurrentState('camera');
     setAnalysisData(null);
     setErrorMessage('');
+    setErrorType('food');
     setConfirmationData(null);
   };
 
@@ -822,6 +825,7 @@ export default function Home() {
           <ErrorState 
             message={errorMessage}
             onRetry={handleRetry}
+            type={errorType}
           />
         )}
       </div>
