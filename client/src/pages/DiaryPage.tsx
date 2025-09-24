@@ -667,12 +667,12 @@ export function DiaryPage() {
                                 <span className="text-blue-600" data-testid={`drink-amount-${drink.id}`}>
                                   {drink.amount}ml
                                 </span>
-                                {drink.caffeine > 0 && (
+                                {(drink.caffeine || 0) > 0 && (
                                   <span className="text-green-600" data-testid={`drink-caffeine-${drink.id}`}>
                                     {drink.caffeine}mg caffeine
                                   </span>
                                 )}
-                                {drink.alcoholContent > 0 && (
+                                {(drink.alcoholContent || 0) > 0 && (
                                   <span className="text-purple-600" data-testid={`drink-alcohol-${drink.id}`}>
                                     {drink.alcoholContent}% ABV
                                   </span>
@@ -697,8 +697,8 @@ export function DiaryPage() {
                           <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center space-x-4">
                               <span className="text-muted-foreground">Type: <strong>{drink.drinkType}</strong></span>
-                              {drink.sugar > 0 && <span className="text-muted-foreground">Sugar: <strong>{drink.sugar}g</strong></span>}
-                              {drink.alcoholUnits > 0 && <span className="text-muted-foreground">Units: <strong>{drink.alcoholUnits}</strong></span>}
+                              {(drink.sugar || 0) > 0 && <span className="text-muted-foreground">Sugar: <strong>{drink.sugar}g</strong></span>}
+                              {(drink.alcoholUnits || 0) > 0 && <span className="text-muted-foreground">Units: <strong>{drink.alcoholUnits}</strong></span>}
                             </div>
                           </div>
                         </div>
