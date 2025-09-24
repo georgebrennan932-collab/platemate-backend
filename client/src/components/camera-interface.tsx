@@ -153,7 +153,11 @@ export function CameraInterface({
   });
 
   const handleBarcodeScanned = (barcode: string) => {
-    console.log("📷 Barcode scanned in camera interface:", barcode);
+    console.log("📷 Barcode scanned in camera interface:", {
+      barcode,
+      length: barcode.length,
+      type: barcode.length === 12 ? 'UPC-A' : barcode.length === 13 ? 'EAN-13' : 'Other'
+    });
     barcodeMutation.mutate(barcode);
   };
 
