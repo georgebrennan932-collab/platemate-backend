@@ -215,12 +215,18 @@ export function CameraInterface({
     if (selectedFile) {
       if (barcodeScanningMode) {
         console.log("🔍 Barcode scanning mode: Scanning image for barcode...");
+        console.log("📁 Selected file details:", {
+          name: selectedFile.name,
+          size: selectedFile.size,
+          type: selectedFile.type
+        });
         try {
           const result = await scanBarcodeFromImage(selectedFile);
           console.log("✅ Barcode found in image:", result.barcode);
           handleBarcodeScanned(result.barcode);
           return;
         } catch (error) {
+          console.error("❌ Barcode detection failed:", error);
           console.log("❌ No barcode found in image, falling back to manual entry");
           setBarcodeScanningMode(false);
           setShowManualEntry(true);
@@ -271,12 +277,18 @@ export function CameraInterface({
         
         if (barcodeScanningMode) {
           console.log("🔍 Barcode scanning mode: Scanning captured photo for barcode...");
+          console.log("📷 File details:", {
+            name: file.name,
+            size: file.size,
+            type: file.type
+          });
           try {
             const result = await scanBarcodeFromImage(file);
             console.log("✅ Barcode found in captured photo:", result.barcode);
             handleBarcodeScanned(result.barcode);
             return;
           } catch (error) {
+            console.error("❌ Barcode detection failed:", error);
             console.log("❌ No barcode found in captured photo, falling back to manual entry");
             setBarcodeScanningMode(false);
             setShowManualEntry(true);

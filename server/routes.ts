@@ -511,6 +511,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test barcode lookup endpoint (for debugging)
+  app.get("/api/test-barcode/:barcode", async (req, res) => {
+    try {
+      const barcode = req.params.barcode;
+      console.log(`🧪 Testing barcode lookup for: ${barcode}`);
+      
+      const productData = await openFoodFactsService.lookupByBarcode(barcode);
+      res.json({
+        barcode,
+        success: true,
+        data: productData
+      });
+    } catch (error) {
+      console.error("Test barcode error:", error);
+      res.status(500).json({ 
+        barcode: req.params.barcode,
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+
   // Barcode lookup endpoint - bypass auth in deployment like other food endpoints
   app.post("/api/barcode", authMiddleware, async (req: any, res) => {
     try {
