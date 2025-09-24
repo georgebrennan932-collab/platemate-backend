@@ -1238,10 +1238,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Weight entry routes (protected)
-  app.post("/api/weights", isAuthenticated, async (req: any, res) => {
+  // Weight entry routes - bypass auth in deployment like diary routes
+  app.post("/api/weights", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // In deployment without auth, use anonymous user ID
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const validatedEntry = insertWeightEntrySchema.parse({
         ...req.body,
         userId
@@ -1254,9 +1255,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/weights", isAuthenticated, async (req: any, res) => {
+  app.get("/api/weights", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
       const start = req.query.start ? new Date(req.query.start as string) : undefined;
       const end = req.query.end ? new Date(req.query.end as string) : undefined;
@@ -1269,16 +1270,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/weights/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/weights/:id", authMiddleware, async (req: any, res) => {
     try {
       const entry = await storage.getWeightEntry(req.params.id);
       if (!entry) {
         return res.status(404).json({ error: "Weight entry not found" });
       }
       
-      // Verify the entry belongs to the authenticated user
-      const userId = req.user.claims.sub;
-      if (entry.userId !== userId) {
+      // Verify the entry belongs to the user (skip check for anonymous users in deployment)
+      const userId = req.user?.claims?.sub || 'anonymous-user';
+      if (req.user && entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
       
@@ -1289,16 +1290,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/weights/:id", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/weights/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getWeightEntry(req.params.id);
       
       if (!entry) {
         return res.status(404).json({ error: "Weight entry not found" });
       }
       
-      // Verify the entry belongs to the authenticated user
+      // Verify the entry belongs to the user
       if (entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
