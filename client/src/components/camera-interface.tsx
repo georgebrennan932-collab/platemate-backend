@@ -339,15 +339,15 @@ export function CameraInterface({
               <Images className="text-white h-5 w-5" />
             </button>
             
-            {/* Barcode scanner button */}
+            {/* Barcode scanner button - DISABLED DUE TO WORKSPACE CRASHES */}
             <button 
               className="w-12 h-12 bg-purple-600/80 rounded-xl flex items-center justify-center border border-purple-600/50 hover:bg-purple-500/80 transition-colors duration-200"
               onClick={() => {
-                console.log("🔍 BARCODE BUTTON CLICKED - Opening camera scanner");
-                setShowBarcodeScanner(true);
+                console.log("🔍 BARCODE BUTTON CLICKED - Opening manual entry");
+                setShowManualEntry(true);
               }}
               data-testid="button-barcode"
-              title="Scan Barcode"
+              title="Enter Barcode"
             >
               <QrCode className="text-white h-5 w-5" />
             </button>
