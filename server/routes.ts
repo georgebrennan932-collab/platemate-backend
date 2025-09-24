@@ -268,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analyze food image - bypass auth in deployment since users won't have Replit authentication
-  const requireAuth = !(process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true');
+  const requireAuth = !(process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true' || process.env.REPLIT_DEPLOYMENT === true);
   const authMiddleware = requireAuth ? isAuthenticated : (req: any, res: any, next: any) => next();
   
   app.post("/api/analyze", authMiddleware, upload.single('image'), async (req: any, res) => {
@@ -1090,16 +1090,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/diary/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/diary/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getDiaryEntry(req.params.id);
       
       if (!entry) {
         return res.status(404).json({ error: "Diary entry not found" });
       }
       
-      // Verify the entry belongs to the authenticated user
+      // Verify the entry belongs to the user
       if (entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
