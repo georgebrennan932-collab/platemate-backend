@@ -53,6 +53,18 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
       setError(scanError.message);
       setIsScanning(false);
       setScannerReady(false);
+      
+      // Auto-fallback to manual entry for permission errors
+      if (scanError.type === 'permission') {
+        console.log('🔄 Scanner permission error, auto-opening manual entry in 2 seconds...');
+        
+        setTimeout(() => {
+          console.log('🔄 Opening manual barcode entry automatically...');
+          const event = new CustomEvent('open-manual-barcode', { detail: { manual: true, autoFallback: true } });
+          window.dispatchEvent(event);
+          onClose();
+        }, 2000);
+      }
     };
 
     scannerRef.current = createBarcodeScanner(handleScanResult, handleScanError);
@@ -82,9 +94,26 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
       setTorchSupported(supported);
     } catch (error) {
       console.error('❌ Failed to start scanning:', error);
-      setError(`Camera error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(`Camera error: ${errorMessage}`);
       setIsScanning(false);
       setScannerReady(false);
+      
+      // Auto-fallback to manual entry for permission errors
+      if (error instanceof Error && 
+          (error.name === 'NotAllowedError' || 
+           error.message.includes('Permission denied') ||
+           error.message.includes('Camera access'))) {
+        console.log('🔄 Camera permission denied, auto-opening manual entry in 2 seconds...');
+        
+        // Brief delay to let user see the error, then auto-open manual entry
+        setTimeout(() => {
+          console.log('🔄 Opening manual barcode entry automatically...');
+          const event = new CustomEvent('open-manual-barcode', { detail: { manual: true, autoFallback: true } });
+          window.dispatchEvent(event);
+          onClose();
+        }, 2000);
+      }
     }
   };
 
@@ -205,7 +234,7 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
                 
                 <div className="bg-orange-900/30 border border-orange-600/30 rounded-lg p-3 mb-6">
                   <h4 className="text-orange-300 font-semibold text-xs mb-1">⚠️ Replit App Limitation</h4>
-                  <p className="text-white/70 text-xs">Camera may be blocked in mobile app. Use "Enter Manually" or open in full browser.</p>
+                  <p className="text-white/70 text-xs">Camera may be blocked in mobile app. Manual entry will open automatically in 2 seconds...</p>
                 </div>
                 <div className="space-y-3">
                   <Button 
@@ -227,15 +256,16 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
                       variant="outline"
                       onClick={() => {
                         handleClose();
-                        // Trigger manual entry
+                        // Trigger manual entry immediately when user clicks
                         setTimeout(() => {
                           const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
                           window.dispatchEvent(event);
                         }, 100);
                       }}
-                      className="border-white/20 bg-white/10 hover:bg-white/20 text-white flex-1"
+                      className="border-white/20 bg-orange-600 hover:bg-orange-700 text-white flex-1 font-medium"
+                      data-testid="button-enter-manually"
                     >
-                      Enter Manually
+                      📝 Enter Manually
                     </Button>
                   </div>
                 </div>
