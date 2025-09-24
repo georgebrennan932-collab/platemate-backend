@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Zap, ZapOff, AlertCircle } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { createBarcodeScanner, ScannerResult, ScannerError } from '@/services/scanner-service';
 
@@ -120,6 +120,11 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-full w-screen h-screen p-0 bg-black flex flex-col" data-testid="modal-barcode-scanner">
+        <DialogTitle className="sr-only">Barcode Scanner</DialogTitle>
+        <DialogDescription className="sr-only">
+          Use your camera to scan product barcodes for nutrition information
+        </DialogDescription>
+        
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-black/80 backdrop-blur-sm border-b border-white/10">
           <h2 className="text-white text-lg font-semibold" data-testid="text-scanner-title">
@@ -212,7 +217,15 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
             variant="outline" 
             onClick={() => {
               handleClose();
-              // TODO: Show manual entry dialog
+              // Open manual entry by clicking barcode button again
+              setTimeout(() => {
+                const barcodeButton = document.querySelector('[data-testid="button-barcode"]') as HTMLButtonElement;
+                if (barcodeButton) {
+                  // Create a manual entry event
+                  const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
+                  window.dispatchEvent(event);
+                }
+              }, 100);
             }}
             className="border-white/20 bg-white/10 hover:bg-white/20 text-white"
             data-testid="button-manual-entry"

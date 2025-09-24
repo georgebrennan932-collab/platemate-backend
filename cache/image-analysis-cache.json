@@ -45,18 +45,36 @@
         "accessCount": 1,
         "lastAccessed": 1758714919819
       }
+    ],
+    [
+      "190a4da13a4096d0c21e14db840cab9fe484699f8cec1a9d1848ed8483f0ca8c",
+      {
+        "imageHash": "190a4da13a4096d0c21e14db840cab9fe484699f8cec1a9d1848ed8483f0ca8c",
+        "analysis": {
+          "imageUrl": "/tmp/uploads/processed_83e91fdd18892faae2b1e95981746600.jpg",
+          "confidence": 85,
+          "totalCalories": 0,
+          "totalProtein": 0,
+          "totalCarbs": 0,
+          "totalFat": 0,
+          "detectedFoods": []
+        },
+        "timestamp": 1758715073235,
+        "accessCount": 1,
+        "lastAccessed": 1758715073235
+      }
     ]
   ],
   "stats": {
-    "totalRequests": 1,
+    "totalRequests": 2,
     "cacheHits": 0,
-    "cacheMisses": 1,
+    "cacheMisses": 2,
     "hitRate": 0,
-    "currentSize": 2,
+    "currentSize": 3,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1758713020230,
-    "newestEntry": 1758714919819
+    "newestEntry": 1758715073235
   },
-  "timestamp": 1758714919819
+  "timestamp": 1758715073236
 }

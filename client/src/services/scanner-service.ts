@@ -125,16 +125,20 @@ class WebBarcodeScanner implements ScannerService {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       this.track = this.stream.getVideoTracks()[0];
+      videoElement.srcObject = this.stream;
+      videoElement.playsInline = true;
+      videoElement.muted = true;
+      await videoElement.play();
       
       this.reader = new BrowserMultiFormatReader();
       this.isActive = true;
 
-      // Start decoding
+      // Start decoding from video element
       const scanLoop = async () => {
         if (!this.isActive) return;
         
         try {
-          const result = await this.reader!.decodeOnceFromVideoDevice();
+          const result = await this.reader!.decodeOnceFromVideoElement(videoElement);
           if (result) {
             const normalized = this.normalizeBarcode(result.getText());
             if (normalized) {

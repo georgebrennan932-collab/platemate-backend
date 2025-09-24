@@ -82,3 +82,7 @@ Preferred communication style: Simple, everyday language.
 - **Unit Conversion System**: Proper kg/lb conversion with validation ranges (kg: 20-300, lb: 44-660) and precise storage in grams for accuracy
 - **Mobile-First Weight Tracking**: Responsive weight interface optimized for mobile health tracking use cases with easy homepage access
 - **End-to-End Testing Verified**: Homepage weigh-in form successfully tested with POST /api/weights integration and diary synchronization confirmed
+- **Camera Barcode Scanner Implementation**: Replaced manual barcode entry with full-screen camera scanning using multi-strategy approach (BarcodeDetector API + ZXing fallback) for real-time product barcode detection
+- **Mobile-First Scanner UX**: Full-screen camera modal with scan guides, torch toggle, error handling for camera permissions, and graceful fallback to manual entry when camera access is denied
+- **Cross-Browser Compatibility**: Barcode detection works in modern browsers (Chrome, Edge, Android) with BarcodeDetector API and falls back to ZXing library for wider browser support
+- **Enhanced Barcode Integration**: Camera scanner connects directly to existing OpenFoodFacts API (/api/barcode) for seamless product nutrition lookup after successful scan detection
