@@ -128,13 +128,27 @@ export function CameraInterface({
     },
     onError: (error: Error) => {
       console.error("💥 Barcode lookup error:", error);
-      toast({
-        title: "Barcode Not Found",
-        description: error.message,
-        variant: "destructive",
-      });
-      setShowBarcodeScanner(false);
-      onAnalysisError(error.message);
+      
+      // If product not found, fallback to manual entry
+      if (error.message.includes("Product not found") || error.message.includes("not found")) {
+        console.log("🔄 Product not found, opening manual entry fallback");
+        setShowBarcodeScanner(false);
+        setShowManualEntry(true);
+        toast({
+          title: "Product Not Found",
+          description: "This barcode wasn't found in our database. Please enter the product details manually.",
+          variant: "default",
+        });
+      } else {
+        // Other errors
+        toast({
+          title: "Barcode Scanner Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        setShowBarcodeScanner(false);
+        onAnalysisError(error.message);
+      }
     },
   });
 
