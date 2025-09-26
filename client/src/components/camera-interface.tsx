@@ -391,7 +391,20 @@ export function CameraInterface({
           <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
             <div className="relative z-10 text-center transition-all duration-200 hover:scale-110">
               <div className="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-white/30">
-                <Flame className="text-white h-10 w-10 transition-all duration-200 hover:scale-110" />
+                <motion.div
+                  animate={{
+                    scale: [1, 1.1, 1.05, 1.15, 1],
+                    rotate: [0, -2, 2, -1, 0]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Flame className="text-white h-10 w-10 transition-all duration-200 hover:scale-110" />
+                </motion.div>
               </div>
               <div className="mt-4 text-white text-center">
                 <p className="text-2xl font-bold">{Math.max(0, caloriesGoal - caloriesConsumed)}</p>
