@@ -365,8 +365,7 @@ export function CameraInterface({
     <div className="relative p-1">
       {/* Camera View Container */}
       <div 
-        className="relative aspect-square overflow-hidden rounded-3xl shadow-2xl border border-slate-600/20 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-3xl" 
-        style={{backgroundColor: '#1F2937'}}
+        className="relative aspect-square overflow-hidden rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:shadow-xl bg-white dark:bg-gray-100" 
         onClick={handleCameraCapture}
         data-testid="camera-panel-clickable"
       >
@@ -385,10 +384,10 @@ export function CameraInterface({
         {!previewUrl && (
           <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
             <div className="relative z-10 text-center transition-all duration-200 hover:scale-110">
-              <div className="w-20 h-20 mx-auto bg-slate-600/60 rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-slate-500/70">
-                <Camera className="text-white h-10 w-10 transition-all duration-200 hover:scale-110" />
+              <div className="w-20 h-20 mx-auto bg-blue-100 dark:bg-blue-200 rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-blue-200 dark:hover:bg-blue-300">
+                <Camera className="text-blue-600 dark:text-blue-700 h-10 w-10 transition-all duration-200 hover:scale-110" />
               </div>
-              <p className="text-white/90 text-base mt-4 font-medium transition-all duration-200 hover:text-white">
+              <p className="text-gray-700 dark:text-gray-600 text-base mt-4 font-medium transition-all duration-200 hover:text-gray-900 dark:hover:text-gray-800">
                 Tap to take photo
               </p>
             </div>
@@ -405,17 +404,17 @@ export function CameraInterface({
           <div className="flex items-center justify-center space-x-3">
             {/* Gallery button */}
             <button 
-              className="w-12 h-12 bg-slate-700/80 rounded-xl flex items-center justify-center border border-slate-600/50 hover:bg-slate-600/80 transition-colors duration-200"
+              className="w-12 h-12 bg-gray-200 dark:bg-gray-300 rounded-xl flex items-center justify-center border border-gray-300 dark:border-gray-400 hover:bg-gray-300 dark:hover:bg-gray-400 transition-colors duration-200"
               onClick={handleGallerySelect}
               data-testid="button-gallery"
               title="Select from Gallery"
             >
-              <Images className="text-white h-5 w-5" />
+              <Images className="text-gray-600 dark:text-gray-700 h-5 w-5" />
             </button>
             
             {/* Barcode scanner button */}
             <button 
-              className="w-12 h-12 bg-purple-600/80 rounded-xl flex items-center justify-center border border-purple-600/50 hover:bg-purple-500/80 transition-colors duration-200"
+              className="w-12 h-12 bg-purple-100 dark:bg-purple-200 rounded-xl flex items-center justify-center border border-purple-200 dark:border-purple-300 hover:bg-purple-200 dark:hover:bg-purple-300 transition-colors duration-200"
               onClick={() => {
                 console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner directly (from camera interface)");
                 setShowBarcodeScanner(true);
@@ -423,12 +422,12 @@ export function CameraInterface({
               data-testid="button-barcode"
               title="Scan Barcode"
             >
-              <QrCode className="text-white h-5 w-5" />
+              <QrCode className="text-purple-600 dark:text-purple-700 h-5 w-5" />
             </button>
             
             {/* Main Capture button */}
             <button 
-              className="w-16 h-16 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center border-2 border-white/20 transition-all duration-200"
+              className="w-16 h-16 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center border-2 border-blue-200 transition-all duration-200"
               onClick={() => {
                 console.log("📷 MAIN CAMERA BUTTON CLICKED - Taking photo");
                 handleCameraCapture();
@@ -441,16 +440,20 @@ export function CameraInterface({
             
             {/* Flash toggle button */}
             <button 
-              className={`w-12 h-12 rounded-xl flex items-center justify-center border border-slate-600/50 transition-all duration-200 ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-200 ${
                 flashEnabled
-                  ? 'bg-yellow-600 hover:bg-yellow-500'
-                  : 'bg-slate-700/80 hover:bg-slate-600/80'
+                  ? 'bg-yellow-100 dark:bg-yellow-200 border-yellow-200 dark:border-yellow-300 hover:bg-yellow-200 dark:hover:bg-yellow-300'
+                  : 'bg-gray-200 dark:bg-gray-300 border-gray-300 dark:border-gray-400 hover:bg-gray-300 dark:hover:bg-gray-400'
               }`}
               onClick={handleFlashToggle}
               data-testid="button-flash"
               title={flashEnabled ? 'Flash On' : 'Flash Off'}
             >
-              <Zap className="text-white h-5 w-5" />
+              <Zap className={`h-5 w-5 ${
+                flashEnabled
+                  ? 'text-yellow-600 dark:text-yellow-700'
+                  : 'text-gray-600 dark:text-gray-700'
+              }`} />
             </button>
           </div>
         </div>
@@ -458,7 +461,7 @@ export function CameraInterface({
       
       {/* Scale tip */}
       <div className="mt-4 text-center">
-        <p className="text-sm text-white font-medium bg-slate-800/80 backdrop-blur-xl border border-slate-600/50 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
+        <p className="text-sm text-gray-600 dark:text-gray-700 font-medium bg-blue-50 dark:bg-blue-100 backdrop-blur-xl border border-blue-200 dark:border-blue-300 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
           💡 For more precise portion analysis, place a fork or your hand in the photo.
         </p>
       </div>
@@ -466,7 +469,7 @@ export function CameraInterface({
       {/* Injection Advice Quick Access */}
       <div className="mt-4 text-center">
         <Link href="/injection-advice">
-          <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 mx-auto border border-white/10 backdrop-blur-xl" data-testid="button-injection-advice-quick">
+          <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 mx-auto border border-blue-200 backdrop-blur-xl" data-testid="button-injection-advice-quick">
             <Syringe className="h-5 w-5" />
             <span>Weight Loss Injection Guide</span>
           </button>
