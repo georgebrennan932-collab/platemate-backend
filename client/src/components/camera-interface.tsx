@@ -365,7 +365,8 @@ export function CameraInterface({
     <div className="relative p-1">
       {/* Camera View Container */}
       <div 
-        className="relative aspect-square overflow-hidden rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:shadow-xl bg-white dark:bg-gray-100" 
+        className="relative aspect-square overflow-hidden rounded-3xl shadow-lg border border-white/20 cursor-pointer transition-all duration-200 hover:shadow-xl" 
+        style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}
         onClick={handleCameraCapture}
         data-testid="camera-panel-clickable"
       >
@@ -384,10 +385,10 @@ export function CameraInterface({
         {!previewUrl && (
           <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
             <div className="relative z-10 text-center transition-all duration-200 hover:scale-110">
-              <div className="w-20 h-20 mx-auto bg-blue-100 dark:bg-blue-200 rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-blue-200 dark:hover:bg-blue-300">
-                <Camera className="text-blue-600 dark:text-blue-700 h-10 w-10 transition-all duration-200 hover:scale-110" />
+              <div className="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-white/30">
+                <Camera className="text-white h-10 w-10 transition-all duration-200 hover:scale-110" />
               </div>
-              <p className="text-gray-700 dark:text-gray-600 text-base mt-4 font-medium transition-all duration-200 hover:text-gray-900 dark:hover:text-gray-800">
+              <p className="text-white text-base mt-4 font-medium transition-all duration-200 hover:text-white/90">
                 Tap to take photo
               </p>
             </div>
@@ -404,17 +405,17 @@ export function CameraInterface({
           <div className="flex items-center justify-center space-x-3">
             {/* Gallery button */}
             <button 
-              className="w-12 h-12 bg-gray-200 dark:bg-gray-300 rounded-xl flex items-center justify-center border border-gray-300 dark:border-gray-400 hover:bg-gray-300 dark:hover:bg-gray-400 transition-colors duration-200"
+              className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 hover:bg-white/30 transition-colors duration-200"
               onClick={handleGallerySelect}
               data-testid="button-gallery"
               title="Select from Gallery"
             >
-              <Images className="text-gray-600 dark:text-gray-700 h-5 w-5" />
+              <Images className="text-white h-5 w-5" />
             </button>
             
             {/* Barcode scanner button */}
             <button 
-              className="w-12 h-12 bg-purple-100 dark:bg-purple-200 rounded-xl flex items-center justify-center border border-purple-200 dark:border-purple-300 hover:bg-purple-200 dark:hover:bg-purple-300 transition-colors duration-200"
+              className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 hover:bg-white/30 transition-colors duration-200"
               onClick={() => {
                 console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner (no auto-camera)");
                 setShowBarcodeScanner(true);
@@ -422,7 +423,7 @@ export function CameraInterface({
               data-testid="button-barcode"
               title="Scan Barcode"
             >
-              <QrCode className="text-purple-600 dark:text-purple-700 h-5 w-5" />
+              <QrCode className="text-white h-5 w-5" />
             </button>
             
             {/* Main Capture button */}
@@ -442,8 +443,8 @@ export function CameraInterface({
             <button 
               className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-200 ${
                 flashEnabled
-                  ? 'bg-yellow-100 dark:bg-yellow-200 border-yellow-200 dark:border-yellow-300 hover:bg-yellow-200 dark:hover:bg-yellow-300'
-                  : 'bg-gray-200 dark:bg-gray-300 border-gray-300 dark:border-gray-400 hover:bg-gray-300 dark:hover:bg-gray-400'
+                  ? 'bg-yellow-500/30 backdrop-blur-sm border-yellow-400/50 hover:bg-yellow-500/40'
+                  : 'bg-white/20 backdrop-blur-sm border-white/30 hover:bg-white/30'
               }`}
               onClick={handleFlashToggle}
               data-testid="button-flash"
@@ -451,8 +452,8 @@ export function CameraInterface({
             >
               <Zap className={`h-5 w-5 ${
                 flashEnabled
-                  ? 'text-yellow-600 dark:text-yellow-700'
-                  : 'text-gray-600 dark:text-gray-700'
+                  ? 'text-yellow-300'
+                  : 'text-white'
               }`} />
             </button>
           </div>
@@ -461,7 +462,7 @@ export function CameraInterface({
       
       {/* Scale tip */}
       <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600 dark:text-gray-700 font-medium bg-blue-50 dark:bg-blue-100 backdrop-blur-xl border border-blue-200 dark:border-blue-300 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
+        <p className="text-sm text-white font-medium bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
           💡 For more precise portion analysis, place a fork or your hand in the photo.
         </p>
       </div>
