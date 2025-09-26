@@ -415,7 +415,7 @@ export function CameraInterface({
             
             {/* Barcode scanner button */}
             <button 
-              className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 hover:bg-white/30 transition-colors duration-200"
+              className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl flex items-center justify-center border border-orange-400 transition-colors duration-200"
               onClick={() => {
                 console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner (no auto-camera)");
                 setShowBarcodeScanner(true);
