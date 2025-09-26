@@ -417,8 +417,7 @@ export function CameraInterface({
             <button 
               className="w-12 h-12 bg-purple-600/80 rounded-xl flex items-center justify-center border border-purple-600/50 hover:bg-purple-500/80 transition-colors duration-200"
               onClick={() => {
-                console.log("🔍 BARCODE BUTTON CLICKED - Opening camera scanner");
-                setBarcodeScanningMode(true);
+                console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner directly (from camera interface)");
                 setShowBarcodeScanner(true);
               }}
               data-testid="button-barcode"
