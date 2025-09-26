@@ -117,6 +117,9 @@ export async function setupAuth(app: Express) {
 
   app.post("/api/logout", (req, res) => {
     console.log("🚪 Logout request received");
+    console.log("🔍 Current session ID:", req.sessionID);
+    console.log("🔍 User authenticated:", req.isAuthenticated());
+    
     req.logout((err) => {
       if (err) {
         console.error("Logout error:", err);
@@ -126,16 +129,34 @@ export async function setupAuth(app: Express) {
         if (err) {
           console.error("Session destroy error:", err);
         }
-        // Clear the session cookie with all possible options
-        res.clearCookie('connect.sid', { 
-          path: '/',
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax'
+        
+        // Clear ALL possible session cookies aggressively
+        const cookieOptions = [
+          { name: 'connect.sid', options: { path: '/', httpOnly: true, secure: false, sameSite: 'lax' as const } },
+          { name: 'connect.sid', options: { path: '/', httpOnly: true, secure: true, sameSite: 'lax' as const } },
+          { name: 'connect.sid', options: { path: '/' } },
+          { name: 'session', options: { path: '/' } },
+          { name: 'sid', options: { path: '/' } },
+        ];
+        
+        cookieOptions.forEach(({ name, options }) => {
+          res.clearCookie(name, options);
         });
-        console.log("🚪 Session destroyed and cookie cleared");
+        
+        // Set headers to prevent caching
+        res.set({
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        });
+        
+        console.log("🚪 Session destroyed and all cookies cleared");
         // Return success status
-        res.status(200).json({ success: true, message: "Logged out successfully" });
+        res.status(200).json({ 
+          success: true, 
+          message: "Logged out successfully",
+          cleared: true
+        });
       });
     });
   });

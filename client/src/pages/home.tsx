@@ -637,13 +637,28 @@ export default function Home() {
                   )}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                     <button 
-                      onClick={() => {
-                        fetch('/api/logout', { 
-                          method: 'POST',
-                          credentials: 'include'
-                        }).then(() => {
-                          window.location.href = '/';
-                        });
+                      onClick={async () => {
+                        try {
+                          console.log('🚪 Starting logout process...');
+                          
+                          // Clear all React Query cache first
+                          queryClient.clear();
+                          
+                          // Call logout endpoint
+                          const response = await fetch('/api/logout', { 
+                            method: 'POST',
+                            credentials: 'include'
+                          });
+                          
+                          console.log('🚪 Logout response:', response.status);
+                          
+                          // Force complete page reload to clear all state
+                          window.location.replace('/');
+                        } catch (error) {
+                          console.error('Logout error:', error);
+                          // Force reload even if logout fails
+                          window.location.replace('/');
+                        }
                       }}
                       className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors w-full text-left" 
                       data-testid="button-nav-logout"
