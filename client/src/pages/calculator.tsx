@@ -91,7 +91,7 @@ export default function CalculatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Enhanced Header with back button */}
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white sticky top-0 z-10 shadow-lg">
         <div className="container mx-auto px-4 py-6">

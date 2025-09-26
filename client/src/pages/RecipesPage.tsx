@@ -100,7 +100,7 @@ export function RecipesPage() {
   const filteredRecipes = recipes || [];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Header */}
       <div className="bg-primary/5 border-b border-primary/10 p-4 sticky top-0 z-10 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-4">

@@ -8,7 +8,7 @@ export default function LandingPage() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
-    <div className="bg-background text-foreground min-h-screen relative overflow-hidden">
+    <div className="text-foreground min-h-screen relative overflow-hidden" style={{background: 'var(--bg-gradient)'}}>
       {/* Animated Background Elements */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-10 left-10 w-20 h-20 bg-purple-200/30 rounded-full blur-xl animate-pulse"></div>

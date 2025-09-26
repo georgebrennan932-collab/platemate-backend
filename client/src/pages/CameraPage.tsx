@@ -208,7 +208,7 @@ export function CameraPage() {
   });
 
   return (
-    <div className="bg-background text-foreground min-h-screen">
+    <div className="text-foreground min-h-screen" style={{background: 'var(--bg-gradient)'}}>
       <AppHeader />
       
       {/* Voice and Type Add Buttons */}

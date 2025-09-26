@@ -281,7 +281,7 @@ export default function CameraTestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
+    <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       <AppHeader />
       
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">

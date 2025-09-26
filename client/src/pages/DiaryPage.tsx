@@ -369,7 +369,7 @@ export function DiaryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Header */}
       <div className="bg-card border-b sticky top-0 z-10">
         <div className="max-w-md mx-auto px-4 py-4">

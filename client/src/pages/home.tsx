@@ -582,7 +582,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen text-foreground" style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}>
+    <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Custom Header for New Design */}
       <div className="px-4 pt-8 pb-6 text-center relative">
         <h1 className="text-5xl font-bold mb-2" style={{color: '#22D3EE'}}>PlateMate</h1>

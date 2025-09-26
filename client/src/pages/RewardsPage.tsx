@@ -35,7 +35,7 @@ export default function RewardsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-20" style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}>
+    <div className="min-h-screen pb-20" style={{background: 'var(--bg-gradient)'}}>
       {/* Header */}
       <div className="px-4 pt-8 pb-6 text-center">
         <div className="flex items-center justify-center space-x-3 mb-2">
