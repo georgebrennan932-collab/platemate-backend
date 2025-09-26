@@ -115,7 +115,8 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.get("/api/logout", (req, res) => {
+  app.post("/api/logout", (req, res) => {
+    console.log("🚪 Logout request received");
     req.logout((err) => {
       if (err) {
         console.error("Logout error:", err);
@@ -125,12 +126,23 @@ export async function setupAuth(app: Express) {
         if (err) {
           console.error("Session destroy error:", err);
         }
-        // Clear the session cookie
-        res.clearCookie('connect.sid');
-        // Redirect to homepage
-        res.redirect('/');
+        // Clear the session cookie with all possible options
+        res.clearCookie('connect.sid', { 
+          path: '/',
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax'
+        });
+        console.log("🚪 Session destroyed and cookie cleared");
+        // Return success status
+        res.status(200).json({ success: true, message: "Logged out successfully" });
       });
     });
+  });
+
+  // Keep GET endpoint for backwards compatibility but redirect to POST
+  app.get("/api/logout", (req, res) => {
+    res.redirect(307, '/api/logout');
   });
 }
 
