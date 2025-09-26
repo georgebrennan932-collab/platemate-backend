@@ -393,17 +393,18 @@ export function CameraInterface({
               <div className="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-white/30">
                 <motion.div
                   animate={{
-                    scale: [1, 1.1, 1.05, 1.15, 1],
-                    rotate: [0, -2, 2, -1, 0]
+                    scale: [1, 1.3, 1.1, 1.4, 1],
+                    rotate: [0, -5, 5, -3, 0],
+                    y: [0, -2, 1, -3, 0]
                   }}
                   transition={{
-                    duration: 2,
+                    duration: 1.5,
                     repeat: Infinity,
                     repeatType: "loop",
                     ease: "easeInOut"
                   }}
                 >
-                  <Flame className="text-white h-10 w-10 transition-all duration-200 hover:scale-110" />
+                  <Flame className="text-white h-10 w-10" />
                 </motion.div>
               </div>
               <div className="mt-4 text-white text-center">
