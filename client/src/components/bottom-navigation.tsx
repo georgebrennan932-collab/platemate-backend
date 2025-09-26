@@ -9,8 +9,8 @@ export function BottomNavigation() {
     {
       href: "/",
       icon: Camera,
-      label: "Scan",
-      isActive: location === "/" || location === "/scan"
+      label: "Home",
+      isActive: location === "/" || location === "/home"
     },
     {
       href: "/diary",

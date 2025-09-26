@@ -375,7 +375,7 @@ export function DiaryPage() {
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Link href="/scan">
+              <Link href="/">
                 <button 
                   className="p-2 hover:bg-muted rounded-lg transition-colors"
                   data-testid="button-back-to-home"
@@ -550,9 +550,9 @@ export function DiaryPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Start your day by scanning food or using voice input
                 </p>
-                <Link href="/scan">
+                <Link href="/">
                   <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
-                    Add First Meal
+                    Go to Homepage
                   </button>
                 </Link>
               </div>
