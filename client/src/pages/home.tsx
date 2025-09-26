@@ -74,7 +74,7 @@ export default function Home() {
     throwOnError: false,
   });
   
-  // Initialize speech recognition and handle page visibility
+  // Initialize speech recognition and handle page visibility/navigation
   useEffect(() => {
     const checkSpeechSupport = () => {
       const supported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
@@ -82,6 +82,17 @@ export default function Home() {
     };
     checkSpeechSupport();
     
+    // Force refresh data when coming back to page (handles browser back/forward cache)
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && isAuthenticated) {
+        // Page was restored from bfcache, force refresh all data
+        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+        queryClient.refetchQueries({ queryKey: ['/api/diary'] });
+        queryClient.refetchQueries({ queryKey: ['/api/nutrition-goals'] });
+      }
+    };
+
     // Refetch data when the page becomes visible (handles navigation back from other pages)
     const handleVisibilityChange = () => {
       if (!document.hidden && isAuthenticated) {
@@ -91,12 +102,26 @@ export default function Home() {
       }
     };
 
+    // Also handle when window regains focus
+    const handleFocus = () => {
+      if (isAuthenticated) {
+        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+      }
+    };
+
+    // Listen for page show events (bfcache restoration)
+    window.addEventListener('pageshow', handlePageShow);
     // Listen for page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Listen for window focus events
+    window.addEventListener('focus', handleFocus);
     
     // Cleanup function to clear any pending nutrition updates
     return () => {
+      window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
       if (nutritionUpdateTimer) {
         clearTimeout(nutritionUpdateTimer);
       }
