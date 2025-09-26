@@ -81,6 +81,16 @@ export default function Home() {
     enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
   });
+
+  // Force data refresh when homepage loads/mounts
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Force fresh data fetch whenever homepage component mounts
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+    }
+  }, [isAuthenticated, queryClient]);
   
   // Initialize speech recognition and handle page visibility/navigation
   useEffect(() => {
@@ -191,7 +201,7 @@ export default function Home() {
     // Delay check to ensure data is loaded
     const timeoutId = setTimeout(checkForAchievedGoals, 1000);
     return () => clearTimeout(timeoutId);
-  }, [nutritionGoals, diaryEntries]);
+  }, [nutritionGoals, diaryEntries, drinkEntries]);
 
   // Calculate consumed calories for today using centralized function
   const getTodayCalories = () => {

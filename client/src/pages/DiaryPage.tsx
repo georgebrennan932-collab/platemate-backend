@@ -379,6 +379,12 @@ export function DiaryPage() {
                 <button 
                   className="p-2 hover:bg-muted rounded-lg transition-colors"
                   data-testid="button-back-to-home"
+                  onClick={() => {
+                    // Force refresh homepage data when navigating back
+                    queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+                  }}
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>

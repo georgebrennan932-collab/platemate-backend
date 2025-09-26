@@ -1035,6 +1035,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      // Disable caching for diary entries to ensure fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       const entries = await storage.getDiaryEntries(userId, limit);
       res.json(entries);
     } catch (error) {
@@ -1263,6 +1267,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      // Disable caching for drink entries to ensure fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       const entries = await storage.getDrinkEntries(userId, limit);
       res.json(entries);
     } catch (error) {
