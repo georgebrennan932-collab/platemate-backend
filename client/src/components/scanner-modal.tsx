@@ -145,7 +145,14 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
   // Auto-start scanning when modal opens
   useEffect(() => {
     if (isOpen && videoRef.current && !isScanning) {
-      startScanning();
+      // Skip auto-start camera, go directly to manual entry fallback
+      console.log('🔄 Scanner modal opened, bypassing camera and opening manual entry...');
+      setTimeout(() => {
+        console.log('🔄 Opening manual barcode entry automatically...');
+        const event = new CustomEvent('open-manual-barcode', { detail: { manual: true, autoFallback: true } });
+        window.dispatchEvent(event);
+        onClose();
+      }, 500);
     } else if (!isOpen) {
       stopScanning();
     }
