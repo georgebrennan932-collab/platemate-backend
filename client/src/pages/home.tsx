@@ -658,49 +658,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Dark Scan Section - Always Visible */}
-      {currentState === 'camera' && (
-        <div className="max-w-md mx-auto px-6 mb-8">
-          <div className="bg-gray-900 rounded-3xl p-6 text-center">
-            <div className="flex justify-center space-x-8 mb-4">
-              {/* Barcode Scanner Icon */}
-              <button 
-                onClick={() => {
-                  console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner directly");
-                  setShowBarcodeScanner(true);
-                }}
-                className="w-16 h-16 bg-gray-700 rounded-2xl flex items-center justify-center hover:bg-gray-600 transition-colors cursor-pointer" 
-                data-testid="button-scan-barcode"
-              >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white">
-                  <path d="M3 4h18v2H3zM3 8h18v1H3zM3 11h18v1H3zM3 14h18v2H3zM3 18h18v2H3z" fill="currentColor"/>
-                  <path d="M3 4v16h2V4H3zM19 4v16h2V4h-2z" fill="currentColor"/>
-                </svg>
-              </button>
-              
-              {/* Camera Icon */}
-              <button 
-                onClick={() => {
-                  // Show the full camera interface below the buttons
-                  const cameraSection = document.getElementById('camera-section');
-                  if (cameraSection) {
-                    cameraSection.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center hover:bg-blue-500 transition-colors"
-                data-testid="button-take-photo"
-              >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" fill="none"/>
-                  <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2" fill="none"/>
-                </svg>
-              </button>
-            </div>
-            
-            <p className="text-white text-lg font-medium">Tap to scan or take photo</p>
-          </div>
-        </div>
-      )}
 
       {/* Persistent Quick Actions Bar */}
       {(currentState === 'processing' || currentState === 'results' || currentState === 'error') && (
