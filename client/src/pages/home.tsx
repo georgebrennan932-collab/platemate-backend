@@ -158,6 +158,23 @@ export default function Home() {
     return () => clearTimeout(timeoutId);
   }, [nutritionGoals, diaryEntries]);
 
+  // Calculate consumed calories for today
+  const getTodayCalories = () => {
+    if (!diaryEntries) return 0;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todayEntries = diaryEntries.filter(entry => 
+      entry.mealDate && new Date(entry.mealDate).toDateString() === new Date().toDateString()
+    );
+
+    // Sum up calories from diary entries
+    return todayEntries.reduce((total, entry) => {
+      // In a real implementation, this would sum calories from the analysis data
+      // For now, using a placeholder calculation
+      return total + (entry.analysisId ? 300 : 0); // Placeholder: 300 calories per analysis
+    }, 0);
+  };
+
   const handleAnalysisStart = () => {
     soundService.playScan();
     setCurrentState('processing');
@@ -685,6 +702,8 @@ export default function Home() {
             onAnalysisStart={handleAnalysisStart}
             onAnalysisSuccess={handleAnalysisSuccess}
             onAnalysisError={handleAnalysisError}
+            caloriesConsumed={getTodayCalories()}
+            caloriesGoal={nutritionGoals?.dailyCalories || 2000}
           />
         )}
         

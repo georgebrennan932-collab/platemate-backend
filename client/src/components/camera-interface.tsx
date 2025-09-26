@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Images, Zap, Camera, CloudUpload, Syringe, QrCode } from "lucide-react";
+import { Images, Zap, Camera, CloudUpload, Syringe, QrCode, Flame } from "lucide-react";
 import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -15,12 +15,16 @@ interface CameraInterfaceProps {
   onAnalysisStart: () => void;
   onAnalysisSuccess: (data: FoodAnalysis) => void;
   onAnalysisError: (error: string, errorType?: 'food' | 'barcode') => void;
+  caloriesConsumed?: number;
+  caloriesGoal?: number;
 }
 
 export function CameraInterface({
   onAnalysisStart,
   onAnalysisSuccess,
   onAnalysisError,
+  caloriesConsumed = 0,
+  caloriesGoal = 2000,
 }: CameraInterfaceProps) {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -381,16 +385,17 @@ export function CameraInterface({
           />
         )}
         
-        {/* Default Camera Icon */}
+        {/* Calories Remaining Display */}
         {!previewUrl && (
           <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
             <div className="relative z-10 text-center transition-all duration-200 hover:scale-110">
               <div className="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-white/30">
-                <Camera className="text-white h-10 w-10 transition-all duration-200 hover:scale-110" />
+                <Flame className="text-white h-10 w-10 transition-all duration-200 hover:scale-110" />
               </div>
-              <p className="text-white text-base mt-4 font-medium transition-all duration-200 hover:text-white/90">
-                Tap to take photo
-              </p>
+              <div className="mt-4 text-white text-center">
+                <p className="text-2xl font-bold">{Math.max(0, caloriesGoal - caloriesConsumed)}</p>
+                <p className="text-sm font-medium opacity-90">calories remaining</p>
+              </div>
             </div>
           </div>
         )}
