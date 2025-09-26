@@ -65,10 +65,10 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   
-  // Use REPLIT_DEPLOYMENT to detect if we're in deployment mode  
-  // Replit sets REPLIT_DEPLOYMENT to "1" during actual deployments, workspace uses "true"
-  const isDeployment = process.env.REPLIT_DEPLOYMENT === "1" || process.env.REPLIT_DEPLOYMENT === "true";
-  console.log(`🔧 Deployment detection: REPLIT_DEPLOYMENT=${process.env.REPLIT_DEPLOYMENT}, isDeployment=${isDeployment}`);
+  // Force development mode for now to show live changes
+  // Only use deployment mode when NODE_ENV is production
+  const isDeployment = process.env.NODE_ENV === "production";
+  console.log(`🔧 Development mode forced: NODE_ENV=${process.env.NODE_ENV}, isDeployment=${isDeployment}`);
   
   if (!isDeployment) {
     console.log("🔧 Setting up Vite for development mode");
