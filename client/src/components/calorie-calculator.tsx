@@ -182,7 +182,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
       goalWeightKg: data.goalWeightKg,
       activityLevel: data.activityLevel,
       weightGoal: data.weightGoal,
-      weeklyWeightChangeKg: data.weeklyWeightChangeKg,
+      weeklyWeightChangeKg: data.weeklyWeightChangeKg || undefined,
       medication: data.medication,
     };
     

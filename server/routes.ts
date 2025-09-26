@@ -1421,10 +1421,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Nutrition goals routes (protected)
-  app.get("/api/nutrition-goals", isAuthenticated, async (req: any, res) => {
+  // Nutrition goals routes (protected in dev, open in deployment)
+  app.get("/api/nutrition-goals", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // In deployment without auth, use anonymous user ID
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const goals = await storage.getNutritionGoals(userId);
       res.json(goals);
     } catch (error) {
@@ -1433,9 +1434,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/nutrition-goals", isAuthenticated, async (req: any, res) => {
+  app.post("/api/nutrition-goals", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // In deployment without auth, use anonymous user ID
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const validatedGoals = insertNutritionGoalsSchema.parse({
         ...req.body,
         userId
