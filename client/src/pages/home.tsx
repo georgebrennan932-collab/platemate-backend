@@ -585,39 +585,36 @@ export default function Home() {
     <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Custom Header for New Design */}
       <div className="px-4 pt-8 pb-6 text-center relative">
-        <h1 className="text-5xl font-bold mb-2 text-white">PlateMate</h1>
-        <p className="text-lg text-white opacity-90">Voice-powered nutrition companion</p>
-        
-        {/* Navigation Menu */}
+        {/* Navigation Menu - moved above title */}
         {isAuthenticated && (
-          <div className="absolute top-8 right-4 flex items-center space-x-2">
+          <div className="absolute top-4 right-4 flex items-center space-x-2 z-10">
             <Link href="/rewards">
               <button 
-                className="p-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 border border-yellow-400/50 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="p-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 border border-yellow-400/50 shadow-lg hover:shadow-xl transform hover:scale-105"
                 data-testid="button-nav-rewards"
                 title="Rewards & Steps"
               >
-                <Zap className="h-5 w-5 text-white" />
+                <Zap className="h-4 w-4 text-white" />
               </button>
             </Link>
             <Link href="/diary">
               <button 
-                className="p-3 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
+                className="p-2 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
                 data-testid="button-nav-history"
                 title="View Diary"
               >
-                <History className="h-5 w-5 text-white" />
+                <History className="h-4 w-4 text-white" />
               </button>
             </Link>
             
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setShowProfile(!showProfile)}
-                className="flex items-center space-x-1 p-3 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
+                className="flex items-center space-x-1 p-2 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
                 data-testid="button-nav-profile"
                 title="Profile"
               >
-                <User className="h-5 w-5 text-white" />
+                <User className="h-4 w-4 text-white" />
                 {showProfile ? (
                   <ChevronUp className="h-3 w-3 text-white/80" />
                 ) : (
@@ -649,6 +646,11 @@ export default function Home() {
             </div>
           </div>
         )}
+        
+        <div className="mt-8">
+          <h1 className="text-5xl font-bold mb-2 text-white">PlateMate</h1>
+          <p className="text-lg text-white opacity-90">Voice-powered nutrition companion</p>
+        </div>
       </div>
       
       {/* Featured Rewards Section */}
