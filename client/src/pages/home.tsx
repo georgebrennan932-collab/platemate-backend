@@ -585,7 +585,7 @@ export default function Home() {
     <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Custom Header for New Design */}
       <div className="px-4 pt-8 pb-6 text-center relative">
-        <h1 className="text-5xl font-bold mb-2" style={{color: '#22D3EE'}}>PlateMate</h1>
+        <h1 className="text-5xl font-bold mb-2 text-white">PlateMate</h1>
         <p className="text-lg text-white opacity-90">Voice-powered nutrition companion</p>
         
         {/* Navigation Menu */}
