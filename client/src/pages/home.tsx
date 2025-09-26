@@ -652,28 +652,26 @@ export default function Home() {
       </div>
       
       {/* Featured Rewards Section */}
-      {isAuthenticated && (
-        <div className="max-w-md mx-auto px-6 mb-6">
-          <Link href="/rewards">
-            <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-3xl p-6 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-300/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
-                    <Zap className="h-8 w-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-1">Steps Rewards</h3>
-                    <p className="text-white/90 text-sm">Turn steps into earned calories</p>
-                  </div>
+      <div className="max-w-md mx-auto px-6 mb-6">
+        <Link href="/rewards">
+          <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-3xl p-6 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-300/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
+                  <Zap className="h-8 w-8 text-white" />
                 </div>
-                <div className="text-white/80">
-                  <ChevronDown className="h-6 w-6 transform rotate-[-90deg]" />
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-1">Steps Rewards</h3>
+                  <p className="text-white/90 text-sm">Turn steps into earned calories</p>
                 </div>
               </div>
+              <div className="text-white/80">
+                <ChevronDown className="h-6 w-6 transform rotate-[-90deg]" />
+              </div>
             </div>
-          </Link>
-        </div>
-      )}
+          </div>
+        </Link>
+      </div>
       
       {/* 2x2 Action Buttons Grid */}
       {currentState === 'camera' && (
