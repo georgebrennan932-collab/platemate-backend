@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Images, Zap, Camera, CloudUpload, Syringe, QrCode, Flame } from "lucide-react";
 import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { mediaService } from '@/lib/media-service';
@@ -419,17 +420,33 @@ export function CameraInterface({
             </button>
             
             {/* Barcode scanner button */}
-            <button 
-              className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl flex items-center justify-center border border-orange-400 transition-colors duration-200"
+            <motion.button 
+              className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl flex items-center justify-center border border-orange-400 transition-colors duration-200 relative overflow-hidden"
               onClick={() => {
                 console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner (no auto-camera)");
                 setShowBarcodeScanner(true);
               }}
               data-testid="button-barcode"
               title="Scan Barcode"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <QrCode className="text-white h-5 w-5" />
-            </button>
+              <QrCode className="text-white h-5 w-5 z-10 relative" />
+              
+              {/* Animated scan line */}
+              <motion.div
+                className="absolute left-1 right-1 h-0.5 bg-white opacity-80"
+                animate={{
+                  y: [-20, 28]
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "linear"
+                }}
+              />
+            </motion.button>
             
             {/* Main Capture button */}
             <button 

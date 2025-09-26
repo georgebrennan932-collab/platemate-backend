@@ -163,8 +163,8 @@ function SpeechControlButton() {
       data-testid="button-speech-control"
     >
       <motion.div
-        animate={isListening ? { scale: [1, 1.2, 1] } : {}}
-        transition={{ duration: 1, repeat: Infinity }}
+        animate={isListening ? { scale: [1, 1.2, 1] } : { scale: [1, 1.2, 1] }}
+        transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
       >
         {isListening ? (
           <MicOff className="h-6 w-6" />
