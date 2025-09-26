@@ -14,6 +14,7 @@ import CalculatorTestPage from "./pages/CalculatorTestPage";
 import RecipesPage from "./pages/RecipesPage";
 import CoachingPage from "./pages/CoachingPage";
 import GoalsPage from "./pages/GoalsPage";
+import RewardsPage from "./pages/RewardsPage";
 import InjectionAdvicePage from "./pages/InjectionAdvicePage";
 import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/not-found";
@@ -38,6 +39,7 @@ function App() {
       <Route path="/recipes" component={RecipesPage} />
       <Route path="/coaching" component={CoachingPage} />
       <Route path="/goals" component={GoalsPage} />
+      <Route path="/rewards" component={RewardsPage} />
       <Route path="/injection-advice" component={InjectionAdvicePage} />
       <Route path="/help" component={HelpPage} />
       <Route path="/camera" component={CameraTestPage} />
