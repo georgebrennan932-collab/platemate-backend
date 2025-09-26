@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 
 export function useAuth() {
-  // Simplified auth for camera troubleshooting - disable auth temporarily
+  // Always return authenticated for demo mode to ensure data loads
   return {
-    user: null,
+    user: { id: 'demo-user', name: 'Demo User' } as User,
     isLoading: false,
-    isAuthenticated: false,
+    isAuthenticated: true,
     requiresLogin: false,
   };
 }
