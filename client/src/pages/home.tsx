@@ -15,7 +15,7 @@ import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
-import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
+import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 
@@ -66,10 +66,10 @@ export default function Home() {
     throwOnError: false,
   });
 
-  const { data: diaryEntries } = useQuery<DiaryEntry[]>({
+  const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
     retry: false,
-    enabled: false, // Disabled for camera troubleshooting
+    enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
   });
   
@@ -167,11 +167,10 @@ export default function Home() {
       entry.mealDate && new Date(entry.mealDate).toDateString() === new Date().toDateString()
     );
 
-    // Sum up calories from diary entries
+    // Sum up actual calories from diary entries' food analyses
     return todayEntries.reduce((total, entry) => {
-      // In a real implementation, this would sum calories from the analysis data
-      // For now, using a placeholder calculation
-      return total + (entry.analysisId ? 300 : 0); // Placeholder: 300 calories per analysis
+      // Use the actual totalCalories from the food analysis
+      return total + (entry.analysis?.totalCalories || 0);
     }, 0);
   };
 
