@@ -268,7 +268,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analyze food image - bypass auth in deployment since users won't have Replit authentication
-  const requireAuth = !(process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true' || process.env.REPLIT_DEPLOYMENT === true);
+  const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true';
+  const requireAuth = !isDeployment;
   const authMiddleware = requireAuth ? isAuthenticated : (req: any, res: any, next: any) => next();
   
   app.post("/api/analyze", authMiddleware, upload.single('image'), async (req: any, res) => {
