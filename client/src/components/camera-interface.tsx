@@ -416,11 +416,12 @@ export function CameraInterface({
             <button 
               className="w-12 h-12 bg-purple-100 dark:bg-purple-200 rounded-xl flex items-center justify-center border border-purple-200 dark:border-purple-300 hover:bg-purple-200 dark:hover:bg-purple-300 transition-colors duration-200"
               onClick={() => {
-                console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner directly (from camera interface)");
-                setShowBarcodeScanner(true);
+                console.log("🔍 BARCODE BUTTON CLICKED - Opening manual barcode entry directly (bypassing camera)");
+                const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
+                window.dispatchEvent(event);
               }}
               data-testid="button-barcode"
-              title="Scan Barcode"
+              title="Enter Barcode Manually"
             >
               <QrCode className="text-purple-600 dark:text-purple-700 h-5 w-5" />
             </button>
