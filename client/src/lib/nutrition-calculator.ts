@@ -220,3 +220,46 @@ export function validateMacroCalculations(macros: MacroTargets): { actualCalorie
   
   return { actualCalories, variance };
 }
+
+/**
+ * Calculate today's nutrition data from diary and drink entries
+ */
+export function calculateTodayNutrition(
+  diaryEntries: any[], 
+  drinkEntries: any[] = []
+): { calories: number; protein: number; carbs: number; fat: number; water: number } {
+  const today = new Date().toDateString();
+  
+  // Filter today's entries
+  const todayDiaryEntries = diaryEntries.filter(entry => 
+    entry.mealDate && new Date(entry.mealDate).toDateString() === today
+  );
+  
+  const todayDrinkEntries = drinkEntries.filter(drink => 
+    drink.loggedAt && new Date(drink.loggedAt).toDateString() === today
+  );
+
+  // Calculate nutrition from food diary entries
+  const nutrition = todayDiaryEntries.reduce((total, entry) => ({
+    calories: total.calories + (entry.analysis?.totalCalories || 0),
+    protein: total.protein + (entry.analysis?.totalProtein || 0),
+    carbs: total.carbs + (entry.analysis?.totalCarbs || 0),
+    fat: total.fat + (entry.analysis?.totalFat || 0),
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+  // Add calories from drinks
+  const drinkCalories = todayDrinkEntries.reduce((total, drink) => total + (drink.calories || 0), 0);
+  
+  // Calculate water intake from specific drink types
+  const water = todayDrinkEntries
+    .filter(drink => ['water', 'tea', 'coffee'].includes(drink.drinkType))
+    .reduce((total, drink) => total + drink.amount, 0);
+
+  return {
+    calories: nutrition.calories + drinkCalories,
+    protein: nutrition.protein,
+    carbs: nutrition.carbs,
+    fat: nutrition.fat,
+    water,
+  };
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/app-header";
@@ -120,27 +121,12 @@ export default function Home() {
 
       if (lastCelebration) return; // Already celebrated today
 
-      // Calculate nutrition progress from actual diary entries
-      const todayEntries = diaryEntries.filter(entry => 
-        entry.mealDate && new Date(entry.mealDate).toDateString() === new Date().toDateString()
-      );
-
-      let totalCalories = 0;
-      let totalProtein = 0;
-      let totalCarbs = 0;
-      let totalFat = 0;
-
-      todayEntries.forEach(entry => {
-        // Use actual nutrition data from food analyses
-        totalCalories += entry.analysis?.totalCalories || 0;
-        totalProtein += entry.analysis?.totalProtein || 0;
-        totalCarbs += entry.analysis?.totalCarbs || 0;
-        totalFat += entry.analysis?.totalFat || 0;
-      });
+      // Calculate nutrition progress using centralized function
+      const todayNutrition = calculateTodayNutrition(diaryEntries || [], []);
 
       // Check if nutrition goals are achieved
-      const caloriesAchieved = totalCalories >= (nutritionGoals.dailyCalories || 2000);
-      const proteinAchieved = totalProtein >= (nutritionGoals.dailyProtein || 150);
+      const caloriesAchieved = todayNutrition.calories >= (nutritionGoals.dailyCalories || 2000);
+      const proteinAchieved = todayNutrition.protein >= (nutritionGoals.dailyProtein || 150);
 
       // Show confetti if any goal is achieved
       if (caloriesAchieved || proteinAchieved) {
@@ -157,20 +143,10 @@ export default function Home() {
     return () => clearTimeout(timeoutId);
   }, [nutritionGoals, diaryEntries]);
 
-  // Calculate consumed calories for today
+  // Calculate consumed calories for today using centralized function
   const getTodayCalories = () => {
     if (!diaryEntries) return 0;
-    
-    const today = new Date().toISOString().split('T')[0];
-    const todayEntries = diaryEntries.filter(entry => 
-      entry.mealDate && new Date(entry.mealDate).toDateString() === new Date().toDateString()
-    );
-
-    // Sum up actual calories from diary entries' food analyses
-    return todayEntries.reduce((total, entry) => {
-      // Use the actual totalCalories from the food analysis
-      return total + (entry.analysis?.totalCalories || 0);
-    }, 0);
+    return calculateTodayNutrition(diaryEntries, []).calories;
   };
 
   const handleAnalysisStart = () => {
