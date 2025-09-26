@@ -12,7 +12,7 @@ import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
-import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
+import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 
@@ -46,7 +46,7 @@ export function CameraPage() {
     retry: false,
   });
 
-  const { data: diaryEntries } = useQuery<DiaryEntry[]>({
+  const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
     retry: false,
   });

@@ -62,7 +62,7 @@ export default function Home() {
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
     retry: false,
-    enabled: false, // Disabled for camera troubleshooting
+    enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
   });
 
@@ -120,7 +120,7 @@ export default function Home() {
 
       if (lastCelebration) return; // Already celebrated today
 
-      // Calculate nutrition progress
+      // Calculate nutrition progress from actual diary entries
       const todayEntries = diaryEntries.filter(entry => 
         entry.mealDate && new Date(entry.mealDate).toDateString() === new Date().toDateString()
       );
@@ -131,12 +131,11 @@ export default function Home() {
       let totalFat = 0;
 
       todayEntries.forEach(entry => {
-        // Note: This will need proper calculation with analysis data in real implementation
-        // For now, using placeholder values
-        totalCalories += 100; // Placeholder
-        totalProtein += 10; // Placeholder
-        totalCarbs += 15; // Placeholder
-        totalFat += 5; // Placeholder
+        // Use actual nutrition data from food analyses
+        totalCalories += entry.analysis?.totalCalories || 0;
+        totalProtein += entry.analysis?.totalProtein || 0;
+        totalCarbs += entry.analysis?.totalCarbs || 0;
+        totalFat += entry.analysis?.totalFat || 0;
       });
 
       // Check if nutrition goals are achieved
