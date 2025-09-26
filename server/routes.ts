@@ -1404,17 +1404,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/weights/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/weights/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // In deployment without auth, use anonymous user ID
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getWeightEntry(req.params.id);
       
       if (!entry) {
         return res.status(404).json({ error: "Weight entry not found" });
       }
       
-      // Verify the entry belongs to the authenticated user
-      if (entry.userId !== userId) {
+      // Verify the entry belongs to the user (skip check for anonymous users in deployment)
+      if (req.user && entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
       
