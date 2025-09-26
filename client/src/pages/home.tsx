@@ -74,7 +74,7 @@ export default function Home() {
     throwOnError: false,
   });
   
-  // Initialize speech recognition
+  // Initialize speech recognition and handle page visibility
   useEffect(() => {
     const checkSpeechSupport = () => {
       const supported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
@@ -82,8 +82,21 @@ export default function Home() {
     };
     checkSpeechSupport();
     
+    // Refetch data when the page becomes visible (handles navigation back from other pages)
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isAuthenticated) {
+        // Refetch both diary entries and nutrition goals when page becomes visible
+        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+      }
+    };
+
+    // Listen for page visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     // Cleanup function to clear any pending nutrition updates
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (nutritionUpdateTimer) {
         clearTimeout(nutritionUpdateTimer);
       }
@@ -91,7 +104,7 @@ export default function Home() {
         nutritionUpdateController.abort();
       }
     };
-  }, []);
+  }, [isAuthenticated, queryClient]);
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
