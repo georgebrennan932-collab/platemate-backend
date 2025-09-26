@@ -13,6 +13,8 @@ import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
+import { ScannerModal } from "@/components/scanner-modal";
+import { BarcodeScanner } from "@/components/barcode-scanner";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
@@ -46,6 +48,10 @@ export default function Home() {
   const [textInput, setTextInput] = useState('');
   const [showTextMealDialog, setShowTextMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
+  
+  // Barcode scanner state
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   
   
   // Persistent confetti celebration state
@@ -461,6 +467,69 @@ export default function Home() {
     },
   });
 
+  const barcodeMutation = useMutation({
+    mutationFn: async (barcode: string) => {
+      console.log("🔍 Looking up barcode:", barcode);
+      
+      const response = await apiRequest('POST', '/api/barcode', { barcode });
+      const result = await response.json();
+      console.log("✅ Barcode lookup successful:", result);
+      return result;
+    },
+    onMutate: () => {
+      setCurrentState('processing');
+    },
+    onSuccess: (data: FoodAnalysis) => {
+      console.log("🎉 Barcode lookup success:", data);
+      setShowBarcodeScanner(false);
+      handleAnalysisSuccess(data);
+    },
+    onError: (error: Error) => {
+      console.error("💥 Barcode lookup error:", error);
+      
+      // If product not found, fallback to manual entry
+      if (error.message.includes("Product not found") || error.message.includes("not found")) {
+        console.log("🔄 Product not found, opening manual entry fallback");
+        setShowBarcodeScanner(false);
+        setShowManualEntry(true);
+        toast({
+          title: "Product Not Found",
+          description: "This barcode wasn't found in our database. Please enter the product details manually.",
+          variant: "default",
+        });
+      } else {
+        // Other errors
+        toast({
+          title: "Barcode Scanner Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        setShowBarcodeScanner(false);
+        handleAnalysisError(error.message, 'barcode');
+      }
+    },
+  });
+
+  const handleBarcodeScanned = (barcode: string) => {
+    console.log("📷 Barcode scanned on homepage:", {
+      barcode,
+      length: barcode.length,
+      type: barcode.length === 12 ? 'UPC-A' : barcode.length === 13 ? 'EAN-13' : 'Other'
+    });
+    barcodeMutation.mutate(barcode);
+  };
+
+  // Listen for manual barcode entry events
+  useEffect(() => {
+    const handleManualBarcodeEvent = () => {
+      setShowBarcodeScanner(false);
+      setShowManualEntry(true);
+    };
+
+    window.addEventListener('open-manual-barcode', handleManualBarcodeEvent);
+    return () => window.removeEventListener('open-manual-barcode', handleManualBarcodeEvent);
+  }, []);
+
   return (
     <div className="min-h-screen text-foreground" style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}>
       {/* Custom Header for New Design */}
@@ -595,14 +664,19 @@ export default function Home() {
           <div className="bg-gray-900 rounded-3xl p-6 text-center">
             <div className="flex justify-center space-x-8 mb-4">
               {/* Barcode Scanner Icon */}
-              <Link href="/scan">
-                <div className="w-16 h-16 bg-gray-700 rounded-2xl flex items-center justify-center hover:bg-gray-600 transition-colors cursor-pointer" data-testid="button-scan-barcode">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white">
-                    <path d="M3 4h18v2H3zM3 8h18v1H3zM3 11h18v1H3zM3 14h18v2H3zM3 18h18v2H3z" fill="currentColor"/>
-                    <path d="M3 4v16h2V4H3zM19 4v16h2V4h-2z" fill="currentColor"/>
-                  </svg>
-                </div>
-              </Link>
+              <button 
+                onClick={() => {
+                  console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner directly");
+                  setShowBarcodeScanner(true);
+                }}
+                className="w-16 h-16 bg-gray-700 rounded-2xl flex items-center justify-center hover:bg-gray-600 transition-colors cursor-pointer" 
+                data-testid="button-scan-barcode"
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white">
+                  <path d="M3 4h18v2H3zM3 8h18v1H3zM3 11h18v1H3zM3 14h18v2H3zM3 18h18v2H3z" fill="currentColor"/>
+                  <path d="M3 4v16h2V4H3zM19 4v16h2V4h-2z" fill="currentColor"/>
+                </svg>
+              </button>
               
               {/* Camera Icon */}
               <button 
@@ -1044,6 +1118,29 @@ export default function Home() {
       {/* Bottom Help Section */}
       <BottomHelpSection />
       
+
+      {/* Camera Barcode Scanner Modal */}
+      <ScannerModal
+        isOpen={showBarcodeScanner}
+        onScanSuccess={(barcode: string) => {
+          handleBarcodeScanned(barcode);
+        }}
+        onClose={() => {
+          setShowBarcodeScanner(false);
+        }}
+      />
+
+      {/* Manual Barcode Entry */}
+      <BarcodeScanner
+        isOpen={showManualEntry}
+        onScanSuccess={(barcode: string) => {
+          setShowManualEntry(false);
+          handleBarcodeScanned(barcode);
+        }}
+        onClose={() => {
+          setShowManualEntry(false);
+        }}
+      />
 
       {/* Persistent confetti celebration */}
       <ConfettiCelebration 
