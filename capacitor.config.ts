@@ -5,7 +5,18 @@ const config: CapacitorConfig = {
   appName: 'PlateMate',
   webDir: 'dist/public',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    // For development, use the Replit URL; for production, use the published app URL
+    url: process.env.NODE_ENV === 'development' 
+      ? (process.env.REPLIT_DOMAINS?.split(',')[0] ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : undefined)
+      : undefined,
+    cleartext: false, // Force HTTPS for security
+    allowNavigation: [
+      'https://replit.com',  // Allow navigation to Replit auth
+      '*://localhost:*',     // Allow localhost for development
+      'https://*.replit.dev', // Allow all Replit domains
+      'https://*.replit.app'  // Allow published app domains
+    ]
   },
   plugins: {
     SplashScreen: {

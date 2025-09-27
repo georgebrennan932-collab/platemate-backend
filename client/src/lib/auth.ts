@@ -1,4 +1,5 @@
 import { queryClient } from "./queryClient";
+import { mobileCompatibleFetch, shouldUseJsonResponse } from "./mobile-auth";
 
 export interface LogoutOptions {
   redirectTo?: string;
@@ -11,14 +12,13 @@ export async function logout(options: LogoutOptions = {}) {
   try {
     console.log('🚪 Starting logout process...');
     
-    // For mobile apps, use fetch with JSON preference
-    const response = await fetch('/api/logout', {
+    // Use mobile-compatible fetch with platform-specific headers
+    const response = await mobileCompatibleFetch('/api/logout', {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
+        'Accept': shouldUseJsonResponse() ? 'application/json' : 'text/html,application/json',
         'Content-Type': 'application/json',
       },
-      credentials: 'include', // Important for cookies
     });
 
     // Clear all React Query cache to remove any cached authenticated data
