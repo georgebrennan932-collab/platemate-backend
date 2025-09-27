@@ -115,23 +115,57 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.get("/api/logout", (req, res) => {
-    req.logout((err) => {
+  // Support both GET and POST for logout (mobile compatibility)
+  const logoutHandler = (req: any, res: any) => {
+    const acceptsJson = req.headers.accept && req.headers.accept.includes('application/json');
+    
+    // If user is not authenticated, just redirect/respond appropriately
+    if (!req.isAuthenticated()) {
+      if (acceptsJson) {
+        return res.json({ success: true, message: "Already logged out" });
+      }
+      return res.redirect('/');
+    }
+
+    req.logout((err: any) => {
       if (err) {
         console.error("Logout error:", err);
       }
+      
       // Destroy the session completely
-      req.session.destroy((err) => {
-        if (err) {
-          console.error("Session destroy error:", err);
+      if (req.session) {
+        req.session.destroy((err: any) => {
+          if (err) {
+            console.error("Session destroy error:", err);
+          }
+          
+          // Clear all session-related cookies
+          res.clearCookie('connect.sid', { path: '/' });
+          res.clearCookie('connect.sid', { path: '/', domain: req.hostname });
+          
+          // Response based on client preference
+          if (acceptsJson) {
+            res.json({ success: true, message: "Logged out successfully" });
+          } else {
+            res.redirect('/');
+          }
+        });
+      } else {
+        // No session to destroy, just clear cookies and respond
+        res.clearCookie('connect.sid', { path: '/' });
+        res.clearCookie('connect.sid', { path: '/', domain: req.hostname });
+        
+        if (acceptsJson) {
+          res.json({ success: true, message: "Logged out successfully" });
+        } else {
+          res.redirect('/');
         }
-        // Clear the session cookie
-        res.clearCookie('connect.sid');
-        // Redirect to homepage
-        res.redirect('/');
-      });
+      }
     });
-  });
+  };
+
+  app.get("/api/logout", logoutHandler);
+  app.post("/api/logout", logoutHandler);
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {

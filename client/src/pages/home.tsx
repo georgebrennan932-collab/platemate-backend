@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { logout } from "@/lib/auth";
 import { AppHeader } from "@/components/app-header";
 import { soundService } from "@/lib/sound-service";
 import { CameraInterface } from "@/components/camera-interface";
@@ -636,10 +637,14 @@ export default function Home() {
                     </div>
                   )}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                    <a href="/api/logout" className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" data-testid="button-nav-logout">
+                    <button 
+                      onClick={() => logout()}
+                      className="w-full flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" 
+                      data-testid="button-nav-logout"
+                    >
                       <LogOut className="h-4 w-4" />
                       <span className="text-sm font-medium">Logout</span>
-                    </a>
+                    </button>
                   </div>
                 </div>
               )}
