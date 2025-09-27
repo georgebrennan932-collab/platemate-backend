@@ -2,11 +2,28 @@ import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 
 export function useAuth() {
-  // Always return authenticated for demo mode to ensure data loads
+  const { data: authData, isLoading, error } = useQuery({
+    queryKey: ['/api/auth/me'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Not authenticated');
+      }
+      return response.json();
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  const isAuthenticated = !error && !isLoading && !!authData;
+
   return {
-    user: { id: 'demo-user', name: 'Demo User' } as User,
-    isLoading: false,
-    isAuthenticated: true,
-    requiresLogin: false,
+    user: authData?.user || null,
+    isLoading,
+    isAuthenticated,
+    requiresLogin: !isAuthenticated && !isLoading,
   };
 }

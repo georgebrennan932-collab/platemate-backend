@@ -165,6 +165,26 @@ export async function setupAuth(app: Express) {
   app.get("/api/logout", (req, res) => {
     res.redirect(307, '/api/logout');
   });
+
+  // Authentication status endpoint
+  app.get("/api/auth/me", (req, res) => {
+    if (req.isAuthenticated()) {
+      const user = req.user as any;
+      res.json({
+        authenticated: true,
+        user: {
+          id: user?.sub || user?.id || 'user',
+          name: user?.name || user?.preferred_username || 'User',
+          email: user?.email
+        }
+      });
+    } else {
+      res.status(401).json({
+        authenticated: false,
+        message: "Not authenticated"
+      });
+    }
+  });
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {

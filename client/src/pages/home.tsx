@@ -643,6 +643,8 @@ export default function Home() {
                           
                           // Clear all React Query cache first
                           queryClient.clear();
+                          // Specifically invalidate auth cache
+                          queryClient.removeQueries({ queryKey: ['/api/auth/me'] });
                           
                           // Call logout endpoint
                           const response = await fetch('/api/logout', { 
