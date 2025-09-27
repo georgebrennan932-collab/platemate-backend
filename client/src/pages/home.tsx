@@ -4,7 +4,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { logout } from "@/lib/auth";
 import { AppHeader } from "@/components/app-header";
 import { soundService } from "@/lib/sound-service";
 import { CameraInterface } from "@/components/camera-interface";
@@ -26,7 +25,7 @@ type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, isAuthenticated, isLoading, requiresLogin } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -582,54 +581,6 @@ export default function Home() {
     return () => window.removeEventListener('open-manual-barcode', handleManualBarcodeEvent);
   }, []);
 
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-foreground" style={{background: 'var(--bg-gradient)'}}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show login screen when user needs to log in
-  if (requiresLogin) {
-    return (
-      <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
-        <div className="max-w-md mx-auto px-6 py-8 text-center">
-          <div className="mt-16">
-            <div className="bg-white/20 p-4 rounded-full w-fit mx-auto mb-6">
-              <Utensils className="h-12 w-12 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold mb-4 text-white">PlateMate</h1>
-            <p className="text-lg text-white/90 mb-8">
-              Your voice-powered AI nutrition companion
-            </p>
-            <p className="text-white/80 mb-8">
-              Sign in to start tracking your nutrition with voice commands and AI-powered food analysis.
-            </p>
-            <a href="/api/login">
-              <button 
-                className="w-full py-4 px-8 bg-white text-purple-600 font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-3"
-                data-testid="button-login"
-              >
-                <User className="h-6 w-6" />
-                <span className="text-lg">Sign In to Continue</span>
-              </button>
-            </a>
-            <div className="mt-8 text-center">
-              <p className="text-white/60 text-sm">
-                Secure authentication powered by Replit
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Custom Header for New Design */}
@@ -685,14 +636,10 @@ export default function Home() {
                     </div>
                   )}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                    <button 
-                      onClick={() => logout()}
-                      className="w-full flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" 
-                      data-testid="button-nav-logout"
-                    >
+                    <a href="/api/logout" className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" data-testid="button-nav-logout">
                       <LogOut className="h-4 w-4" />
                       <span className="text-sm font-medium">Logout</span>
-                    </button>
+                    </a>
                   </div>
                 </div>
               )}

@@ -1,6 +1,5 @@
 import { Switch, Route } from "wouter";
 import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
 
 // ✅ Pages in your /pages folder
 import CameraPage from "./pages/CameraPage";
@@ -20,24 +19,6 @@ import InjectionAdvicePage from "./pages/InjectionAdvicePage";
 import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/not-found";
 
-// Smart route component that shows landing page for unauthenticated users and home for authenticated users
-function RootRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-foreground" style={{background: 'var(--bg-gradient)'}}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  return isAuthenticated ? <Home /> : <LandingPage />;
-}
-
 function App() {
   useEffect(() => {
     console.log("App loaded");
@@ -45,7 +26,7 @@ function App() {
 
   return (
     <Switch>
-      <Route path="/" component={RootRoute} />
+      <Route path="/" component={Home} />
       <Route path="/landing" component={LandingPage} />
       <Route path="/scan" component={CameraPage} />
       <Route path="/home" component={Home} />
