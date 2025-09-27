@@ -8,6 +8,9 @@ const config: CapacitorConfig = {
     androidScheme: 'https'
   },
   plugins: {
+    App: {
+      urlScheme: 'com.platemate.app'
+    },
     SplashScreen: {
       launchShowDuration: 2000,
       backgroundColor: "#8B5CF6",

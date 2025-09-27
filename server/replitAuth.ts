@@ -183,6 +183,86 @@ export async function setupAuth(app: Express) {
     res.redirect(307, '/api/logout');
   });
 
+  // Mobile OAuth callback endpoint
+  app.post("/api/auth/mobile-callback", async (req, res) => {
+    try {
+      const { code, state } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ message: "Authorization code required" });
+      }
+
+      console.log('📱 Processing mobile OAuth callback with code:', code);
+      
+      // Exchange the code for tokens using the OAuth client
+      const config = await getOidcConfig();
+      const hostname = req.hostname;
+      
+      // Use a simpler approach - let's manually handle the token exchange
+      const tokenUrl = config.token_endpoint;
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: `https://${hostname}/api/callback`,
+          client_id: process.env.REPL_ID!,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Token exchange failed: ${response.status}`);
+      }
+
+      const tokenData = await response.json();
+      console.log('✅ Token exchange successful');
+
+      
+      // Create a mock token set for compatibility with existing functions
+      const tokenSet = {
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        claims: () => {
+          // Decode the ID token to get user claims
+          const idToken = tokenData.id_token;
+          if (idToken && typeof idToken === 'string') {
+            try {
+              const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString());
+              return payload;
+            } catch (error) {
+              console.error('Error decoding ID token:', error);
+              return {};
+            }
+          }
+          return {};
+        }
+      };
+      
+      // Create user session
+      const user = {};
+      updateUserSession(user, tokenSet);
+      await upsertUser(tokenSet.claims());
+      
+      // Login the user via passport
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Login error:', err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        
+        console.log('🎉 Mobile authentication complete');
+        res.json({ success: true, message: "Authentication successful" });
+      });
+      
+    } catch (error) {
+      console.error('❌ Mobile OAuth error:', error);
+      res.status(401).json({ message: "Authentication failed" });
+    }
+  });
+
   // Authentication status endpoint
   app.get("/api/auth/me", (req, res) => {
     if (req.isAuthenticated()) {
