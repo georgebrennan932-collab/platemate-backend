@@ -102,10 +102,27 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    // Check if this is a mobile app request
+    const userAgent = req.get('User-Agent') || '';
+    const isMobile = userAgent.includes('Capacitor') || userAgent.includes('Mobile');
+    
+    if (isMobile) {
+      // For mobile apps, redirect to a mobile-friendly OAuth flow
+      const authUrl = `https://replit.com/oidc/auth?` +
+        `client_id=${process.env.REPL_ID}&` +
+        `redirect_uri=https://${req.hostname}/api/callback&` +
+        `response_type=code&` +
+        `scope=openid email profile offline_access&` +
+        `prompt=login consent`;
+      
+      res.redirect(authUrl);
+    } else {
+      // Regular web browser authentication
+      passport.authenticate(`replitauth:${req.hostname}`, {
+        prompt: "login consent",
+        scope: ["openid", "email", "profile", "offline_access"],
+      })(req, res, next);
+    }
   });
 
   app.get("/api/callback", (req, res, next) => {
