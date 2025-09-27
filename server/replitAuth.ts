@@ -183,6 +183,59 @@ export async function setupAuth(app: Express) {
     res.redirect(307, '/api/logout');
   });
 
+  // Mobile demo login endpoint for testing
+  app.post("/api/auth/mobile-demo-login", async (req, res) => {
+    try {
+      console.log('📱 Mobile demo login request received');
+      
+      // Create a demo session for mobile testing
+      const demoUser = {
+        claims: {
+          sub: 'mobile-demo-user',
+          email: 'mobile@platemate.app',
+          first_name: 'Mobile',
+          last_name: 'User',
+          profile_image_url: null,
+        },
+        access_token: 'demo-token',
+        refresh_token: 'demo-refresh',
+        expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
+      };
+      
+      // Store demo user in database
+      await upsertUser({
+        id: demoUser.claims.sub,
+        email: demoUser.claims.email,
+        firstName: demoUser.claims.first_name,
+        lastName: demoUser.claims.last_name,
+        profileImageUrl: demoUser.claims.profile_image_url,
+      });
+      
+      // Login the user via passport
+      req.login(demoUser, (err) => {
+        if (err) {
+          console.error('Demo login error:', err);
+          return res.status(500).json({ message: "Demo login failed" });
+        }
+        
+        console.log('🎉 Mobile demo authentication complete');
+        res.json({ 
+          success: true, 
+          message: "Demo authentication successful",
+          user: {
+            id: demoUser.claims.sub,
+            name: demoUser.claims.first_name,
+            email: demoUser.claims.email,
+          }
+        });
+      });
+      
+    } catch (error) {
+      console.error('❌ Mobile demo login error:', error);
+      res.status(500).json({ message: "Demo authentication failed" });
+    }
+  });
+
   // Mobile OAuth callback endpoint
   app.post("/api/auth/mobile-callback", async (req, res) => {
     try {

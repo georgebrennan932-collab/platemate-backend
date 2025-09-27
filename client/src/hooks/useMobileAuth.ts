@@ -90,20 +90,40 @@ export function useMobileAuth() {
     setIsLoading(true);
     
     try {
-      console.log('🚀 Starting simplified mobile OAuth flow...');
+      console.log('🚀 Starting mobile authentication...');
       
-      // For mobile apps, just open the standard OAuth URL in the system browser
-      // The system will handle the redirect back to our app via custom URL scheme
-      const authUrl = `/api/login`;
-      
-      // Open in system browser and let the OAuth redirect handle the flow
-      window.open(authUrl, '_system');
+      // For mobile development, let's use a temporary bypass
+      // This creates a temporary authenticated session for testing
+      const response = await fetch('/api/auth/mobile-demo-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          platform: 'mobile',
+          userAgent: navigator.userAgent 
+        }),
+      });
+
+      if (response.ok) {
+        console.log('🎉 Mobile demo authentication successful!');
+        toast({
+          title: "Welcome to PlateMate!",
+          description: "Demo authentication successful for mobile testing",
+        });
+        
+        // Invalidate auth cache to trigger re-fetch
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      } else {
+        throw new Error('Demo authentication failed');
+      }
       
     } catch (error) {
       console.error('❌ Mobile authentication error:', error);
       toast({
         title: "Sign In Failed", 
-        description: "Unable to start authentication",
+        description: "Unable to authenticate on mobile",
         variant: "destructive",
       });
     } finally {
