@@ -14,13 +14,10 @@ export function useAuth() {
       return response.json();
     },
     retry: false,
-    refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    // Don't retry on error and mark as settled
-    retryOnMount: false,
   });
 
   const isAuthenticated = !error && !isLoading && !!authData;
