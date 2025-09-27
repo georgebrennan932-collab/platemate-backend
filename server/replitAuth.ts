@@ -102,27 +102,10 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    // Check if this is a mobile app request
-    const userAgent = req.get('User-Agent') || '';
-    const isMobile = userAgent.includes('Capacitor') || userAgent.includes('Mobile');
-    
-    if (isMobile) {
-      // For mobile apps, redirect to a mobile-friendly OAuth flow
-      const authUrl = `https://replit.com/oidc/auth?` +
-        `client_id=${process.env.REPL_ID}&` +
-        `redirect_uri=https://${req.hostname}/api/callback&` +
-        `response_type=code&` +
-        `scope=openid email profile offline_access&` +
-        `prompt=login consent`;
-      
-      res.redirect(authUrl);
-    } else {
-      // Regular web browser authentication
-      passport.authenticate(`replitauth:${req.hostname}`, {
-        prompt: "login consent",
-        scope: ["openid", "email", "profile", "offline_access"],
-      })(req, res, next);
-    }
+    passport.authenticate(`replitauth:${req.hostname}`, {
+      prompt: "login consent",
+      scope: ["openid", "email", "profile", "offline_access"],
+    })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
@@ -132,11 +115,7 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res) => {
-    console.log("🚪 Logout request received");
-    console.log("🔍 Current session ID:", req.sessionID);
-    console.log("🔍 User authenticated:", req.isAuthenticated());
-    
+  app.get("/api/logout", (req, res) => {
     req.logout((err) => {
       if (err) {
         console.error("Logout error:", err);
@@ -146,194 +125,12 @@ export async function setupAuth(app: Express) {
         if (err) {
           console.error("Session destroy error:", err);
         }
-        
-        // Clear ALL possible session cookies aggressively
-        const cookieOptions = [
-          { name: 'connect.sid', options: { path: '/', httpOnly: true, secure: false, sameSite: 'lax' as const } },
-          { name: 'connect.sid', options: { path: '/', httpOnly: true, secure: true, sameSite: 'lax' as const } },
-          { name: 'connect.sid', options: { path: '/' } },
-          { name: 'session', options: { path: '/' } },
-          { name: 'sid', options: { path: '/' } },
-        ];
-        
-        cookieOptions.forEach(({ name, options }) => {
-          res.clearCookie(name, options);
-        });
-        
-        // Set headers to prevent caching
-        res.set({
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        });
-        
-        console.log("🚪 Session destroyed and all cookies cleared");
-        // Return success status
-        res.status(200).json({ 
-          success: true, 
-          message: "Logged out successfully",
-          cleared: true
-        });
+        // Clear the session cookie
+        res.clearCookie('connect.sid');
+        // Redirect to homepage
+        res.redirect('/');
       });
     });
-  });
-
-  // Keep GET endpoint for backwards compatibility but redirect to POST
-  app.get("/api/logout", (req, res) => {
-    res.redirect(307, '/api/logout');
-  });
-
-  // Mobile demo login endpoint for testing
-  app.post("/api/auth/mobile-demo-login", async (req, res) => {
-    try {
-      console.log('📱 Mobile demo login request received');
-      
-      // Create a demo session for mobile testing
-      const demoUser = {
-        claims: {
-          sub: 'mobile-demo-user',
-          email: 'mobile@platemate.app',
-          first_name: 'Mobile',
-          last_name: 'User',
-          profile_image_url: null,
-        },
-        access_token: 'demo-token',
-        refresh_token: 'demo-refresh',
-        expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
-      };
-      
-      // Store demo user in database
-      await upsertUser({
-        id: demoUser.claims.sub,
-        email: demoUser.claims.email,
-        firstName: demoUser.claims.first_name,
-        lastName: demoUser.claims.last_name,
-        profileImageUrl: demoUser.claims.profile_image_url,
-      });
-      
-      // Login the user via passport
-      req.login(demoUser, (err) => {
-        if (err) {
-          console.error('Demo login error:', err);
-          return res.status(500).json({ message: "Demo login failed" });
-        }
-        
-        console.log('🎉 Mobile demo authentication complete');
-        res.json({ 
-          success: true, 
-          message: "Demo authentication successful",
-          user: {
-            id: demoUser.claims.sub,
-            name: demoUser.claims.first_name,
-            email: demoUser.claims.email,
-          }
-        });
-      });
-      
-    } catch (error) {
-      console.error('❌ Mobile demo login error:', error);
-      res.status(500).json({ message: "Demo authentication failed" });
-    }
-  });
-
-  // Mobile OAuth callback endpoint
-  app.post("/api/auth/mobile-callback", async (req, res) => {
-    try {
-      const { code, state } = req.body;
-      
-      if (!code) {
-        return res.status(400).json({ message: "Authorization code required" });
-      }
-
-      console.log('📱 Processing mobile OAuth callback with code:', code);
-      
-      // Exchange the code for tokens using the OAuth client
-      const config = await getOidcConfig();
-      const hostname = req.hostname;
-      
-      // Use a simpler approach - let's manually handle the token exchange
-      const tokenUrl = config.token_endpoint;
-      const response = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: `https://${hostname}/api/callback`,
-          client_id: process.env.REPL_ID!,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Token exchange failed: ${response.status}`);
-      }
-
-      const tokenData = await response.json();
-      console.log('✅ Token exchange successful');
-
-      
-      // Create a mock token set for compatibility with existing functions
-      const tokenSet = {
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-        claims: () => {
-          // Decode the ID token to get user claims
-          const idToken = tokenData.id_token;
-          if (idToken && typeof idToken === 'string') {
-            try {
-              const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString());
-              return payload;
-            } catch (error) {
-              console.error('Error decoding ID token:', error);
-              return {};
-            }
-          }
-          return {};
-        }
-      };
-      
-      // Create user session
-      const user = {};
-      updateUserSession(user, tokenSet);
-      await upsertUser(tokenSet.claims());
-      
-      // Login the user via passport
-      req.login(user, (err) => {
-        if (err) {
-          console.error('Login error:', err);
-          return res.status(500).json({ message: "Login failed" });
-        }
-        
-        console.log('🎉 Mobile authentication complete');
-        res.json({ success: true, message: "Authentication successful" });
-      });
-      
-    } catch (error) {
-      console.error('❌ Mobile OAuth error:', error);
-      res.status(401).json({ message: "Authentication failed" });
-    }
-  });
-
-  // Authentication status endpoint
-  app.get("/api/auth/me", (req, res) => {
-    if (req.isAuthenticated()) {
-      const user = req.user as any;
-      res.json({
-        authenticated: true,
-        user: {
-          id: user?.sub || user?.id || 'user',
-          name: user?.name || user?.preferred_username || 'User',
-          email: user?.email
-        }
-      });
-    } else {
-      res.status(401).json({
-        authenticated: false,
-        message: "Not authenticated"
-      });
-    }
   });
 }
 
