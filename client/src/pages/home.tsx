@@ -26,7 +26,7 @@ type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading, requiresLogin } = useAuth();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -581,6 +581,54 @@ export default function Home() {
     window.addEventListener('open-manual-barcode', handleManualBarcodeEvent);
     return () => window.removeEventListener('open-manual-barcode', handleManualBarcodeEvent);
   }, []);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-foreground" style={{background: 'var(--bg-gradient)'}}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login screen when user needs to log in
+  if (requiresLogin) {
+    return (
+      <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
+        <div className="max-w-md mx-auto px-6 py-8 text-center">
+          <div className="mt-16">
+            <div className="bg-white/20 p-4 rounded-full w-fit mx-auto mb-6">
+              <Utensils className="h-12 w-12 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold mb-4 text-white">PlateMate</h1>
+            <p className="text-lg text-white/90 mb-8">
+              Your voice-powered AI nutrition companion
+            </p>
+            <p className="text-white/80 mb-8">
+              Sign in to start tracking your nutrition with voice commands and AI-powered food analysis.
+            </p>
+            <a href="/api/login">
+              <button 
+                className="w-full py-4 px-8 bg-white text-purple-600 font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-3"
+                data-testid="button-login"
+              >
+                <User className="h-6 w-6" />
+                <span className="text-lg">Sign In to Continue</span>
+              </button>
+            </a>
+            <div className="mt-8 text-center">
+              <p className="text-white/60 text-sm">
+                Secure authentication powered by Replit
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
