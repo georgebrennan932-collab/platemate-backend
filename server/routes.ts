@@ -1704,6 +1704,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Authentication status endpoint
+  app.get("/api/auth/status", (req, res) => {
+    try {
+      if (req.isAuthenticated() && req.user) {
+        const user = req.user as any;
+        
+        // Check if user session is still valid
+        const now = Math.floor(Date.now() / 1000);
+        const isTokenValid = user.expires_at && now <= user.expires_at;
+        
+        if (isTokenValid) {
+          res.json({
+            isAuthenticated: true,
+            user: {
+              id: user.claims?.sub || 'user',
+              email: user.claims?.email || '',
+              firstName: user.claims?.first_name || '',
+              lastName: user.claims?.last_name || '',
+              profileImageUrl: user.claims?.profile_image_url || ''
+            }
+          });
+        } else {
+          // Token expired, user needs to re-authenticate
+          res.status(401).json({
+            isAuthenticated: false,
+            user: null,
+            message: "Session expired"
+          });
+        }
+      } else {
+        // Not authenticated
+        res.status(401).json({
+          isAuthenticated: false,
+          user: null
+        });
+      }
+    } catch (error) {
+      console.error("Auth status check error:", error);
+      res.status(401).json({
+        isAuthenticated: false,
+        user: null,
+        message: "Authentication check failed"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
