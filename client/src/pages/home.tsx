@@ -1235,13 +1235,13 @@ export default function Home() {
         />
       </Suspense>
 
-      {/* Persistent confetti celebration */}
-      <ConfettiCelebration 
+      {/* Persistent confetti celebration - TEMPORARILY DISABLED FOR MOBILE TESTING */}
+      {false && <ConfettiCelebration 
         trigger={showPersistentConfetti} 
         onComplete={() => setShowPersistentConfetti(false)}
         duration={4000}
         particleCount={80}
-      />
+      />}
     </div>
   );
 }

@@ -540,8 +540,8 @@ export function CameraPage() {
       {/* Bottom Help Section */}
       <BottomHelpSection />
       
-      {/* Persistent Confetti */}
-      {showPersistentConfetti && (
+      {/* Persistent Confetti - TEMPORARILY DISABLED FOR MOBILE TESTING */}
+      {false && showPersistentConfetti && (
         <ConfettiCelebration 
           trigger={showPersistentConfetti}
           duration={5000} 
