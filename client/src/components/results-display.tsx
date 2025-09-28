@@ -1159,13 +1159,21 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         <button 
           className="flex-1 gradient-button py-4 px-6 rounded-xl font-medium hover:scale-[1.02] flex items-center justify-center space-x-2"
           onClick={() => {
-            console.log('🎯 "Add to Diary" button clicked - opening dialog');
-            setShowDiaryDialog(true);
+            console.log('🎯 Direct "Add to Diary" button clicked');
+            addToDiaryMutation.mutate();
           }}
+          disabled={addToDiaryMutation.isPending}
           data-testid="button-add-diary"
         >
           <Plus className="h-5 w-5" />
-          <span>Add to Diary</span>
+          {addToDiaryMutation.isPending ? (
+            <span className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Adding...
+            </span>
+          ) : (
+            <span>Add to Diary</span>
+          )}
         </button>
         <button 
           className="flex-1 modern-card bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 text-gray-700 dark:text-gray-300 py-4 px-6 rounded-xl font-medium hover:scale-[1.02] smooth-transition flex items-center justify-center space-x-2"
