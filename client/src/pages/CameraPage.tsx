@@ -255,6 +255,23 @@ export function CameraPage() {
 
   return (
     <div className="text-foreground min-h-screen" style={{background: 'var(--bg-gradient)'}}>
+      {/* MOBILE TOUCH DEBUG TEST */}
+      <div 
+        onClick={() => {
+          console.log("🚨 MOBILE TOUCH DEBUG: Button clicked!");
+          alert("Touch events work!");
+        }}
+        className="fixed top-4 right-4 bg-red-500 text-white px-3 py-2 rounded text-xs font-bold cursor-pointer"
+        style={{ 
+          position: 'fixed',
+          top: '10px',
+          right: '10px',
+          zIndex: 99999,
+          touchAction: 'manipulation'
+        }}
+      >
+        TEST
+      </div>
       <AppHeader />
       
       {/* Voice and Type Add Buttons */}
