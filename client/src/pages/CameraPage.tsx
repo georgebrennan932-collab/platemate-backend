@@ -422,9 +422,18 @@ export function CameraPage() {
               </button>
               <button
                 onClick={handleConfirmVoiceMeal}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log("📱 MOBILE TOUCH: Voice Add Meal button touched!");
+                  if (!addVoiceMealMutation.isPending) {
+                    handleConfirmVoiceMeal();
+                  }
+                }}
                 disabled={addVoiceMealMutation.isPending}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg"
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg touch-manipulation"
                 data-testid="button-confirm-voice-meal"
+                style={{ touchAction: 'manipulation' }}
               >
                 {addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
               </button>
@@ -491,9 +500,18 @@ export function CameraPage() {
               </button>
               <button
                 onClick={handleConfirmTextMeal}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log("📱 MOBILE TOUCH: Text Add Meal button touched!");
+                  if (!addVoiceMealMutation.isPending && textInput.trim()) {
+                    handleConfirmTextMeal();
+                  }
+                }}
                 disabled={addVoiceMealMutation.isPending || !textInput.trim()}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg"
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg touch-manipulation"
                 data-testid="button-confirm-text-meal"
+                style={{ touchAction: 'manipulation' }}
               >
                 {addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
               </button>
