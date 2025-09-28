@@ -989,6 +989,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // In deployment without auth, use anonymous user ID
       const userId = req.user?.claims?.sub || 'anonymous-user';
+      
+      console.log("📱 POST /api/diary request:", {
+        userId,
+        userAgent: req.headers['user-agent'],
+        platform: req.headers['x-platform'],
+        requestedWith: req.headers['x-requested-with'],
+        origin: req.headers.origin,
+        bodyKeys: Object.keys(req.body),
+        analysisId: req.body.analysisId,
+        mealType: req.body.mealType
+      });
+      
       let analysisId = req.body.analysisId;
       
       // If modifiedAnalysis is provided, create a new analysis with the edited foods
@@ -1022,11 +1034,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      
+      console.log("📱 GET /api/diary request:", {
+        userId,
+        userAgent: req.headers['user-agent'],
+        platform: req.headers['x-platform'],
+        requestedWith: req.headers['x-requested-with'],
+        origin: req.headers.origin,
+        limit
+      });
+      
       // Disable caching for diary entries to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
       const entries = await storage.getDiaryEntries(userId, limit);
+      
+      console.log("📱 GET /api/diary response:", {
+        userId,
+        entriesCount: entries.length,
+        entries: entries.map(e => ({
+          id: e.id,
+          mealType: e.mealType,
+          notes: e.notes,
+          totalCalories: e.analysis?.totalCalories
+        }))
+      });
+      
       res.json(entries);
     } catch (error) {
       console.error("Get diary entries error:", error);
