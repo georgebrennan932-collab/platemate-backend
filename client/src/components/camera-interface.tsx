@@ -84,6 +84,7 @@ export function CameraInterface({
       const response = await fetch('/api/analyze', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Include session cookies for auth
       });
 
       console.log("📡 Response received:", {

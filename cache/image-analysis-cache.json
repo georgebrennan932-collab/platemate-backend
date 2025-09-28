@@ -1,67 +1,85 @@
 {
   "entries": [
     [
-      "bef6bf4cabe72baa194efac1ee10f3cd382775791d9a06c3d34d5f55992db488",
+      "fb9ca3829e2dde4078a5c2072e93db7fca6d0e97c41269ab937ba296496ae642",
       {
-        "imageHash": "bef6bf4cabe72baa194efac1ee10f3cd382775791d9a06c3d34d5f55992db488",
+        "imageHash": "fb9ca3829e2dde4078a5c2072e93db7fca6d0e97c41269ab937ba296496ae642",
         "analysis": {
-          "imageUrl": "/tmp/uploads/processed_b72f834981be5d5f49427473753df972.jpg",
-          "confidence": 85,
-          "totalCalories": 0,
-          "totalProtein": 0,
-          "totalCarbs": 0,
-          "totalFat": 0,
-          "detectedFoods": []
-        },
-        "timestamp": 1758713020230,
-        "accessCount": 1,
-        "lastAccessed": 1758713020230
-      }
-    ],
-    [
-      "f544c804a565610343129c6b6f66bf664bd8b2c816b3768894f7d180de5379e0",
-      {
-        "imageHash": "f544c804a565610343129c6b6f66bf664bd8b2c816b3768894f7d180de5379e0",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_7c3c337897d39476a80bba68f463e996.jpg",
-          "confidence": 100,
-          "totalCalories": 596,
-          "totalProtein": 27,
-          "totalCarbs": 36,
-          "totalFat": 38,
+          "imageUrl": "/tmp/uploads/processed_b90ef9033b04f4b4716367b6f483cc26.jpg",
+          "confidence": 90,
+          "totalCalories": 1023,
+          "totalProtein": 51,
+          "totalCarbs": 45,
+          "totalFat": 71,
           "detectedFoods": [
             {
-              "name": "Chicken nuggets, from frozen",
-              "portion": "200g",
-              "calories": 596,
-              "protein": 27,
-              "carbs": 36,
-              "fat": 38,
+              "name": "Egg, whole, fried no added fat",
+              "portion": "1 large egg",
+              "calories": 72,
+              "protein": 6,
+              "carbs": 1,
+              "fat": 5,
+              "icon": "egg"
+            },
+            {
+              "name": "Sausage, smoked link sausage, pork",
+              "portion": "1 sausage (approximately 75g)",
+              "calories": 232,
+              "protein": 9,
+              "carbs": 1,
+              "fat": 21,
+              "icon": "bacon"
+            },
+            {
+              "name": "Blood sausage",
+              "portion": "1 slice (approximately 50g)",
+              "calories": 190,
+              "protein": 7,
+              "carbs": 1,
+              "fat": 17,
+              "icon": "bacon"
+            },
+            {
+              "name": "Baked beans",
+              "portion": "100g",
+              "calories": 105,
+              "protein": 5,
+              "carbs": 22,
+              "fat": 1,
+              "icon": "bread-slice"
+            },
+            {
+              "name": "Mushrooms, raw",
+              "portion": "100g",
+              "calories": 31,
+              "protein": 3,
+              "carbs": 4,
+              "fat": 0,
+              "icon": "bread-slice"
+            },
+            {
+              "name": "CHICK-FIL-A, hash browns",
+              "portion": "1 piece (approximately 50g)",
+              "calories": 151,
+              "protein": 2,
+              "carbs": 15,
+              "fat": 9,
+              "icon": "bread-slice"
+            },
+            {
+              "name": "Pork bacon, NS as to fresh, smoked or cured, cooked",
+              "portion": "1 slice (approximately 50g)",
+              "calories": 242,
+              "protein": 19,
+              "carbs": 1,
+              "fat": 18,
               "icon": "bacon"
             }
           ]
         },
-        "timestamp": 1758714919819,
+        "timestamp": 1759096682657,
         "accessCount": 1,
-        "lastAccessed": 1758714919819
-      }
-    ],
-    [
-      "190a4da13a4096d0c21e14db840cab9fe484699f8cec1a9d1848ed8483f0ca8c",
-      {
-        "imageHash": "190a4da13a4096d0c21e14db840cab9fe484699f8cec1a9d1848ed8483f0ca8c",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_83e91fdd18892faae2b1e95981746600.jpg",
-          "confidence": 85,
-          "totalCalories": 0,
-          "totalProtein": 0,
-          "totalCarbs": 0,
-          "totalFat": 0,
-          "detectedFoods": []
-        },
-        "timestamp": 1758715073235,
-        "accessCount": 1,
-        "lastAccessed": 1758715073235
+        "lastAccessed": 1759096682657
       }
     ]
   ],
@@ -70,11 +88,11 @@
     "cacheHits": 0,
     "cacheMisses": 2,
     "hitRate": 0,
-    "currentSize": 3,
+    "currentSize": 1,
     "maxSize": 1000,
     "totalEvictions": 0,
-    "oldestEntry": 1758713020230,
-    "newestEntry": 1758715073235
+    "oldestEntry": 1759096682657,
+    "newestEntry": 1759096682657
   },
-  "timestamp": 1758715073236
+  "timestamp": 1759096682658
 }
