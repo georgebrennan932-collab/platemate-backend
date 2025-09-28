@@ -155,7 +155,16 @@ export function CameraPage() {
   };
 
   const handleConfirmVoiceMeal = () => {
-    if (!voiceInput.trim()) return;
+    console.log("📱 VOICE BUTTON CLICKED - handleConfirmVoiceMeal called!");
+    console.log("📱 Voice input:", voiceInput);
+    console.log("📱 Meal type:", selectedMealType);
+    
+    if (!voiceInput.trim()) {
+      console.log("📱 Voice input is empty, returning early");
+      return;
+    }
+    
+    console.log("📱 Calling addVoiceMealMutation.mutate...");
     addVoiceMealMutation.mutate({
       foodDescription: voiceInput.trim(),
       mealType: selectedMealType
@@ -163,7 +172,16 @@ export function CameraPage() {
   };
 
   const handleConfirmTextMeal = () => {
-    if (!textInput.trim()) return;
+    console.log("📱 TEXT BUTTON CLICKED - handleConfirmTextMeal called!");
+    console.log("📱 Text input:", textInput);
+    console.log("📱 Meal type:", selectedMealType);
+    
+    if (!textInput.trim()) {
+      console.log("📱 Text input is empty, returning early");
+      return;
+    }
+    
+    console.log("📱 Calling addVoiceMealMutation.mutate...");
     addVoiceMealMutation.mutate({
       foodDescription: textInput.trim(),
       mealType: selectedMealType
