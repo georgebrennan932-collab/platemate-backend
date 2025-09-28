@@ -65,6 +65,10 @@ export default function Home() {
     retry: false,
     enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
+    staleTime: 2 * 60 * 1000, // 2 minutes - nutrition goals change infrequently
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 
   const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
@@ -72,6 +76,10 @@ export default function Home() {
     retry: false,
     enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
+    staleTime: 60 * 1000, // 1 minute - diary entries change more frequently
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 
   // Fetch drinks data for calorie calculation
@@ -80,17 +88,21 @@ export default function Home() {
     retry: false,
     enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
+    staleTime: 60 * 1000, // 1 minute - drinks change frequently
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 
-  // Force data refresh when homepage loads/mounts
+  // Only invalidate on auth state change, not every mount
   useEffect(() => {
     if (isAuthenticated) {
-      // Force fresh data fetch whenever homepage component mounts
+      // Invalidate only once when user becomes authenticated
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
       queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
     }
-  }, [isAuthenticated, queryClient]);
+  }, [isAuthenticated, queryClient]); // Only run when auth status changes
   
   // Initialize speech recognition and handle page visibility/navigation
   useEffect(() => {
@@ -100,36 +112,24 @@ export default function Home() {
     };
     checkSpeechSupport();
     
-    // Force refresh data when coming back to page (handles browser back/forward cache)
+    // Only refresh on bfcache restore, let React Query handle staleness
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted && isAuthenticated) {
-        // Page was restored from bfcache, force refresh all data
+        // Only invalidate diary on bfcache restore (most likely to have new data)
         queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
-        queryClient.refetchQueries({ queryKey: ['/api/diary'] });
-        queryClient.refetchQueries({ queryKey: ['/api/nutrition-goals'] });
-        queryClient.refetchQueries({ queryKey: ['/api/drinks'] });
       }
     };
 
-    // Refetch data when the page becomes visible (handles navigation back from other pages)
+    // Minimal visibility change handling - let React Query's reconnect handle most cases
     const handleVisibilityChange = () => {
-      if (!document.hidden && isAuthenticated) {
-        // Refetch diary entries, nutrition goals, and drinks when page becomes visible
-        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
-      }
+      // React Query will automatically refetch stale data on reconnect
+      // No need for manual invalidation here
     };
 
-    // Also handle when window regains focus
+    // No manual focus handling needed - React Query handles this
     const handleFocus = () => {
-      if (isAuthenticated) {
-        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
-      }
+      // React Query handles focus refetching via refetchOnWindowFocus (disabled above)
+      // No manual invalidation needed
     };
 
     // Listen for page show events (bfcache restoration)
