@@ -636,10 +636,22 @@ export default function Home() {
                     </div>
                   )}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                    <a href="/api/logout" className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" data-testid="button-nav-logout">
+                    <button 
+                      onClick={async () => {
+                        try {
+                          const { logout } = await import("@/lib/firebase");
+                          await logout();
+                          // User will be automatically redirected due to auth state change
+                        } catch (error) {
+                          console.error("Logout error:", error);
+                        }
+                      }}
+                      className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors w-full text-left" 
+                      data-testid="button-nav-logout"
+                    >
                       <LogOut className="h-4 w-4" />
                       <span className="text-sm font-medium">Logout</span>
-                    </a>
+                    </button>
                   </div>
                 </div>
               )}
