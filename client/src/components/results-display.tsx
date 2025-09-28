@@ -3,6 +3,7 @@ import type { FoodAnalysis, DetectedFood } from "@shared/schema";
 import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { createSmartInvalidation } from "@/lib/smart-invalidation";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -30,6 +31,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const smartInvalidation = createSmartInvalidation(queryClient);
 
   // Check speech recognition support
   useEffect(() => {
@@ -413,10 +415,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         description: "Your food corrections have been saved to the database.",
       });
       
-      // Invalidate all related caches
-      queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/analyses', data.id] });
+      // Batch invalidate all related caches
+      smartInvalidation.invalidateQueries(['/api/analyses']);
+      smartInvalidation.invalidateQueries(['/api/diary']);
+      smartInvalidation.invalidateQueries(['/api/analyses', data.id]);
     },
     onError: (error: Error) => {
       console.error("❌ Failed to save changes:", error);
@@ -501,8 +503,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         setEditableFoods([...updatedAnalysis.detectedFoods]);
       }
       
-      queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      smartInvalidation.invalidateQueries(['/api/analyses']);
+      smartInvalidation.invalidateQueries(['/api/diary']);
       setShowVoiceMealDialog(false);
       setVoiceInput('');
     },
@@ -551,7 +553,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         title: "Added to Diary!",
         description: "Your meal has been saved to your food diary.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      smartInvalidation.invalidateQueries(['/api/diary']);
       setShowDiaryDialog(false);
     },
     onError: (error: Error) => {

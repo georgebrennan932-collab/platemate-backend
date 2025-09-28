@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { createSmartInvalidation } from "@/lib/smart-invalidation";
 import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,7 @@ type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const smartInvalidation = createSmartInvalidation(queryClient);
   const { user, isAuthenticated } = useAuth();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
@@ -100,12 +102,12 @@ export default function Home() {
   // Only invalidate on auth state change, not every mount
   useEffect(() => {
     if (isAuthenticated) {
-      // Invalidate only once when user becomes authenticated
-      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+      // Batch invalidations for better performance
+      smartInvalidation.invalidateQueries(['/api/diary']);
+      smartInvalidation.invalidateQueries(['/api/nutrition-goals']);
+      smartInvalidation.invalidateQueries(['/api/drinks']);
     }
-  }, [isAuthenticated, queryClient]); // Only run when auth status changes
+  }, [isAuthenticated, smartInvalidation]); // Only run when auth status changes
   
   // Initialize speech recognition and handle page visibility/navigation
   useEffect(() => {
@@ -119,7 +121,7 @@ export default function Home() {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted && isAuthenticated) {
         // Only invalidate diary on bfcache restore (most likely to have new data)
-        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        smartInvalidation.invalidateSelectively(['/api/diary']);
       }
     };
 

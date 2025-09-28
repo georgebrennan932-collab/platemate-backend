@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { createSmartInvalidation } from "@/lib/smart-invalidation";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target, TrendingUp, HelpCircle, Mic, MicOff, Plus } from "lucide-react";
@@ -29,6 +30,7 @@ import type { WeightEntry } from "@shared/schema";
 export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const smartInvalidation = createSmartInvalidation(queryClient);
   const [activeTab, setActiveTab] = useState<'diary' | 'analytics' | 'weight'>('diary');
   const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
 
@@ -160,7 +162,7 @@ export function DiaryPage() {
         title: "Entry Deleted",
         description: "Meal has been removed from your diary.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      smartInvalidation.invalidateQueries(['/api/diary']);
     },
     onError: (error: Error) => {
       toast({
@@ -181,7 +183,7 @@ export function DiaryPage() {
         title: "Drink Deleted",
         description: "Drink has been removed from your diary.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+      smartInvalidation.invalidateQueries(['/api/drinks']);
     },
     onError: (error: Error) => {
       toast({
@@ -214,7 +216,7 @@ export function DiaryPage() {
         title: "Meal Added!",
         description: "Your voice meal has been added to your diary.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      smartInvalidation.invalidateQueries(['/api/diary']);
       setShowVoiceMealDialog(false);
       setVoiceInput('');
     },
@@ -384,9 +386,9 @@ export function DiaryPage() {
                   data-testid="button-back-to-home"
                   onClick={() => {
                     // Force refresh homepage data when navigating back
-                    queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+                    smartInvalidation.invalidateQueries(['/api/diary']);
                     queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-                    queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+                    smartInvalidation.invalidateQueries(['/api/drinks']);
                   }}
                 >
                   <ArrowLeft className="h-5 w-5" />
