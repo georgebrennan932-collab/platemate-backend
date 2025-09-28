@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/app-header";
 import { soundService } from "@/lib/sound-service";
-import { CameraInterface } from "@/components/camera-interface";
 import { ProcessingState } from "@/components/processing-state";
 import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
@@ -14,8 +13,12 @@ import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
-import { ScannerModal } from "@/components/scanner-modal";
-import { BarcodeScanner } from "@/components/barcode-scanner";
+import { lazy, Suspense } from "react";
+
+// Lazy load heavy components to improve initial page load
+const CameraInterface = lazy(() => import("@/components/camera-interface").then(module => ({ default: module.CameraInterface })));
+const ScannerModal = lazy(() => import("@/components/scanner-modal").then(module => ({ default: module.ScannerModal })));
+const BarcodeScanner = lazy(() => import("@/components/barcode-scanner").then(module => ({ default: module.BarcodeScanner })));
 import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis, DrinkEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
@@ -782,13 +785,19 @@ export default function Home() {
 
       <div className="max-w-md mx-auto" id="camera-section">
         {currentState === 'camera' && (
-          <CameraInterface
-            onAnalysisStart={handleAnalysisStart}
-            onAnalysisSuccess={handleAnalysisSuccess}
-            onAnalysisError={handleAnalysisError}
-            caloriesConsumed={getTodayCalories()}
-            caloriesGoal={nutritionGoals?.dailyCalories || 2000}
-          />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          }>
+            <CameraInterface
+              onAnalysisStart={handleAnalysisStart}
+              onAnalysisSuccess={handleAnalysisSuccess}
+              onAnalysisError={handleAnalysisError}
+              caloriesConsumed={getTodayCalories()}
+              caloriesGoal={nutritionGoals?.dailyCalories || 2000}
+            />
+          </Suspense>
         )}
         
         {currentState === 'processing' && <ProcessingState />}
@@ -1180,27 +1189,31 @@ export default function Home() {
       
 
       {/* Camera Barcode Scanner Modal */}
-      <ScannerModal
-        isOpen={showBarcodeScanner}
-        onScanSuccess={(barcode: string) => {
-          handleBarcodeScanned(barcode);
-        }}
-        onClose={() => {
-          setShowBarcodeScanner(false);
-        }}
-      />
+      <Suspense fallback={null}>
+        <ScannerModal
+          isOpen={showBarcodeScanner}
+          onScanSuccess={(barcode: string) => {
+            handleBarcodeScanned(barcode);
+          }}
+          onClose={() => {
+            setShowBarcodeScanner(false);
+          }}
+        />
+      </Suspense>
 
       {/* Manual Barcode Entry */}
-      <BarcodeScanner
-        isOpen={showManualEntry}
-        onScanSuccess={(barcode: string) => {
-          setShowManualEntry(false);
-          handleBarcodeScanned(barcode);
-        }}
-        onClose={() => {
-          setShowManualEntry(false);
-        }}
-      />
+      <Suspense fallback={null}>
+        <BarcodeScanner
+          isOpen={showManualEntry}
+          onScanSuccess={(barcode: string) => {
+            setShowManualEntry(false);
+            handleBarcodeScanned(barcode);
+          }}
+          onClose={() => {
+            setShowManualEntry(false);
+          }}
+        />
+      </Suspense>
 
       {/* Persistent confetti celebration */}
       <ConfettiCelebration 

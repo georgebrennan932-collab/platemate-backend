@@ -19,7 +19,10 @@ import { BottomHelpSection } from "@/components/bottom-help-section";
 import { WeightForm } from "@/components/weight-form";
 import { WeightList } from "@/components/weight-list";
 import { WeightEditDialog } from "@/components/weight-edit-dialog";
-import { WeightChart } from "@/components/weight-chart";
+import { lazy, Suspense } from "react";
+
+// Lazy load heavy chart component
+const WeightChart = lazy(() => import("@/components/weight-chart").then(module => ({ default: module.WeightChart })));
 import { DrinksBar } from "@/components/drinks-bar";
 import type { WeightEntry } from "@shared/schema";
 
