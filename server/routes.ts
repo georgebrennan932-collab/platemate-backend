@@ -259,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // All routes now use temporary auth middleware during Firebase migration
   
-  app.post("/api/analyze", authMiddleware, upload.single('image'), async (req: any, res) => {
+  app.post("/api/analyze", upload.single('image'), async (req: any, res) => {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const requestStartTime = Date.now();
     
