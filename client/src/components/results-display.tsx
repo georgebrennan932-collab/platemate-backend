@@ -405,10 +405,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       // Update local state to match server response
       setEditableFoods([...updatedAnalysis.detectedFoods]);
       
-      console.log("✅ Successfully saved changes to database. Server totals:", {
-        calories: updatedAnalysis.totalCalories,
-        protein: updatedAnalysis.totalProtein
-      });
+      // Changes saved successfully
       
       toast({
         title: "Changes Saved",
@@ -421,7 +418,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       smartInvalidation.invalidateQueries(['/api/analyses', data.id]);
     },
     onError: (error: Error) => {
-      console.error("❌ Failed to save changes:", error);
+      // Failed to save changes
       toast({
         title: "Save Failed",
         description: "Could not save your changes. Please try again.",
