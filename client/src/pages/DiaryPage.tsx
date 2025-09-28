@@ -32,7 +32,7 @@ export function DiaryPage() {
   const queryClient = useQueryClient();
   const smartInvalidation = createSmartInvalidation(queryClient);
   const [activeTab, setActiveTab] = useState<'diary' | 'analytics' | 'weight'>('diary');
-  const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
+  const [viewMode, setViewMode] = useState<'today' | 'history'>('history');
 
   // Check URL parameters for tab switching
   useEffect(() => {
