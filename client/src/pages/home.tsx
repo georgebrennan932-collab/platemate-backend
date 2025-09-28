@@ -735,7 +735,9 @@ export default function Home() {
                 style={{backgroundColor: '#14B8A6'}}
                 data-testid="button-diet-advice"
               >
-                <Lightbulb className="h-5 w-5" />
+                <Lightbulb className="h-5 w-5 animate-pulse" style={{
+                  animation: 'bulbFlicker 3s ease-in-out infinite'
+                }} />
                 <span className="text-base font-bold">AI Advice</span>
               </button>
             </Link>
@@ -756,7 +758,9 @@ export default function Home() {
             </Link>
             <Link href="/advice">
               <button className="flex items-center space-x-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors" data-testid="quick-advice">
-                <Lightbulb className="h-4 w-4" />
+                <Lightbulb className="h-4 w-4" style={{
+                  animation: 'bulbFlicker 3s ease-in-out infinite'
+                }} />
                 <span className="text-sm font-medium">Advice</span>
               </button>
             </Link>
