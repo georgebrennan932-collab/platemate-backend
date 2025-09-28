@@ -3,6 +3,7 @@ import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syri
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthForms } from "@/components/auth-forms";
 
 export default function LandingPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -41,15 +42,21 @@ export default function LandingPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
-        {/* Get Started Button */}
-        <div className="text-center mb-16 animate-fade-in-up animation-delay-900">
-          {isAuthenticated ? (
-            <div className="space-y-4">
+        {/* Authentication Section */}
+        <div className="mb-16 animate-fade-in-up animation-delay-900">
+          {isLoading ? (
+            <div className="text-center">
+              <div className="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full text-sm font-medium">
+                Loading...
+              </div>
+            </div>
+          ) : isAuthenticated ? (
+            <div className="text-center space-y-4">
               <div className="inline-flex items-center px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
                 <Shield className="h-4 w-4 mr-2" />
                 ✅ Signed in and ready!
               </div>
-              <Link href="/scan">
+              <Link href="/">
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-pulse-glow relative overflow-hidden group"
@@ -63,20 +70,11 @@ export default function LandingPage() {
               </Link>
             </div>
           ) : (
-            <a href="/api/login">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-pulse-glow relative overflow-hidden group"
-                data-testid="button-login"
-              >
-                {/* Animated shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                <LogIn className="h-6 w-6 mr-2 animate-bounce" />
-                Sign In to Start
-              </Button>
-            </a>
+            <div className="max-w-md mx-auto">
+              <AuthForms />
+            </div>
           )}
-          <p className="text-sm text-muted-foreground mt-3 animate-fade-in animation-delay-1200">
+          <p className="text-center text-sm text-muted-foreground mt-6 animate-fade-in animation-delay-1200">
             Say "100g salmon" or "one apple" - your voice becomes your food diary
           </p>
         </div>
