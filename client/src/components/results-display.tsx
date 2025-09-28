@@ -1268,14 +1268,21 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   console.log('🔘 Diary button clicked!', { mealType: selectedMealType, date: selectedDate, time: selectedTime });
                   addToDiaryMutation.mutate();
                 }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('📱 Touch event detected on diary button');
+                  addToDiaryMutation.mutate();
+                }}
                 disabled={addToDiaryMutation.isPending}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none active:scale-95"
                 data-testid="button-save-diary"
               >
                 <Plus className="h-5 w-5 mr-2 inline" />
