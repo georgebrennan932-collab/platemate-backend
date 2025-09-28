@@ -1158,7 +1158,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       <div className="flex space-x-4 pt-6">
         <button 
           className="flex-1 gradient-button py-4 px-6 rounded-xl font-medium hover:scale-[1.02] flex items-center justify-center space-x-2"
-          onClick={() => setShowDiaryDialog(true)}
+          onClick={() => {
+            console.log('🎯 "Add to Diary" button clicked - opening dialog');
+            setShowDiaryDialog(true);
+          }}
           data-testid="button-add-diary"
         >
           <Plus className="h-5 w-5" />
@@ -1175,7 +1178,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       </div>
 
       {/* Add to Diary Dialog */}
-      {showDiaryDialog && (
+      {(() => {
+        if (showDiaryDialog) {
+          console.log('📋 Diary dialog is opening', { selectedMealType, selectedDate, selectedTime });
+        }
+        return showDiaryDialog;
+      })() && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
           <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 dark:border-gray-700/50 animate-in slide-in-from-bottom-4 duration-300">
             
