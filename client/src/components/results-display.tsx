@@ -14,6 +14,25 @@ interface ResultsDisplayProps {
 
 export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [showDiaryDialog, setShowDiaryDialog] = useState(false);
+
+  // Temporary debugging for touch interception issues
+  useEffect(() => {
+    const handleGlobalPointer = (e: PointerEvent) => {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const styles = el ? getComputedStyle(el) : null;
+      console.log('🔍 Touch intercepted by:', {
+        element: el?.tagName,
+        id: el?.id,
+        className: el?.className,
+        zIndex: styles?.zIndex,
+        pointerEvents: styles?.pointerEvents,
+        position: styles?.position
+      });
+    };
+    
+    window.addEventListener('pointerdown', handleGlobalPointer, true);
+    return () => window.removeEventListener('pointerdown', handleGlobalPointer, true);
+  }, []);
   const [selectedMealType, setSelectedMealType] = useState<"breakfast" | "lunch" | "dinner" | "snack">("lunch");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
@@ -1158,12 +1177,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       <div className="flex space-x-4 pt-6">
         <button 
           className="flex-1 gradient-button py-4 px-6 rounded-xl font-medium hover:scale-[1.02] flex items-center justify-center space-x-2"
-          onClick={() => {
-            console.log('🎯 Direct "Add to Diary" button clicked');
+          onPointerUp={(e) => {
+            console.log('🎯 Direct "Add to Diary" button clicked via pointer');
             addToDiaryMutation.mutate();
           }}
           disabled={addToDiaryMutation.isPending}
           data-testid="button-add-diary"
+          role="button"
+          style={{ pointerEvents: 'auto', zIndex: 1000 }}
         >
           <Plus className="h-5 w-5" />
           {addToDiaryMutation.isPending ? (
@@ -1285,16 +1306,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               </button>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('🔘 Diary button clicked!', { mealType: selectedMealType, date: selectedDate, time: selectedTime });
-                  addToDiaryMutation.mutate();
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('📱 Touch event detected on diary button');
+                onPointerUp={() => {
+                  console.log('🔘 Dialog button clicked via pointer!', { mealType: selectedMealType, date: selectedDate, time: selectedTime });
                   addToDiaryMutation.mutate();
                 }}
                 disabled={addToDiaryMutation.isPending}
