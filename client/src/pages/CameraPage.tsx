@@ -172,21 +172,43 @@ export function CameraPage() {
 
   const addVoiceMealMutation = useMutation({
     mutationFn: async ({ foodDescription, mealType }: { foodDescription: string, mealType: string }) => {
-      // First analyze the text-based food description
-      const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
-      const analysis = await analysisResponse.json();
-      
-      // Then create the diary entry with current date/time
-      const now = new Date();
-      const diaryResponse = await apiRequest('POST', '/api/diary', {
-        analysisId: analysis.id,
+      console.log("📱 Mobile voice/text meal submission started:", {
+        foodDescription,
         mealType,
-        mealDate: now.toISOString(),
-        notes: `Added via text input: "${foodDescription}"`
+        userAgent: navigator.userAgent,
+        platform: (window as any).Capacitor?.getPlatform?.() || 'web'
       });
-      return await diaryResponse.json();
+      
+      try {
+        // First analyze the text-based food description
+        console.log("📱 Making analyze-text request...");
+        const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
+        const analysis = await analysisResponse.json();
+        
+        console.log("📱 Analyze-text response:", analysis);
+        
+        // Then create the diary entry with current date/time
+        const now = new Date();
+        const diaryPayload = {
+          analysisId: analysis.id,
+          mealType,
+          mealDate: now.toISOString(),
+          notes: `Added via text input: "${foodDescription}"`
+        };
+        
+        console.log("📱 Making diary entry request:", diaryPayload);
+        const diaryResponse = await apiRequest('POST', '/api/diary', diaryPayload);
+        const result = await diaryResponse.json();
+        
+        console.log("📱 Diary entry response:", result);
+        return result;
+      } catch (error) {
+        console.error("📱 Mobile meal submission error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
+      console.log("📱 Mobile meal submission SUCCESS!");
       toast({
         title: "Meal Added!",
         description: "Your meal has been added to your diary.",
@@ -198,6 +220,7 @@ export function CameraPage() {
       setTextInput('');
     },
     onError: (error: Error) => {
+      console.error("📱 Mobile meal submission FAILED:", error);
       toast({
         title: "Error",
         description: "Failed to add meal from voice. Please try again.",
