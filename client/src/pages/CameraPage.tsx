@@ -420,39 +420,30 @@ export function CameraPage() {
               >
                 Cancel
               </button>
-              <button
-                onClick={(e) => {
-                  console.log("📱 CLICK EVENT: Voice Add Meal button clicked!");
-                  handleConfirmVoiceMeal();
-                }}
-                onTouchStart={(e) => {
-                  console.log("📱 TOUCH START: Voice Add Meal button touch started!");
+              <form 
+                onSubmit={(e) => {
                   e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onTouchEnd={(e) => {
-                  console.log("📱 TOUCH END: Voice Add Meal button touch ended!");
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!addVoiceMealMutation.isPending) {
-                    setTimeout(() => handleConfirmVoiceMeal(), 10);
+                  console.log("📱 FORM SUBMIT: Voice meal form submitted!");
+                  if (!addVoiceMealMutation.isPending && voiceInput.trim()) {
+                    handleConfirmVoiceMeal();
                   }
                 }}
-                onPointerDown={(e) => {
-                  console.log("📱 POINTER DOWN: Voice Add Meal button pointer down!");
-                }}
-                disabled={addVoiceMealMutation.isPending}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg touch-manipulation cursor-pointer"
-                data-testid="button-confirm-voice-meal"
-                style={{ 
-                  touchAction: 'manipulation',
-                  WebkitTapHighlightColor: 'transparent',
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none'
-                }}
+                className="flex-1"
               >
-                {addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
-              </button>
+                <input
+                  type="submit"
+                  value={addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
+                  disabled={addVoiceMealMutation.isPending}
+                  className="w-full py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg cursor-pointer border-0"
+                  data-testid="button-confirm-voice-meal"
+                  style={{ 
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                    WebkitAppearance: 'none',
+                    appearance: 'none'
+                  }}
+                />
+              </form>
             </div>
           </div>
         </div>
@@ -514,39 +505,30 @@ export function CameraPage() {
               >
                 Cancel
               </button>
-              <button
-                onClick={(e) => {
-                  console.log("📱 CLICK EVENT: Text Add Meal button clicked!");
-                  handleConfirmTextMeal();
-                }}
-                onTouchStart={(e) => {
-                  console.log("📱 TOUCH START: Text Add Meal button touch started!");
+              <form 
+                onSubmit={(e) => {
                   e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onTouchEnd={(e) => {
-                  console.log("📱 TOUCH END: Text Add Meal button touch ended!");
-                  e.preventDefault();
-                  e.stopPropagation();
+                  console.log("📱 FORM SUBMIT: Text meal form submitted!");
                   if (!addVoiceMealMutation.isPending && textInput.trim()) {
-                    setTimeout(() => handleConfirmTextMeal(), 10);
+                    handleConfirmTextMeal();
                   }
                 }}
-                onPointerDown={(e) => {
-                  console.log("📱 POINTER DOWN: Text Add Meal button pointer down!");
-                }}
-                disabled={addVoiceMealMutation.isPending || !textInput.trim()}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg touch-manipulation cursor-pointer"
-                data-testid="button-confirm-text-meal"
-                style={{ 
-                  touchAction: 'manipulation',
-                  WebkitTapHighlightColor: 'transparent',
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none'
-                }}
+                className="flex-1"
               >
-                {addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
-              </button>
+                <input
+                  type="submit"
+                  value={addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
+                  disabled={addVoiceMealMutation.isPending || !textInput.trim()}
+                  className="w-full py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg cursor-pointer border-0"
+                  data-testid="button-confirm-text-meal"
+                  style={{ 
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                    WebkitAppearance: 'none',
+                    appearance: 'none'
+                  }}
+                />
+              </form>
             </div>
           </div>
         </div>
