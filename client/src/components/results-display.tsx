@@ -524,6 +524,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   const addToDiaryMutation = useMutation({
     mutationFn: async () => {
+      console.log('🍽️ Adding to diary - mutation started', {
+        selectedMealType,
+        selectedDate,
+        selectedTime,
+        dataId: data.id,
+        editableFoodsCount: editableFoods.length
+      });
+      
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
       
       // Create a modified analysis with updated food data
@@ -536,14 +544,21 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         totalFat: totals.fat
       };
       
-      const response = await apiRequest('POST', '/api/diary', {
+      const requestData = {
         analysisId: data.id,
         mealType: selectedMealType,
         mealDate: mealDateTime.toISOString(),
         notes: "",
         modifiedAnalysis // Send the modified data
-      });
-      return await response.json();
+      };
+      
+      console.log('🍽️ Making POST request to /api/diary with data:', requestData);
+      
+      const response = await apiRequest('POST', '/api/diary', requestData);
+      const result = await response.json();
+      
+      console.log('🍽️ Diary API response:', result);
+      return result;
     },
     onSuccess: () => {
       toast({
