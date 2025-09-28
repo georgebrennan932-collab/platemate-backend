@@ -659,8 +659,9 @@ export default function Home() {
           <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-3xl p-6 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-300/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
-                  <Zap className="h-8 w-8 text-white" />
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full relative">
+                  <Zap className="h-8 w-8 text-white animate-pulse" />
+                  <div className="absolute inset-0 rounded-full animate-ping bg-yellow-300/30"></div>
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white mb-1">Steps Rewards</h3>
