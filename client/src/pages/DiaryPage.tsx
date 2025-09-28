@@ -547,7 +547,13 @@ export function DiaryPage() {
             }} />
             
             {/* Weight Progress Chart */}
-            <WeightChart />
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            }>
+              <WeightChart />
+            </Suspense>
           </div>
         ) : viewMode === 'today' ? (
           <div className="space-y-6">
