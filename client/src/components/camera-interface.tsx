@@ -386,19 +386,6 @@ export function CameraInterface({
           />
         )}
         
-        {/* Camera Icon Display */}
-        {!previewUrl && (
-          <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
-            <div className="relative z-10 text-center transition-all duration-200 hover:scale-110">
-              <div className="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-white/30">
-                <Camera className="text-white h-10 w-10" />
-              </div>
-              <div className="mt-4 text-white text-center">
-                <p className="text-lg font-medium opacity-90">Tap to capture</p>
-              </div>
-            </div>
-          </div>
-        )}
         
         {/* Plate detection circle - only show when has preview */}
         {previewUrl && (
