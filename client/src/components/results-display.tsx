@@ -13,6 +13,8 @@ interface ResultsDisplayProps {
 }
 
 export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
+  console.log("🎯 ResultsDisplay RENDERING - component loaded!");
+  
   const [showDiaryDialog, setShowDiaryDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<"breakfast" | "lunch" | "dinner" | "snack">("lunch");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -1158,8 +1160,16 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       <div className="flex space-x-4 pt-6">
         <button 
           className="flex-1 gradient-button py-4 px-6 rounded-xl font-medium hover:scale-[1.02] flex items-center justify-center space-x-2"
+          onClick={(e) => {
+            console.log('🎯 BUTTON CLICKED! Event:', e.type);
+            addToDiaryMutation.mutate();
+          }}
           onPointerUp={(e) => {
-            console.log('🎯 Direct "Add to Diary" button clicked via pointer');
+            console.log('🎯 POINTER EVENT! Event:', e.type);
+            addToDiaryMutation.mutate();
+          }}
+          onTouchEnd={(e) => {
+            console.log('🎯 TOUCH EVENT! Event:', e.type);
             addToDiaryMutation.mutate();
           }}
           disabled={addToDiaryMutation.isPending}
