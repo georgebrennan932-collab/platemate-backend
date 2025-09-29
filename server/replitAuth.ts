@@ -38,7 +38,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       maxAge: sessionTtl,
     },
   });
@@ -102,14 +102,10 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    // Use the actual Replit domain instead of req.hostname which may be localhost
-    const replitDomain = process.env.REPLIT_DOMAINS!.split(",")[0];
-    const actualHostname = req.get('host')?.includes('replit.dev') ? req.hostname : replitDomain;
+    console.log(`🔐 Login attempt - req.hostname: ${req.hostname}`);
     
-    console.log(`🔐 Login attempt - req.hostname: ${req.hostname}, actual domain: ${actualHostname}`);
-    
-    passport.authenticate(`replitauth:${actualHostname}`, {
-      prompt: "select_account",
+    passport.authenticate(`replitauth:${req.hostname}`, {
+      prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
@@ -121,15 +117,13 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    // Use the actual Replit domain instead of req.hostname which may be localhost
-    const replitDomain = process.env.REPLIT_DOMAINS!.split(",")[0];
-    const actualHostname = req.get('host')?.includes('replit.dev') ? req.hostname : replitDomain;
+    console.log(`🔐 Callback attempt - req.hostname: ${req.hostname}`);
+    console.log(`🔐 Callback query params:`, req.query);
+    console.log(`🔐 Callback full URL:`, req.url);
     
-    console.log(`🔐 Callback attempt - req.hostname: ${req.hostname}, actual domain: ${actualHostname}`);
-    
-    passport.authenticate(`replitauth:${actualHostname}`, {
+    passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
-      failureRedirect: "/?auth=failed",
+      failureRedirect: "/api/login",
     })(req, res, next);
   });
 
