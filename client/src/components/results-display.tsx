@@ -1171,16 +1171,23 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         <button 
           className="flex-1 gradient-button py-4 px-6 rounded-xl font-medium hover:scale-[1.02] flex items-center justify-center space-x-2"
           onClick={(e) => {
-            console.log('🔘 Add to Diary button clicked!', {
-              hasData: !!data,
-              dataId: data?.id,
-              editableFoodsCount: editableFoods?.length,
+            console.log('🚨 BUTTON CLICKED!');
+            console.log('🔘 Button state:', {
+              disabled: addToDiaryMutation.isPending || authLoading || !isAuthenticated,
               isPending: addToDiaryMutation.isPending,
-              error: addToDiaryMutation.error,
-              isAuthenticated,
               authLoading,
-              hasUser: !!user
+              isAuthenticated,
+              hasUser: !!user,
+              hasData: !!data,
+              dataId: data?.id
             });
+            
+            if (addToDiaryMutation.isPending || authLoading || !isAuthenticated) {
+              console.log('❌ Button is disabled, not executing mutation');
+              return;
+            }
+            
+            console.log('✅ Executing mutation...');
             addToDiaryMutation.mutate();
           }}
           disabled={addToDiaryMutation.isPending || authLoading || !isAuthenticated}
