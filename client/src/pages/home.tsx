@@ -586,66 +586,78 @@ export default function Home() {
       {/* Custom Header for New Design */}
       <div className="px-4 pt-8 pb-6 text-center relative">
         {/* Navigation Menu - moved above title */}
-        {isAuthenticated && (
-          <div className="absolute top-4 right-4 flex items-center space-x-2 z-10">
-            <Link href="/rewards">
-              <button 
-                className="p-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 border border-yellow-400/50 shadow-lg hover:shadow-xl transform hover:scale-105"
-                data-testid="button-nav-rewards"
-                title="Rewards & Steps"
-              >
-                <Zap className="h-4 w-4 text-white" />
-              </button>
-            </Link>
-            <Link href="/diary">
-              <button 
-                className="p-2 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
-                data-testid="button-nav-history"
-                title="View Diary"
-              >
-                <History className="h-4 w-4 text-white" />
-              </button>
-            </Link>
-            
-            <div className="relative" ref={profileRef}>
-              <button
-                onClick={() => setShowProfile(!showProfile)}
-                className="flex items-center space-x-1 p-2 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
-                data-testid="button-nav-profile"
-                title="Profile"
-              >
-                <User className="h-4 w-4 text-white" />
-                {showProfile ? (
-                  <ChevronUp className="h-3 w-3 text-white/80" />
-                ) : (
-                  <ChevronDown className="h-3 w-3 text-white/80" />
-                )}
-              </button>
+        <div className="absolute top-4 right-4 flex items-center space-x-2 z-10">
+          {isAuthenticated ? (
+            <>
+              <Link href="/rewards">
+                <button 
+                  className="p-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 border border-yellow-400/50 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  data-testid="button-nav-rewards"
+                  title="Rewards & Steps"
+                >
+                  <Zap className="h-4 w-4 text-white" />
+                </button>
+              </Link>
+              <Link href="/diary">
+                <button 
+                  className="p-2 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
+                  data-testid="button-nav-history"
+                  title="View Diary"
+                >
+                  <History className="h-4 w-4 text-white" />
+                </button>
+              </Link>
               
-              {showProfile && (
-                <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[200px] backdrop-blur-md z-50">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <User className="h-4 w-4 text-foreground/80" />
-                    <span className="text-sm font-medium text-foreground/90">
-                      User
-                    </span>
-                  </div>
-                  {false && (
-                    <div className="text-xs text-foreground/60 mb-3 ml-6">
-                      user@example.com
-                    </div>
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setShowProfile(!showProfile)}
+                  className="flex items-center space-x-1 p-2 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20"
+                  data-testid="button-nav-profile"
+                  title="Profile"
+                >
+                  <User className="h-4 w-4 text-white" />
+                  {showProfile ? (
+                    <ChevronUp className="h-3 w-3 text-white/80" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3 text-white/80" />
                   )}
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                    <a href="/api/logout" className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" data-testid="button-nav-logout">
-                      <LogOut className="h-4 w-4" />
-                      <span className="text-sm font-medium">Logout</span>
-                    </a>
+                </button>
+                
+                {showProfile && (
+                  <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[200px] backdrop-blur-md z-50">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <User className="h-4 w-4 text-foreground/80" />
+                      <span className="text-sm font-medium text-foreground/90">
+                        {user?.firstName || user?.email || 'User'}
+                      </span>
+                    </div>
+                    {user?.email && (
+                      <div className="text-xs text-foreground/60 mb-3 ml-6">
+                        {user.email}
+                      </div>
+                    )}
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                      <a href="/api/logout" className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" data-testid="button-nav-logout">
+                        <LogOut className="h-4 w-4" />
+                        <span className="text-sm font-medium">Logout</span>
+                      </a>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                )}
+              </div>
+            </>
+          ) : (
+            <a 
+              href="/api/login"
+              className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20 text-white hover:scale-105 transform"
+              data-testid="button-login"
+              title="Login with Replit"
+            >
+              <User className="h-4 w-4" />
+              <span className="text-sm font-medium">Login</span>
+            </a>
+          )}
+        </div>
         
         <div className="mt-8">
           <h1 className="text-5xl font-bold mb-2 text-white">PlateMate</h1>
