@@ -787,6 +787,17 @@ export default function Home() {
         </div>
       )}
 
+      {/* Portion Analysis Tip - positioned near camera button */}
+      {currentState === 'camera' && (
+        <div className="max-w-md mx-auto px-6 mt-4 mb-6">
+          <div className="text-center">
+            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
+              💡 For more precise portion analysis, place a fork or your hand in the photo.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Weight Loss Injection Guide */}
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
@@ -908,16 +919,6 @@ export default function Home() {
           />
         )}
 
-        {/* Portion Analysis Tip - moved from camera interface */}
-        {currentState === 'camera' && (
-          <div className="px-6 mt-4 mb-6">
-            <div className="text-center">
-              <p className="text-sm text-gray-700 dark:text-gray-300 font-medium bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
-                💡 For more precise portion analysis, place a fork or your hand in the photo.
-              </p>
-            </div>
-          </div>
-        )}
         
         {currentState === 'processing' && <ProcessingState />}
         
