@@ -13,6 +13,9 @@ interface ResultsDisplayProps {
 }
 
 export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
+  console.log("🚨 CRITICAL DEBUG: ResultsDisplay component is RENDERING!");
+  console.log("🚨 CRITICAL DEBUG: Component props:", { data: !!data, onScanAnother: !!onScanAnother });
+  
   const [showDiaryDialog, setShowDiaryDialog] = useState(false);
 
   // Temporary debugging for touch interception issues
