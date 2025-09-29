@@ -44,7 +44,18 @@ export function AppHeader() {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          {isAuthenticated && user ? (
+          {!isAuthenticated && (
+            <a href="/api/login">
+              <button 
+                className="p-3 px-6 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-blue-400/30 shadow-md"
+                data-testid="button-login"
+                title="Sign in with Replit"
+              >
+                Sign In
+              </button>
+            </a>
+          )}
+          {isAuthenticated && user && (
             <div className="relative mr-2" ref={profileRef}>
               <button
                 onClick={() => setShowProfile(!showProfile)}
@@ -76,7 +87,7 @@ export function AppHeader() {
                 </div>
               )}
             </div>
-          ) : null}
+          )}
           <button 
             className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 dark:from-gray-800/50 dark:to-gray-700/30 backdrop-blur-sm hover:scale-110 smooth-transition border border-white/10 dark:border-gray-700/30"
             data-testid="button-history"
