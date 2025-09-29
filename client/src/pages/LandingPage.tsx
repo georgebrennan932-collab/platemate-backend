@@ -3,6 +3,7 @@ import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syri
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { launchSignup, launchLogin } from "@/lib/auth-launcher";
 
 export default function LandingPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -40,29 +41,27 @@ export default function LandingPage() {
           {/* Top CTA Buttons */}
           {!isAuthenticated && (
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up animation-delay-900">
-              <a href="https://replit.com/signup" target="_blank" rel="noopener noreferrer">
-                <Button 
-                  size="lg" 
-                  variant="secondary"
-                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
-                  data-testid="button-signup-header"
-                >
-                  <Sparkles className="h-6 w-6 mr-2" />
-                  Create Free Account
-                </Button>
-              </a>
+              <Button 
+                size="lg" 
+                variant="secondary"
+                className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
+                data-testid="button-signup-header"
+                onClick={launchSignup}
+              >
+                <Sparkles className="h-6 w-6 mr-2" />
+                Create Free Account
+              </Button>
               <span className="text-white/60 text-sm">or</span>
-              <a href="/api/login">
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
-                  data-testid="button-signin-header"
-                >
-                  <LogIn className="h-6 w-6 mr-2" />
-                  Sign In
-                </Button>
-              </a>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
+                data-testid="button-signin-header"
+                onClick={launchLogin}
+              >
+                <LogIn className="h-6 w-6 mr-2" />
+                Sign In
+              </Button>
             </div>
           )}
         </div>
@@ -392,29 +391,27 @@ export default function LandingPage() {
             </Link>
           ) : (
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a href="/api/login" className="relative z-20">
-                <Button 
-                  size="lg" 
-                  variant="secondary"
-                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 cursor-pointer"
-                  data-testid="button-sign-in"
-                >
-                  <LogIn className="h-6 w-6 mr-2" />
-                  Sign In to Start
-                </Button>
-              </a>
+              <Button 
+                size="lg" 
+                variant="secondary"
+                className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
+                data-testid="button-sign-in"
+                onClick={launchLogin}
+              >
+                <LogIn className="h-6 w-6 mr-2" />
+                Sign In to Start
+              </Button>
               <span className="text-white/80 text-sm">or</span>
-              <a href="https://replit.com/signup" target="_blank" rel="noopener noreferrer" className="relative z-20">
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 cursor-pointer"
-                  data-testid="button-sign-up"
-                >
-                  <Sparkles className="h-6 w-6 mr-2" />
-                  Create Free Account
-                </Button>
-              </a>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
+                data-testid="button-sign-up"
+                onClick={launchSignup}
+              >
+                <Sparkles className="h-6 w-6 mr-2" />
+                Create Free Account
+              </Button>
             </div>
           )}
         </div>
