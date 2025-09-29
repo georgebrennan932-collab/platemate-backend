@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, memo } from "react";
+import React, { useEffect, useRef } from "react";
 import { Flame, Beef, Wheat, Droplets } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import type { NutritionGoals } from "@shared/schema";
@@ -15,7 +15,7 @@ interface ProgressIndicatorsProps {
   };
 }
 
-export const ProgressIndicators = memo(function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps) {
+export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps) {
   if (!goals) return null;
 
   // Track previous achievement status to trigger confetti only on new achievements
@@ -200,4 +200,4 @@ export const ProgressIndicators = memo(function ProgressIndicators({ goals, cons
       />
     </div>
   );
-});
+}

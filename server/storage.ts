@@ -143,73 +143,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDiaryEntries(userId?: string, limit = 50): Promise<DiaryEntryWithAnalysis[]> {
-    // Get regular diary entries with full analysis
-    const regularEntries = userId 
-      ? await db.query.diaryEntries.findMany({
-          where: eq(diaryEntries.userId, userId),
-          limit: Math.ceil(limit * 0.8), // Reserve some space for simple entries
-          orderBy: desc(diaryEntries.mealDate),
-          with: {
-            analysis: true,
-          },
-        })
-      : await db.query.diaryEntries.findMany({
-          limit: Math.ceil(limit * 0.8),
-          orderBy: desc(diaryEntries.mealDate),
-          with: {
-            analysis: true,
-          },
-        });
-
-    // Get simple food entries and transform them to match diary format
-    const simpleEntries = userId 
-      ? await db.query.simpleFoodEntries.findMany({
-          where: eq(simpleFoodEntries.userId, userId),
-          limit: Math.floor(limit * 0.5),
-          orderBy: desc(simpleFoodEntries.createdAt),
-        })
-      : [];
-
-    // Transform simple entries to DiaryEntryWithAnalysis format
-    const transformedSimpleEntries: DiaryEntryWithAnalysis[] = simpleEntries.map(entry => ({
-      id: `simple-${entry.id}`, // Prefix to distinguish from regular entries
-      userId: entry.userId,
-      analysisId: `simple-analysis-${entry.id}`,
-      mealType: 'snack',
-      customMealName: null,
-      mealDate: entry.createdAt,
-      notes: `Mobile entry: ${entry.food} - ${entry.amount}`,
-      createdAt: entry.createdAt,
-      updatedAt: entry.createdAt,
-      analysis: {
-        id: `simple-analysis-${entry.id}`,
-        imageUrl: '', // Empty string instead of null
-        confidence: 0.8, // Default confidence for manual entries
-        totalCalories: 0, // Will show as "Unknown" in UI
-        totalProtein: 0,
-        totalCarbs: 0,
-        totalFat: 0,
-        detectedFoods: [{
-          name: entry.food,
-          portion: entry.amount,
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0,
-          confidence: 0.8,
-          icon: '🍽️' // Default food icon for mobile entries
-        }],
-        createdAt: entry.createdAt,
-        updatedAt: entry.createdAt
-      }
-    }));
-
-    // Combine and sort all entries by date (newest first)
-    const allEntries = [...regularEntries, ...transformedSimpleEntries];
-    allEntries.sort((a, b) => new Date(b.mealDate).getTime() - new Date(a.mealDate).getTime());
-
-    // Apply final limit
-    return allEntries.slice(0, limit);
+    if (userId) {
+      return await db.query.diaryEntries.findMany({
+        where: eq(diaryEntries.userId, userId),
+        limit,
+        orderBy: desc(diaryEntries.mealDate),
+        with: {
+          analysis: true,
+        },
+      });
+    } else {
+      return await db.query.diaryEntries.findMany({
+        limit,
+        orderBy: desc(diaryEntries.mealDate),
+        with: {
+          analysis: true,
+        },
+      });
+    }
   }
 
   async getDiaryEntry(id: string): Promise<DiaryEntryWithAnalysis | undefined> {

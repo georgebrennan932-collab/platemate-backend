@@ -3,11 +3,8 @@ import type { FoodAnalysis, DetectedFood } from "@shared/schema";
 import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { createSmartInvalidation } from "@/lib/smart-invalidation";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getCurrentUser } from "@/lib/firebase";
-import { useAuth } from "@/hooks/useAuth";
 
 interface ResultsDisplayProps {
   data: FoodAnalysis;
@@ -33,8 +30,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const smartInvalidation = createSmartInvalidation(queryClient);
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
 
   // Check speech recognition support
   useEffect(() => {
@@ -408,20 +403,23 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       // Update local state to match server response
       setEditableFoods([...updatedAnalysis.detectedFoods]);
       
-      // Changes saved successfully
+      console.log("✅ Successfully saved changes to database. Server totals:", {
+        calories: updatedAnalysis.totalCalories,
+        protein: updatedAnalysis.totalProtein
+      });
       
       toast({
         title: "Changes Saved",
         description: "Your food corrections have been saved to the database.",
       });
       
-      // Batch invalidate all related caches
-      smartInvalidation.invalidateQueries(['/api/analyses']);
-      smartInvalidation.invalidateQueries(['/api/diary']);
-      smartInvalidation.invalidateQueries(['/api/analyses', data.id]);
+      // Invalidate all related caches
+      queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/analyses', data.id] });
     },
     onError: (error: Error) => {
-      // Failed to save changes
+      console.error("❌ Failed to save changes:", error);
       toast({
         title: "Save Failed",
         description: "Could not save your changes. Please try again.",
@@ -503,8 +501,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         setEditableFoods([...updatedAnalysis.detectedFoods]);
       }
       
-      smartInvalidation.invalidateQueries(['/api/analyses']);
-      smartInvalidation.invalidateQueries(['/api/diary']);
+      queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
       setShowVoiceMealDialog(false);
       setVoiceInput('');
     },
@@ -527,23 +525,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   const addToDiaryMutation = useMutation({
     mutationFn: async () => {
-      console.log('🍽️ Adding to diary - mutation started', {
-        selectedMealType,
-        selectedDate,
-        selectedTime,
-        dataId: data.id,
-        editableFoodsCount: editableFoods.length
-      });
-      
-      // Auth check - user should be authenticated before we reach here
-      console.log('🔐 Auth state at mutation time:', {
-        isAuthenticated,
-        hasUser: !!user,
-        uid: user?.uid,
-        email: user?.email,
-        authLoading
-      });
-      
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
       
       // Create a modified analysis with updated food data
@@ -556,28 +537,21 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         totalFat: totals.fat
       };
       
-      const requestData = {
+      const response = await apiRequest('POST', '/api/diary', {
         analysisId: data.id,
         mealType: selectedMealType,
         mealDate: mealDateTime.toISOString(),
         notes: "",
         modifiedAnalysis // Send the modified data
-      };
-      
-      console.log('🍽️ Making POST request to /api/diary with data:', requestData);
-      
-      const response = await apiRequest('POST', '/api/diary', requestData);
-      const result = await response.json();
-      
-      console.log('🍽️ Diary API response:', result);
-      return result;
+      });
+      return await response.json();
     },
     onSuccess: () => {
       toast({
         title: "Added to Diary!",
         description: "Your meal has been saved to your food diary.",
       });
-      smartInvalidation.invalidateQueries(['/api/diary']);
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
       setShowDiaryDialog(false);
     },
     onError: (error: Error) => {
@@ -1170,47 +1144,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       <div className="flex space-x-4 pt-6">
         <button 
           className="flex-1 gradient-button py-4 px-6 rounded-xl font-medium hover:scale-[1.02] flex items-center justify-center space-x-2"
-          onClick={(e) => {
-            console.log('🚨 BUTTON CLICKED!');
-            console.log('🔘 Button state:', {
-              disabled: addToDiaryMutation.isPending || authLoading || !isAuthenticated,
-              isPending: addToDiaryMutation.isPending,
-              authLoading,
-              isAuthenticated,
-              hasUser: !!user,
-              hasData: !!data,
-              dataId: data?.id
-            });
-            
-            if (addToDiaryMutation.isPending || authLoading || !isAuthenticated) {
-              console.log('❌ Button is disabled, not executing mutation');
-              return;
-            }
-            
-            console.log('✅ Executing mutation...');
-            addToDiaryMutation.mutate();
-          }}
-          disabled={addToDiaryMutation.isPending || authLoading || !isAuthenticated}
+          onClick={() => setShowDiaryDialog(true)}
           data-testid="button-add-diary"
-          role="button"
-          style={{ pointerEvents: 'auto', zIndex: 1000 }}
         >
           <Plus className="h-5 w-5" />
-          {addToDiaryMutation.isPending ? (
-            <span className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Adding...
-            </span>
-          ) : authLoading ? (
-            <span className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Loading...
-            </span>
-          ) : !isAuthenticated ? (
-            <span>Login Required</span>
-          ) : (
-            <span>Add to Diary</span>
-          )}
+          <span>Add to Diary</span>
         </button>
         <button 
           className="flex-1 modern-card bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 text-gray-700 dark:text-gray-300 py-4 px-6 rounded-xl font-medium hover:scale-[1.02] smooth-transition flex items-center justify-center space-x-2"
@@ -1223,12 +1161,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       </div>
 
       {/* Add to Diary Dialog */}
-      {(() => {
-        if (showDiaryDialog) {
-          console.log('📋 Diary dialog is opening', { selectedMealType, selectedDate, selectedTime });
-        }
-        return showDiaryDialog;
-      })() && (
+      {showDiaryDialog && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
           <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 dark:border-gray-700/50 animate-in slide-in-from-bottom-4 duration-300">
             
@@ -1321,13 +1254,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                 Cancel
               </button>
               <button
-                type="button"
-                onPointerUp={() => {
-                  console.log('🔘 Dialog button clicked via pointer!', { mealType: selectedMealType, date: selectedDate, time: selectedTime });
-                  addToDiaryMutation.mutate();
-                }}
+                onClick={() => addToDiaryMutation.mutate()}
                 disabled={addToDiaryMutation.isPending}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none active:scale-95"
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 data-testid="button-save-diary"
               >
                 <Plus className="h-5 w-5 mr-2 inline" />

@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
@@ -142,12 +143,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded images as static files from the correct upload directory
   app.use('/uploads', express.static(uploadDir));
   
-  // Firebase authentication middleware with development fallback
-  const { verifyFirebaseToken } = await import('./lib/firebase-auth');
-  const authMiddleware = verifyFirebaseToken;
+  // Setup authentication
+  await setupAuth(app);
 
   // Cache and monitoring endpoints
-  app.get('/api/cache/stats', authMiddleware, async (req, res) => {
+  app.get('/api/cache/stats', isAuthenticated, async (req, res) => {
     try {
       const cacheStats = imageAnalysisCache.getStats();
       const queueStats = analysisQueue.getStats();
@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/cache/clear', authMiddleware, async (req, res) => {
+  app.post('/api/cache/clear', isAuthenticated, async (req, res) => {
     try {
       await imageAnalysisCache.clear();
       res.json({ message: 'Cache cleared successfully' });
@@ -173,7 +173,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Firebase auth status route - to be implemented with Firebase on frontend
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
   // saveFood endpoint for mobile app compatibility - accepts simple food entries
   app.post("/saveFood", async (req, res) => {
@@ -257,9 +267,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // All routes now use temporary auth middleware during Firebase migration
+  // Analyze food image - bypass auth in deployment since users won't have Replit authentication
+  const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true';
+  const requireAuth = !isDeployment;
+  const authMiddleware = requireAuth ? isAuthenticated : (req: any, res: any, next: any) => next();
   
-  app.post("/api/analyze", upload.single('image'), async (req: any, res) => {
+  app.post("/api/analyze", authMiddleware, upload.single('image'), async (req: any, res) => {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const requestStartTime = Date.now();
     
@@ -436,8 +449,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - creating food analysis and returning 200 OK`);
           const analysis = await storage.createFoodAnalysis(foodAnalysisData);
 
-          // Always return just the analysis - user chooses whether to add to diary
-          responseData = analysis;
+          // Optional: Auto-add to diary if user is authenticated and requests it
+          if (req.user && req.body.autoAddToDiary === 'true') {
+            try {
+              const userId = req.user.claims.sub;
+              const diaryData = {
+                userId,
+                analysisId: analysis.id,
+                mealType: req.body.mealType || 'snack',
+                mealDate: req.body.mealDate || new Date().toISOString().split('T')[0],
+                notes: req.body.notes || '',
+                customMealName: req.body.customMealName || null
+              };
+              
+              const validatedDiaryEntry = insertDiaryEntrySchema.parse(diaryData);
+              const diaryEntry = await storage.createDiaryEntry(validatedDiaryEntry);
+              
+              console.log(`✅ Auto-added analysis ${analysis.id} to diary for user ${userId}`);
+              
+              // Return both analysis and diary entry info
+              responseData = {
+                ...analysis,
+                diaryEntry: {
+                  id: diaryEntry.id,
+                  mealType: diaryEntry.mealType,
+                  mealDate: diaryEntry.mealDate
+                }
+              };
+            } catch (diaryError) {
+              console.error("Failed to auto-add to diary:", diaryError);
+              // Still return the analysis even if diary add fails
+              responseData = analysis;
+            }
+          } else {
+            responseData = analysis;
+          }
         }
       } catch (error) {
         analysisError = error;
@@ -740,7 +786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // === FOOD CONFIRMATION API ENDPOINTS (for confidence threshold workflow) ===
   
   // Create food confirmation for low confidence analysis (<90%)
-  app.post("/api/food-confirmations", authMiddleware, async (req: any, res) => {
+  app.post("/api/food-confirmations", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedData = insertFoodConfirmationSchema.parse({
@@ -763,7 +809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get pending food confirmations for user
-  app.get("/api/food-confirmations", authMiddleware, async (req: any, res) => {
+  app.get("/api/food-confirmations", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const status = req.query.status as string | undefined;
@@ -777,7 +823,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get specific food confirmation
-  app.get("/api/food-confirmations/:id", authMiddleware, async (req: any, res) => {
+  app.get("/api/food-confirmations/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const confirmation = await storage.getFoodConfirmation(req.params.id);
@@ -862,7 +908,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Refresh analysis - reanalyze the image with current AI providers
-  app.post("/api/analyses/:id/refresh", authMiddleware, async (req: any, res) => {
+  app.post("/api/analyses/:id/refresh", isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
       const userId = req.user.claims.sub;
@@ -951,23 +997,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Diary routes - protected with Firebase authentication
+  // Diary routes - bypass auth in deployment with anonymous user support
   app.post("/api/diary", authMiddleware, async (req: any, res) => {
     try {
-      // Get authenticated user ID from Firebase token
-      const userId = req.user?.claims?.sub || 'firebase-user-demo';
-      
-      console.log("📱 POST /api/diary request:", {
-        userId,
-        userAgent: req.headers['user-agent'],
-        platform: req.headers['x-platform'],
-        requestedWith: req.headers['x-requested-with'],
-        origin: req.headers.origin,
-        bodyKeys: Object.keys(req.body),
-        analysisId: req.body.analysisId,
-        mealType: req.body.mealType
-      });
-      
+      // In deployment without auth, use anonymous user ID
+      const userId = req.user?.claims?.sub || 'anonymous-user';
       let analysisId = req.body.analysisId;
       
       // If modifiedAnalysis is provided, create a new analysis with the edited foods
@@ -1001,33 +1035,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      
-      console.log("📱 GET /api/diary request:", {
-        userId,
-        userAgent: req.headers['user-agent'],
-        platform: req.headers['x-platform'],
-        requestedWith: req.headers['x-requested-with'],
-        origin: req.headers.origin,
-        limit
-      });
-      
       // Disable caching for diary entries to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
       const entries = await storage.getDiaryEntries(userId, limit);
-      
-      console.log("📱 GET /api/diary response:", {
-        userId,
-        entriesCount: entries.length,
-        entries: entries.map(e => ({
-          id: e.id,
-          mealType: e.mealType,
-          notes: e.notes,
-          totalCalories: e.analysis?.totalCalories
-        }))
-      });
-      
       res.json(entries);
     } catch (error) {
       console.error("Get diary entries error:", error);
@@ -1159,7 +1171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Diet advice routes (protected)
-  app.get("/api/diet-advice", authMiddleware, async (req: any, res) => {
+  app.get("/api/diet-advice", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const entries = await storage.getDiaryEntries(userId, 30); // Get last 30 entries for this user
@@ -1184,7 +1196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/diet-advice/generate", authMiddleware, async (req: any, res) => {
+  app.post("/api/diet-advice/generate", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const entries = await storage.getDiaryEntries(userId, 30);
@@ -1209,7 +1221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Custom AI question endpoint
-  app.post("/api/ai/ask", authMiddleware, async (req: any, res) => {
+  app.post("/api/ai/ask", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { question } = req.body;
@@ -1448,7 +1460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User profile routes
-  app.get("/api/user-profile", authMiddleware, async (req: any, res) => {
+  app.get("/api/user-profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const profile = await storage.getUserProfile(userId);
@@ -1459,7 +1471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/user-profile", authMiddleware, async (req: any, res) => {
+  app.post("/api/user-profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedProfile = insertUserProfileSchema.parse({
@@ -1475,7 +1487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Daily coaching endpoints
-  app.get('/api/coaching/daily', authMiddleware, async (req: any, res) => {
+  app.get('/api/coaching/daily', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       
@@ -1495,7 +1507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/coaching/generate', authMiddleware, async (req: any, res) => {
+  app.post('/api/coaching/generate', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       

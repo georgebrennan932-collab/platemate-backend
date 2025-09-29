@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { createSmartInvalidation } from "@/lib/smart-invalidation";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target, TrendingUp, HelpCircle, Mic, MicOff, Plus } from "lucide-react";
@@ -20,19 +19,15 @@ import { BottomHelpSection } from "@/components/bottom-help-section";
 import { WeightForm } from "@/components/weight-form";
 import { WeightList } from "@/components/weight-list";
 import { WeightEditDialog } from "@/components/weight-edit-dialog";
-import { lazy, Suspense } from "react";
-
-// Lazy load heavy chart component
-const WeightChart = lazy(() => import("@/components/weight-chart").then(module => ({ default: module.WeightChart })));
+import { WeightChart } from "@/components/weight-chart";
 import { DrinksBar } from "@/components/drinks-bar";
 import type { WeightEntry } from "@shared/schema";
 
 export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const smartInvalidation = createSmartInvalidation(queryClient);
   const [activeTab, setActiveTab] = useState<'diary' | 'analytics' | 'weight'>('diary');
-  const [viewMode, setViewMode] = useState<'today' | 'history'>('history');
+  const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
 
   // Check URL parameters for tab switching
   useEffect(() => {
@@ -162,7 +157,7 @@ export function DiaryPage() {
         title: "Entry Deleted",
         description: "Meal has been removed from your diary.",
       });
-      smartInvalidation.invalidateQueries(['/api/diary']);
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
     },
     onError: (error: Error) => {
       toast({
@@ -183,7 +178,7 @@ export function DiaryPage() {
         title: "Drink Deleted",
         description: "Drink has been removed from your diary.",
       });
-      smartInvalidation.invalidateQueries(['/api/drinks']);
+      queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
     },
     onError: (error: Error) => {
       toast({
@@ -216,7 +211,7 @@ export function DiaryPage() {
         title: "Meal Added!",
         description: "Your voice meal has been added to your diary.",
       });
-      smartInvalidation.invalidateQueries(['/api/diary']);
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
       setShowVoiceMealDialog(false);
       setVoiceInput('');
     },
@@ -386,9 +381,9 @@ export function DiaryPage() {
                   data-testid="button-back-to-home"
                   onClick={() => {
                     // Force refresh homepage data when navigating back
-                    smartInvalidation.invalidateQueries(['/api/diary']);
+                    queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
                     queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-                    smartInvalidation.invalidateQueries(['/api/drinks']);
+                    queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
                   }}
                 >
                   <ArrowLeft className="h-5 w-5" />
@@ -549,13 +544,7 @@ export function DiaryPage() {
             }} />
             
             {/* Weight Progress Chart */}
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            }>
-              <WeightChart />
-            </Suspense>
+            <WeightChart />
           </div>
         ) : viewMode === 'today' ? (
           <div className="space-y-6">

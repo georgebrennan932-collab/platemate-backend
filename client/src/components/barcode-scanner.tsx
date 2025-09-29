@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from "react";
+import { useState } from "react";
 import type { KeyboardEvent } from "react";
 // Icons for the interface
 const QrCode = ({ className }: { className?: string }) => <div className={`${className} inline-block`}>🏷️</div>;
@@ -15,7 +15,8 @@ interface BarcodeScannerProps {
   isOpen: boolean;
 }
 
-export const BarcodeScanner = memo(function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScannerProps) {
+export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScannerProps) {
+  console.log("🔍 Manual Barcode Entry component loaded - no camera permissions needed!");
   const { toast } = useToast();
   const [scanError, setScanError] = useState<string | null>(null);
   const [manualBarcode, setManualBarcode] = useState('');
@@ -28,6 +29,7 @@ export const BarcodeScanner = memo(function BarcodeScanner({ onScanSuccess, onCl
     }
     
     const barcodeValue = manualBarcode.trim();
+    console.log('📝 Manual barcode entered:', barcodeValue);
     
     // Basic barcode validation (typically 12-14 digits)
     if (!/^\d{8,14}$/.test(barcodeValue)) {
@@ -174,4 +176,4 @@ export const BarcodeScanner = memo(function BarcodeScanner({ onScanSuccess, onCl
       </div>
     </div>
   );
-});
+}

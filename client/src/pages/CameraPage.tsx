@@ -155,16 +155,7 @@ export function CameraPage() {
   };
 
   const handleConfirmVoiceMeal = () => {
-    console.log("📱 VOICE BUTTON CLICKED - handleConfirmVoiceMeal called!");
-    console.log("📱 Voice input:", voiceInput);
-    console.log("📱 Meal type:", selectedMealType);
-    
-    if (!voiceInput.trim()) {
-      console.log("📱 Voice input is empty, returning early");
-      return;
-    }
-    
-    console.log("📱 Calling addVoiceMealMutation.mutate...");
+    if (!voiceInput.trim()) return;
     addVoiceMealMutation.mutate({
       foodDescription: voiceInput.trim(),
       mealType: selectedMealType
@@ -172,16 +163,7 @@ export function CameraPage() {
   };
 
   const handleConfirmTextMeal = () => {
-    console.log("📱 TEXT BUTTON CLICKED - handleConfirmTextMeal called!");
-    console.log("📱 Text input:", textInput);
-    console.log("📱 Meal type:", selectedMealType);
-    
-    if (!textInput.trim()) {
-      console.log("📱 Text input is empty, returning early");
-      return;
-    }
-    
-    console.log("📱 Calling addVoiceMealMutation.mutate...");
+    if (!textInput.trim()) return;
     addVoiceMealMutation.mutate({
       foodDescription: textInput.trim(),
       mealType: selectedMealType
@@ -190,60 +172,32 @@ export function CameraPage() {
 
   const addVoiceMealMutation = useMutation({
     mutationFn: async ({ foodDescription, mealType }: { foodDescription: string, mealType: string }) => {
-      console.log("📱 Mobile voice/text meal submission started:", {
-        foodDescription,
-        mealType,
-        userAgent: navigator.userAgent,
-        platform: (window as any).Capacitor?.getPlatform?.() || 'web'
-      });
+      // First analyze the text-based food description
+      const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
+      const analysis = await analysisResponse.json();
       
-      try {
-        // First analyze the text-based food description
-        console.log("📱 Making analyze-text request...");
-        const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
-        const analysis = await analysisResponse.json();
-        
-        console.log("📱 Analyze-text response:", analysis);
-        
-        // Then create the diary entry with current date/time
-        const now = new Date();
-        const diaryPayload = {
-          analysisId: analysis.id,
-          mealType,
-          mealDate: now.toISOString(),
-          notes: `Added via text input: "${foodDescription}"`
-        };
-        
-        console.log("📱 Making diary entry request:", diaryPayload);
-        const diaryResponse = await apiRequest('POST', '/api/diary', diaryPayload);
-        const result = await diaryResponse.json();
-        
-        console.log("📱 Diary entry response:", result);
-        return result;
-      } catch (error) {
-        console.error("📱 Mobile meal submission error:", error);
-        throw error;
-      }
+      // Then create the diary entry with current date/time
+      const now = new Date();
+      const diaryResponse = await apiRequest('POST', '/api/diary', {
+        analysisId: analysis.id,
+        mealType,
+        mealDate: now.toISOString(),
+        notes: `Added via text input: "${foodDescription}"`
+      });
+      return await diaryResponse.json();
     },
     onSuccess: () => {
-      console.log("📱 Mobile meal submission SUCCESS!");
       toast({
         title: "Meal Added!",
         description: "Your meal has been added to your diary.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
-      
-      // Force close dialogs - mobile WebView workaround
-      setTimeout(() => {
-        setShowVoiceMealDialog(false);
-        setShowTextMealDialog(false);
-        setVoiceInput('');
-        setTextInput('');
-        console.log("📱 Auto-closed dialogs due to mobile WebView issue");
-      }, 1000);
+      setShowVoiceMealDialog(false);
+      setShowTextMealDialog(false);
+      setVoiceInput('');
+      setTextInput('');
     },
     onError: (error: Error) => {
-      console.error("📱 Mobile meal submission FAILED:", error);
       toast({
         title: "Error",
         description: "Failed to add meal from voice. Please try again.",
@@ -255,23 +209,6 @@ export function CameraPage() {
 
   return (
     <div className="text-foreground min-h-screen" style={{background: 'var(--bg-gradient)'}}>
-      {/* MOBILE TOUCH DEBUG TEST */}
-      <div 
-        onClick={() => {
-          console.log("🚨 MOBILE TOUCH DEBUG: Button clicked!");
-          alert("Touch events work!");
-        }}
-        className="fixed top-4 right-4 bg-red-500 text-white px-3 py-2 rounded text-xs font-bold cursor-pointer"
-        style={{ 
-          position: 'fixed',
-          top: '10px',
-          right: '10px',
-          zIndex: 99999,
-          touchAction: 'manipulation'
-        }}
-      >
-        TEST
-      </div>
       <AppHeader />
       
       {/* Voice and Type Add Buttons */}
@@ -442,49 +379,14 @@ export function CameraPage() {
               >
                 Cancel
               </button>
-              <div 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log("📱 DIV CLICK: Voice meal button clicked!");
-                  if (!addVoiceMealMutation.isPending && voiceInput.trim()) {
-                    handleConfirmVoiceMeal();
-                  }
-                }}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  console.log("📱 DIV TOUCH START: Voice meal button touched!");
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log("📱 DIV TOUCH END: Voice meal button touch ended!");
-                  if (!addVoiceMealMutation.isPending && voiceInput.trim()) {
-                    setTimeout(() => handleConfirmVoiceMeal(), 50);
-                  }
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  console.log("📱 DIV MOUSE DOWN: Voice meal button mouse down!");
-                  if (!addVoiceMealMutation.isPending && voiceInput.trim()) {
-                    setTimeout(() => handleConfirmVoiceMeal(), 100);
-                  }
-                }}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg cursor-pointer text-center flex items-center justify-center"
+              <button
+                onClick={handleConfirmVoiceMeal}
+                disabled={addVoiceMealMutation.isPending}
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg"
                 data-testid="button-confirm-voice-meal"
-                style={{ 
-                  touchAction: 'manipulation',
-                  WebkitTapHighlightColor: 'rgba(0,0,0,0)',
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  opacity: addVoiceMealMutation.isPending ? 0.5 : 1,
-                  pointerEvents: addVoiceMealMutation.isPending ? 'none' : 'auto',
-                  position: 'relative',
-                  zIndex: 9999
-                }}
               >
                 {addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -546,49 +448,14 @@ export function CameraPage() {
               >
                 Cancel
               </button>
-              <div 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log("📱 DIV CLICK: Text meal button clicked!");
-                  if (!addVoiceMealMutation.isPending && textInput.trim()) {
-                    handleConfirmTextMeal();
-                  }
-                }}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  console.log("📱 DIV TOUCH START: Text meal button touched!");
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log("📱 DIV TOUCH END: Text meal button touch ended!");
-                  if (!addVoiceMealMutation.isPending && textInput.trim()) {
-                    setTimeout(() => handleConfirmTextMeal(), 50);
-                  }
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  console.log("📱 DIV MOUSE DOWN: Text meal button mouse down!");
-                  if (!addVoiceMealMutation.isPending && textInput.trim()) {
-                    setTimeout(() => handleConfirmTextMeal(), 100);
-                  }
-                }}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg cursor-pointer text-center flex items-center justify-center"
+              <button
+                onClick={handleConfirmTextMeal}
+                disabled={addVoiceMealMutation.isPending || !textInput.trim()}
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg"
                 data-testid="button-confirm-text-meal"
-                style={{ 
-                  touchAction: 'manipulation',
-                  WebkitTapHighlightColor: 'rgba(0,0,0,0)',
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  opacity: (addVoiceMealMutation.isPending || !textInput.trim()) ? 0.5 : 1,
-                  pointerEvents: (addVoiceMealMutation.isPending || !textInput.trim()) ? 'none' : 'auto',
-                  position: 'relative',
-                  zIndex: 9999
-                }}
               >
                 {addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -600,8 +467,8 @@ export function CameraPage() {
       {/* Bottom Help Section */}
       <BottomHelpSection />
       
-      {/* Persistent Confetti - TEMPORARILY DISABLED FOR MOBILE TESTING */}
-      {false && showPersistentConfetti && (
+      {/* Persistent Confetti */}
+      {showPersistentConfetti && (
         <ConfettiCelebration 
           trigger={showPersistentConfetti}
           duration={5000} 

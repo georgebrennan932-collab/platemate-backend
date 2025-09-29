@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { createSmartInvalidation } from "@/lib/smart-invalidation";
 import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/app-header";
 import { soundService } from "@/lib/sound-service";
+import { CameraInterface } from "@/components/camera-interface";
 import { ProcessingState } from "@/components/processing-state";
 import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
@@ -14,12 +14,8 @@ import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
-import { lazy, Suspense } from "react";
-
-// Lazy load heavy components to improve initial page load
-const CameraInterface = lazy(() => import("@/components/camera-interface").then(module => ({ default: module.CameraInterface })));
-const ScannerModal = lazy(() => import("@/components/scanner-modal").then(module => ({ default: module.ScannerModal })));
-const BarcodeScanner = lazy(() => import("@/components/barcode-scanner").then(module => ({ default: module.BarcodeScanner })));
+import { ScannerModal } from "@/components/scanner-modal";
+import { BarcodeScanner } from "@/components/barcode-scanner";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis, DrinkEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
@@ -29,7 +25,6 @@ type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const smartInvalidation = createSmartInvalidation(queryClient);
   const { user, isAuthenticated } = useAuth();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
@@ -70,10 +65,6 @@ export default function Home() {
     retry: false,
     enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
-    staleTime: 2 * 60 * 1000, // 2 minutes - nutrition goals change infrequently
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
   });
 
   const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
@@ -81,10 +72,6 @@ export default function Home() {
     retry: false,
     enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
-    staleTime: 60 * 1000, // 1 minute - diary entries change more frequently
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
   });
 
   // Fetch drinks data for calorie calculation
@@ -93,21 +80,17 @@ export default function Home() {
     retry: false,
     enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
-    staleTime: 60 * 1000, // 1 minute - drinks change frequently
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
   });
 
-  // Only invalidate on auth state change, not every mount
+  // Force data refresh when homepage loads/mounts
   useEffect(() => {
     if (isAuthenticated) {
-      // Batch invalidations for better performance
-      smartInvalidation.invalidateQueries(['/api/diary']);
-      smartInvalidation.invalidateQueries(['/api/nutrition-goals']);
-      smartInvalidation.invalidateQueries(['/api/drinks']);
+      // Force fresh data fetch whenever homepage component mounts
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
     }
-  }, [isAuthenticated, smartInvalidation]); // Only run when auth status changes
+  }, [isAuthenticated, queryClient]);
   
   // Initialize speech recognition and handle page visibility/navigation
   useEffect(() => {
@@ -117,24 +100,36 @@ export default function Home() {
     };
     checkSpeechSupport();
     
-    // Only refresh on bfcache restore, let React Query handle staleness
+    // Force refresh data when coming back to page (handles browser back/forward cache)
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted && isAuthenticated) {
-        // Only invalidate diary on bfcache restore (most likely to have new data)
-        smartInvalidation.invalidateSelectively(['/api/diary']);
+        // Page was restored from bfcache, force refresh all data
+        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+        queryClient.refetchQueries({ queryKey: ['/api/diary'] });
+        queryClient.refetchQueries({ queryKey: ['/api/nutrition-goals'] });
+        queryClient.refetchQueries({ queryKey: ['/api/drinks'] });
       }
     };
 
-    // Minimal visibility change handling - let React Query's reconnect handle most cases
+    // Refetch data when the page becomes visible (handles navigation back from other pages)
     const handleVisibilityChange = () => {
-      // React Query will automatically refetch stale data on reconnect
-      // No need for manual invalidation here
+      if (!document.hidden && isAuthenticated) {
+        // Refetch diary entries, nutrition goals, and drinks when page becomes visible
+        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+      }
     };
 
-    // No manual focus handling needed - React Query handles this
+    // Also handle when window regains focus
     const handleFocus = () => {
-      // React Query handles focus refetching via refetchOnWindowFocus (disabled above)
-      // No manual invalidation needed
+      if (isAuthenticated) {
+        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+      }
     };
 
     // Listen for page show events (bfcache restoration)
@@ -641,22 +636,10 @@ export default function Home() {
                     </div>
                   )}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                    <button 
-                      onClick={async () => {
-                        try {
-                          const { logout } = await import("@/lib/firebase");
-                          await logout();
-                          // User will be automatically redirected due to auth state change
-                        } catch (error) {
-                          console.error("Logout error:", error);
-                        }
-                      }}
-                      className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors w-full text-left" 
-                      data-testid="button-nav-logout"
-                    >
+                    <a href="/api/logout" className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" data-testid="button-nav-logout">
                       <LogOut className="h-4 w-4" />
                       <span className="text-sm font-medium">Logout</span>
-                    </button>
+                    </a>
                   </div>
                 </div>
               )}
@@ -787,19 +770,13 @@ export default function Home() {
 
       <div className="max-w-md mx-auto" id="camera-section">
         {currentState === 'camera' && (
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          }>
-            <CameraInterface
-              onAnalysisStart={handleAnalysisStart}
-              onAnalysisSuccess={handleAnalysisSuccess}
-              onAnalysisError={handleAnalysisError}
-              caloriesConsumed={getTodayCalories()}
-              caloriesGoal={nutritionGoals?.dailyCalories || 2000}
-            />
-          </Suspense>
+          <CameraInterface
+            onAnalysisStart={handleAnalysisStart}
+            onAnalysisSuccess={handleAnalysisSuccess}
+            onAnalysisError={handleAnalysisError}
+            caloriesConsumed={getTodayCalories()}
+            caloriesGoal={nutritionGoals?.dailyCalories || 2000}
+          />
         )}
         
         {currentState === 'processing' && <ProcessingState />}
@@ -1077,18 +1054,9 @@ export default function Home() {
               </button>
               <button
                 onClick={handleConfirmVoiceMeal}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log("📱 MOBILE TOUCH: Home Voice Add Meal button touched!");
-                  if (!addVoiceMealMutation.isPending) {
-                    handleConfirmVoiceMeal();
-                  }
-                }}
                 disabled={addVoiceMealMutation.isPending}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 touch-manipulation"
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
                 data-testid="button-confirm-voice-meal"
-                style={{ touchAction: 'manipulation' }}
               >
                 {addVoiceMealMutation.isPending ? (
                   <>
@@ -1170,18 +1138,9 @@ export default function Home() {
               </button>
               <button
                 onClick={handleConfirmTextMeal}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log("📱 MOBILE TOUCH: Home Text Add Meal button touched!");
-                  if (!addVoiceMealMutation.isPending && textInput.trim()) {
-                    handleConfirmTextMeal();
-                  }
-                }}
                 disabled={addVoiceMealMutation.isPending || !textInput.trim()}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 touch-manipulation"
+                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
                 data-testid="button-confirm-text-meal"
-                style={{ touchAction: 'manipulation' }}
               >
                 {addVoiceMealMutation.isPending ? (
                   <>
@@ -1209,39 +1168,35 @@ export default function Home() {
       
 
       {/* Camera Barcode Scanner Modal */}
-      <Suspense fallback={null}>
-        <ScannerModal
-          isOpen={showBarcodeScanner}
-          onScanSuccess={(barcode: string) => {
-            handleBarcodeScanned(barcode);
-          }}
-          onClose={() => {
-            setShowBarcodeScanner(false);
-          }}
-        />
-      </Suspense>
+      <ScannerModal
+        isOpen={showBarcodeScanner}
+        onScanSuccess={(barcode: string) => {
+          handleBarcodeScanned(barcode);
+        }}
+        onClose={() => {
+          setShowBarcodeScanner(false);
+        }}
+      />
 
       {/* Manual Barcode Entry */}
-      <Suspense fallback={null}>
-        <BarcodeScanner
-          isOpen={showManualEntry}
-          onScanSuccess={(barcode: string) => {
-            setShowManualEntry(false);
-            handleBarcodeScanned(barcode);
-          }}
-          onClose={() => {
-            setShowManualEntry(false);
-          }}
-        />
-      </Suspense>
+      <BarcodeScanner
+        isOpen={showManualEntry}
+        onScanSuccess={(barcode: string) => {
+          setShowManualEntry(false);
+          handleBarcodeScanned(barcode);
+        }}
+        onClose={() => {
+          setShowManualEntry(false);
+        }}
+      />
 
-      {/* Persistent confetti celebration - TEMPORARILY DISABLED FOR MOBILE TESTING */}
-      {false && <ConfettiCelebration 
+      {/* Persistent confetti celebration */}
+      <ConfettiCelebration 
         trigger={showPersistentConfetti} 
         onComplete={() => setShowPersistentConfetti(false)}
         duration={4000}
         particleCount={80}
-      />}
+      />
     </div>
   );
 }

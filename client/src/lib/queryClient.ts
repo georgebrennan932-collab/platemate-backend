@@ -1,6 +1,4 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getCurrentUser } from "./firebase";
-import { getIdToken } from "firebase/auth";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -9,32 +7,14 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const currentUser = getCurrentUser();
-  if (currentUser) {
-    try {
-      const idToken = await getIdToken(currentUser);
-      return {
-        "Authorization": `Bearer ${idToken}`
-      };
-    } catch (error) {
-      console.warn("Failed to get Firebase ID token:", error);
-    }
-  }
-  return {};
-}
-
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const authHeaders = await getAuthHeaders();
-  const contentHeaders = data ? { "Content-Type": "application/json" } : {};
-  
   const res = await fetch(url, {
     method,
-    headers: { ...contentHeaders, ...authHeaders },
+    headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -49,10 +29,7 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const authHeaders = await getAuthHeaders();
-    
     const res = await fetch(queryKey.join("/") as string, {
-      headers: authHeaders,
       credentials: "include",
     });
 
@@ -69,10 +46,8 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false, // Disable frequent refetch on focus for performance
-      refetchOnMount: false, // Prevent refetch on component mount if data exists
-      staleTime: 15 * 60 * 1000, // 15 minutes - longer stale time for better performance
-      gcTime: 30 * 60 * 1000, // 30 minutes garbage collection time
+      refetchOnWindowFocus: true, // Enable refetch when browser tab becomes active
+      staleTime: 5 * 60 * 1000, // 5 minutes - allow data to become stale and refetch
       retry: false,
     },
     mutations: {
