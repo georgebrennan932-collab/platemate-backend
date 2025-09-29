@@ -5,7 +5,13 @@ const config: CapacitorConfig = {
   appName: 'PlateMate',
   webDir: 'dist/public',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    allowNavigation: [
+      'https://replit.com/*',
+      'https://*.replit.dev/*',
+      'https://*.replit.app/*',
+      '*://localhost:*'
+    ]
   },
   plugins: {
     SplashScreen: {
