@@ -44,12 +44,10 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   variant="secondary"
-                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-bounce relative z-10 group/button overflow-hidden"
+                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
                   data-testid="button-signup-header"
                 >
-                  {/* Button shimmer effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-200/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-                  <Sparkles className="h-6 w-6 mr-2 animate-spin-slow" />
+                  <Sparkles className="h-6 w-6 mr-2" />
                   Create Free Account
                 </Button>
               </a>
@@ -58,12 +56,10 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="bg-transparent border-2 border-white/50 text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-bounce animation-delay-200 relative z-10 group/button overflow-hidden"
+                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
                   data-testid="button-signin-header"
                 >
-                  {/* Button shimmer effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-                  <LogIn className="h-6 w-6 mr-2 animate-pulse" />
+                  <LogIn className="h-6 w-6 mr-2" />
                   Sign In
                 </Button>
               </a>
