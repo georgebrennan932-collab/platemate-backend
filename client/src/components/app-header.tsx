@@ -45,15 +45,26 @@ export function AppHeader() {
         </div>
         <div className="flex items-center space-x-2">
           {!isAuthenticated && (
-            <a href="/api/login">
-              <button 
-                className="p-3 px-6 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-blue-400/30 shadow-md"
-                data-testid="button-login"
-                title="Sign in with Replit"
-              >
-                Sign In
-              </button>
-            </a>
+            <div className="flex items-center space-x-2">
+              <a href="/api/login">
+                <button 
+                  className="p-2 px-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-blue-400/30 shadow-md"
+                  data-testid="button-login"
+                  title="Sign in with Replit"
+                >
+                  Sign In
+                </button>
+              </a>
+              <a href="https://replit.com/signup" target="_blank" rel="noopener noreferrer">
+                <button 
+                  className="p-2 px-4 rounded-xl bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-green-400/30 shadow-md"
+                  data-testid="button-signup"
+                  title="Create a Replit account"
+                >
+                  Sign Up
+                </button>
+              </a>
+            </div>
           )}
           {isAuthenticated && user && (
             <div className="relative mr-2" ref={profileRef}>

@@ -100,6 +100,20 @@ export default function Home() {
     checkSpeechSupport();
   }, []);
 
+  // Check for authentication failure in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('auth') === 'failed') {
+      toast({
+        title: "Sign In Failed",
+        description: "There was an issue signing you in. Please try again or create a new Replit account first.",
+        variant: "destructive",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [toast]);
+
   // Force data refresh when homepage loads/mounts
   useEffect(() => {
     if (isAuthenticated) {

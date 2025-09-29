@@ -109,9 +109,15 @@ export async function setupAuth(app: Express) {
     console.log(`🔐 Login attempt - req.hostname: ${req.hostname}, actual domain: ${actualHostname}`);
     
     passport.authenticate(`replitauth:${actualHostname}`, {
-      prompt: "login consent",
+      prompt: "select_account",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
+  });
+
+  // Add a separate signup route that redirects to Replit signup then back to login
+  app.get("/api/signup", (req, res) => {
+    console.log(`🔐 Signup redirect to Replit`);
+    res.redirect("https://replit.com/signup?from=oauth");
   });
 
   app.get("/api/callback", (req, res, next) => {
@@ -123,7 +129,7 @@ export async function setupAuth(app: Express) {
     
     passport.authenticate(`replitauth:${actualHostname}`, {
       successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+      failureRedirect: "/?auth=failed",
     })(req, res, next);
   });
 
