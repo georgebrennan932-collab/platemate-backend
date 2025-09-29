@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, Award, Calendar } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
+import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 
 interface WeeklyAnalyticsProps {
   goals: NutritionGoals | undefined;
@@ -27,38 +28,12 @@ export function WeeklyAnalytics({ goals }: WeeklyAnalyticsProps) {
     const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
     return weekDays.map(day => {
-      const dayStr = format(day, 'yyyy-MM-dd');
-      
-      // Food nutrition for the day
-      const dayEntries = diaryEntries.filter(entry => 
-        format(new Date(entry.mealDate), 'yyyy-MM-dd') === dayStr
-      );
-      
-      const dayDrinks = drinkEntries.filter(drink => 
-        format(new Date(drink.loggedAt), 'yyyy-MM-dd') === dayStr
-      );
-
-      const nutrition = dayEntries.reduce((total, entry) => ({
-        calories: total.calories + (entry.analysis?.totalCalories || 0),
-        protein: total.protein + (entry.analysis?.totalProtein || 0),
-        carbs: total.carbs + (entry.analysis?.totalCarbs || 0),
-        fat: total.fat + (entry.analysis?.totalFat || 0),
-      }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-      const drinkCalories = dayDrinks.reduce((total, drink) => total + (drink.calories || 0), 0);
-      const water = dayDrinks
-        .filter(drink => ['water', 'tea', 'coffee'].includes(drink.drinkType))
-        .reduce((total, drink) => total + drink.amount, 0);
+      // Use standardized nutrition calculation function
+      const nutrition = calculateDailyNutrition(diaryEntries, drinkEntries, day);
 
       return {
         date: day,
-        nutrition: {
-          calories: nutrition.calories + drinkCalories,
-          protein: nutrition.protein,
-          carbs: nutrition.carbs,
-          fat: nutrition.fat,
-          water,
-        },
+        nutrition,
         goals: goals ? {
           calories: goals.dailyCalories || 2000,
           protein: goals.dailyProtein || 150,

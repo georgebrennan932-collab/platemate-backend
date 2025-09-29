@@ -22,6 +22,7 @@ import { WeightEditDialog } from "@/components/weight-edit-dialog";
 import { WeightChart } from "@/components/weight-chart";
 import { DrinksBar } from "@/components/drinks-bar";
 import type { WeightEntry } from "@shared/schema";
+import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 
 export function DiaryPage() {
   const { toast } = useToast();
@@ -243,34 +244,10 @@ export function DiaryPage() {
     return groups;
   }, {} as Record<string, DrinkEntry[]>) || {};
 
-  // Calculate daily nutrition totals
+  // Calculate daily nutrition totals using standardized function
   const getDailyNutrition = (date: string) => {
-    const foodNutrition = groupedEntries[date]?.reduce((total, entry) => {
-      return {
-        calories: total.calories + (entry.analysis?.totalCalories || 0),
-        protein: total.protein + (entry.analysis?.totalProtein || 0),
-        carbs: total.carbs + (entry.analysis?.totalCarbs || 0),
-        fat: total.fat + (entry.analysis?.totalFat || 0),
-      };
-    }, { calories: 0, protein: 0, carbs: 0, fat: 0 }) || { calories: 0, protein: 0, carbs: 0, fat: 0 };
-    
-    const drinkCalories = groupedDrinks[date]?.reduce((total, drink) => {
-      return total + (drink.calories || 0);
-    }, 0) || 0;
-    
-    return {
-      calories: foodNutrition.calories + drinkCalories,
-      protein: foodNutrition.protein,
-      carbs: foodNutrition.carbs,
-      fat: foodNutrition.fat,
-      water: groupedDrinks[date]?.reduce((total, drink) => {
-        // Only count water-type drinks toward hydration
-        if (['water', 'tea', 'coffee'].includes(drink.drinkType)) {
-          return total + drink.amount;
-        }
-        return total;
-      }, 0) || 0,
-    };
+    const targetDate = new Date(date);
+    return calculateDailyNutrition(diaryEntries || [], drinkEntries || [], targetDate);
   };
 
   // Get today's date string for filtering

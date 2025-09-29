@@ -8,6 +8,8 @@
  * - Macronutrient targets
  */
 
+import { format } from 'date-fns';
+
 export interface UserData {
   age: number;
   sex: "male" | "female";
@@ -222,25 +224,28 @@ export function validateMacroCalculations(macros: MacroTargets): { actualCalorie
 }
 
 /**
- * Calculate today's nutrition data from diary and drink entries
+ * Calculate nutrition data for a specific date from diary and drink entries
+ * Uses standardized date comparison logic to ensure consistency across the app
  */
-export function calculateTodayNutrition(
+export function calculateDailyNutrition(
   diaryEntries: any[], 
-  drinkEntries: any[] = []
+  drinkEntries: any[] = [],
+  targetDate?: Date
 ): { calories: number; protein: number; carbs: number; fat: number; water: number } {
-  const today = new Date().toDateString();
+  const dateToCheck = targetDate || new Date();
+  const dateStr = format(dateToCheck, 'yyyy-MM-dd');
   
-  // Filter today's entries
-  const todayDiaryEntries = diaryEntries.filter(entry => 
-    entry.mealDate && new Date(entry.mealDate).toDateString() === today
+  // Filter entries for the target date using consistent date formatting
+  const targetDiaryEntries = diaryEntries.filter(entry => 
+    entry.mealDate && format(new Date(entry.mealDate), 'yyyy-MM-dd') === dateStr
   );
   
-  const todayDrinkEntries = drinkEntries.filter(drink => 
-    drink.loggedAt && new Date(drink.loggedAt).toDateString() === today
+  const targetDrinkEntries = drinkEntries.filter(drink => 
+    drink.loggedAt && format(new Date(drink.loggedAt), 'yyyy-MM-dd') === dateStr
   );
 
   // Calculate nutrition from food diary entries
-  const nutrition = todayDiaryEntries.reduce((total, entry) => ({
+  const nutrition = targetDiaryEntries.reduce((total, entry) => ({
     calories: total.calories + (entry.analysis?.totalCalories || 0),
     protein: total.protein + (entry.analysis?.totalProtein || 0),
     carbs: total.carbs + (entry.analysis?.totalCarbs || 0),
@@ -248,10 +253,10 @@ export function calculateTodayNutrition(
   }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   // Add calories from drinks
-  const drinkCalories = todayDrinkEntries.reduce((total, drink) => total + (drink.calories || 0), 0);
+  const drinkCalories = targetDrinkEntries.reduce((total, drink) => total + (drink.calories || 0), 0);
   
   // Calculate water intake from specific drink types
-  const water = todayDrinkEntries
+  const water = targetDrinkEntries
     .filter(drink => ['water', 'tea', 'coffee'].includes(drink.drinkType))
     .reduce((total, drink) => total + drink.amount, 0);
 
@@ -262,4 +267,15 @@ export function calculateTodayNutrition(
     fat: nutrition.fat,
     water,
   };
+}
+
+/**
+ * Calculate today's nutrition data from diary and drink entries
+ * Uses the standardized daily calculation function
+ */
+export function calculateTodayNutrition(
+  diaryEntries: any[], 
+  drinkEntries: any[] = []
+): { calories: number; protein: number; carbs: number; fat: number; water: number } {
+  return calculateDailyNutrition(diaryEntries, drinkEntries, new Date());
 }

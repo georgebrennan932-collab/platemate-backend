@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
+import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 
 interface AdvancedAnalyticsProps {
   goals: NutritionGoals | undefined;
@@ -55,26 +56,12 @@ export function AdvancedAnalytics({ goals }: AdvancedAnalyticsProps) {
   // Calculate nutrition trends over last 30 days
   const getTrendData = () => {
     const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
-      const dayEntries = diaryEntries.filter(entry => 
-        format(new Date(entry.mealDate), 'yyyy-MM-dd') === date
-      );
-      const dayDrinks = drinkEntries.filter(drink => 
-        format(new Date(drink.loggedAt), 'yyyy-MM-dd') === date
-      );
-
-      const nutrition = dayEntries.reduce((total, entry) => ({
-        calories: total.calories + (entry.analysis?.totalCalories || 0),
-        protein: total.protein + (entry.analysis?.totalProtein || 0),
-        carbs: total.carbs + (entry.analysis?.totalCarbs || 0),
-        fat: total.fat + (entry.analysis?.totalFat || 0),
-      }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-      const drinkCalories = dayDrinks.reduce((total, drink) => total + (drink.calories || 0), 0);
+      const targetDate = subDays(new Date(), i);
+      const nutrition = calculateDailyNutrition(diaryEntries, drinkEntries, targetDate);
       
       return {
-        date,
-        calories: nutrition.calories + drinkCalories,
+        date: format(targetDate, 'yyyy-MM-dd'),
+        calories: nutrition.calories,
         protein: nutrition.protein,
         carbs: nutrition.carbs,
         fat: nutrition.fat,
@@ -109,25 +96,13 @@ export function AdvancedAnalytics({ goals }: AdvancedAnalyticsProps) {
     if (!goals) return { caloriesRate: 0, proteinRate: 0, weeklyRate: 0 };
 
     const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
-      const dayEntries = diaryEntries.filter(entry => 
-        format(new Date(entry.mealDate), 'yyyy-MM-dd') === date
-      );
-      const dayDrinks = drinkEntries.filter(drink => 
-        format(new Date(drink.loggedAt), 'yyyy-MM-dd') === date
-      );
-
-      const nutrition = dayEntries.reduce((total, entry) => ({
-        calories: total.calories + (entry.analysis?.totalCalories || 0),
-        protein: total.protein + (entry.analysis?.totalProtein || 0),
-      }), { calories: 0, protein: 0 });
-
-      const drinkCalories = dayDrinks.reduce((total, drink) => total + (drink.calories || 0), 0);
+      const targetDate = subDays(new Date(), i);
+      const nutrition = calculateDailyNutrition(diaryEntries, drinkEntries, targetDate);
       
       return {
-        calories: nutrition.calories + drinkCalories,
+        calories: nutrition.calories,
         protein: nutrition.protein,
-        achievedCalories: (nutrition.calories + drinkCalories) >= (goals.dailyCalories || 2000) * 0.9,
+        achievedCalories: nutrition.calories >= (goals.dailyCalories || 2000) * 0.9,
         achievedProtein: nutrition.protein >= (goals.dailyProtein || 150) * 0.9,
       };
     });

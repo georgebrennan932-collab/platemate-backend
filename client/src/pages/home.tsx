@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/app-header";
@@ -20,6 +19,7 @@ import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis, 
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { ProgressIndicators } from "@/components/progress-indicators";
+import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
@@ -74,49 +74,10 @@ export default function Home() {
     throwOnError: false,
   });
 
-  // Calculate today's consumed nutrition from diary and drink entries
-  const getTodayConsumedNutrition = () => {
-    if (!diaryEntries || !drinkEntries) {
-      return { calories: 0, protein: 0, carbs: 0, fat: 0, water: 0 };
-    }
-
-    const today = new Date().toDateString();
-    
-    // Filter today's entries
-    const todayDiaryEntries = diaryEntries.filter(entry => 
-      entry.mealDate && new Date(entry.mealDate).toDateString() === today
-    );
-    
-    const todayDrinkEntries = drinkEntries.filter(drink => 
-      drink.loggedAt && new Date(drink.loggedAt).toDateString() === today
-    );
-
-    // Calculate nutrition from food diary entries
-    const nutrition = todayDiaryEntries.reduce((total, entry) => ({
-      calories: total.calories + (entry.analysis?.totalCalories || 0),
-      protein: total.protein + (entry.analysis?.totalProtein || 0),
-      carbs: total.carbs + (entry.analysis?.totalCarbs || 0),
-      fat: total.fat + (entry.analysis?.totalFat || 0),
-    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-    // Add calories from drinks
-    const drinkCalories = todayDrinkEntries.reduce((total, drink) => total + (drink.calories || 0), 0);
-    
-    // Calculate water intake from specific drink types
-    const water = todayDrinkEntries
-      .filter(drink => ['water', 'tea', 'coffee'].includes(drink.drinkType))
-      .reduce((total, drink) => total + drink.amount, 0);
-
-    return {
-      calories: nutrition.calories + drinkCalories,
-      protein: nutrition.protein,
-      carbs: nutrition.carbs,
-      fat: nutrition.fat,
-      water,
-    };
-  };
-
-  const todayConsumedNutrition = getTodayConsumedNutrition();
+  // Calculate today's consumed nutrition using standardized function
+  const todayConsumedNutrition = diaryEntries && drinkEntries 
+    ? calculateTodayNutrition(diaryEntries, drinkEntries)
+    : { calories: 0, protein: 0, carbs: 0, fat: 0, water: 0 };
 
   // Force data refresh when homepage loads/mounts
   useEffect(() => {
