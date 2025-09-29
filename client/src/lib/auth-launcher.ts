@@ -19,6 +19,8 @@ export function getAuthConfig(): AuthConfig {
 export async function launchSignup(): Promise<void> {
   const config = getAuthConfig();
   
+  console.log('🔍 Launch signup - isNative:', config.isNative, 'platform:', config.platform);
+  
   if (config.isNative) {
     console.log('📱 Mobile: Opening OAuth signup in system browser with deep-link return');
     
@@ -28,19 +30,22 @@ export async function launchSignup(): Promise<void> {
     const signupUrl = `${baseUrl}/api/signup?returnUrl=${encodeURIComponent(returnUrl)}`;
     
     console.log('🔗 Signup URL:', signupUrl);
+    console.log('🔍 Browser plugin available:', typeof Browser !== 'undefined');
     
     try {
-      await Browser.open({
+      console.log('🚀 Calling Browser.open()...');
+      const result = await Browser.open({
         url: signupUrl,
         windowName: '_system',
         toolbarColor: '#8B5CF6',
         presentationStyle: 'popover',
       });
       
-      console.log('✅ OAuth signup browser opened successfully');
+      console.log('✅ Browser.open() returned:', result);
     } catch (error) {
       console.error('❌ Failed to open OAuth signup browser:', error);
-      window.location.href = '/api/signup';
+      alert(`Error opening browser: ${error instanceof Error ? error.message : String(error)}`);
+      // Don't fallback - user needs to know there's an error
     }
   } else {
     console.log('🌐 Web: Navigating to OAuth signup');
@@ -51,6 +56,8 @@ export async function launchSignup(): Promise<void> {
 export async function launchLogin(): Promise<void> {
   const config = getAuthConfig();
   
+  console.log('🔍 Launch login - isNative:', config.isNative, 'platform:', config.platform);
+  
   if (config.isNative) {
     console.log('📱 Mobile: Opening OAuth in system browser with deep-link return');
     
@@ -60,19 +67,22 @@ export async function launchLogin(): Promise<void> {
     const loginUrl = `${baseUrl}/api/login?returnUrl=${encodeURIComponent(returnUrl)}`;
     
     console.log('🔗 Login URL:', loginUrl);
+    console.log('🔍 Browser plugin available:', typeof Browser !== 'undefined');
     
     try {
-      await Browser.open({
+      console.log('🚀 Calling Browser.open()...');
+      const result = await Browser.open({
         url: loginUrl,
         windowName: '_system',
         toolbarColor: '#8B5CF6',
         presentationStyle: 'popover',
       });
       
-      console.log('✅ OAuth browser opened successfully');
+      console.log('✅ Browser.open() returned:', result);
     } catch (error) {
       console.error('❌ Failed to open OAuth browser:', error);
-      window.location.href = '/api/login';
+      alert(`Error opening browser: ${error instanceof Error ? error.message : String(error)}`);
+      // Don't fallback - user needs to know there's an error
     }
   } else {
     console.log('🌐 Web: Navigating to OAuth login');
