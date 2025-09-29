@@ -6,6 +6,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { createSmartInvalidation } from "@/lib/smart-invalidation";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getCurrentUser } from "@/lib/firebase";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ResultsDisplayProps {
   data: FoodAnalysis;
@@ -32,6 +34,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const smartInvalidation = createSmartInvalidation(queryClient);
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
 
   // Check speech recognition support
   useEffect(() => {
@@ -530,6 +533,15 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         selectedTime,
         dataId: data.id,
         editableFoodsCount: editableFoods.length
+      });
+      
+      // Auth check - user should be authenticated before we reach here
+      console.log('🔐 Auth state at mutation time:', {
+        isAuthenticated,
+        hasUser: !!user,
+        uid: user?.uid,
+        email: user?.email,
+        authLoading
       });
       
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
@@ -1159,9 +1171,19 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         <button 
           className="flex-1 gradient-button py-4 px-6 rounded-xl font-medium hover:scale-[1.02] flex items-center justify-center space-x-2"
           onClick={(e) => {
+            console.log('🔘 Add to Diary button clicked!', {
+              hasData: !!data,
+              dataId: data?.id,
+              editableFoodsCount: editableFoods?.length,
+              isPending: addToDiaryMutation.isPending,
+              error: addToDiaryMutation.error,
+              isAuthenticated,
+              authLoading,
+              hasUser: !!user
+            });
             addToDiaryMutation.mutate();
           }}
-          disabled={addToDiaryMutation.isPending}
+          disabled={addToDiaryMutation.isPending || authLoading || !isAuthenticated}
           data-testid="button-add-diary"
           role="button"
           style={{ pointerEvents: 'auto', zIndex: 1000 }}
@@ -1172,6 +1194,13 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               Adding...
             </span>
+          ) : authLoading ? (
+            <span className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Loading...
+            </span>
+          ) : !isAuthenticated ? (
+            <span>Login Required</span>
           ) : (
             <span>Add to Diary</span>
           )}
