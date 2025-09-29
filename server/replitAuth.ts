@@ -128,10 +128,31 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  // Add a separate signup route that redirects to Replit signup then back to login
-  app.get("/api/signup", (req, res) => {
-    console.log(`🔐 Signup redirect to Replit`);
-    res.redirect("https://replit.com/signup?from=oauth");
+  // Signup route - uses OAuth flow just like login (Replit will show signup if user doesn't exist)
+  app.get("/api/signup", (req, res, next) => {
+    console.log(`🔐 Signup attempt - req.hostname: ${req.hostname}`);
+    
+    // Store returnUrl in session if provided (for mobile OAuth)
+    const returnUrl = req.query.returnUrl as string | undefined;
+    if (returnUrl) {
+      // SECURITY: Validate returnUrl to prevent open redirects
+      if (!returnUrl.startsWith('platemate://auth-complete')) {
+        console.error('❌ Invalid returnUrl - must start with platemate://auth-complete');
+        return res.status(400).json({ error: 'Invalid return URL' });
+      }
+      console.log(`📱 Mobile OAuth signup - validated returnUrl: ${returnUrl}`);
+      (req.session as any).returnUrl = returnUrl;
+    }
+    
+    // Use the first domain from REPLIT_DOMAINS for authentication
+    const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
+    console.log(`🔐 Using domain for signup: ${domain}`);
+    
+    // Trigger OAuth flow (Replit will show signup form if user doesn't exist)
+    passport.authenticate(`replitauth:${domain}`, {
+      prompt: "login consent",
+      scope: ["openid", "email", "profile", "offline_access"],
+    })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {

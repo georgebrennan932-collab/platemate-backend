@@ -20,24 +20,31 @@ export async function launchSignup(): Promise<void> {
   const config = getAuthConfig();
   
   if (config.isNative) {
-    console.log('📱 Mobile: Opening Replit signup in system browser');
+    console.log('📱 Mobile: Opening OAuth signup in system browser with deep-link return');
+    
+    // For mobile, use OAuth flow (same as login) with signup hint
+    const baseUrl = window.location.origin;
+    const returnUrl = 'platemate://auth-complete';
+    const signupUrl = `${baseUrl}/api/signup?returnUrl=${encodeURIComponent(returnUrl)}`;
+    
+    console.log('🔗 Signup URL:', signupUrl);
     
     try {
       await Browser.open({
-        url: 'https://replit.com/signup',
+        url: signupUrl,
         windowName: '_system',
         toolbarColor: '#8B5CF6',
         presentationStyle: 'popover',
       });
       
-      console.log('✅ Signup browser opened successfully');
+      console.log('✅ OAuth signup browser opened successfully');
     } catch (error) {
-      console.error('❌ Failed to open signup browser:', error);
-      window.location.href = 'https://replit.com/signup';
+      console.error('❌ Failed to open OAuth signup browser:', error);
+      window.location.href = '/api/signup';
     }
   } else {
-    console.log('🌐 Web: Navigating to Replit signup');
-    window.location.href = 'https://replit.com/signup';
+    console.log('🌐 Web: Navigating to OAuth signup');
+    window.location.href = '/api/signup';
   }
 }
 
