@@ -35,10 +35,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Authentication and Authorization
 - **Replit OIDC Integration**: Full OpenID Connect authentication using Replit accounts for persistent user identity
-- **Session Management**: Connect-pg-simple for PostgreSQL session storage with secure cookie-based sessions
+- **Session Management**: Connect-pg-simple for PostgreSQL session storage with secure cookie-based sessions (SameSite=None for mobile WebView compatibility)
 - **User Isolation**: Each authenticated user has isolated data (diary entries, analyses, weights) with proper ownership checks
 - **Authentication Middleware**: Express middleware protecting API endpoints with automatic session validation
 - **Frontend Integration**: useAuth React hook with automatic authentication state management and conditional UI rendering
+- **Mobile OAuth Flow**: Complete Capacitor-compatible authentication with Browser plugin, deep-link handling, and secure session bridging
+- **Bridge Token System**: One-time use cryptographic tokens (5-minute TTL) for secure mobile session establishment with automatic cleanup
 
 ## AI Services Architecture
 - **Multi-Provider System**: Intelligent AI provider management with automatic failover
@@ -72,7 +74,9 @@ Preferred communication style: Simple, everyday language.
 - **Camera Integration**: Native camera API with web camera fallback for better food photography
 - **App Configuration**: Custom app icons, splash screens, and native app settings
 - **Build Process**: Unified build system that generates web and native mobile apps
-- **Plugins**: Camera, Filesystem, Status Bar, Splash Screen, and App plugins integrated
+- **Plugins**: Camera, Filesystem, Status Bar, Splash Screen, App, and Browser plugins integrated
+- **Deep-Link Handling**: Custom URL scheme (platemate://) configured in iOS (Info.plist) and Android (AndroidManifest.xml) for OAuth return flow
+- **OAuth Integration**: System browser authentication with deep-link callback and secure session transfer to app WebView
 
 # Recent Changes
 
@@ -92,3 +96,7 @@ Preferred communication style: Simple, everyday language.
 - **Full Replit Authentication System**: Implemented complete Replit OIDC authentication with login/logout UI, persistent user accounts, and proper data isolation replacing session-based anonymous users
 - **Secure User Data Isolation**: Each authenticated user now has isolated diary entries, analyses, and weight tracking with proper ownership validation on all endpoints
 - **Conditional Navigation UI**: Navigation dynamically shows login button for unauthenticated users and user profile with real name/email for authenticated users
+- **Mobile OAuth Solution**: Complete Capacitor-compatible authentication flow using Browser plugin for system browser OAuth, deep-link return (platemate://auth-complete), and secure one-time bridge tokens for session establishment
+- **Security-Hardened OAuth**: Strict returnUrl validation (allowlist-based), 256-bit cryptographic bridge tokens, 5-minute TTL with automatic cleanup, and SameSite=None cookies for cross-origin WebView compatibility
+- **Platform-Aware Auth**: Auth launcher utility with automatic platform detection, absolute HTTPS URLs for mobile, and graceful fallback for web authentication
+- **Deep-Link Configuration**: iOS CFBundleURLTypes and Android intent-filter setup for platemate:// scheme with host-based routing (auth-complete)
