@@ -799,12 +799,18 @@ export default function Home() {
         </div>
       )}
 
-      {/* Portion Analysis Tip - positioned near camera button */}
+      {/* Portion Analysis Tip and Instructions - positioned near camera button */}
       {currentState === 'camera' && (
-        <div className="max-w-md mx-auto px-6 mt-4 mb-6">
+        <div className="max-w-md mx-auto px-6 mt-4 mb-6 space-y-3">
           <div className="text-center">
             <p className="text-sm text-gray-700 dark:text-gray-300 font-medium bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
               💡 For more precise portion analysis, place a fork or your hand in the photo.
+            </p>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400 font-medium bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl px-4 py-3 inline-block" data-testid="text-analyze-instruction">
+              📸 After taking a photo, press the image to analyze your meal
             </p>
           </div>
         </div>
