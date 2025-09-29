@@ -53,7 +53,7 @@ export default function Home() {
   const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
   
   
-  // Fetch nutrition goals only - no diary data on homepage
+  // Fetch nutrition goals and diary data for consumed values calculation
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
     retry: false,
@@ -61,11 +61,70 @@ export default function Home() {
     throwOnError: false,
   });
 
+  // Fetch diary and drink data to calculate consumed nutrition
+  const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
+    queryKey: ['/api/diary'],
+    enabled: isAuthenticated,
+    throwOnError: false,
+  });
+
+  const { data: drinkEntries } = useQuery<DrinkEntry[]>({
+    queryKey: ['/api/drinks'],
+    enabled: isAuthenticated,
+    throwOnError: false,
+  });
+
+  // Calculate today's consumed nutrition from diary and drink entries
+  const getTodayConsumedNutrition = () => {
+    if (!diaryEntries || !drinkEntries) {
+      return { calories: 0, protein: 0, carbs: 0, fat: 0, water: 0 };
+    }
+
+    const today = new Date().toDateString();
+    
+    // Filter today's entries
+    const todayDiaryEntries = diaryEntries.filter(entry => 
+      entry.mealDate && new Date(entry.mealDate).toDateString() === today
+    );
+    
+    const todayDrinkEntries = drinkEntries.filter(drink => 
+      drink.loggedAt && new Date(drink.loggedAt).toDateString() === today
+    );
+
+    // Calculate nutrition from food diary entries
+    const nutrition = todayDiaryEntries.reduce((total, entry) => ({
+      calories: total.calories + (entry.analysis?.totalCalories || 0),
+      protein: total.protein + (entry.analysis?.totalProtein || 0),
+      carbs: total.carbs + (entry.analysis?.totalCarbs || 0),
+      fat: total.fat + (entry.analysis?.totalFat || 0),
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+    // Add calories from drinks
+    const drinkCalories = todayDrinkEntries.reduce((total, drink) => total + (drink.calories || 0), 0);
+    
+    // Calculate water intake from specific drink types
+    const water = todayDrinkEntries
+      .filter(drink => ['water', 'tea', 'coffee'].includes(drink.drinkType))
+      .reduce((total, drink) => total + drink.amount, 0);
+
+    return {
+      calories: nutrition.calories + drinkCalories,
+      protein: nutrition.protein,
+      carbs: nutrition.carbs,
+      fat: nutrition.fat,
+      water,
+    };
+  };
+
+  const todayConsumedNutrition = getTodayConsumedNutrition();
+
   // Force data refresh when homepage loads/mounts
   useEffect(() => {
     if (isAuthenticated) {
       // Force fresh data fetch whenever homepage component mounts
       queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
     }
   }, [isAuthenticated, queryClient]);
   
@@ -75,17 +134,23 @@ export default function Home() {
     // Force refresh data when coming back to page (handles browser back/forward cache)
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted && isAuthenticated) {
-        // Page was restored from bfcache, force refresh nutrition goals
+        // Page was restored from bfcache, force refresh nutrition goals and diary data
         queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
         queryClient.refetchQueries({ queryKey: ['/api/nutrition-goals'] });
+        queryClient.refetchQueries({ queryKey: ['/api/diary'] });
+        queryClient.refetchQueries({ queryKey: ['/api/drinks'] });
       }
     };
 
     // Refetch data when the page becomes visible (handles navigation back from other pages)
     const handleVisibilityChange = () => {
       if (!document.hidden && isAuthenticated) {
-        // Refetch nutrition goals when page becomes visible
+        // Refetch nutrition goals and diary data when page becomes visible
         queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
       }
     };
 
@@ -93,6 +158,8 @@ export default function Home() {
     const handleFocus = () => {
       if (isAuthenticated) {
         queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
       }
     };
 
@@ -499,18 +566,12 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* Daily Nutrition Progress - Removed diary dependency */}
+      {/* Daily Nutrition Progress - Shows real consumed values from diary */}
       {isAuthenticated && nutritionGoals && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <ProgressIndicators
             goals={nutritionGoals}
-            consumed={{
-              calories: 0,
-              protein: 0,
-              carbs: 0,
-              fat: 0,
-              water: 0
-            }}
+            consumed={todayConsumedNutrition}
           />
         </div>
       )}
