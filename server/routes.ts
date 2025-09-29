@@ -436,41 +436,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - creating food analysis and returning 200 OK`);
           const analysis = await storage.createFoodAnalysis(foodAnalysisData);
 
-          // Optional: Auto-add to diary if user is authenticated and requests it
-          if (req.user && req.body.autoAddToDiary === 'true') {
-            try {
-              const userId = req.user.claims.sub;
-              const diaryData = {
-                userId,
-                analysisId: analysis.id,
-                mealType: req.body.mealType || 'snack',
-                mealDate: req.body.mealDate || new Date().toISOString().split('T')[0],
-                notes: req.body.notes || '',
-                customMealName: req.body.customMealName || null
-              };
-              
-              const validatedDiaryEntry = insertDiaryEntrySchema.parse(diaryData);
-              const diaryEntry = await storage.createDiaryEntry(validatedDiaryEntry);
-              
-              console.log(`✅ Auto-added analysis ${analysis.id} to diary for user ${userId}`);
-              
-              // Return both analysis and diary entry info
-              responseData = {
-                ...analysis,
-                diaryEntry: {
-                  id: diaryEntry.id,
-                  mealType: diaryEntry.mealType,
-                  mealDate: diaryEntry.mealDate
-                }
-              };
-            } catch (diaryError) {
-              console.error("Failed to auto-add to diary:", diaryError);
-              // Still return the analysis even if diary add fails
-              responseData = analysis;
-            }
-          } else {
-            responseData = analysis;
-          }
+          // Always return just the analysis - user chooses whether to add to diary
+          responseData = analysis;
         }
       } catch (error) {
         analysisError = error;

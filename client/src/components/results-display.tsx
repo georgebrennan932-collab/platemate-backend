@@ -13,29 +13,7 @@ interface ResultsDisplayProps {
 }
 
 export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
-  console.log("🚨 CRITICAL DEBUG: ResultsDisplay component is RENDERING!");
-  console.log("🚨 CRITICAL DEBUG: Component props:", { data: !!data, onScanAnother: !!onScanAnother });
-  
   const [showDiaryDialog, setShowDiaryDialog] = useState(false);
-
-  // Temporary debugging for touch interception issues
-  useEffect(() => {
-    const handleGlobalPointer = (e: PointerEvent) => {
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      const styles = el ? getComputedStyle(el) : null;
-      console.log('🔍 Touch intercepted by:', {
-        element: el?.tagName,
-        id: el?.id,
-        className: el?.className,
-        zIndex: styles?.zIndex,
-        pointerEvents: styles?.pointerEvents,
-        position: styles?.position
-      });
-    };
-    
-    window.addEventListener('pointerdown', handleGlobalPointer, true);
-    return () => window.removeEventListener('pointerdown', handleGlobalPointer, true);
-  }, []);
   const [selectedMealType, setSelectedMealType] = useState<"breakfast" | "lunch" | "dinner" | "snack">("lunch");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
