@@ -146,6 +146,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
 
+  // User authentication endpoint
+  app.get('/api/user', async (req: any, res) => {
+    if (req.user && req.user.claims) {
+      // User is authenticated, return user info
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(404).json({ error: 'User not found' });
+      }
+    } else {
+      // User not authenticated
+      res.status(401).json({ error: 'Not authenticated' });
+    }
+  });
+
   // Cache and monitoring endpoints
   app.get('/api/cache/stats', isAuthenticated, async (req, res) => {
     try {
