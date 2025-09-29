@@ -267,20 +267,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Analyze food image - bypass auth in deployment since users won't have Replit authentication
-  const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true';
-  const requireAuth = !isDeployment;
-  
-  // Enhanced middleware to generate unique session-based user IDs in deployment
-  const authMiddleware = requireAuth ? isAuthenticated : (req: any, res: any, next: any) => {
-    // Generate unique session-based user ID for data isolation
-    if (!req.session.userId) {
-      req.session.userId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    }
-    // Attach session user to req.user for consistency with auth system
-    req.user = { claims: { sub: req.session.userId } };
-    next();
-  };
+  // Enable Replit authentication for all routes
+  const authMiddleware = isAuthenticated;
   
   app.post("/api/analyze", authMiddleware, upload.single('image'), async (req: any, res) => {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
