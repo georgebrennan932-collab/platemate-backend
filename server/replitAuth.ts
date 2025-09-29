@@ -104,7 +104,11 @@ export async function setupAuth(app: Express) {
   app.get("/api/login", (req, res, next) => {
     console.log(`🔐 Login attempt - req.hostname: ${req.hostname}`);
     
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    // Use the first domain from REPLIT_DOMAINS for authentication
+    const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
+    console.log(`🔐 Using domain for auth: ${domain}`);
+    
+    passport.authenticate(`replitauth:${domain}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
@@ -121,7 +125,11 @@ export async function setupAuth(app: Express) {
     console.log(`🔐 Callback query params:`, req.query);
     console.log(`🔐 Callback full URL:`, req.url);
     
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    // Use the first domain from REPLIT_DOMAINS for authentication
+    const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
+    console.log(`🔐 Using domain for callback: ${domain}`);
+    
+    passport.authenticate(`replitauth:${domain}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
