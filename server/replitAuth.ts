@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { createBridgeToken } from "./bridgeTokens";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -104,6 +105,13 @@ export async function setupAuth(app: Express) {
   app.get("/api/login", (req, res, next) => {
     console.log(`🔐 Login attempt - req.hostname: ${req.hostname}`);
     
+    // Store returnUrl in session if provided (for mobile OAuth)
+    const returnUrl = req.query.returnUrl as string | undefined;
+    if (returnUrl) {
+      console.log(`📱 Mobile OAuth - returnUrl: ${returnUrl}`);
+      req.session.returnUrl = returnUrl;
+    }
+    
     // Use the first domain from REPLIT_DOMAINS for authentication
     const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
     console.log(`🔐 Using domain for auth: ${domain}`);
@@ -129,9 +137,45 @@ export async function setupAuth(app: Express) {
     const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
     console.log(`🔐 Using domain for callback: ${domain}`);
     
-    passport.authenticate(`replitauth:${domain}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+    passport.authenticate(`replitauth:${domain}`, (err: any, user: any) => {
+      if (err) {
+        console.error('❌ Authentication error:', err);
+        return res.redirect("/api/login");
+      }
+      
+      if (!user) {
+        console.log('❌ No user returned from authentication');
+        return res.redirect("/api/login");
+      }
+      
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('❌ Login error:', err);
+          return res.redirect("/api/login");
+        }
+        
+        // Check if this is a mobile OAuth flow with returnUrl
+        const returnUrl = req.session.returnUrl;
+        
+        if (returnUrl) {
+          console.log(`📱 Mobile OAuth complete - generating bridge token`);
+          
+          // Create a bridge token for the mobile app
+          const bridgeToken = createBridgeToken(req.sessionID);
+          
+          // Clear the returnUrl from session
+          delete req.session.returnUrl;
+          
+          // Redirect back to the mobile app with the bridge token
+          const redirectUrl = `${returnUrl}?token=${bridgeToken}`;
+          console.log(`📱 Redirecting to mobile app: ${redirectUrl}`);
+          return res.redirect(redirectUrl);
+        }
+        
+        // Normal web flow - redirect to home
+        console.log(`🌐 Web OAuth complete - redirecting to /`);
+        res.redirect("/");
+      });
     })(req, res, next);
   });
 

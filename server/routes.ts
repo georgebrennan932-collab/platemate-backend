@@ -12,6 +12,8 @@ import { aiManager } from "./ai-providers/ai-manager";
 import { usdaService } from "./services/usda-service";
 import { imageAnalysisCache } from "./services/image-analysis-cache";
 import { openFoodFactsService } from "./services/openfoodfacts-service";
+import { consumeBridgeToken } from "./bridgeTokens";
+import type { Session } from "express-session";
 
 // Configure multer for image uploads with deployment-aware storage
 const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true';
@@ -198,6 +200,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Mobile OAuth session bridge endpoint
+  app.post('/api/session/consume', express.json(), async (req: any, res) => {
+    try {
+      const { token } = req.body;
+      
+      if (!token || typeof token !== 'string') {
+        console.log('❌ Invalid bridge token request');
+        return res.status(400).json({ error: 'Invalid token' });
+      }
+      
+      console.log('🔑 Attempting to consume bridge token...');
+      
+      // Exchange the bridge token for a session ID
+      const sessionId = consumeBridgeToken(token);
+      
+      if (!sessionId) {
+        console.log('❌ Bridge token not found or expired');
+        return res.status(401).json({ error: 'Invalid or expired token' });
+      }
+      
+      console.log('✅ Bridge token valid for session:', sessionId);
+      
+      // Load the session data from the session store
+      const sessionStore = req.sessionStore;
+      
+      sessionStore.get(sessionId, (err: any, sessionData: any) => {
+        if (err) {
+          console.error('❌ Error loading session:', err);
+          return res.status(500).json({ error: 'Failed to load session' });
+        }
+        
+        if (!sessionData) {
+          console.log('❌ Session not found:', sessionId);
+          return res.status(401).json({ error: 'Session not found' });
+        }
+        
+        console.log('✅ Session data loaded, setting up new session...');
+        
+        // Copy the authenticated session data to the current request
+        req.session.passport = sessionData.passport;
+        req.session.cookie = sessionData.cookie;
+        
+        // Save the new session
+        req.session.save((saveErr: any) => {
+          if (saveErr) {
+            console.error('❌ Error saving session:', saveErr);
+            return res.status(500).json({ error: 'Failed to save session' });
+          }
+          
+          console.log('🎉 Session successfully bridged to mobile app');
+          res.json({ ok: true });
+        });
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Session consume error:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 

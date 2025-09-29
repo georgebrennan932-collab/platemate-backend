@@ -48,7 +48,9 @@ function App() {
     console.log("App loaded");
     
     // Set up deep-link handler for mobile OAuth return
-    const handleAppUrlOpen = CapacitorApp.addListener('appUrlOpen', async (event) => {
+    let listenerHandle: any;
+    
+    CapacitorApp.addListener('appUrlOpen', async (event) => {
       const url = event.url;
       console.log('📱 Deep-link received:', url);
       
@@ -96,11 +98,15 @@ function App() {
           console.error('❌ Error handling auth callback:', error);
         }
       }
+    }).then(handle => {
+      listenerHandle = handle;
     });
     
     // Clean up listener on unmount
     return () => {
-      handleAppUrlOpen.remove();
+      if (listenerHandle) {
+        listenerHandle.remove();
+      }
     };
   }, []);
 
