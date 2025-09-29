@@ -720,7 +720,7 @@ export function DiaryPage() {
             <DrinksBar />
             
             {/* Today's Summary */}
-            <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6">
+            <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2">
                   <Target className="h-5 w-5 text-primary" />
