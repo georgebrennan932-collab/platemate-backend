@@ -74,9 +74,9 @@ export default function LandingPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
-        {/* Get Started Button */}
-        <div className="text-center mb-16 animate-fade-in-up animation-delay-900">
-          {isAuthenticated ? (
+        {/* Get Started Button - Only for authenticated users */}
+        {isAuthenticated && (
+          <div className="text-center mb-16 animate-fade-in-up animation-delay-900">
             <div className="space-y-4">
               <div className="inline-flex items-center px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
                 <Shield className="h-4 w-4 mr-2" />
@@ -95,24 +95,11 @@ export default function LandingPage() {
                 </Button>
               </Link>
             </div>
-          ) : (
-            <a href="/api/login">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-pulse-glow relative overflow-hidden group"
-                data-testid="button-login"
-              >
-                {/* Animated shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                <LogIn className="h-6 w-6 mr-2 animate-bounce" />
-                Sign In to Start
-              </Button>
-            </a>
-          )}
-          <p className="text-sm text-muted-foreground mt-3 animate-fade-in animation-delay-1200">
-            Say "100g salmon" or "one apple" - your voice becomes your food diary
-          </p>
-        </div>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-3 animate-fade-in animation-delay-1200">
+              Say "100g salmon" or "one apple" - your voice becomes your food diary
+            </p>
+          </div>
+        )}
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
@@ -237,7 +224,7 @@ export default function LandingPage() {
                 <Mic className="h-8 w-8 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
               </div>
               <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-600 transition-colors">Speak Your Meal</h3>
-              <p className="text-muted-foreground">
+              <p className="text-gray-700 dark:text-gray-200">
                 Just say what you ate! "Two slices of pizza" or "100g salmon" - your voice becomes your food diary.
               </p>
             </div>
@@ -247,7 +234,7 @@ export default function LandingPage() {
                 <Brain className="h-8 w-8 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
               </div>
               <h3 className="text-xl font-semibold mb-2 group-hover:text-pink-600 transition-colors">Smart AI Analysis</h3>
-              <p className="text-muted-foreground">
+              <p className="text-gray-700 dark:text-gray-200">
                 Our AI understands your voice and instantly calculates calories, protein, carbs, and fat from what you said.
               </p>
             </div>
@@ -257,7 +244,7 @@ export default function LandingPage() {
                 <BookOpen className="h-8 w-8 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform" />
               </div>
               <h3 className="text-xl font-semibold mb-2 group-hover:text-green-600 transition-colors">Auto-Track & Improve</h3>
-              <p className="text-muted-foreground">
+              <p className="text-gray-700 dark:text-gray-200">
                 Meals are automatically saved to your diary with beautiful voice thumbnails. Track progress effortlessly.
               </p>
             </div>
