@@ -34,8 +34,11 @@ Preferred communication style: Simple, everyday language.
 - **Connection**: Neon Database serverless PostgreSQL integration ready
 
 ## Authentication and Authorization
-- **Session Management**: Connect-pg-simple for PostgreSQL session storage (configured but not implemented)
-- **Architecture**: Cookie-based sessions with secure defaults prepared for implementation
+- **Replit OIDC Integration**: Full OpenID Connect authentication using Replit accounts for persistent user identity
+- **Session Management**: Connect-pg-simple for PostgreSQL session storage with secure cookie-based sessions
+- **User Isolation**: Each authenticated user has isolated data (diary entries, analyses, weights) with proper ownership checks
+- **Authentication Middleware**: Express middleware protecting API endpoints with automatic session validation
+- **Frontend Integration**: useAuth React hook with automatic authentication state management and conditional UI rendering
 
 ## AI Services Architecture
 - **Multi-Provider System**: Intelligent AI provider management with automatic failover
@@ -86,3 +89,6 @@ Preferred communication style: Simple, everyday language.
 - **Mobile-First Scanner UX**: Full-screen camera modal with scan guides, torch toggle, error handling for camera permissions, and graceful fallback to manual entry when camera access is denied
 - **Cross-Browser Compatibility**: Barcode detection works in modern browsers (Chrome, Edge, Android) with BarcodeDetector API and falls back to ZXing library for wider browser support
 - **Enhanced Barcode Integration**: Camera scanner connects directly to existing OpenFoodFacts API (/api/barcode) for seamless product nutrition lookup after successful scan detection
+- **Full Replit Authentication System**: Implemented complete Replit OIDC authentication with login/logout UI, persistent user accounts, and proper data isolation replacing session-based anonymous users
+- **Secure User Data Isolation**: Each authenticated user now has isolated diary entries, analyses, and weight tracking with proper ownership validation on all endpoints
+- **Conditional Navigation UI**: Navigation dynamically shows login button for unauthenticated users and user profile with real name/email for authenticated users
