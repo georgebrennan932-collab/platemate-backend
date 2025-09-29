@@ -40,6 +40,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: true,
+      sameSite: 'none', // Required for mobile WebView cross-origin cookies
       maxAge: sessionTtl,
     },
   });
@@ -108,8 +109,13 @@ export async function setupAuth(app: Express) {
     // Store returnUrl in session if provided (for mobile OAuth)
     const returnUrl = req.query.returnUrl as string | undefined;
     if (returnUrl) {
-      console.log(`📱 Mobile OAuth - returnUrl: ${returnUrl}`);
-      req.session.returnUrl = returnUrl;
+      // SECURITY: Validate returnUrl to prevent open redirects
+      if (!returnUrl.startsWith('platemate://auth-complete')) {
+        console.error('❌ Invalid returnUrl - must start with platemate://auth-complete');
+        return res.status(400).json({ error: 'Invalid return URL' });
+      }
+      console.log(`📱 Mobile OAuth - validated returnUrl: ${returnUrl}`);
+      (req.session as any).returnUrl = returnUrl;
     }
     
     // Use the first domain from REPLIT_DOMAINS for authentication
@@ -155,7 +161,7 @@ export async function setupAuth(app: Express) {
         }
         
         // Check if this is a mobile OAuth flow with returnUrl
-        const returnUrl = req.session.returnUrl;
+        const returnUrl = (req.session as any).returnUrl;
         
         if (returnUrl) {
           console.log(`📱 Mobile OAuth complete - generating bridge token`);
@@ -164,7 +170,7 @@ export async function setupAuth(app: Express) {
           const bridgeToken = createBridgeToken(req.sessionID);
           
           // Clear the returnUrl from session
-          delete req.session.returnUrl;
+          delete (req.session as any).returnUrl;
           
           // Redirect back to the mobile app with the bridge token
           const redirectUrl = `${returnUrl}?token=${bridgeToken}`;

@@ -12,11 +12,13 @@ const bridgeTokens = new Map<string, BridgeToken>();
 // Clean up expired tokens every minute
 setInterval(() => {
   const now = Date.now();
-  for (const [token, data] of bridgeTokens.entries()) {
+  const tokensToDelete: string[] = [];
+  bridgeTokens.forEach((data, token) => {
     if (data.expiresAt < now) {
-      bridgeTokens.delete(token);
+      tokensToDelete.push(token);
     }
-  }
+  });
+  tokensToDelete.forEach(token => bridgeTokens.delete(token));
 }, 60 * 1000);
 
 export function createBridgeToken(sessionId: string): string {

@@ -241,11 +241,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log('✅ Session data loaded, setting up new session...');
         
-        // Copy the authenticated session data to the current request
+        // Copy only the authenticated passport data to the current request
         req.session.passport = sessionData.passport;
-        req.session.cookie = sessionData.cookie;
         
-        // Save the new session
+        // Save the new session (don't copy cookie data, let it be generated fresh)
         req.session.save((saveErr: any) => {
           if (saveErr) {
             console.error('❌ Error saving session:', saveErr);

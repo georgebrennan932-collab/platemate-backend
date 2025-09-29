@@ -68,8 +68,11 @@ function App() {
           
           console.log('🔑 Exchanging bridge token for session...');
           
-          // Exchange the token for a session cookie
-          const response = await fetch('/api/session/consume', {
+          // Exchange the token for a session cookie (use absolute URL for mobile)
+          const baseUrl = window.location.origin;
+          const consumeUrl = `${baseUrl}/api/session/consume`;
+          
+          const response = await fetch(consumeUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

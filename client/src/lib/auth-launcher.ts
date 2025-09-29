@@ -47,9 +47,12 @@ export async function launchLogin(): Promise<void> {
   if (config.isNative) {
     console.log('📱 Mobile: Opening OAuth in system browser with deep-link return');
     
-    // For mobile, include returnUrl so backend can redirect back to the app
+    // For mobile, use absolute HTTPS URL (not relative path)
+    const baseUrl = window.location.origin;
     const returnUrl = 'platemate://auth-complete';
-    const loginUrl = `/api/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+    const loginUrl = `${baseUrl}/api/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+    
+    console.log('🔗 Login URL:', loginUrl);
     
     try {
       await Browser.open({
