@@ -951,11 +951,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Diary routes - bypass auth in deployment with anonymous user support
-  app.post("/api/diary", async (req: any, res) => {
+  // Diary routes - protected with Firebase authentication
+  app.post("/api/diary", authMiddleware, async (req: any, res) => {
     try {
-      // In deployment without auth, use anonymous user ID
-      const userId = 'firebase-user-demo'; // Development mode user
+      // Get authenticated user ID from Firebase token
+      const userId = req.user?.claims?.sub || 'firebase-user-demo';
       
       console.log("📱 POST /api/diary request:", {
         userId,

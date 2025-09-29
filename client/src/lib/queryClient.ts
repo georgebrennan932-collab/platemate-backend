@@ -1,4 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { getCurrentUser } from "./firebase";
+import { getIdToken } from "firebase/auth";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -7,14 +9,32 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const currentUser = getCurrentUser();
+  if (currentUser) {
+    try {
+      const idToken = await getIdToken(currentUser);
+      return {
+        "Authorization": `Bearer ${idToken}`
+      };
+    } catch (error) {
+      console.warn("Failed to get Firebase ID token:", error);
+    }
+  }
+  return {};
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const authHeaders = await getAuthHeaders();
+  const contentHeaders = data ? { "Content-Type": "application/json" } : {};
+  
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: { ...contentHeaders, ...authHeaders },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,7 +49,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    const authHeaders = await getAuthHeaders();
+    
     const res = await fetch(queryKey.join("/") as string, {
+      headers: authHeaders,
       credentials: "include",
     });
 
