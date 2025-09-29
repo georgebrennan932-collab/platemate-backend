@@ -269,8 +269,28 @@ export default function Home() {
   };
 
   const handleGallerySelect = () => {
-    // Use file input for reliable gallery access across all platforms
-    fileInputRef.current?.click();
+    // Directly trigger the camera interface's gallery input instead of homepage file input
+    document.getElementById('camera-section')?.scrollIntoView({ behavior: 'smooth' });
+    // Give scroll time to complete, then trigger the camera interface's file input
+    setTimeout(() => {
+      const cameraFileInput = document.querySelector('[data-testid="input-file"]') as HTMLInputElement;
+      if (cameraFileInput) {
+        cameraFileInput.click();
+      }
+    }, 300);
+  };
+
+  const handleCameraCapture = () => {
+    // Directly trigger the camera interface's camera capture instead of trying to click the panel
+    console.log("📷 CAMERA BUTTON CLICKED - Taking photo");
+    document.getElementById('camera-section')?.scrollIntoView({ behavior: 'smooth' });
+    // Give scroll time to complete, then trigger the camera interface's camera input
+    setTimeout(() => {
+      const cameraInput = document.querySelector('[data-testid="input-camera"]') as HTMLInputElement;
+      if (cameraInput) {
+        cameraInput.click();
+      }
+    }, 300);
   };
 
   const handleScanAnother = () => {
@@ -747,15 +767,7 @@ export default function Home() {
           
           <div className="grid grid-cols-3 gap-3">
             <button
-              onClick={() => {
-                console.log("📷 CAMERA BUTTON CLICKED - Taking photo");
-                document.getElementById('camera-section')?.scrollIntoView({ behavior: 'smooth' });
-                // Trigger camera capture
-                const cameraPanel = document.querySelector('[data-testid="camera-panel-clickable"]') as HTMLElement;
-                if (cameraPanel) {
-                  cameraPanel.click();
-                }
-              }}
+              onClick={handleCameraCapture}
               className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-blue-600 text-white hover:bg-blue-500"
               data-testid="button-add-camera"
             >
