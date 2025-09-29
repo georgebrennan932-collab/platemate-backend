@@ -20,7 +20,6 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { ProgressIndicators } from "@/components/progress-indicators";
 import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
-import { Mic, MicOff, Plus, Keyboard } from "lucide-react";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
