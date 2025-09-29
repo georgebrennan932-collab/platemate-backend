@@ -42,14 +42,7 @@ export default function Home() {
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   
-  // Voice input state
-  const [isListening, setIsListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(false);
-  const [voiceInput, setVoiceInput] = useState('');
-  const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
-  const [textInput, setTextInput] = useState('');
-  const [showTextMealDialog, setShowTextMealDialog] = useState(false);
-  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
+  // No voice input functionality on homepage
   
   // Barcode scanner state
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
@@ -60,24 +53,9 @@ export default function Home() {
   const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
   
   
-  // Fetch nutrition goals and diary entries to check for achievements - only if authenticated
+  // Fetch nutrition goals only - no diary data on homepage
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
-    retry: false,
-    enabled: isAuthenticated, // Enable when authenticated
-    throwOnError: false,
-  });
-
-  const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
-    queryKey: ['/api/diary'],
-    retry: false,
-    enabled: isAuthenticated, // Enable when authenticated
-    throwOnError: false,
-  });
-
-  // Fetch drinks data for calorie calculation
-  const { data: drinkEntries } = useQuery<DrinkEntry[]>({
-    queryKey: ['/api/drinks'],
     retry: false,
     enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
@@ -87,49 +65,34 @@ export default function Home() {
   useEffect(() => {
     if (isAuthenticated) {
       // Force fresh data fetch whenever homepage component mounts
-      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
       queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
     }
   }, [isAuthenticated, queryClient]);
   
-  // Initialize speech recognition and handle page visibility/navigation
+  // Handle page visibility/navigation
   useEffect(() => {
-    const checkSpeechSupport = () => {
-      const supported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
-      setSpeechSupported(supported);
-    };
-    checkSpeechSupport();
     
     // Force refresh data when coming back to page (handles browser back/forward cache)
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted && isAuthenticated) {
-        // Page was restored from bfcache, force refresh all data
-        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        // Page was restored from bfcache, force refresh nutrition goals
         queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
-        queryClient.refetchQueries({ queryKey: ['/api/diary'] });
         queryClient.refetchQueries({ queryKey: ['/api/nutrition-goals'] });
-        queryClient.refetchQueries({ queryKey: ['/api/drinks'] });
       }
     };
 
     // Refetch data when the page becomes visible (handles navigation back from other pages)
     const handleVisibilityChange = () => {
       if (!document.hidden && isAuthenticated) {
-        // Refetch diary entries, nutrition goals, and drinks when page becomes visible
-        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+        // Refetch nutrition goals when page becomes visible
         queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
       }
     };
 
     // Also handle when window regains focus
     const handleFocus = () => {
       if (isAuthenticated) {
-        queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
         queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
       }
     };
 
@@ -171,44 +134,7 @@ export default function Home() {
     };
   }, [showProfile]);
 
-  // Check for achieved goals and trigger persistent confetti
-  useEffect(() => {
-    const checkForAchievedGoals = () => {
-      if (!nutritionGoals || !diaryEntries) return;
-
-      const today = new Date().toISOString().split('T')[0];
-      const lastCelebrationKey = `platemate-confetti-${today}`;
-      const lastCelebration = localStorage.getItem(lastCelebrationKey);
-
-      if (lastCelebration) return; // Already celebrated today
-
-      // Calculate nutrition progress using centralized function
-      const todayNutrition = calculateTodayNutrition(diaryEntries || [], drinkEntries || []);
-
-      // Check if nutrition goals are achieved
-      const caloriesAchieved = todayNutrition.calories >= (nutritionGoals.dailyCalories || 2000);
-      const proteinAchieved = todayNutrition.protein >= (nutritionGoals.dailyProtein || 150);
-
-      // Show confetti if any goal is achieved
-      if (caloriesAchieved || proteinAchieved) {
-        console.log('🎉 Goals achieved! Triggering persistent confetti celebration');
-        setShowPersistentConfetti(true);
-        
-        // Mark as celebrated today
-        localStorage.setItem(lastCelebrationKey, new Date().toISOString());
-      }
-    };
-
-    // Delay check to ensure data is loaded
-    const timeoutId = setTimeout(checkForAchievedGoals, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [nutritionGoals, diaryEntries, drinkEntries]);
-
-  // Calculate consumed calories for today using centralized function
-  const getTodayCalories = () => {
-    if (!diaryEntries) return 0;
-    return calculateTodayNutrition(diaryEntries, drinkEntries || []).calories;
-  };
+  // No achievement checking or calorie calculation on homepage
 
   const handleAnalysisStart = () => {
     soundService.playScan();
@@ -401,123 +327,7 @@ export default function Home() {
     setNutritionUpdateTimer(timer);
   }, [nutritionUpdateTimer, updateNutritionValues, nutritionRequestId]);
 
-  const handleVoiceInput = async () => {
-    if (!speechSupported) {
-      toast({
-        title: "Speech Not Supported",
-        description: "Speech recognition is not supported in this browser",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isListening) {
-      setIsListening(false);
-      return;
-    }
-
-    try {
-      const recognition = new (window.SpeechRecognition || (window as any).webkitSpeechRecognition)();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      recognition.onstart = () => {
-        setIsListening(true);
-        toast({
-          title: "Listening...",
-          description: "Say your food item and quantity (e.g., '100g salmon')",
-        });
-      };
-
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setVoiceInput(transcript);
-        setShowVoiceMealDialog(true);
-        toast({
-          title: "Voice captured!",
-          description: `Heard: "${transcript}"`,
-        });
-      };
-
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        toast({
-          title: "Speech Error",
-          description: "Could not recognize speech. Please try again.",
-          variant: "destructive",
-        });
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.start();
-    } catch (error) {
-      toast({
-        title: "Speech Error",
-        description: "Failed to start speech recognition",
-        variant: "destructive",
-      });
-      setIsListening(false);
-    }
-  };
-
-  const handleConfirmVoiceMeal = () => {
-    if (!voiceInput.trim()) return;
-    addVoiceMealMutation.mutate({
-      foodDescription: voiceInput.trim(),
-      mealType: selectedMealType
-    });
-  };
-
-  const handleConfirmTextMeal = () => {
-    if (!textInput.trim()) return;
-    addVoiceMealMutation.mutate({
-      foodDescription: textInput.trim(),
-      mealType: selectedMealType
-    });
-  };
-
-
-  const addVoiceMealMutation = useMutation({
-    mutationFn: async ({ foodDescription, mealType }: { foodDescription: string, mealType: string }) => {
-      // First analyze the text-based food description
-      const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
-      const analysis = await analysisResponse.json();
-      
-      // Then create the diary entry with current date/time
-      const now = new Date();
-      const diaryResponse = await apiRequest('POST', '/api/diary', {
-        analysisId: analysis.id,
-        mealType,
-        mealDate: now.toISOString(),
-        notes: `Added via text input: "${foodDescription}"`
-      });
-      return await diaryResponse.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Meal Added!",
-        description: "Your meal has been added to your diary.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
-      setShowVoiceMealDialog(false);
-      setShowTextMealDialog(false);
-      setVoiceInput('');
-      setTextInput('');
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add meal from voice. Please try again.",
-        variant: "destructive",
-      });
-      console.error("Error adding voice meal:", error);
-    },
-  });
+  // Voice and text meal input removed from homepage - only in diary page
 
   const barcodeMutation = useMutation({
     mutationFn: async (barcode: string) => {
@@ -689,57 +499,26 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* Daily Nutrition Progress */}
-      {isAuthenticated && nutritionGoals && diaryEntries && (
+      {/* Daily Nutrition Progress - Removed diary dependency */}
+      {isAuthenticated && nutritionGoals && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <ProgressIndicators
             goals={nutritionGoals}
-            consumed={calculateTodayNutrition(diaryEntries || [], drinkEntries || [])}
+            consumed={{
+              calories: 0,
+              protein: 0,
+              carbs: 0,
+              fat: 0,
+              water: 0
+            }}
           />
         </div>
       )}
       
-      {/* 2x2 Action Buttons Grid */}
+      {/* 2x2 Action Buttons Grid - Removed Voice and Text Input */}
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <div className="grid grid-cols-2 gap-4">
-            {/* Voice Add Button */}
-            <button
-              onClick={handleVoiceInput}
-              disabled={!speechSupported}
-              className={`py-4 px-6 rounded-2xl font-semibold flex items-center justify-center space-x-3 transition-all duration-200 ${
-                isListening
-                  ? 'bg-red-500 text-white'
-                  : speechSupported
-                  ? 'text-white hover:opacity-90 transform hover:scale-105'
-                  : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-              }`}
-              style={{
-                backgroundColor: isListening ? '#EF4444' : speechSupported ? '#374151' : '#9CA3AF'
-              }}
-              data-testid="button-add-voice"
-            >
-              {isListening ? (
-                <MicOff className="h-5 w-5" />
-              ) : (
-                <Mic className="h-5 w-5" />
-              )}
-              <span className="text-base font-bold">
-                {isListening ? 'Listening...' : 'Voice Add'}
-              </span>
-            </button>
-            
-            {/* Type Button */}
-            <button
-              onClick={() => setShowTextMealDialog(true)}
-              className="py-4 px-6 rounded-2xl font-semibold flex items-center justify-center space-x-3 transition-all duration-200 text-white hover:opacity-90 transform hover:scale-105"
-              style={{backgroundColor: '#3B82F6'}}
-              data-testid="button-add-type"
-            >
-              <Plus className="h-5 w-5" />
-              <span className="text-base font-bold">Type</span>
-            </button>
-
             {/* Weigh In Button */}
             <Link 
               href="/diary?tab=weight"
@@ -797,7 +576,7 @@ export default function Home() {
             onAnalysisStart={handleAnalysisStart}
             onAnalysisSuccess={handleAnalysisSuccess}
             onAnalysisError={handleAnalysisError}
-            caloriesConsumed={getTodayCalories()}
+            caloriesConsumed={0}
             caloriesGoal={nutritionGoals?.dailyCalories || 2000}
           />
         )}
@@ -1021,166 +800,9 @@ export default function Home() {
         </div>
       )}
       
-      {/* Voice Meal Confirmation Dialog */}
-      {showVoiceMealDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Mic className="h-6 w-6 text-primary" />
-              </div>
-              Add Voice Meal
-            </h3>
-            
-            <div className="space-y-6">
-              {/* Voice Input Display */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 border border-blue-200/30 dark:border-blue-700/30">
-                <label className="block text-sm font-semibold mb-3 text-blue-700 dark:text-blue-300">What you said:</label>
-                <div className="bg-gradient-to-r from-white to-blue-50 dark:from-gray-900 dark:to-blue-950/50 p-6 rounded-xl border-3 border-blue-300 dark:border-blue-600 shadow-lg">
-                  <p className="text-2xl font-black text-blue-900 dark:text-blue-100 leading-relaxed text-center tracking-wide">
-                    "{voiceInput}"
-                  </p>
-                </div>
-              </div>
+      {/* Voice and text meal dialogs removed from homepage */}
 
-              {/* Meal Type Selection */}
-              <div>
-                <label className="block text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">Meal Type</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => (
-                    <button
-                      key={meal}
-                      onClick={() => setSelectedMealType(meal)}
-                      className={`py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                        selectedMealType === meal
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg transform scale-105 border-2 border-green-400'
-                          : 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-500'
-                      }`}
-                      data-testid={`button-voice-meal-${meal}`}
-                    >
-                      {meal.charAt(0).toUpperCase() + meal.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Dialog Actions */}
-            <div className="flex space-x-4 mt-6">
-              <button
-                onClick={() => setShowVoiceMealDialog(false)}
-                disabled={addVoiceMealMutation.isPending}
-                className="flex-1 py-3 px-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 disabled:opacity-50"
-                data-testid="button-cancel-voice-meal"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmVoiceMeal}
-                disabled={addVoiceMealMutation.isPending}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                data-testid="button-confirm-voice-meal"
-              >
-                {addVoiceMealMutation.isPending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-5 w-5" />
-                    Add to Diary
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Text Meal Input Dialog */}
-      {showTextMealDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Keyboard className="h-6 w-6 text-primary" />
-              </div>
-              Type Your Meal
-            </h3>
-            
-            <div className="space-y-6">
-              {/* Text Input Field */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 border border-green-200/30 dark:border-green-700/30">
-                <label className="block text-sm font-semibold mb-3 text-black dark:text-white">What did you eat?</label>
-                <input
-                  type="text"
-                  value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="e.g., 100g salmon, 2 slices bread, 1 apple..."
-                  className="w-full p-4 rounded-xl border-2 border-green-300 dark:border-green-600 bg-white dark:bg-gray-900 text-lg font-medium focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none transition-all"
-                  data-testid="input-text-meal"
-                  autoFocus
-                />
-              </div>
-
-              {/* Meal Type Selection */}
-              <div>
-                <label className="block text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">Meal Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => (
-                    <button
-                      key={meal}
-                      onClick={() => setSelectedMealType(meal)}
-                      className={`py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-                        selectedMealType === meal
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md scale-105'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                      }`}
-                      data-testid={`button-text-meal-${meal}`}
-                    >
-                      {meal.charAt(0).toUpperCase() + meal.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Dialog Actions */}
-            <div className="flex space-x-4 mt-6">
-              <button
-                onClick={() => {
-                  setShowTextMealDialog(false);
-                  setTextInput('');
-                }}
-                disabled={addVoiceMealMutation.isPending}
-                className="flex-1 py-3 px-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 disabled:opacity-50"
-                data-testid="button-cancel-text-meal"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmTextMeal}
-                disabled={addVoiceMealMutation.isPending || !textInput.trim()}
-                className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                data-testid="button-confirm-text-meal"
-              >
-                {addVoiceMealMutation.isPending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-5 w-5" />
-                    Add to Diary
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* All meal input dialogs removed from homepage */}
 
 
       {/* Bottom Navigation */}
