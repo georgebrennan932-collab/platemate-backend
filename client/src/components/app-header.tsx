@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
 import platemateLogo from "@/assets/platemate-logo.png";
 import { useState, useRef, useEffect } from "react";
-import { handleMobileLogin, handleMobileSignup } from "@/lib/mobile-auth";
 
 export function AppHeader() {
   const { user, isAuthenticated } = useAuth();
@@ -47,22 +46,24 @@ export function AppHeader() {
         <div className="flex items-center space-x-2">
           {!isAuthenticated && (
             <div className="flex items-center space-x-2">
-              <button 
-                className="p-2 px-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-blue-400/30 shadow-md"
-                data-testid="button-login"
-                title="Sign in with Replit"
-                onClick={handleMobileLogin}
-              >
-                Sign In
-              </button>
-              <button 
-                className="p-2 px-4 rounded-xl bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-green-400/30 shadow-md"
-                data-testid="button-signup"
-                title="Create a Replit account"
-                onClick={handleMobileSignup}
-              >
-                Sign Up
-              </button>
+              <a href="/api/login">
+                <button 
+                  className="p-2 px-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-blue-400/30 shadow-md"
+                  data-testid="button-login"
+                  title="Sign in with Replit"
+                >
+                  Sign In
+                </button>
+              </a>
+              <a href="https://replit.com/signup" target="_blank" rel="noopener noreferrer">
+                <button 
+                  className="p-2 px-4 rounded-xl bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-green-400/30 shadow-md"
+                  data-testid="button-signup"
+                  title="Create a Replit account"
+                >
+                  Sign Up
+                </button>
+              </a>
             </div>
           )}
           {isAuthenticated && user && (

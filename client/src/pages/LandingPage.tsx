@@ -3,7 +3,6 @@ import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syri
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { handleMobileLogin, handleMobileSignup } from "@/lib/mobile-auth";
 
 export default function LandingPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -393,27 +392,29 @@ export default function LandingPage() {
             </Link>
           ) : (
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
-                size="lg" 
-                variant="secondary"
-                className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
-                data-testid="button-sign-in"
-                onClick={handleMobileLogin}
-              >
-                <LogIn className="h-6 w-6 mr-2" />
-                Sign In to Start
-              </Button>
+              <a href="/api/login" className="relative z-20">
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 cursor-pointer"
+                  data-testid="button-sign-in"
+                >
+                  <LogIn className="h-6 w-6 mr-2" />
+                  Sign In to Start
+                </Button>
+              </a>
               <span className="text-white/80 text-sm">or</span>
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
-                data-testid="button-sign-up"
-                onClick={handleMobileSignup}
-              >
-                <Sparkles className="h-6 w-6 mr-2" />
-                Create Free Account
-              </Button>
+              <a href="https://replit.com/signup" target="_blank" rel="noopener noreferrer" className="relative z-20">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 cursor-pointer"
+                  data-testid="button-sign-up"
+                >
+                  <Sparkles className="h-6 w-6 mr-2" />
+                  Create Free Account
+                </Button>
+              </a>
             </div>
           )}
         </div>
