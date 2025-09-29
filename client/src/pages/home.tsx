@@ -19,6 +19,7 @@ import { BarcodeScanner } from "@/components/barcode-scanner";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis, DrinkEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
+import { ProgressIndicators } from "@/components/progress-indicators";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
@@ -687,6 +688,16 @@ export default function Home() {
           </div>
         </Link>
       </div>
+
+      {/* Daily Nutrition Progress */}
+      {isAuthenticated && nutritionGoals && diaryEntries && (
+        <div className="max-w-md mx-auto px-6 mb-6">
+          <ProgressIndicators
+            goals={nutritionGoals}
+            consumed={calculateTodayNutrition(diaryEntries || [], drinkEntries || [])}
+          />
+        </div>
+      )}
       
       {/* 2x2 Action Buttons Grid */}
       {currentState === 'camera' && (
