@@ -1,6 +1,9 @@
 import { Switch, Route } from "wouter";
 import { useEffect } from "react";
 import { useAuth } from "./hooks/useAuth";
+import { App as CapacitorApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+import { queryClient } from "./lib/queryClient";
 
 // ✅ Pages in your /pages folder
 import CameraPage from "./pages/CameraPage";
@@ -43,6 +46,62 @@ function RootRoute() {
 function App() {
   useEffect(() => {
     console.log("App loaded");
+    
+    // Set up deep-link handler for mobile OAuth return
+    const handleAppUrlOpen = CapacitorApp.addListener('appUrlOpen', async (event) => {
+      const url = event.url;
+      console.log('📱 Deep-link received:', url);
+      
+      // Check if this is an auth-complete callback
+      if (url.startsWith('platemate://auth-complete')) {
+        try {
+          // Parse the URL to get the token
+          const urlObj = new URL(url);
+          const token = urlObj.searchParams.get('token');
+          
+          if (!token) {
+            console.error('❌ No token found in deep-link URL');
+            return;
+          }
+          
+          console.log('🔑 Exchanging bridge token for session...');
+          
+          // Exchange the token for a session cookie
+          const response = await fetch('/api/session/consume', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ token }),
+          });
+          
+          if (!response.ok) {
+            console.error('❌ Failed to consume session token:', response.statusText);
+            return;
+          }
+          
+          const result = await response.json();
+          console.log('✅ Session established:', result);
+          
+          // Close the browser window
+          await Browser.close();
+          
+          // Invalidate auth queries to refresh the UI
+          await queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+          
+          console.log('🎉 Authentication complete! User is now logged in.');
+          
+        } catch (error) {
+          console.error('❌ Error handling auth callback:', error);
+        }
+      }
+    });
+    
+    // Clean up listener on unmount
+    return () => {
+      handleAppUrlOpen.remove();
+    };
   }, []);
 
   return (
