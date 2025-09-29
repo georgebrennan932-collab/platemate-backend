@@ -81,12 +81,10 @@ export default function LandingPage() {
               <Link href="/scan">
                 <Button 
                   size="lg" 
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-pulse-glow relative overflow-hidden group"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
                   data-testid="button-get-started"
                 >
-                  {/* Animated shimmer effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                  <Camera className="h-6 w-6 mr-2 animate-bounce" />
+                  <Camera className="h-6 w-6 mr-2" />
                   Start Using PlateMate
                 </Button>
               </Link>
@@ -385,12 +383,10 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 variant="secondary"
-                className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-2 transition-all duration-300 animate-bounce relative z-10 group/button overflow-hidden"
+                className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
                 data-testid="button-start-now"
               >
-                {/* Button shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-                <Mic className="h-6 w-6 mr-2 animate-pulse" />
+                <Mic className="h-6 w-6 mr-2" />
                 Start Voice Logging Now
               </Button>
             </Link>
@@ -400,12 +396,10 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   variant="secondary"
-                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-2 transition-all duration-300 animate-bounce relative z-10 group/button overflow-hidden"
+                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
                   data-testid="button-sign-in"
                 >
-                  {/* Button shimmer effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-                  <LogIn className="h-6 w-6 mr-2 animate-pulse" />
+                  <LogIn className="h-6 w-6 mr-2" />
                   Sign In to Start
                 </Button>
               </a>
@@ -414,12 +408,10 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-2 transition-all duration-300 animate-bounce animation-delay-300 relative z-10 group/button overflow-hidden"
+                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
                   data-testid="button-sign-up"
                 >
-                  {/* Button shimmer effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
-                  <Sparkles className="h-6 w-6 mr-2 animate-spin-slow" />
+                  <Sparkles className="h-6 w-6 mr-2" />
                   Create Free Account
                 </Button>
               </a>
