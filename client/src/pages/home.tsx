@@ -662,6 +662,75 @@ export default function Home() {
         </Link>
       </div>
 
+      {/* Voice and Type Add Buttons */}
+      {currentState === 'camera' && (
+        <div className="max-w-md mx-auto px-4 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <button
+              onClick={handleVoiceInput}
+              disabled={!speechSupported}
+              className={`py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 ${
+                isListening
+                  ? 'bg-red-500 text-white'
+                  : speechSupported
+                  ? 'bg-slate-700 text-white hover:bg-slate-600'
+                  : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              }`}
+              data-testid="button-add-voice"
+            >
+              {isListening ? (
+                <MicOff className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+              <span className="text-sm">
+                {isListening ? 'Listening...' : 'Voice Add'}
+              </span>
+            </button>
+            
+            <button
+              onClick={() => setShowTextMealDialog(true)}
+              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-blue-600 text-white hover:bg-blue-500"
+              data-testid="button-add-type"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="text-sm">Type</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Calories Remaining Box - moved above nutritional values */}
+      {currentState === 'camera' && isAuthenticated && nutritionGoals && (
+        <div className="max-w-md mx-auto px-6 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl flex items-center justify-center mb-4">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.3, 1.1, 1.4, 1],
+                    rotate: [0, -5, 5, -3, 0],
+                    y: [0, -2, 1, -3, 0]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Flame className="text-white h-10 w-10" />
+                </motion.div>
+              </div>
+              <div className="text-gray-900 dark:text-gray-100">
+                <p className="text-3xl font-bold">{Math.max(0, (nutritionGoals?.dailyCalories || 2000) - todayConsumedNutrition.calories)}</p>
+                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">calories remaining</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Daily Nutrition Progress - Shows real consumed values from diary */}
       {isAuthenticated && nutritionGoals && (
         <div className="max-w-md mx-auto px-6 mb-6">
@@ -957,44 +1026,6 @@ export default function Home() {
         </div>
       )}
       
-      {/* Voice and Type Add Buttons */}
-      {currentState === 'camera' && (
-        <div className="max-w-md mx-auto px-4 mb-4">
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <button
-              onClick={handleVoiceInput}
-              disabled={!speechSupported}
-              className={`py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 ${
-                isListening
-                  ? 'bg-red-500 text-white'
-                  : speechSupported
-                  ? 'bg-slate-700 text-white hover:bg-slate-600'
-                  : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-              }`}
-              data-testid="button-add-voice"
-            >
-              {isListening ? (
-                <MicOff className="h-4 w-4" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-              <span className="text-sm">
-                {isListening ? 'Listening...' : 'Voice Add'}
-              </span>
-            </button>
-            
-            <button
-              onClick={() => setShowTextMealDialog(true)}
-              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-blue-600 text-white hover:bg-blue-500"
-              data-testid="button-add-type"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="text-sm">Type</span>
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Voice Meal Confirmation Dialog */}
       {showVoiceMealDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
