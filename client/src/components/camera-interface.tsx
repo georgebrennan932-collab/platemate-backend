@@ -392,25 +392,6 @@ export function CameraInterface({
           <div className="absolute inset-16 border border-white/30 rounded-full border-dashed"></div>
         )}
         
-        {/* Flash toggle button only */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
-          <button 
-            className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-200 ${
-              flashEnabled
-                ? 'bg-yellow-500/30 backdrop-blur-sm border-yellow-400/50 hover:bg-yellow-500/40'
-                : 'bg-white/20 backdrop-blur-sm border-white/30 hover:bg-white/30'
-            }`}
-            onClick={handleFlashToggle}
-            data-testid="button-flash"
-            title={flashEnabled ? 'Flash On' : 'Flash Off'}
-          >
-            <Zap className={`h-5 w-5 ${
-              flashEnabled
-                ? 'text-yellow-300'
-                : 'text-white'
-            }`} />
-          </button>
-        </div>
       </div>
       
       {/* Scale tip */}
@@ -420,15 +401,6 @@ export function CameraInterface({
         </p>
       </div>
 
-      {/* Injection Advice Quick Access */}
-      <div className="mt-4 text-center">
-        <Link href="/injection-advice">
-          <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 mx-auto border border-blue-200 backdrop-blur-xl" data-testid="button-injection-advice-quick">
-            <Syringe className="h-5 w-5" />
-            <span>Weight Loss Injection Guide</span>
-          </button>
-        </Link>
-      </div>
 
       {/* Hidden file inputs */}
       <input

@@ -260,10 +260,10 @@ export default function Home() {
       return;
     }
 
-    // Trigger analysis of selected image
-    handleAnalysisStart();
-    analysisMutation.mutate(file);
+    // For gallery selection, scroll to camera section and let camera interface handle the analysis
+    document.getElementById('camera-section')?.scrollIntoView({ behavior: 'smooth' });
     
+    // The camera interface will handle the analysis when the file is processed
     // Reset file input
     event.target.value = '';
   };
@@ -783,6 +783,20 @@ export default function Home() {
               <QrCode className="h-4 w-4" />
               <span className="text-sm">Barcode</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Weight Loss Injection Guide */}
+      {currentState === 'camera' && (
+        <div className="max-w-md mx-auto px-6 mb-6">
+          <div className="text-center">
+            <Link href="/injection-advice">
+              <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 mx-auto border border-blue-200 backdrop-blur-xl w-full" data-testid="button-injection-advice-quick">
+              <Syringe className="h-5 w-5" />
+              <span>Weight Loss Injection Guide</span>
+            </button>
+            </Link>
           </div>
         </div>
       )}
