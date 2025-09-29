@@ -12,7 +12,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Flame } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Flame, Camera, QrCode } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
@@ -44,6 +44,7 @@ export default function Home() {
   const [textInput, setTextInput] = useState('');
   const [showTextMealDialog, setShowTextMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
+  const [textMealInput, setTextMealInput] = useState('');
   const [nutritionUpdateTimer, setNutritionUpdateTimer] = useState<NodeJS.Timeout | null>(null);
   const [nutritionUpdateController, setNutritionUpdateController] = useState<AbortController | null>(null);
   const [nutritionRequestId, setNutritionRequestId] = useState<number>(0);
@@ -663,7 +664,7 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* Voice and Type Add Buttons */}
+      {/* All Add Buttons */}
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 mb-4">
           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -696,6 +697,37 @@ export default function Home() {
             >
               <Plus className="h-4 w-4" />
               <span className="text-sm">Type</span>
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                console.log("📷 CAMERA BUTTON CLICKED - Taking photo");
+                document.getElementById('camera-section')?.scrollIntoView({ behavior: 'smooth' });
+                // Trigger camera capture
+                const cameraPanel = document.querySelector('[data-testid="camera-panel-clickable"]') as HTMLElement;
+                if (cameraPanel) {
+                  cameraPanel.click();
+                }
+              }}
+              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-blue-600 text-white hover:bg-blue-500"
+              data-testid="button-add-camera"
+            >
+              <Camera className="h-4 w-4" />
+              <span className="text-sm">Camera</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner");
+                setShowBarcodeScanner(true);
+              }}
+              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-orange-500 text-white hover:bg-orange-600"
+              data-testid="button-add-barcode"
+            >
+              <QrCode className="h-4 w-4" />
+              <span className="text-sm">Barcode</span>
             </button>
           </div>
         </div>

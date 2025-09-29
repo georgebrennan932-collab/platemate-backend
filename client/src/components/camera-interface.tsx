@@ -386,30 +386,15 @@ export function CameraInterface({
           />
         )}
         
-        {/* Calories Remaining Display */}
+        {/* Camera Icon Display */}
         {!previewUrl && (
           <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
             <div className="relative z-10 text-center transition-all duration-200 hover:scale-110">
               <div className="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center transition-all duration-200 hover:bg-white/30">
-                <motion.div
-                  animate={{
-                    scale: [1, 1.3, 1.1, 1.4, 1],
-                    rotate: [0, -5, 5, -3, 0],
-                    y: [0, -2, 1, -3, 0]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    repeatType: "loop",
-                    ease: "easeInOut"
-                  }}
-                >
-                  <Flame className="text-white h-10 w-10" />
-                </motion.div>
+                <Camera className="text-white h-10 w-10" />
               </div>
               <div className="mt-4 text-white text-center">
-                <p className="text-2xl font-bold">{Math.max(0, caloriesGoal - caloriesConsumed)}</p>
-                <p className="text-sm font-medium opacity-90">calories remaining</p>
+                <p className="text-lg font-medium opacity-90">Tap to capture</p>
               </div>
             </div>
           </div>
@@ -433,47 +418,6 @@ export function CameraInterface({
               <Images className="text-white h-5 w-5" />
             </button>
             
-            {/* Barcode scanner button */}
-            <motion.button 
-              className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl flex items-center justify-center border border-orange-400 transition-colors duration-200 relative overflow-hidden"
-              onClick={() => {
-                console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner (no auto-camera)");
-                setShowBarcodeScanner(true);
-              }}
-              data-testid="button-barcode"
-              title="Scan Barcode"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <QrCode className="text-white h-5 w-5 z-10 relative" />
-              
-              {/* Animated scan line */}
-              <motion.div
-                className="absolute left-1 right-1 h-0.5 bg-white opacity-80"
-                animate={{
-                  y: [-20, 28]
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "linear"
-                }}
-              />
-            </motion.button>
-            
-            {/* Main Capture button */}
-            <button 
-              className="w-16 h-16 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center border-2 border-blue-200 transition-all duration-200"
-              onClick={() => {
-                console.log("📷 MAIN CAMERA BUTTON CLICKED - Taking photo");
-                handleCameraCapture();
-              }}
-              data-testid="button-capture"
-              title="📷 Take Food Photo"
-            >
-              <Camera className="text-white h-8 w-8" />
-            </button>
             
             {/* Flash toggle button */}
             <button 
