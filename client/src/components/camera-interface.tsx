@@ -394,12 +394,6 @@ export function CameraInterface({
         
       </div>
       
-      {/* Scale tip */}
-      <div className="mt-4 text-center">
-        <p className="text-sm text-white font-medium bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
-          💡 For more precise portion analysis, place a fork or your hand in the photo.
-        </p>
-      </div>
 
 
       {/* Hidden file inputs */}
