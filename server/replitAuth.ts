@@ -102,14 +102,26 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    // Use the actual Replit domain instead of req.hostname which may be localhost
+    const replitDomain = process.env.REPLIT_DOMAINS!.split(",")[0];
+    const actualHostname = req.get('host')?.includes('replit.dev') ? req.hostname : replitDomain;
+    
+    console.log(`🔐 Login attempt - req.hostname: ${req.hostname}, actual domain: ${actualHostname}`);
+    
+    passport.authenticate(`replitauth:${actualHostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    // Use the actual Replit domain instead of req.hostname which may be localhost
+    const replitDomain = process.env.REPLIT_DOMAINS!.split(",")[0];
+    const actualHostname = req.get('host')?.includes('replit.dev') ? req.hostname : replitDomain;
+    
+    console.log(`🔐 Callback attempt - req.hostname: ${req.hostname}, actual domain: ${actualHostname}`);
+    
+    passport.authenticate(`replitauth:${actualHostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
