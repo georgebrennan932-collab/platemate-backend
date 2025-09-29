@@ -32,10 +32,43 @@ export default function LandingPage() {
           <p className="text-xl opacity-90 mb-6 animate-fade-in-up animation-delay-300">
             Your voice-powered AI nutrition companion
           </p>
-          <p className="text-lg opacity-80 max-w-2xl mx-auto animate-fade-in-up animation-delay-600">
+          <p className="text-lg opacity-80 max-w-2xl mx-auto mb-8 animate-fade-in-up animation-delay-600">
             Just speak your meals aloud and watch them automatically appear in your food diary! 
             Or snap photos for instant AI analysis. Get personalized nutrition guidance with the power of your voice.
           </p>
+          
+          {/* Top CTA Buttons */}
+          {!isAuthenticated && (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up animation-delay-900">
+              <a href="https://replit.com/signup" target="_blank" rel="noopener noreferrer">
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-bounce relative z-10 group/button overflow-hidden"
+                  data-testid="button-signup-header"
+                >
+                  {/* Button shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-200/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
+                  <Sparkles className="h-6 w-6 mr-2 animate-spin-slow" />
+                  Create Free Account
+                </Button>
+              </a>
+              <span className="text-white/60 text-sm">or</span>
+              <a href="/api/login">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="bg-transparent border-2 border-white/50 text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 hover:rotate-1 transition-all duration-300 animate-bounce animation-delay-200 relative z-10 group/button overflow-hidden"
+                  data-testid="button-signin-header"
+                >
+                  {/* Button shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/button:translate-x-full transition-transform duration-1000"></div>
+                  <LogIn className="h-6 w-6 mr-2 animate-pulse" />
+                  Sign In
+                </Button>
+              </a>
+            </div>
+          )}
         </div>
       </header>
 
