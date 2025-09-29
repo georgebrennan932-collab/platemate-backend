@@ -12,7 +12,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Flame, Camera, QrCode } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Flame, Camera, QrCode, Images } from "lucide-react";
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
@@ -52,6 +52,7 @@ export default function Home() {
   // Navigation state
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // No voice input functionality on homepage
   
@@ -226,6 +227,50 @@ export default function Home() {
     setErrorMessage('');
     setErrorType('food');
     setConfirmationData(null);
+  };
+
+  // Gallery selection handlers
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    const inputType = event.target.getAttribute('capture') ? 'camera' : 'gallery';
+    
+    console.log("📁 File selected:", {
+      hasFile: !!file,
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
+      inputType: inputType
+    });
+
+    if (!file) {
+      toast({
+        title: "No file selected",
+        description: "Please select an image file to analyze.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPG, PNG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Trigger analysis of selected image
+    handleAnalysisStart();
+    analysisMutation.mutate(file);
+    
+    // Reset file input
+    event.target.value = '';
+  };
+
+  const handleGallerySelect = () => {
+    // Use file input for reliable gallery access across all platforms
+    fileInputRef.current?.click();
   };
 
   const handleScanAnother = () => {
@@ -700,7 +745,7 @@ export default function Home() {
             </button>
           </div>
           
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => {
                 console.log("📷 CAMERA BUTTON CLICKED - Taking photo");
@@ -716,6 +761,15 @@ export default function Home() {
             >
               <Camera className="h-4 w-4" />
               <span className="text-sm">Camera</span>
+            </button>
+            
+            <button
+              onClick={handleGallerySelect}
+              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-green-600 text-white hover:bg-green-500"
+              data-testid="button-add-gallery"
+            >
+              <Images className="h-4 w-4" />
+              <span className="text-sm">Gallery</span>
             </button>
             
             <button
@@ -1224,6 +1278,16 @@ export default function Home() {
         onClose={() => {
           setShowManualEntry(false);
         }}
+      />
+
+      {/* Hidden file input for gallery */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+        data-testid="input-file-gallery"
       />
 
       {/* Persistent confetti celebration */}
