@@ -24,8 +24,9 @@ export async function launchSignup(): Promise<void> {
   if (config.isNative) {
     console.log('📱 Mobile: Opening OAuth signup in system browser with deep-link return');
     
-    // For mobile, use OAuth flow (same as login) with signup hint
-    const baseUrl = window.location.origin;
+    // For mobile, we need the actual HTTPS server URL, not capacitor://localhost
+    // Use the Replit deployment URL
+    const baseUrl = 'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev';
     const returnUrl = 'platemate://auth-complete';
     const signupUrl = `${baseUrl}/api/signup?returnUrl=${encodeURIComponent(returnUrl)}`;
     
@@ -61,8 +62,9 @@ export async function launchLogin(): Promise<void> {
   if (config.isNative) {
     console.log('📱 Mobile: Opening OAuth in system browser with deep-link return');
     
-    // For mobile, use absolute HTTPS URL (not relative path)
-    const baseUrl = window.location.origin;
+    // For mobile, we need the actual HTTPS server URL, not capacitor://localhost
+    // Use the Replit deployment URL
+    const baseUrl = 'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev';
     const returnUrl = 'platemate://auth-complete';
     const loginUrl = `${baseUrl}/api/login?returnUrl=${encodeURIComponent(returnUrl)}`;
     
