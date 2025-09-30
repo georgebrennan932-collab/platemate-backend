@@ -26,7 +26,7 @@ export async function launchSignup(): Promise<void> {
     
     // For mobile, we need the actual HTTPS server URL, not capacitor://localhost
     // Use the Replit deployment URL
-    const baseUrl = 'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev';
+    const baseUrl = 'https://nutri-snap-1-georgebrennan93.replit.app';
     const returnUrl = 'platemate://auth-complete';
     const signupUrl = `${baseUrl}/api/signup?returnUrl=${encodeURIComponent(returnUrl)}`;
     
@@ -64,7 +64,7 @@ export async function launchLogin(): Promise<void> {
     
     // For mobile, we need the actual HTTPS server URL, not capacitor://localhost
     // Use the Replit deployment URL
-    const baseUrl = 'https://b3ef8bbc-4987-4bf0-84a0-21447c42de4e-00-d9egvcnatzxk.kirk.replit.dev';
+    const baseUrl = 'https://nutri-snap-1-georgebrennan93.replit.app';
     const returnUrl = 'platemate://auth-complete';
     const loginUrl = `${baseUrl}/api/login?returnUrl=${encodeURIComponent(returnUrl)}`;
     

@@ -46,11 +46,7 @@ export default function LandingPage() {
                 variant="secondary"
                 className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
                 data-testid="button-signup-header"
-                onClick={() => {
-                  console.log('🔴 SIGNUP BUTTON CLICKED - onClick handler fired!');
-                  alert('Signup button clicked!');
-                  launchSignup();
-                }}
+                onClick={launchSignup}
               >
                 <Sparkles className="h-6 w-6 mr-2" />
                 Create Free Account
@@ -61,11 +57,7 @@ export default function LandingPage() {
                 variant="outline"
                 className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
                 data-testid="button-signin-header"
-                onClick={() => {
-                  console.log('🔴 SIGNIN BUTTON CLICKED - onClick handler fired!');
-                  alert('Sign in button clicked!');
-                  launchLogin();
-                }}
+                onClick={launchLogin}
               >
                 <LogIn className="h-6 w-6 mr-2" />
                 Sign In
