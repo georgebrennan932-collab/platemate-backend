@@ -100,7 +100,3 @@ Preferred communication style: Simple, everyday language.
 - **Security-Hardened OAuth**: Strict returnUrl validation (allowlist-based), 256-bit cryptographic bridge tokens, 5-minute TTL with automatic cleanup, and SameSite=None cookies for cross-origin WebView compatibility
 - **Platform-Aware Auth**: Auth launcher utility with automatic platform detection, absolute HTTPS URLs for mobile, and graceful fallback for web authentication
 - **Deep-Link Configuration**: iOS CFBundleURLTypes and Android intent-filter setup for platemate:// scheme with host-based routing (auth-complete)
-- **Aggressive Client-Side Caching**: Implemented 1-hour staleTime and 24-hour garbage collection time (gcTime) for TanStack Query to dramatically reduce API calls and improve app responsiveness
-- **IndexedDB Persistent Storage**: Created IndexedDB wrapper (indexeddb-storage.ts) for persistent client-side caching of images, analyses, and diary entries with automatic cleanup
-- **Optimistic UI Updates**: Added onMutate handlers to mutations for immediate user feedback before server confirmation, creating instant-feeling interactions
-- **Performance Optimizations**: Disabled refetchOnWindowFocus to prevent unnecessary re-fetching, enabling faster app performance especially on slower connections

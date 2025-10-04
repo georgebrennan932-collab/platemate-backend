@@ -65,19 +65,10 @@ export function CameraInterface({
       const formData = new FormData();
       formData.append('image', file);
       
-      // Add guest ID header if present
-      const guestId = localStorage.getItem('platemate_guest_id');
-      const headers: Record<string, string> = {};
-      if (guestId) {
-        headers['X-Guest-Id'] = guestId;
-      }
-      
       console.log("🚀 Sending request to /api/analyze...");
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers,
         body: formData,
-        credentials: 'include',
       });
 
       console.log("📡 Response received:", {
@@ -115,20 +106,12 @@ export function CameraInterface({
     mutationFn: async (barcode: string) => {
       console.log("🔍 Looking up barcode:", barcode);
       
-      // Add guest ID header if present
-      const guestId = localStorage.getItem('platemate_guest_id');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (guestId) {
-        headers['X-Guest-Id'] = guestId;
-      }
-      
       const response = await fetch('/api/barcode', {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ barcode }),
-        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -261,18 +244,7 @@ export function CameraInterface({
         }
       } else {
         console.log("🖼️ Gallery image selected, starting food analysis...");
-        console.log("📋 Mutation state before call:", {
-          isPending: analysisMutation.isPending,
-          isError: analysisMutation.isError,
-          error: analysisMutation.error
-        });
-        try {
-          analysisMutation.mutate(selectedFile);
-          console.log("✅ Mutation.mutate() called successfully");
-        } catch (error) {
-          console.error("❌ Error calling mutation.mutate():", error);
-          onAnalysisError("Failed to start analysis: " + (error as Error).message);
-        }
+        analysisMutation.mutate(selectedFile);
         return;
       }
     }
@@ -334,19 +306,8 @@ export function CameraInterface({
           }
         } else {
           console.log("🎯 Starting food analysis...");
-          console.log("📋 Mutation state before call:", {
-            isPending: analysisMutation.isPending,
-            isError: analysisMutation.isError,
-            error: analysisMutation.error
-          });
-          try {
-            // Auto-analyze the captured photo for food
-            analysisMutation.mutate(file);
-            console.log("✅ Mutation.mutate() called successfully");
-          } catch (error) {
-            console.error("❌ Error calling mutation.mutate():", error);
-            onAnalysisError("Failed to start analysis: " + (error as Error).message);
-          }
+          // Auto-analyze the captured photo for food
+          analysisMutation.mutate(file);
         }
       } catch (error) {
         console.error('❌ Error taking photo:', error);

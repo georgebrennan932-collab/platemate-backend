@@ -5,29 +5,29 @@
       {
         "imageHash": "c77d71be523a37742b4428100108befe4fad5249dad22d5f8c1b3861d96d5102",
         "analysis": {
-          "imageUrl": "/tmp/uploads/processed_c59c27315de4fee858f47ec2a3f8258b.jpg",
+          "imageUrl": "/tmp/uploads/processed_d74e8794b8fa5f0491de1e2da0ef0185.jpg",
           "confidence": 90,
-          "totalCalories": 1076,
-          "totalProtein": 46,
-          "totalCarbs": 43,
-          "totalFat": 79,
+          "totalCalories": 781,
+          "totalProtein": 32,
+          "totalCarbs": 44,
+          "totalFat": 53,
           "detectedFoods": [
             {
               "name": "Egg, whole, fried no added fat",
-              "portion": "2 large eggs",
-              "calories": 143,
-              "protein": 12,
+              "portion": "1 large egg",
+              "calories": 72,
+              "protein": 6,
               "carbs": 1,
-              "fat": 10,
+              "fat": 5,
               "icon": "egg"
             },
             {
               "name": "Sausage, smoked link sausage, pork",
-              "portion": "2 sausages (approximately 150g)",
-              "calories": 464,
-              "protein": 18,
+              "portion": "1 sausage (approximately 75g)",
+              "calories": 232,
+              "protein": 9,
               "carbs": 1,
-              "fat": 42,
+              "fat": 21,
               "icon": "bacon"
             },
             {
@@ -50,16 +50,16 @@
             },
             {
               "name": "Mushrooms, raw",
-              "portion": "3 medium mushrooms (approximately 75g)",
-              "calories": 23,
-              "protein": 2,
-              "carbs": 3,
+              "portion": "100g",
+              "calories": 31,
+              "protein": 3,
+              "carbs": 4,
               "fat": 0,
               "icon": "bread-slice"
             },
             {
               "name": "CHICK-FIL-A, hash browns",
-              "portion": "1 hash brown (approximately 50g)",
+              "portion": "1 piece (approximately 50g)",
               "calories": 151,
               "protein": 2,
               "carbs": 15,
@@ -68,22 +68,22 @@
             }
           ]
         },
-        "timestamp": 1759611325921,
+        "timestamp": 1759128355157,
         "accessCount": 1,
-        "lastAccessed": 1759611325921
+        "lastAccessed": 1759128355157
       }
     ]
   ],
   "stats": {
-    "totalRequests": 1,
+    "totalRequests": 2,
     "cacheHits": 0,
-    "cacheMisses": 1,
+    "cacheMisses": 2,
     "hitRate": 0,
     "currentSize": 1,
     "maxSize": 1000,
     "totalEvictions": 0,
-    "oldestEntry": 1759611325921,
-    "newestEntry": 1759611325921
+    "oldestEntry": 1759128355157,
+    "newestEntry": 1759128355157
   },
-  "timestamp": 1759611325922
+  "timestamp": 1759128355157
 }
