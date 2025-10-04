@@ -65,10 +65,19 @@ export function CameraInterface({
       const formData = new FormData();
       formData.append('image', file);
       
+      // Add guest ID header if present
+      const guestId = localStorage.getItem('platemate_guest_id');
+      const headers: Record<string, string> = {};
+      if (guestId) {
+        headers['X-Guest-Id'] = guestId;
+      }
+      
       console.log("🚀 Sending request to /api/analyze...");
       const response = await fetch('/api/analyze', {
         method: 'POST',
+        headers,
         body: formData,
+        credentials: 'include',
       });
 
       console.log("📡 Response received:", {
@@ -106,12 +115,20 @@ export function CameraInterface({
     mutationFn: async (barcode: string) => {
       console.log("🔍 Looking up barcode:", barcode);
       
+      // Add guest ID header if present
+      const guestId = localStorage.getItem('platemate_guest_id');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (guestId) {
+        headers['X-Guest-Id'] = guestId;
+      }
+      
       const response = await fetch('/api/barcode', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ barcode }),
+        credentials: 'include',
       });
 
       if (!response.ok) {
