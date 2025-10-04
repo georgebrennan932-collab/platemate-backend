@@ -736,7 +736,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/analyses/:id", authMiddleware, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
 
       // Validate request body using zod schema (excludes client-side totals)
       const validatedData = updateFoodAnalysisSchema.parse(req.body);
@@ -922,7 +922,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Confirm or reject food analysis (user decision)
   app.patch("/api/food-confirmations/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const { id } = req.params;
       
       // Verify ownership first
@@ -1076,7 +1076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/diary", authMiddleware, async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       let analysisId = req.body.analysisId;
       
       // If modifiedAnalysis is provided, create a new analysis with the edited foods
@@ -1108,7 +1108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/diary", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       // Disable caching for diary entries to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -1130,7 +1130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the entry belongs to the user (skip check for anonymous users in deployment)
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       if (req.user && entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
@@ -1144,7 +1144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/diary/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getDiaryEntry(req.params.id);
       
       if (!entry) {
@@ -1172,7 +1172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/diary/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getDiaryEntry(req.params.id);
       
       if (!entry) {
@@ -1325,7 +1325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Drink routes (protected)
   app.post("/api/drinks", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const validatedEntry = insertDrinkEntrySchema.parse({
         ...req.body,
         userId
@@ -1340,7 +1340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/drinks", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       // Disable caching for drink entries to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -1362,7 +1362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the entry belongs to the user (skip check for anonymous users in deployment)
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       if (req.user && entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
@@ -1376,7 +1376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/drinks/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getDrinkEntry(req.params.id);
       
       if (!entry) {
@@ -1403,7 +1403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/weights", authMiddleware, async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const validatedEntry = insertWeightEntrySchema.parse({
         ...req.body,
         userId
@@ -1418,7 +1418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/weights", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
       const start = req.query.start ? new Date(req.query.start as string) : undefined;
       const end = req.query.end ? new Date(req.query.end as string) : undefined;
@@ -1439,7 +1439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the entry belongs to the user (skip check for anonymous users in deployment)
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       if (req.user && entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
@@ -1453,7 +1453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/weights/:id", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getWeightEntry(req.params.id);
       
       if (!entry) {
@@ -1482,7 +1482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/weights/:id", authMiddleware, async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getWeightEntry(req.params.id);
       
       if (!entry) {
@@ -1509,7 +1509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/nutrition-goals", authMiddleware, async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const goals = await storage.getNutritionGoals(userId);
       res.json(goals);
     } catch (error) {
@@ -1521,7 +1521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/nutrition-goals", authMiddleware, async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = (req as any).guestId || req.user?.claims?.sub || 'anonymous-user';
       const validatedGoals = insertNutritionGoalsSchema.parse({
         ...req.body,
         userId
