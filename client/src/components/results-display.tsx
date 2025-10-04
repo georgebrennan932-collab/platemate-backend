@@ -1144,12 +1144,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       <div className="flex space-x-4 pt-6">
         <button 
           className="flex-1 gradient-button py-4 px-6 rounded-xl font-medium hover:scale-[1.02] flex items-center justify-center space-x-2"
-          onClick={() => {
-            console.log('🔴 ADD TO DIARY BUTTON CLICKED');
-            console.log('🔴 Current showDiaryDialog:', showDiaryDialog);
-            setShowDiaryDialog(true);
-            console.log('🔴 Called setShowDiaryDialog(true)');
-          }}
+          onClick={() => setShowDiaryDialog(true)}
           data-testid="button-add-diary"
         >
           <Plus className="h-5 w-5" />
