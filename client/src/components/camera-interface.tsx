@@ -261,7 +261,18 @@ export function CameraInterface({
         }
       } else {
         console.log("🖼️ Gallery image selected, starting food analysis...");
-        analysisMutation.mutate(selectedFile);
+        console.log("📋 Mutation state before call:", {
+          isPending: analysisMutation.isPending,
+          isError: analysisMutation.isError,
+          error: analysisMutation.error
+        });
+        try {
+          analysisMutation.mutate(selectedFile);
+          console.log("✅ Mutation.mutate() called successfully");
+        } catch (error) {
+          console.error("❌ Error calling mutation.mutate():", error);
+          onAnalysisError("Failed to start analysis: " + (error as Error).message);
+        }
         return;
       }
     }
@@ -323,8 +334,19 @@ export function CameraInterface({
           }
         } else {
           console.log("🎯 Starting food analysis...");
-          // Auto-analyze the captured photo for food
-          analysisMutation.mutate(file);
+          console.log("📋 Mutation state before call:", {
+            isPending: analysisMutation.isPending,
+            isError: analysisMutation.isError,
+            error: analysisMutation.error
+          });
+          try {
+            // Auto-analyze the captured photo for food
+            analysisMutation.mutate(file);
+            console.log("✅ Mutation.mutate() called successfully");
+          } catch (error) {
+            console.error("❌ Error calling mutation.mutate():", error);
+            onAnalysisError("Failed to start analysis: " + (error as Error).message);
+          }
         }
       } catch (error) {
         console.error('❌ Error taking photo:', error);
