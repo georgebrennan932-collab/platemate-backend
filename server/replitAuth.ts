@@ -220,18 +220,7 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
-  
-  // Check for guest ID in headers
-  const guestId = req.headers['x-guest-id'] as string | undefined;
-  
-  // If guest ID provided, attach it to the request and allow access
-  if (guestId && guestId.startsWith('guest_')) {
-    (req as any).guestId = guestId;
-    (req as any).isGuest = true;
-    return next();
-  }
 
-  // Otherwise, check for authenticated user
   if (!req.isAuthenticated() || !user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }

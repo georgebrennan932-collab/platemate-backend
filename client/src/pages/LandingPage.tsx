@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { launchSignup, launchLogin } from "@/lib/auth-launcher";
 
 export default function LandingPage() {
-  const { isAuthenticated, isGuest, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <div className="text-foreground min-h-screen relative overflow-hidden" style={{background: 'var(--bg-gradient)'}}>
@@ -38,47 +38,61 @@ export default function LandingPage() {
             Or snap photos for instant AI analysis. Get personalized nutrition guidance with the power of your voice.
           </p>
           
-          {/* CTA Buttons - Show for everyone */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up animation-delay-900">
-            <Link href="/scan">
+          {/* Top CTA Buttons */}
+          {!isAuthenticated && (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up animation-delay-900">
               <Button 
                 size="lg" 
                 variant="secondary"
                 className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
-                data-testid="button-get-started-landing"
+                data-testid="button-signup-header"
+                onClick={launchSignup}
               >
-                <Camera className="h-6 w-6 mr-2" />
-                {isAuthenticated ? "Continue Tracking" : "Start Free (No Signup)"}
+                <Sparkles className="h-6 w-6 mr-2" />
+                Create Free Account
               </Button>
-            </Link>
-            
-            {!isAuthenticated && (
-              <>
-                <span className="text-white/60 text-sm">or</span>
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
-                  data-testid="button-signin-header"
-                  onClick={launchLogin}
-                >
-                  <LogIn className="h-6 w-6 mr-2" />
-                  Sign In to Save
-                </Button>
-              </>
-            )}
-          </div>
-          
-          {isGuest && !isAuthenticated && (
-            <p className="text-sm text-white/80 mt-4 animate-fade-in animation-delay-1200">
-              💡 Your data is saved on this device. Sign in to sync across devices!
-            </p>
+              <span className="text-white/60 text-sm">or</span>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
+                data-testid="button-signin-header"
+                onClick={launchLogin}
+              >
+                <LogIn className="h-6 w-6 mr-2" />
+                Sign In
+              </Button>
+            </div>
           )}
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
+        {/* Get Started Button - Only for authenticated users */}
+        {isAuthenticated && (
+          <div className="text-center mb-16 animate-fade-in-up animation-delay-900">
+            <div className="space-y-4">
+              <div className="inline-flex items-center px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
+                <Shield className="h-4 w-4 mr-2" />
+                ✅ Signed in and ready!
+              </div>
+              <Link href="/scan">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
+                  data-testid="button-get-started"
+                >
+                  <Camera className="h-6 w-6 mr-2" />
+                  Start Using PlateMate
+                </Button>
+              </Link>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-3 animate-fade-in animation-delay-1200">
+              Say "100g salmon" or "one apple" - your voice becomes your food diary
+            </p>
+          </div>
+        )}
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
