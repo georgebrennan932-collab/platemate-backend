@@ -466,12 +466,20 @@ export default function Home() {
       });
       return await diaryResponse.json();
     },
+    onMutate: async ({ foodDescription }) => {
+      // Show immediate feedback
+      toast({
+        title: "Adding Meal...",
+        description: `Analyzing: ${foodDescription}`,
+      });
+    },
     onSuccess: () => {
       toast({
         title: "Meal Added!",
         description: "Your meal has been added to your diary.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
       setShowVoiceMealDialog(false);
       setShowTextMealDialog(false);
       setVoiceInput('');
