@@ -544,86 +544,102 @@ export function DiaryPage() {
                 <h3 className="text-lg font-medium">Today's Meals</h3>
                 {sortedDates.map((date) => (
                   <div key={date}>
-                    {filteredGroupedEntries[date]?.map((entry) => (
-                      <div key={entry.id} className="bg-card border rounded-lg p-4 mb-2">
-                        {/* Header with meal info and actions */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            {/* Meal Photo Thumbnail */}
-                            {entry.analysis?.imageUrl && (
-                              <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted">
-                                <img 
-                                  src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`}
-                                  alt="Meal photo" 
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                  }}
-                                />
-                              </div>
-                            )}
-                            <div>
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className="text-sm font-medium capitalize">{entry.mealType}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {format(new Date(entry.mealDate), 'h:mm a')}
-                                </span>
-                              </div>
-                              
-                              {/* Compact nutrition overview */}
-                              <div className="flex items-center space-x-3 text-xs">
-                                <span className="font-semibold text-red-600" data-testid={`meal-calories-${entry.id}`}>
-                                  {entry.analysis?.totalCalories || 0} cal
-                                </span>
-                                <span className="text-blue-600" data-testid={`meal-protein-${entry.id}`}>
-                                  {entry.analysis?.totalProtein || 0}g protein
-                                </span>
-                                <span className="text-orange-600" data-testid={`meal-carbs-${entry.id}`}>
-                                  {entry.analysis?.totalCarbs || 0}g carbs
-                                </span>
-                                <span className="text-yellow-600" data-testid={`meal-fat-${entry.id}`}>
-                                  {entry.analysis?.totalFat || 0}g fat
-                                </span>
+                    {filteredGroupedEntries[date]?.map((entry) => {
+                      const mealTypeColors = {
+                        breakfast: 'from-orange-50 to-amber-50 dark:from-orange-900/10 dark:to-amber-900/10 border-orange-200/50 dark:border-orange-800/30',
+                        lunch: 'from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 border-green-200/50 dark:border-green-800/30',
+                        dinner: 'from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border-blue-200/50 dark:border-blue-800/30',
+                        snack: 'from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/10 border-purple-200/50 dark:border-purple-800/30',
+                      };
+                      const mealTypeBadgeColors = {
+                        breakfast: 'bg-gradient-to-r from-orange-500 to-amber-500 text-white',
+                        lunch: 'bg-gradient-to-r from-green-500 to-emerald-500 text-white',
+                        dinner: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white',
+                        snack: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
+                      };
+                      return (
+                        <div key={entry.id} className={`bg-gradient-to-br ${mealTypeColors[entry.mealType as keyof typeof mealTypeColors] || mealTypeColors.snack} border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 p-4 mb-3`}>
+                          {/* Header with meal info and actions */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              {/* Meal Photo Thumbnail */}
+                              {entry.analysis?.imageUrl && (
+                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted shadow-sm">
+                                  <img 
+                                    src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`}
+                                    alt="Meal photo" 
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <div>
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${mealTypeBadgeColors[entry.mealType as keyof typeof mealTypeBadgeColors] || mealTypeBadgeColors.snack}`}>
+                                    {entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1)}
+                                  </span>
+                                  <span className="text-xs font-medium text-muted-foreground">
+                                    {format(new Date(entry.mealDate), 'h:mm a')}
+                                  </span>
+                                </div>
+                                
+                                {/* Colorful nutrition badges */}
+                                <div className="flex items-center gap-2 flex-wrap mt-2">
+                                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 shadow-sm" data-testid={`meal-calories-${entry.id}`}>
+                                    🔥 {entry.analysis?.totalCalories || 0}
+                                  </span>
+                                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm" data-testid={`meal-protein-${entry.id}`}>
+                                    💪 {entry.analysis?.totalProtein || 0}g
+                                  </span>
+                                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 shadow-sm" data-testid={`meal-carbs-${entry.id}`}>
+                                    🌾 {entry.analysis?.totalCarbs || 0}g
+                                  </span>
+                                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 shadow-sm" data-testid={`meal-fat-${entry.id}`}>
+                                    🥑 {entry.analysis?.totalFat || 0}g
+                                  </span>
+                                </div>
                               </div>
                             </div>
+                            <div className="flex items-center space-x-1">
+                              <EditDiaryEntryDialog entry={entry} />
+                              <button
+                                onClick={() => deleteMutation.mutate(entry.id)}
+                                className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                title="Delete entry"
+                                data-testid={`button-delete-${entry.id}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <EditDiaryEntryDialog entry={entry} />
-                            <button
-                              onClick={() => deleteMutation.mutate(entry.id)}
-                              className="p-1 text-red-500 hover:bg-red-50 rounded"
-                              title="Delete entry"
-                              data-testid={`button-delete-${entry.id}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                        
-                        {/* Compact food list */}
-                        {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                          <div className="space-y-1">
-                            {entry.analysis.detectedFoods.map((food, index) => (
-                              <div key={index} className="flex items-center justify-between py-1 px-2 bg-muted/20 rounded text-xs">
-                                <div className="flex items-center space-x-2 flex-1 min-w-0">
-                                  <span className="text-sm">{food.icon || '🍽️'}</span>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium truncate">{food.name}</p>
-                                    <p className="text-muted-foreground">{food.portion}</p>
+                          
+                          {/* Compact food list */}
+                          {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
+                            <div className="space-y-1">
+                              {entry.analysis.detectedFoods.map((food, index) => (
+                                <div key={index} className="flex items-center justify-between py-1.5 px-3 bg-white/60 dark:bg-black/10 rounded-lg text-xs shadow-sm">
+                                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                    <span className="text-lg">{food.icon || '🍽️'}</span>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold truncate">{food.name}</p>
+                                      <p className="text-muted-foreground text-xs">{food.portion}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 text-right ml-2 shrink-0">
+                                    <span className="font-bold text-red-700 dark:text-red-400">{food.calories}</span>
+                                    <span className="text-blue-600 dark:text-blue-400 text-xs">{food.protein}p</span>
+                                    <span className="text-orange-600 dark:text-orange-400 text-xs">{food.carbs}c</span>
+                                    <span className="text-yellow-600 dark:text-yellow-400 text-xs">{food.fat}f</span>
                                   </div>
                                 </div>
-                                <div className="flex items-center space-x-2 text-right ml-2 shrink-0">
-                                  <span className="font-medium">{food.calories}</span>
-                                  <span className="text-blue-600">{food.protein}p</span>
-                                  <span className="text-orange-600">{food.carbs}c</span>
-                                  <span className="text-yellow-600">{food.fat}f</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                     
                     {/* Today's Drinks */}
                     {groupedDrinks[date]?.map((drink) => (
