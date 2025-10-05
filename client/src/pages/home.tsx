@@ -205,9 +205,20 @@ export default function Home() {
   };
 
   const handleAnalysisSuccess = (data: any) => {
+    console.log("📊 handleAnalysisSuccess called:", { 
+      type: data.type, 
+      confidence: data.confidence,
+      hasConfirmationId: !!data.confirmationId,
+      hasSuggestedFoods: !!data.suggestedFoods 
+    });
+    
     // Check if this is a confirmation request (low confidence)
     if (data.type === 'confirmation_required') {
       console.log("⚠️ Low confidence detected, showing confirmation UI:", data);
+      console.log("🔧 Setting confirmationData:", {
+        confirmationId: data.confirmationId,
+        suggestedFoodsCount: data.suggestedFoods?.length
+      });
       soundService.playError(); // Different sound for confirmation needed
       setConfirmationData(data);
       setEditableFoods(Array.isArray(data.suggestedFoods) ? [...data.suggestedFoods] : []); // Initialize editable foods safely
@@ -314,16 +325,46 @@ export default function Home() {
   };
 
   const handleConfirmAnalysis = async () => {
-    if (!confirmationData) return;
+    console.log("🔘 Confirm Analysis button clicked", {
+      hasConfirmationData: !!confirmationData,
+      confirmationData,
+      editableFoodsCount: editableFoods.length
+    });
+    
+    if (!confirmationData) {
+      console.error("❌ confirmationData is missing!", { confirmationData });
+      toast({
+        title: "Missing Data",
+        description: "Confirmation data is missing. Please try scanning the image again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!confirmationData.confirmationId) {
+      console.error("❌ confirmationId is missing!", { confirmationData });
+      toast({
+        title: "Invalid Data",
+        description: "Confirmation ID is missing. Please try scanning the image again.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
+      console.log("📤 Sending PATCH request to /api/food-confirmations/" + confirmationData.confirmationId);
+      
       // Call the API to confirm the analysis with edited foods using correct endpoint
       const response = await apiRequest('PATCH', `/api/food-confirmations/${confirmationData.confirmationId}`, {
         status: 'confirmed',
         finalFoods: editableFoods.length > 0 ? editableFoods : confirmationData.suggestedFoods,
         userFeedback: null
       });
+      
+      console.log("📥 Response received:", { status: response.status, ok: response.ok });
+      
       const result = await response.json();
+      console.log("✅ Analysis confirmed successfully:", result);
       
       // Show the confirmed analysis as results - use finalAnalysis if available
       const analysisToShow = result.finalAnalysis || result.confirmation;
@@ -339,10 +380,10 @@ export default function Home() {
         description: "Your food analysis has been confirmed and saved.",
       });
     } catch (error: any) {
-      console.error("Failed to confirm analysis:", error);
+      console.error("❌ Failed to confirm analysis:", error);
       toast({
         title: "Confirmation Failed",
-        description: "Failed to confirm the analysis. Please try again.",
+        description: error.message || "Failed to confirm the analysis. Please try again.",
         variant: "destructive",
       });
     }
