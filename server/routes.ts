@@ -474,11 +474,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (foodAnalysisData.confidence < 90) {
           console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for image analysis`);
           
-          // In deployment without auth, skip confirmation and proceed with analysis
+          // Guest users: return low-confidence analysis without saving (no confirmations)
           if (!req.user) {
-            console.log(`📝 [${requestId}] No user context in deployment - proceeding with low-confidence analysis`);
-            const analysis = await storage.createFoodAnalysis(foodAnalysisData);
-            responseData = analysis;
+            console.log(`📝 [${requestId}] Guest mode - returning low-confidence analysis without database save`);
+            responseData = { id: `guest_${Date.now()}`, ...foodAnalysisData };
           } else {
             // Create food confirmation for authenticated user review
             const userId = req.user.claims.sub;
