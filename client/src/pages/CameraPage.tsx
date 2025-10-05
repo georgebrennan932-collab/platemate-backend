@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/app-header";
 import { soundService } from "@/lib/sound-service";
 import { CameraInterface } from "@/components/camera-interface";
@@ -21,6 +22,7 @@ type AppState = 'camera' | 'processing' | 'results' | 'error';
 export function CameraPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -41,14 +43,19 @@ export function CameraPage() {
   
   
   // Fetch nutrition goals and diary entries to check for achievements
+  // Only fetch if authenticated
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
+    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
+    enabled: isAuthenticated,
   });
 
   const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
+    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
+    enabled: isAuthenticated,
   });
   
   // Initialize speech recognition
@@ -172,6 +179,10 @@ export function CameraPage() {
 
   const addVoiceMealMutation = useMutation({
     mutationFn: async ({ foodDescription, mealType }: { foodDescription: string, mealType: string }) => {
+      if (!isAuthenticated) {
+        throw new Error("Please log in to add meals to your diary");
+      }
+      
       // First analyze the text-based food description
       const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
       const analysis = await analysisResponse.json();
@@ -200,7 +211,7 @@ export function CameraPage() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to add meal from voice. Please try again.",
+        description: error.message || "Failed to add meal from voice. Please try again.",
         variant: "destructive",
       });
       console.error("Error adding voice meal:", error);
@@ -211,8 +222,8 @@ export function CameraPage() {
     <div className="text-foreground min-h-screen" style={{background: 'var(--bg-gradient)'}}>
       <AppHeader />
       
-      {/* Voice and Type Add Buttons */}
-      {currentState === 'camera' && (
+      {/* Voice and Type Add Buttons - Only show if authenticated */}
+      {currentState === 'camera' && isAuthenticated && (
         <div className="max-w-md mx-auto px-4 mb-4">
           <div className="grid grid-cols-2 gap-3 mb-4">
             <button

@@ -50,65 +50,84 @@ function App() {
     // Set up deep-link handler for mobile OAuth return
     let listenerHandle: any;
     
-    CapacitorApp.addListener('appUrlOpen', async (event) => {
-      const url = event.url;
-      console.log('📱 Deep-link received:', url);
-      
-      // Check if this is an auth-complete callback
-      if (url.startsWith('platemate://auth-complete')) {
+    // Wrap the whole setup in try-catch to prevent any crashes
+    try {
+      CapacitorApp.addListener('appUrlOpen', async (event) => {
         try {
-          // Parse the URL to get the token
-          const urlObj = new URL(url);
-          const token = urlObj.searchParams.get('token');
+          const url = event.url;
+          console.log('📱 Deep-link received:', url);
           
-          if (!token) {
-            console.error('❌ No token found in deep-link URL');
-            return;
+          // Check if this is an auth-complete callback
+          if (url.startsWith('platemate://auth-complete')) {
+            try {
+              // Parse the URL to get the token
+              const urlObj = new URL(url);
+              const token = urlObj.searchParams.get('token');
+              
+              if (!token) {
+                console.error('❌ No token found in deep-link URL');
+                return;
+              }
+              
+              console.log('🔑 Exchanging bridge token for session...');
+              
+              // Exchange the token for a session cookie (use absolute URL for mobile)
+              const baseUrl = window.location.origin;
+              const consumeUrl = `${baseUrl}/api/session/consume`;
+              
+              const response = await fetch(consumeUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ token }),
+              });
+              
+              if (!response.ok) {
+                console.error('❌ Failed to consume session token:', response.statusText);
+                return;
+              }
+              
+              const result = await response.json();
+              console.log('✅ Session established:', result);
+              
+              // Close the browser window
+              try {
+                await Browser.close();
+              } catch (closeError) {
+                console.log('ℹ️ Could not close browser (may already be closed):', closeError);
+              }
+              
+              // Invalidate auth queries to refresh the UI
+              await queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+              
+              console.log('🎉 Authentication complete! User is now logged in.');
+              
+            } catch (error) {
+              console.error('❌ Error handling auth callback:', error);
+            }
           }
-          
-          console.log('🔑 Exchanging bridge token for session...');
-          
-          // Exchange the token for a session cookie (use absolute URL for mobile)
-          const baseUrl = window.location.origin;
-          const consumeUrl = `${baseUrl}/api/session/consume`;
-          
-          const response = await fetch(consumeUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ token }),
-          });
-          
-          if (!response.ok) {
-            console.error('❌ Failed to consume session token:', response.statusText);
-            return;
-          }
-          
-          const result = await response.json();
-          console.log('✅ Session established:', result);
-          
-          // Close the browser window
-          await Browser.close();
-          
-          // Invalidate auth queries to refresh the UI
-          await queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-          
-          console.log('🎉 Authentication complete! User is now logged in.');
-          
         } catch (error) {
-          console.error('❌ Error handling auth callback:', error);
+          console.error('❌ Error in deep-link handler:', error);
         }
-      }
-    }).then(handle => {
-      listenerHandle = handle;
-    });
+      }).then(handle => {
+        listenerHandle = handle;
+      }).catch(error => {
+        console.error('❌ Error setting up deep-link listener:', error);
+      });
+    } catch (error) {
+      console.error('❌ Error in deep-link setup:', error);
+    }
     
     // Clean up listener on unmount
     return () => {
-      if (listenerHandle) {
-        listenerHandle.remove();
+      try {
+        if (listenerHandle) {
+          listenerHandle.remove();
+        }
+      } catch (error) {
+        console.error('❌ Error removing deep-link listener:', error);
       }
     };
   }, []);
