@@ -37,6 +37,12 @@ const config: CapacitorConfig = {
     },
     Motion: {
       interval: 100
+    },
+    CapgoCapacitorSocialLogin: {
+      google: {
+        webClientId: process.env.GOOGLE_WEB_CLIENT_ID || '',
+        scopes: ['profile', 'email']
+      }
     }
   }
 };
