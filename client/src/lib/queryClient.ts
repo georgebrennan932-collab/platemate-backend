@@ -46,7 +46,8 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: true, // Enable refetch when browser tab becomes active
+      refetchOnWindowFocus: false, // DISABLED: Causes WebView crashes in Capacitor
+      refetchOnMount: false, // DISABLED: Reduces unnecessary refetches
       staleTime: 5 * 60 * 1000, // 5 minutes - allow data to become stale and refetch
       retry: false,
     },
