@@ -39,7 +39,9 @@ export async function launchSignup(): Promise<void> {
         url: signupUrl,
         windowName: '_system',
         toolbarColor: '#8B5CF6',
-        presentationStyle: 'popover',
+        // Use fullscreen to ensure proper Chrome Custom Tabs (Android) and SFSafariViewController (iOS)
+        // This prevents Google's "disallowed_useragent" error by not using popover WebViews
+        presentationStyle: 'fullscreen',
       });
       
       console.log('✅ Browser.open() returned:', result);
@@ -77,7 +79,9 @@ export async function launchLogin(): Promise<void> {
         url: loginUrl,
         windowName: '_system',
         toolbarColor: '#8B5CF6',
-        presentationStyle: 'popover',
+        // Use fullscreen to ensure proper Chrome Custom Tabs (Android) and SFSafariViewController (iOS)
+        // This prevents Google's "disallowed_useragent" error by not using popover WebViews
+        presentationStyle: 'fullscreen',
       });
       
       console.log('✅ Browser.open() returned:', result);
