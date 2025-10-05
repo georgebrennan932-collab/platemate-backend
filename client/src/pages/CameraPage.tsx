@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/app-header";
 import { soundService } from "@/lib/sound-service";
 import { CameraInterface } from "@/components/camera-interface";
@@ -21,6 +22,7 @@ type AppState = 'camera' | 'processing' | 'results' | 'error';
 export function CameraPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAuthenticated, isGuestMode } = useAuth();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -43,13 +45,19 @@ export function CameraPage() {
   // Fetch nutrition goals and diary entries to check for achievements
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
+    enabled: isAuthenticated,
     retry: false,
   });
 
   const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
+    enabled: isAuthenticated,
     retry: false,
   });
+
+  // For guest mode, use empty arrays as fallback
+  const displayNutritionGoals = isGuestMode ? undefined : nutritionGoals;
+  const displayDiaryEntries = isGuestMode ? [] : (diaryEntries || []);
   
   // Initialize speech recognition
   useEffect(() => {
@@ -210,6 +218,38 @@ export function CameraPage() {
   return (
     <div className="text-foreground min-h-screen" style={{background: 'var(--bg-gradient)'}}>
       <AppHeader />
+      
+      {/* Guest Mode Banner */}
+      {isGuestMode && (
+        <div className="max-w-md mx-auto px-4 pt-4">
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4" data-testid="guest-mode-banner">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <Zap className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
+                  You're in Guest Mode
+                </h3>
+                <p className="text-xs text-yellow-800 dark:text-yellow-200 mb-2">
+                  Your data is temporary and won't be saved. Create a free account to keep your progress!
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      window.location.href = '/';
+                    }}
+                    className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors"
+                    data-testid="button-signup-from-guest"
+                  >
+                    Sign Up Free
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Voice and Type Add Buttons */}
       {currentState === 'camera' && (
