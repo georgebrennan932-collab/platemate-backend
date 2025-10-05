@@ -1,18 +1,12 @@
-import { Link, useLocation } from "wouter";
-import { Camera, BookOpen, Brain, Sparkles, Zap, Shield, LogIn, Calculator, Syringe, Target, Mic, Volume2, ChefHat, Scale, Award } from "lucide-react";
+import { Link } from "wouter";
+import { Camera, BookOpen, Brain, Sparkles, Shield, LogIn, Calculator, Syringe, Target, Mic, Volume2, ChefHat, Scale, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { launchSignup, launchLogin } from "@/lib/auth-launcher";
 
 export default function LandingPage() {
-  const { isAuthenticated, isLoading, enableGuestMode } = useAuth();
-  const [, setLocation] = useLocation();
-
-  const handleGuestMode = () => {
-    enableGuestMode();
-    setLocation('/scan');
-  };
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <div className="text-foreground min-h-screen relative overflow-hidden" style={{background: 'var(--bg-gradient)'}}>
@@ -46,45 +40,28 @@ export default function LandingPage() {
           
           {/* Top CTA Buttons */}
           {!isAuthenticated && (
-            <div className="flex flex-col gap-6 justify-center items-center animate-fade-in-up animation-delay-900">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Button 
-                  size="lg" 
-                  variant="secondary"
-                  className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
-                  data-testid="button-signup-header"
-                  onClick={launchSignup}
-                >
-                  <Sparkles className="h-6 w-6 mr-2" />
-                  Create Free Account
-                </Button>
-                <span className="text-white/60 text-sm">or</span>
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
-                  data-testid="button-signin-header"
-                  onClick={launchLogin}
-                >
-                  <LogIn className="h-6 w-6 mr-2" />
-                  Sign In
-                </Button>
-              </div>
-              
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-white/60 text-sm">Just want to try it?</span>
-                <Button 
-                  size="sm" 
-                  variant="ghost"
-                  className="bg-white/10 border border-white/30 text-white hover:bg-white/20 px-4 py-2 text-sm font-medium rounded-lg shadow-sm transform hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer"
-                  data-testid="button-guest-mode"
-                  onClick={handleGuestMode}
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  Try as Guest (No Account Needed)
-                </Button>
-                <p className="text-white/50 text-xs max-w-xs text-center">Guest data is temporary • Sign up to save permanently</p>
-              </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up animation-delay-900">
+              <Button 
+                size="lg" 
+                variant="secondary"
+                className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
+                data-testid="button-signup-header"
+                onClick={launchSignup}
+              >
+                <Sparkles className="h-6 w-6 mr-2" />
+                Create Free Account
+              </Button>
+              <span className="text-white/60 text-sm">or</span>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-6 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-110 transition-all duration-300 relative z-20 cursor-pointer"
+                data-testid="button-signin-header"
+                onClick={launchLogin}
+              >
+                <LogIn className="h-6 w-6 mr-2" />
+                Sign In
+              </Button>
             </div>
           )}
         </div>
