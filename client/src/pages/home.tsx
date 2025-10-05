@@ -90,24 +90,6 @@ export default function Home() {
   const todayConsumedNutrition = diaryEntries && drinkEntries 
     ? calculateTodayNutrition(diaryEntries, drinkEntries)
     : { calories: 0, protein: 0, carbs: 0, fat: 0, water: 0 };
-  
-  // Debug logging
-  useEffect(() => {
-    if (diaryEntries && drinkEntries) {
-      console.log('🔍 Homepage Nutrition Debug:', {
-        diaryEntriesCount: diaryEntries?.length || 0,
-        drinkEntriesCount: drinkEntries?.length || 0,
-        todayConsumedNutrition,
-        firstEntry: diaryEntries?.[0],
-        firstEntryAnalysis: diaryEntries?.[0]?.analysis,
-        allEntryCalories: diaryEntries?.map(e => ({
-          id: e.id,
-          date: e.mealDate,
-          calories: e.analysis?.totalCalories
-        }))
-      });
-    }
-  }, [diaryEntries, drinkEntries, todayConsumedNutrition]);
 
   // Initialize speech recognition
   useEffect(() => {

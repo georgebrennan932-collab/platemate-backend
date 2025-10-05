@@ -540,25 +540,18 @@ export function DiaryPage() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <h3 className="text-lg font-medium">Today's Meals</h3>
                 {sortedDates.map((date) => (
-                  <div key={date} className="space-y-4">
-                    {filteredGroupedEntries[date]?.map((entry) => {
-                      const mealTypeColors = {
-                        breakfast: { gradient: 'from-orange-500 to-amber-500', bg: 'bg-orange-50 dark:bg-orange-950/20', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-700 dark:text-orange-300' },
-                        lunch: { gradient: 'from-green-500 to-emerald-500', bg: 'bg-green-50 dark:bg-green-950/20', border: 'border-green-200 dark:border-green-800', text: 'text-green-700 dark:text-green-300' },
-                        dinner: { gradient: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50 dark:bg-blue-950/20', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-300' },
-                        snack: { gradient: 'from-purple-500 to-pink-500', bg: 'bg-purple-50 dark:bg-purple-950/20', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-700 dark:text-purple-300' }
-                      };
-                      const colors = mealTypeColors[entry.mealType as keyof typeof mealTypeColors] || mealTypeColors.snack;
-                      
-                      return (
-                        <div key={entry.id} className={`bg-card border ${colors.border} rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 animate-in fade-in slide-in-from-bottom-2`}>
-                          {/* Header with large image and meal info */}
-                          <div className="relative">
+                  <div key={date}>
+                    {filteredGroupedEntries[date]?.map((entry) => (
+                      <div key={entry.id} className="bg-card border rounded-lg p-4 mb-2">
+                        {/* Header with meal info and actions */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            {/* Meal Photo Thumbnail */}
                             {entry.analysis?.imageUrl && (
-                              <div className="w-full h-48 overflow-hidden bg-muted">
+                              <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted">
                                 <img 
                                   src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`}
                                   alt="Meal photo" 
@@ -569,139 +562,68 @@ export function DiaryPage() {
                                 />
                               </div>
                             )}
-                            
-                            {/* Meal type badge - positioned on image */}
-                            <div className={`absolute top-4 left-4 px-4 py-1.5 rounded-full bg-gradient-to-r ${colors.gradient} text-white text-sm font-semibold shadow-lg flex items-center space-x-2`}>
-                              <Utensils className="h-4 w-4" />
-                              <span className="capitalize">{entry.mealType}</span>
-                            </div>
-                            
-                            {/* Time badge */}
-                            <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs font-medium flex items-center space-x-1">
-                              <Clock className="h-3 w-3" />
-                              <span>{format(new Date(entry.mealDate), 'h:mm a')}</span>
-                            </div>
-                            
-                            {/* Action buttons */}
-                            <div className="absolute bottom-4 right-4 flex items-center space-x-2">
-                              <EditDiaryEntryDialog entry={entry} />
-                              <button
-                                onClick={() => deleteMutation.mutate(entry.id)}
-                                className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                                title="Delete entry"
-                                data-testid={`button-delete-${entry.id}`}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                            <div>
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-sm font-medium capitalize">{entry.mealType}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {format(new Date(entry.mealDate), 'h:mm a')}
+                                </span>
+                              </div>
+                              
+                              {/* Compact nutrition overview */}
+                              <div className="flex items-center space-x-3 text-xs">
+                                <span className="font-semibold text-red-600" data-testid={`meal-calories-${entry.id}`}>
+                                  {entry.analysis?.totalCalories || 0} cal
+                                </span>
+                                <span className="text-blue-600" data-testid={`meal-protein-${entry.id}`}>
+                                  {entry.analysis?.totalProtein || 0}g protein
+                                </span>
+                                <span className="text-orange-600" data-testid={`meal-carbs-${entry.id}`}>
+                                  {entry.analysis?.totalCarbs || 0}g carbs
+                                </span>
+                                <span className="text-yellow-600" data-testid={`meal-fat-${entry.id}`}>
+                                  {entry.analysis?.totalFat || 0}g fat
+                                </span>
+                              </div>
                             </div>
                           </div>
-                          
-                          {/* Nutrition summary with visual bars */}
-                          <div className={`${colors.bg} p-4 border-t ${colors.border}`}>
-                            <div className="grid grid-cols-4 gap-3 mb-3">
-                              <div className="text-center">
-                                <div className="text-2xl font-bold text-red-600" data-testid={`meal-calories-${entry.id}`}>
-                                  {entry.analysis?.totalCalories || 0}
-                                </div>
-                                <div className="text-xs text-muted-foreground">Calories</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-xl font-bold text-blue-600" data-testid={`meal-protein-${entry.id}`}>
-                                  {entry.analysis?.totalProtein || 0}g
-                                </div>
-                                <div className="text-xs text-muted-foreground">Protein</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-xl font-bold text-orange-600" data-testid={`meal-carbs-${entry.id}`}>
-                                  {entry.analysis?.totalCarbs || 0}g
-                                </div>
-                                <div className="text-xs text-muted-foreground">Carbs</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-xl font-bold text-yellow-600" data-testid={`meal-fat-${entry.id}`}>
-                                  {entry.analysis?.totalFat || 0}g
-                                </div>
-                                <div className="text-xs text-muted-foreground">Fat</div>
-                              </div>
-                            </div>
-                            
-                            {/* Visual macro bars */}
-                            {nutritionGoals && (
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs font-medium w-12">P</span>
-                                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                                    <div 
-                                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-500"
-                                      style={{ width: `${Math.min(100, ((entry.analysis?.totalProtein || 0) / (nutritionGoals.dailyProtein || 1)) * 100)}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-xs text-muted-foreground w-12 text-right">{Math.round(((entry.analysis?.totalProtein || 0) / (nutritionGoals.dailyProtein || 1)) * 100)}%</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs font-medium w-12">C</span>
-                                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                                    <div 
-                                      className="bg-gradient-to-r from-orange-500 to-orange-600 h-full transition-all duration-500"
-                                      style={{ width: `${Math.min(100, ((entry.analysis?.totalCarbs || 0) / (nutritionGoals.dailyCarbs || 1)) * 100)}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-xs text-muted-foreground w-12 text-right">{Math.round(((entry.analysis?.totalCarbs || 0) / (nutritionGoals.dailyCarbs || 1)) * 100)}%</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs font-medium w-12">F</span>
-                                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                                    <div 
-                                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 h-full transition-all duration-500"
-                                      style={{ width: `${Math.min(100, ((entry.analysis?.totalFat || 0) / (nutritionGoals.dailyFat || 1)) * 100)}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-xs text-muted-foreground w-12 text-right">{Math.round(((entry.analysis?.totalFat || 0) / (nutritionGoals.dailyFat || 1)) * 100)}%</span>
-                                </div>
-                              </div>
-                            )}
+                          <div className="flex items-center space-x-1">
+                            <EditDiaryEntryDialog entry={entry} />
+                            <button
+                              onClick={() => deleteMutation.mutate(entry.id)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              title="Delete entry"
+                              data-testid={`button-delete-${entry.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-                          
-                          {/* Enhanced food list */}
-                          {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                            <div className="p-4 space-y-2">
-                              <div className="text-sm font-semibold text-muted-foreground mb-3">Food Items</div>
-                              {entry.analysis.detectedFoods.map((food, index) => (
-                                <div key={index} className="bg-gradient-to-r from-muted/50 to-muted/30 rounded-xl p-3 hover:from-muted/60 hover:to-muted/40 transition-colors">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                      <span className="text-2xl">{food.icon || '🍽️'}</span>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="font-semibold truncate">{food.name}</p>
-                                        <p className="text-sm text-muted-foreground">{food.portion}</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center space-x-3 text-sm ml-3 shrink-0">
-                                      <div className="text-center">
-                                        <div className="font-bold">{food.calories}</div>
-                                        <div className="text-xs text-muted-foreground">cal</div>
-                                      </div>
-                                      <div className="text-center">
-                                        <div className="font-bold text-blue-600">{food.protein}g</div>
-                                        <div className="text-xs text-muted-foreground">P</div>
-                                      </div>
-                                      <div className="text-center">
-                                        <div className="font-bold text-orange-600">{food.carbs}g</div>
-                                        <div className="text-xs text-muted-foreground">C</div>
-                                      </div>
-                                      <div className="text-center">
-                                        <div className="font-bold text-yellow-600">{food.fat}g</div>
-                                        <div className="text-xs text-muted-foreground">F</div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
                         </div>
-                      );
-                    })}
+                        
+                        {/* Compact food list */}
+                        {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
+                          <div className="space-y-1">
+                            {entry.analysis.detectedFoods.map((food, index) => (
+                              <div key={index} className="flex items-center justify-between py-1 px-2 bg-muted/20 rounded text-xs">
+                                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                  <span className="text-sm">{food.icon || '🍽️'}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{food.name}</p>
+                                    <p className="text-muted-foreground">{food.portion}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2 text-right ml-2 shrink-0">
+                                  <span className="font-medium">{food.calories}</span>
+                                  <span className="text-blue-600">{food.protein}p</span>
+                                  <span className="text-orange-600">{food.carbs}c</span>
+                                  <span className="text-yellow-600">{food.fat}f</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                     
                     {/* Today's Drinks */}
                     {groupedDrinks[date]?.map((drink) => (
@@ -839,11 +761,11 @@ export function DiaryPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* History Header */}
-            <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4 border border-primary/20">
-              <div className="flex items-center space-x-2 text-sm font-medium">
-                <Calendar className="h-5 w-5 text-primary" />
+            <div className="bg-muted/30 rounded-xl p-4">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
                 <span>Previous Days (Last 30 days)</span>
               </div>
             </div>
@@ -855,244 +777,28 @@ export function DiaryPage() {
                 <p className="text-sm text-muted-foreground">Your meal history will appear here</p>
               </div>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-4">
                 {sortedDates.map((date) => {
                   const dailyNutrition = getDailyNutrition(date);
                   return (
-                    <div key={date} className="relative">
-                      {/* Timeline-style date header */}
-                      <div className="sticky top-16 z-10 bg-background/95 backdrop-blur-sm border-b pb-3 mb-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-1 h-12 bg-gradient-to-b from-primary to-primary/50 rounded-full"></div>
-                            <div>
-                              <h3 className="font-bold text-lg">{format(new Date(date), 'EEEE')}</h3>
-                              <p className="text-sm text-muted-foreground">{format(new Date(date), 'MMMM d, yyyy')}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-primary/5 text-primary px-4 py-2 rounded-full border border-primary/20">
-                            <Flame className="h-5 w-5" />
-                            <span className="font-bold">{dailyNutrition.calories}</span>
-                            <span className="text-sm">cal</span>
-                          </div>
+                    <div key={date} className="bg-card border rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 text-sm font-medium text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>{format(new Date(date), 'EEEE, MMMM d, yyyy')}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1 rounded-full">
+                          <Flame className="h-4 w-4" />
+                          <span className="text-sm font-semibold">
+                            {dailyNutrition.calories} cal
+                          </span>
                         </div>
                       </div>
-                      
-                      {/* Meals for this date */}
-                      <div className="space-y-4 pl-6">
-                        {filteredGroupedEntries[date]?.map((entry) => {
-                          const mealTypeColors = {
-                            breakfast: { gradient: 'from-orange-500 to-amber-500', bg: 'bg-orange-50 dark:bg-orange-950/20', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-700 dark:text-orange-300' },
-                            lunch: { gradient: 'from-green-500 to-emerald-500', bg: 'bg-green-50 dark:bg-green-950/20', border: 'border-green-200 dark:border-green-800', text: 'text-green-700 dark:text-green-300' },
-                            dinner: { gradient: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50 dark:bg-blue-950/20', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-300' },
-                            snack: { gradient: 'from-purple-500 to-pink-500', bg: 'bg-purple-50 dark:bg-purple-950/20', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-700 dark:text-purple-300' }
-                          };
-                          const colors = mealTypeColors[entry.mealType as keyof typeof mealTypeColors] || mealTypeColors.snack;
-                          
-                          return (
-                            <div key={entry.id} className={`bg-card border ${colors.border} rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200`}>
-                              {/* Header with large image and meal info */}
-                              <div className="relative">
-                                {entry.analysis?.imageUrl && (
-                                  <div className="w-full h-48 overflow-hidden bg-muted">
-                                    <img 
-                                      src={entry.analysis.imageUrl.startsWith('/') ? entry.analysis.imageUrl : `/${entry.analysis.imageUrl}`}
-                                      alt="Meal photo" 
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        e.currentTarget.style.display = 'none';
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                                
-                                {/* Meal type badge */}
-                                <div className={`absolute top-4 left-4 px-4 py-1.5 rounded-full bg-gradient-to-r ${colors.gradient} text-white text-sm font-semibold shadow-lg flex items-center space-x-2`}>
-                                  <Utensils className="h-4 w-4" />
-                                  <span className="capitalize">{entry.mealType}</span>
-                                </div>
-                                
-                                {/* Time badge */}
-                                <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs font-medium flex items-center space-x-1">
-                                  <Clock className="h-3 w-3" />
-                                  <span>{format(new Date(entry.mealDate), 'h:mm a')}</span>
-                                </div>
-                                
-                                {/* Action buttons */}
-                                <div className="absolute bottom-4 right-4 flex items-center space-x-2">
-                                  <EditDiaryEntryDialog entry={entry} />
-                                  <button
-                                    onClick={() => deleteMutation.mutate(entry.id)}
-                                    className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                                    title="Delete entry"
-                                    data-testid={`button-delete-${entry.id}`}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </div>
-                              
-                              {/* Nutrition summary */}
-                              <div className={`${colors.bg} p-4 border-t ${colors.border}`}>
-                                <div className="grid grid-cols-4 gap-3 mb-3">
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold text-red-600">
-                                      {entry.analysis?.totalCalories || 0}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">Calories</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-xl font-bold text-blue-600">
-                                      {entry.analysis?.totalProtein || 0}g
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">Protein</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-xl font-bold text-orange-600">
-                                      {entry.analysis?.totalCarbs || 0}g
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">Carbs</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-xl font-bold text-yellow-600">
-                                      {entry.analysis?.totalFat || 0}g
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">Fat</div>
-                                  </div>
-                                </div>
-                                
-                                {/* Visual macro bars */}
-                                {nutritionGoals && (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-xs font-medium w-12">P</span>
-                                      <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                                        <div 
-                                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-500"
-                                          style={{ width: `${Math.min(100, ((entry.analysis?.totalProtein || 0) / (nutritionGoals.dailyProtein || 1)) * 100)}%` }}
-                                        />
-                                      </div>
-                                      <span className="text-xs text-muted-foreground w-12 text-right">{Math.round(((entry.analysis?.totalProtein || 0) / (nutritionGoals.dailyProtein || 1)) * 100)}%</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-xs font-medium w-12">C</span>
-                                      <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                                        <div 
-                                          className="bg-gradient-to-r from-orange-500 to-orange-600 h-full transition-all duration-500"
-                                          style={{ width: `${Math.min(100, ((entry.analysis?.totalCarbs || 0) / (nutritionGoals.dailyCarbs || 1)) * 100)}%` }}
-                                        />
-                                      </div>
-                                      <span className="text-xs text-muted-foreground w-12 text-right">{Math.round(((entry.analysis?.totalCarbs || 0) / (nutritionGoals.dailyCarbs || 1)) * 100)}%</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-xs font-medium w-12">F</span>
-                                      <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                                        <div 
-                                          className="bg-gradient-to-r from-yellow-500 to-yellow-600 h-full transition-all duration-500"
-                                          style={{ width: `${Math.min(100, ((entry.analysis?.totalFat || 0) / (nutritionGoals.dailyFat || 1)) * 100)}%` }}
-                                        />
-                                      </div>
-                                      <span className="text-xs text-muted-foreground w-12 text-right">{Math.round(((entry.analysis?.totalFat || 0) / (nutritionGoals.dailyFat || 1)) * 100)}%</span>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Enhanced food list */}
-                              {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                                <div className="p-4 space-y-2">
-                                  <div className="text-sm font-semibold text-muted-foreground mb-3">Food Items</div>
-                                  {entry.analysis.detectedFoods.map((food, index) => (
-                                    <div key={index} className="bg-gradient-to-r from-muted/50 to-muted/30 rounded-xl p-3 hover:from-muted/60 hover:to-muted/40 transition-colors">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                          <span className="text-2xl">{food.icon || '🍽️'}</span>
-                                          <div className="flex-1 min-w-0">
-                                            <p className="font-semibold truncate">{food.name}</p>
-                                            <p className="text-sm text-muted-foreground">{food.portion}</p>
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center space-x-3 text-sm ml-3 shrink-0">
-                                          <div className="text-center">
-                                            <div className="font-bold">{food.calories}</div>
-                                            <div className="text-xs text-muted-foreground">cal</div>
-                                          </div>
-                                          <div className="text-center">
-                                            <div className="font-bold text-blue-600">{food.protein}g</div>
-                                            <div className="text-xs text-muted-foreground">P</div>
-                                          </div>
-                                          <div className="text-center">
-                                            <div className="font-bold text-orange-600">{food.carbs}g</div>
-                                            <div className="text-xs text-muted-foreground">C</div>
-                                          </div>
-                                          <div className="text-center">
-                                            <div className="font-bold text-yellow-600">{food.fat}g</div>
-                                            <div className="text-xs text-muted-foreground">F</div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                        
-                        {/* Drinks for this date */}
-                        {groupedDrinks[date]?.map((drink) => (
-                          <div key={drink.id} className="bg-card border border-blue-200 dark:border-blue-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
-                            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 p-4 border-b border-blue-200 dark:border-blue-800">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                  <div className="p-2 bg-blue-500 text-white rounded-full">
-                                    <Droplets className="h-5 w-5" />
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold">{drink.drinkName}</h4>
-                                    <p className="text-xs text-muted-foreground flex items-center space-x-1">
-                                      <Clock className="h-3 w-3" />
-                                      <span>{format(new Date(drink.loggedAt), 'h:mm a')}</span>
-                                    </p>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => deleteDrinkMutation.mutate(drink.id)}
-                                  className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                                  title="Delete drink"
-                                  data-testid={`button-delete-drink-${drink.id}`}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-                            <div className="p-4 bg-blue-50/50 dark:bg-blue-950/10">
-                              <div className="grid grid-cols-4 gap-3 text-center text-sm">
-                                <div>
-                                  <div className="font-bold text-red-600">{drink.calories || 0}</div>
-                                  <div className="text-xs text-muted-foreground">cal</div>
-                                </div>
-                                <div>
-                                  <div className="font-bold text-blue-600">{drink.amount}ml</div>
-                                  <div className="text-xs text-muted-foreground">volume</div>
-                                </div>
-                                {(drink.caffeine || 0) > 0 && (
-                                  <div>
-                                    <div className="font-bold text-green-600">{drink.caffeine}mg</div>
-                                    <div className="text-xs text-muted-foreground">caffeine</div>
-                                  </div>
-                                )}
-                                {(drink.alcoholContent || 0) > 0 && (
-                                  <div>
-                                    <div className="font-bold text-purple-600">{drink.alcoholContent}%</div>
-                                    <div className="text-xs text-muted-foreground">ABV</div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      {filteredGroupedEntries[date] && (
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          {filteredGroupedEntries[date].length} meal{filteredGroupedEntries[date].length !== 1 ? 's' : ''} logged
+                        </div>
+                      )}
                     </div>
                   );
                 })}

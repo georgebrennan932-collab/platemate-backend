@@ -1,107 +1,89 @@
 {
   "entries": [
     [
-      "388d11bd86124ba832c89a92443bdd659513a5a476ef57634cf434d3ad4d0b89",
+      "c77d71be523a37742b4428100108befe4fad5249dad22d5f8c1b3861d96d5102",
       {
-        "imageHash": "388d11bd86124ba832c89a92443bdd659513a5a476ef57634cf434d3ad4d0b89",
+        "imageHash": "c77d71be523a37742b4428100108befe4fad5249dad22d5f8c1b3861d96d5102",
         "analysis": {
-          "imageUrl": "/tmp/uploads/processed_b2206c30df35786a0a3c283ea20df22d.jpg",
-          "confidence": 95,
-          "totalCalories": 2205,
-          "totalProtein": 87,
-          "totalCarbs": 111,
-          "totalFat": 158,
+          "imageUrl": "/tmp/uploads/processed_d74e8794b8fa5f0491de1e2da0ef0185.jpg",
+          "confidence": 90,
+          "totalCalories": 781,
+          "totalProtein": 32,
+          "totalCarbs": 44,
+          "totalFat": 53,
           "detectedFoods": [
             {
               "name": "Egg, whole, fried no added fat",
-              "portion": "2 large",
-              "calories": 143,
-              "protein": 12,
+              "portion": "1 large egg",
+              "calories": 72,
+              "protein": 6,
               "carbs": 1,
-              "fat": 10,
+              "fat": 5,
               "icon": "egg"
             },
             {
               "name": "Sausage, smoked link sausage, pork",
-              "portion": "2 large",
-              "calories": 927,
-              "protein": 36,
-              "carbs": 3,
-              "fat": 85,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Pork bacon, NS as to fresh, smoked or cured, cooked",
-              "portion": "2 rashers back bacon",
-              "calories": 194,
-              "protein": 15,
+              "portion": "1 sausage (approximately 75g)",
+              "calories": 232,
+              "protein": 9,
               "carbs": 1,
-              "fat": 14,
+              "fat": 21,
               "icon": "bacon"
             },
             {
               "name": "Blood sausage",
-              "portion": "1 slice",
-              "calories": 171,
+              "portion": "1 slice (approximately 50g)",
+              "calories": 190,
               "protein": 7,
               "carbs": 1,
-              "fat": 16,
-              "icon": "🍽️"
+              "fat": 17,
+              "icon": "bacon"
             },
             {
               "name": "Baked beans",
-              "portion": "150g",
-              "calories": 158,
-              "protein": 7,
-              "carbs": 32,
+              "portion": "100g",
+              "calories": 105,
+              "protein": 5,
+              "carbs": 22,
               "fat": 1,
-              "icon": "🍽️"
+              "icon": "bread-slice"
+            },
+            {
+              "name": "Mushrooms, raw",
+              "portion": "100g",
+              "calories": 31,
+              "protein": 3,
+              "carbs": 4,
+              "fat": 0,
+              "icon": "bread-slice"
             },
             {
               "name": "CHICK-FIL-A, hash browns",
-              "portion": "1 medium",
-              "calories": 452,
-              "protein": 5,
-              "carbs": 46,
-              "fat": 28,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Mushrooms, NS as to form, cooked",
-              "portion": "100g",
-              "calories": 66,
-              "protein": 4,
-              "carbs": 5,
-              "fat": 4,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Orange juice, canned, unsweetened",
-              "portion": "200ml",
-              "calories": 94,
-              "protein": 1,
-              "carbs": 22,
-              "fat": 0,
-              "icon": "🍽️"
+              "portion": "1 piece (approximately 50g)",
+              "calories": 151,
+              "protein": 2,
+              "carbs": 15,
+              "fat": 9,
+              "icon": "bread-slice"
             }
           ]
         },
-        "timestamp": 1759642845175,
+        "timestamp": 1759128355157,
         "accessCount": 1,
-        "lastAccessed": 1759642845175
+        "lastAccessed": 1759128355157
       }
     ]
   ],
   "stats": {
-    "totalRequests": 1,
+    "totalRequests": 2,
     "cacheHits": 0,
-    "cacheMisses": 1,
+    "cacheMisses": 2,
     "hitRate": 0,
     "currentSize": 1,
     "maxSize": 1000,
     "totalEvictions": 0,
-    "oldestEntry": 1759642845175,
-    "newestEntry": 1759642845175
+    "oldestEntry": 1759128355157,
+    "newestEntry": 1759128355157
   },
-  "timestamp": 1759642845177
+  "timestamp": 1759128355157
 }
