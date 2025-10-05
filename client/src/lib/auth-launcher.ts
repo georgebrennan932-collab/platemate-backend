@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { SocialLogin } from '@capgo/capacitor-social-login';
+import { queryClient } from '@/lib/queryClient';
 
 export interface AuthConfig {
   isNative: boolean;
@@ -109,8 +110,12 @@ export async function launchSignup(): Promise<void> {
       const data = await response.json();
       console.log('✅ Session created:', data);
       
-      // Redirect to home page
-      window.location.href = '/';
+      // Refresh user data without page reload to preserve camera state
+      await queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+      console.log('✅ User data refreshed - camera state preserved');
     } catch (error) {
       console.error('❌ Google Sign-In failed:', error);
       alert(`Sign up failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -171,8 +176,12 @@ export async function launchLogin(): Promise<void> {
       const data = await response.json();
       console.log('✅ Session created:', data);
       
-      // Redirect to home page
-      window.location.href = '/';
+      // Refresh user data without page reload to preserve camera state
+      await queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+      console.log('✅ User data refreshed - camera state preserved');
     } catch (error) {
       console.error('❌ Google Sign-In failed:', error);
       alert(`Login failed: ${error instanceof Error ? error.message : String(error)}`);
