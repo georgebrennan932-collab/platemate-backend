@@ -109,3 +109,4 @@ Preferred communication style: Simple, everyday language.
 - **Secure Token Verification**: Backend verifies Google ID tokens using google-auth-library's OAuth2Client with proper audience validation before establishing user sessions
 - **Unified Authentication Flow**: Web users continue to use Replit OIDC (supports Google/GitHub/X/Apple) while mobile users get optimized native Google Sign-In experience
 - **Lazy Authentication Initialization**: Fixed camera crash issue by implementing lazy initialization pattern - Google Sign-In only initializes when user clicks login/signup buttons, preventing conflicts with camera permissions on app startup
+- **Plugin Configuration Removal**: Removed CapgoCapacitorSocialLogin configuration from capacitor.config.ts to prevent automatic plugin initialization at app startup, ensuring camera permissions work without interference
