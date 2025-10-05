@@ -1,12 +1,16 @@
 import { Link } from "wouter";
-import { Camera, BookOpen, Brain, Sparkles, Shield, LogIn, Calculator, Syringe, Target, Mic, Volume2, ChefHat, Scale, Award } from "lucide-react";
+import { Camera, BookOpen, Brain, Sparkles, Shield, LogIn, Calculator, Syringe, Target, Mic, Volume2, ChefHat, Scale, Award, AlertCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { launchSignup, launchLogin } from "@/lib/auth-launcher";
+import { isEmbeddedBrowser, getRecommendedBrowser, getBrowserName } from "@/lib/webview-detection";
 
 export default function LandingPage() {
   const { isAuthenticated, isLoading } = useAuth();
+  const isInEmbeddedBrowser = isEmbeddedBrowser();
+  const browserName = getBrowserName();
+  const recommendedBrowser = getRecommendedBrowser();
 
   return (
     <div className="text-foreground min-h-screen relative overflow-hidden" style={{background: 'var(--bg-gradient)'}}>
@@ -66,6 +70,42 @@ export default function LandingPage() {
           )}
         </div>
       </header>
+
+      {/* WebView Warning Banner */}
+      {isInEmbeddedBrowser && !isAuthenticated && (
+        <div className="max-w-4xl mx-auto px-4 pt-6">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-4 shadow-lg animate-fade-in-up" data-testid="webview-warning">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="h-6 w-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-yellow-900 dark:text-yellow-100 mb-2">
+                  Open in {recommendedBrowser} for Sign-In
+                </h3>
+                <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
+                  You're viewing this in {browserName}. Google requires sign-in to happen in your default browser for security. 
+                  Tap the menu (•••) and select "Open in {recommendedBrowser}" to sign in with Google.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-yellow-100 dark:bg-yellow-800 border-yellow-400 dark:border-yellow-600 text-yellow-900 dark:text-yellow-100 hover:bg-yellow-200 dark:hover:bg-yellow-700"
+                    onClick={() => {
+                      // Copy URL to clipboard
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Link copied! Paste it in ' + recommendedBrowser);
+                    }}
+                    data-testid="button-copy-url"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Copy Link
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
