@@ -217,6 +217,13 @@ export async function setupAuth(app: Express) {
     });
   });
 
+  // Endpoint to get Google Web Client ID for frontend
+  app.get("/api/auth/google/config", (req, res) => {
+    res.json({
+      webClientId: process.env.GOOGLE_WEB_CLIENT_ID || '',
+    });
+  });
+
   // Native Google Sign-In endpoint for mobile apps
   app.post("/api/auth/google/mobile", async (req, res) => {
     try {

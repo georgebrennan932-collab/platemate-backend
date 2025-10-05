@@ -28,9 +28,18 @@ export async function initializeGoogleAuth(): Promise<void> {
 
   try {
     console.log('📱 Initializing native Google Sign-In...');
+    
+    // Fetch Google Web Client ID from backend
+    const response = await fetch('/api/auth/google/config');
+    const { webClientId } = await response.json();
+    
+    if (!webClientId) {
+      throw new Error('Google Web Client ID not configured on server');
+    }
+    
     await SocialLogin.initialize({
       google: {
-        webClientId: import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID || '',
+        webClientId,
       },
     });
     console.log('✅ Native Google Sign-In initialized');

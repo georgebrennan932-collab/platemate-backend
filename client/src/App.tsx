@@ -4,6 +4,7 @@ import { useAuth } from "./hooks/useAuth";
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { queryClient } from "./lib/queryClient";
+import { initializeGoogleAuth } from "./lib/auth-launcher";
 
 // ✅ Pages in your /pages folder
 import CameraPage from "./pages/CameraPage";
@@ -46,6 +47,11 @@ function RootRoute() {
 function App() {
   useEffect(() => {
     console.log("App loaded");
+    
+    // Initialize native Google authentication for mobile
+    initializeGoogleAuth().catch(error => {
+      console.error('Failed to initialize Google Auth:', error);
+    });
     
     // Set up deep-link handler for mobile OAuth return
     let listenerHandle: any;
