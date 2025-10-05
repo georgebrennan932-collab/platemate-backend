@@ -17,12 +17,20 @@ export function getAuthConfig(): AuthConfig {
   };
 }
 
-// Initialize Google Sign-In for native platforms
-export async function initializeGoogleAuth(): Promise<void> {
+// Track if Google Auth has been initialized (to avoid multiple initializations)
+let googleAuthInitialized = false;
+
+// Lazy initialization - only called when user clicks login/signup
+async function ensureGoogleAuthInitialized(): Promise<void> {
   const config = getAuthConfig();
   
   if (!config.isNative) {
-    console.log('🌐 Web platform - skipping native Google Auth initialization');
+    // Web platform - no native Google Auth needed
+    return;
+  }
+
+  if (googleAuthInitialized) {
+    // Already initialized - skip
     return;
   }
 
@@ -42,9 +50,12 @@ export async function initializeGoogleAuth(): Promise<void> {
         webClientId,
       },
     });
+    
+    googleAuthInitialized = true;
     console.log('✅ Native Google Sign-In initialized');
   } catch (error) {
     console.error('❌ Failed to initialize Google Sign-In:', error);
+    throw error;
   }
 }
 
@@ -57,6 +68,9 @@ export async function launchSignup(): Promise<void> {
     console.log('📱 Mobile: Using native Google Sign-In');
     
     try {
+      // Initialize Google Auth only when user clicks signup (lazy initialization)
+      await ensureGoogleAuthInitialized();
+      
       console.log('🚀 Calling SocialLogin.login()...');
       const result = await SocialLogin.login({
         provider: 'google',
@@ -116,6 +130,9 @@ export async function launchLogin(): Promise<void> {
     console.log('📱 Mobile: Using native Google Sign-In');
     
     try {
+      // Initialize Google Auth only when user clicks login (lazy initialization)
+      await ensureGoogleAuthInitialized();
+      
       console.log('🚀 Calling SocialLogin.login()...');
       const result = await SocialLogin.login({
         provider: 'google',
