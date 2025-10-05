@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/app-header";
 import { soundService } from "@/lib/sound-service";
 import { CameraInterface } from "@/components/camera-interface";
@@ -22,7 +21,6 @@ type AppState = 'camera' | 'processing' | 'results' | 'error';
 export function CameraPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuth();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -45,13 +43,11 @@ export function CameraPage() {
   // Fetch nutrition goals and diary entries to check for achievements
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
-    enabled: isAuthenticated,
     retry: false,
   });
 
   const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
-    enabled: isAuthenticated,
     retry: false,
   });
   

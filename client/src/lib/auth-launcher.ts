@@ -1,7 +1,5 @@
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
-import { SocialLogin } from '@capgo/capacitor-social-login';
-import { queryClient } from '@/lib/queryClient';
 
 export interface AuthConfig {
   isNative: boolean;
@@ -18,107 +16,37 @@ export function getAuthConfig(): AuthConfig {
   };
 }
 
-// Track if Google Auth has been initialized (to avoid multiple initializations)
-let googleAuthInitialized = false;
-
-// Lazy initialization - only called when user clicks login/signup
-async function ensureGoogleAuthInitialized(): Promise<void> {
-  const config = getAuthConfig();
-  
-  if (!config.isNative) {
-    // Web platform - no native Google Auth needed
-    return;
-  }
-
-  if (googleAuthInitialized) {
-    // Already initialized - skip
-    return;
-  }
-
-  try {
-    console.log('📱 Initializing native Google Sign-In...');
-    
-    // Fetch Google Web Client ID from backend
-    const response = await fetch('/api/auth/google/config');
-    const { webClientId } = await response.json();
-    
-    if (!webClientId) {
-      throw new Error('Google Web Client ID not configured on server');
-    }
-    
-    await SocialLogin.initialize({
-      google: {
-        webClientId,
-      },
-    });
-    
-    googleAuthInitialized = true;
-    console.log('✅ Native Google Sign-In initialized');
-  } catch (error) {
-    console.error('❌ Failed to initialize Google Sign-In:', error);
-    throw error;
-  }
-}
-
 export async function launchSignup(): Promise<void> {
   const config = getAuthConfig();
   
   console.log('🔍 Launch signup - isNative:', config.isNative, 'platform:', config.platform);
   
   if (config.isNative) {
-    console.log('📱 Mobile: Using native Google Sign-In');
+    console.log('📱 Mobile: Opening OAuth signup in system browser with deep-link return');
+    
+    // For mobile, we need the actual HTTPS server URL, not capacitor://localhost
+    // Use the Replit deployment URL
+    const baseUrl = 'https://nutri-snap-1-georgebrennan93.replit.app';
+    const returnUrl = 'platemate://auth-complete';
+    const signupUrl = `${baseUrl}/api/signup?returnUrl=${encodeURIComponent(returnUrl)}`;
+    
+    console.log('🔗 Signup URL:', signupUrl);
+    console.log('🔍 Browser plugin available:', typeof Browser !== 'undefined');
     
     try {
-      // Initialize Google Auth only when user clicks signup (lazy initialization)
-      await ensureGoogleAuthInitialized();
-      
-      console.log('🚀 Calling SocialLogin.login()...');
-      const result = await SocialLogin.login({
-        provider: 'google',
-        options: {
-          scopes: ['profile', 'email']
-        }
+      console.log('🚀 Calling Browser.open()...');
+      const result = await Browser.open({
+        url: signupUrl,
+        windowName: '_system',
+        toolbarColor: '#8B5CF6',
+        presentationStyle: 'popover',
       });
       
-      console.log('✅ Native Google Sign-In successful:', result);
-      
-      // Extract ID token from the result
-      const googleResult = result.result as any;
-      const idToken = googleResult.authentication?.idToken || googleResult.idToken;
-      
-      if (!idToken) {
-        throw new Error('No ID token received from Google Sign-In');
-      }
-      
-      // Send the ID token to our backend to create a session
-      const response = await fetch('/api/auth/google/mobile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Important for session cookies
-        body: JSON.stringify({
-          idToken,
-        }),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Authentication failed');
-      }
-      
-      const data = await response.json();
-      console.log('✅ Session created:', data);
-      
-      // Refresh user data without page reload to preserve camera state
-      await queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-      console.log('✅ User data refreshed - camera state preserved');
+      console.log('✅ Browser.open() returned:', result);
     } catch (error) {
-      console.error('❌ Google Sign-In failed:', error);
-      alert(`Sign up failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('❌ Failed to open OAuth signup browser:', error);
+      alert(`Error opening browser: ${error instanceof Error ? error.message : String(error)}`);
+      // Don't fallback - user needs to know there's an error
     }
   } else {
     console.log('🌐 Web: Navigating to OAuth signup');
@@ -132,59 +60,31 @@ export async function launchLogin(): Promise<void> {
   console.log('🔍 Launch login - isNative:', config.isNative, 'platform:', config.platform);
   
   if (config.isNative) {
-    console.log('📱 Mobile: Using native Google Sign-In');
+    console.log('📱 Mobile: Opening OAuth in system browser with deep-link return');
+    
+    // For mobile, we need the actual HTTPS server URL, not capacitor://localhost
+    // Use the Replit deployment URL
+    const baseUrl = 'https://nutri-snap-1-georgebrennan93.replit.app';
+    const returnUrl = 'platemate://auth-complete';
+    const loginUrl = `${baseUrl}/api/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+    
+    console.log('🔗 Login URL:', loginUrl);
+    console.log('🔍 Browser plugin available:', typeof Browser !== 'undefined');
     
     try {
-      // Initialize Google Auth only when user clicks login (lazy initialization)
-      await ensureGoogleAuthInitialized();
-      
-      console.log('🚀 Calling SocialLogin.login()...');
-      const result = await SocialLogin.login({
-        provider: 'google',
-        options: {
-          scopes: ['profile', 'email']
-        }
+      console.log('🚀 Calling Browser.open()...');
+      const result = await Browser.open({
+        url: loginUrl,
+        windowName: '_system',
+        toolbarColor: '#8B5CF6',
+        presentationStyle: 'popover',
       });
       
-      console.log('✅ Native Google Sign-In successful:', result);
-      
-      // Extract ID token from the result
-      const googleResult = result.result as any;
-      const idToken = googleResult.authentication?.idToken || googleResult.idToken;
-      
-      if (!idToken) {
-        throw new Error('No ID token received from Google Sign-In');
-      }
-      
-      // Send the ID token to our backend to create a session
-      const response = await fetch('/api/auth/google/mobile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Important for session cookies
-        body: JSON.stringify({
-          idToken,
-        }),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Authentication failed');
-      }
-      
-      const data = await response.json();
-      console.log('✅ Session created:', data);
-      
-      // Refresh user data without page reload to preserve camera state
-      await queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
-      console.log('✅ User data refreshed - camera state preserved');
+      console.log('✅ Browser.open() returned:', result);
     } catch (error) {
-      console.error('❌ Google Sign-In failed:', error);
-      alert(`Login failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('❌ Failed to open OAuth browser:', error);
+      alert(`Error opening browser: ${error instanceof Error ? error.message : String(error)}`);
+      // Don't fallback - user needs to know there's an error
     }
   } else {
     console.log('🌐 Web: Navigating to OAuth login');

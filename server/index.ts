@@ -4,10 +4,6 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Disable ETag generation globally to prevent 304 Not Modified responses
-// that break frontend query client (it treats 304 as error instead of cache hit)
-app.disable('etag');
-
 // Log deployment environment details for debugging
 console.log("🚀 ===== SERVER STARTUP DEBUG ======");
 console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
