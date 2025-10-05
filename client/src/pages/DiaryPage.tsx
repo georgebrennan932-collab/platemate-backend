@@ -28,7 +28,7 @@ import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { isAuthenticated, isGuestMode } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<'diary' | 'analytics' | 'weight'>('diary');
   const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
 
@@ -154,11 +154,6 @@ export function DiaryPage() {
     enabled: isAuthenticated,
   });
 
-  // For guest mode, use empty arrays as fallback
-  const displayDiaryEntries = isGuestMode ? [] : (diaryEntries || []);
-  const displayDrinkEntries = isGuestMode ? [] : (drinkEntries || []);
-  const displayNutritionGoals = isGuestMode ? undefined : nutritionGoals;
-
   const deleteMutation = useMutation({
     mutationFn: async (entryId: string) => {
       await apiRequest('DELETE', `/api/diary/${entryId}`);
@@ -236,7 +231,7 @@ export function DiaryPage() {
     },
   });
 
-  const groupedEntries = displayDiaryEntries?.reduce((groups, entry) => {
+  const groupedEntries = diaryEntries?.reduce((groups, entry) => {
     const date = new Date(entry.mealDate).toDateString();
     if (!groups[date]) {
       groups[date] = [];
@@ -245,7 +240,7 @@ export function DiaryPage() {
     return groups;
   }, {} as Record<string, DiaryEntryWithAnalysis[]>) || {};
 
-  const groupedDrinks = displayDrinkEntries?.reduce((groups, drink) => {
+  const groupedDrinks = drinkEntries?.reduce((groups, drink) => {
     const date = new Date(drink.loggedAt).toDateString();
     if (!groups[date]) {
       groups[date] = [];
@@ -257,7 +252,7 @@ export function DiaryPage() {
   // Calculate daily nutrition totals using standardized function
   const getDailyNutrition = (date: string) => {
     const targetDate = new Date(date);
-    return calculateDailyNutrition(displayDiaryEntries || [], displayDrinkEntries || [], targetDate);
+    return calculateDailyNutrition(diaryEntries || [], drinkEntries || [], targetDate);
   };
 
   // Get today's date string for filtering
@@ -266,12 +261,12 @@ export function DiaryPage() {
   
   // Calculate remaining to reach targets
   const getRemainingNutrition = () => {
-    if (!displayNutritionGoals) return null;
+    if (!nutritionGoals) return null;
     return {
-      calories: Math.max(0, (displayNutritionGoals.dailyCalories || 0) - todayNutrition.calories),
-      protein: Math.max(0, (displayNutritionGoals.dailyProtein || 0) - todayNutrition.protein),
-      carbs: Math.max(0, (displayNutritionGoals.dailyCarbs || 0) - todayNutrition.carbs),
-      fat: Math.max(0, (displayNutritionGoals.dailyFat || 0) - todayNutrition.fat),
+      calories: Math.max(0, (nutritionGoals.dailyCalories || 0) - todayNutrition.calories),
+      protein: Math.max(0, (nutritionGoals.dailyProtein || 0) - todayNutrition.protein),
+      carbs: Math.max(0, (nutritionGoals.dailyCarbs || 0) - todayNutrition.carbs),
+      fat: Math.max(0, (nutritionGoals.dailyFat || 0) - todayNutrition.fat),
     };
   };
   
@@ -280,7 +275,7 @@ export function DiaryPage() {
   const allDates = new Set([...Object.keys(groupedEntries), ...Object.keys(groupedDrinks)]);
   
   // Filter entries based on search and filters
-  const filteredEntries = displayDiaryEntries?.filter(entry => {
+  const filteredEntries = diaryEntries?.filter(entry => {
     // Text search
     if (searchQuery) {
       const searchLower = searchQuery.toLowerCase();
@@ -501,40 +496,10 @@ export function DiaryPage() {
       
       {/* Content */}
       <div className="max-w-md mx-auto p-4 pb-32">
-        {/* Guest Mode Banner */}
-        {isGuestMode && (
-          <div className="mb-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4" data-testid="guest-mode-banner">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <Zap className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
-                  You're in Guest Mode
-                </h3>
-                <p className="text-xs text-yellow-800 dark:text-yellow-200 mb-2">
-                  Your data is temporary and won't be saved. Create a free account to keep your progress!
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      window.location.href = '/';
-                    }}
-                    className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors"
-                    data-testid="button-signup-from-guest"
-                  >
-                    Sign Up Free
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
         {activeTab === 'analytics' ? (
           <div className="space-y-6">
-            <WeeklyAnalytics goals={displayNutritionGoals} />
-            <AdvancedAnalytics goals={displayNutritionGoals} />
+            <WeeklyAnalytics goals={nutritionGoals} />
+            <AdvancedAnalytics goals={nutritionGoals} />
           </div>
         ) : activeTab === 'weight' ? (
           <div className="space-y-6">
@@ -773,7 +738,7 @@ export function DiaryPage() {
               </div>
               
               {/* Macros Progress */}
-              {displayNutritionGoals && (
+              {nutritionGoals && (
                 <div className="space-y-3">
                   <div className="text-sm font-medium mb-2">Macronutrients</div>
                   <div className="grid grid-cols-3 gap-3">
@@ -800,16 +765,16 @@ export function DiaryPage() {
               )}
               
               {/* Progress Bar */}
-              {displayNutritionGoals && (
+              {nutritionGoals && (
                 <div className="mt-4">
                   <div className="flex justify-between text-sm mb-1">
                     <span>Daily Goal Progress</span>
-                    <span>{Math.round((todayNutrition.calories / (displayNutritionGoals.dailyCalories || 1)) * 100)}%</span>
+                    <span>{Math.round((todayNutrition.calories / (nutritionGoals.dailyCalories || 1)) * 100)}%</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div 
                       className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, (todayNutrition.calories / (displayNutritionGoals.dailyCalories || 1)) * 100)}%` }}
+                      style={{ width: `${Math.min(100, (todayNutrition.calories / (nutritionGoals.dailyCalories || 1)) * 100)}%` }}
                     ></div>
                   </div>
                 </div>
