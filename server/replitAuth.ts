@@ -32,6 +32,11 @@ export function getSession() {
     ttl: sessionTtl,
     tableName: "sessions",
   });
+  
+  // For Capacitor apps, we need different cookie settings
+  // Capacitor uses capacitor://localhost which is not HTTPS
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
@@ -39,8 +44,12 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none', // Required for mobile WebView cross-origin cookies
+      // Only require secure cookies in production
+      // In development (including Capacitor localhost), allow non-secure
+      secure: isProduction ? 'auto' : false,
+      // Use 'lax' for better compatibility with Capacitor
+      // This works for both web and native apps
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: sessionTtl,
     },
   });
