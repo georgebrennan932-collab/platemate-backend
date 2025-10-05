@@ -612,12 +612,9 @@ export function DiaryPage() {
                             <div className="space-y-2">
                               {entry.analysis.detectedFoods.map((food, index) => (
                                 <div key={index} className="flex items-center justify-between py-2 px-3 bg-white/50 dark:bg-gray-900/30 rounded-lg border border-purple-100 dark:border-purple-900">
-                                  <div className="flex items-center space-x-2 flex-1 min-w-0">
-                                    <span className="text-xl">{food.icon || '🍽️'}</span>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-semibold text-sm truncate">{food.name}</p>
-                                      <p className="text-xs text-muted-foreground">{food.portion}</p>
-                                    </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-sm truncate">{food.name}</p>
+                                    <p className="text-xs text-muted-foreground">{food.portion}</p>
                                   </div>
                                   <div className="flex items-center space-x-2 text-xs ml-2 shrink-0">
                                     <span className="font-bold text-red-600">{food.calories}</span>
