@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
+import { Device } from '@capacitor/device';
 import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
 import { ScannerModal } from "@/components/scanner-modal";
@@ -269,6 +270,29 @@ export function CameraInterface({
     if (Capacitor.isNativePlatform()) {
       try {
         console.log("📱 Using Capacitor camera...");
+        
+        // Check and request camera permissions first
+        console.log("🔐 Checking camera permissions...");
+        const permissions = await CapacitorCamera.checkPermissions();
+        console.log("📋 Current permissions:", permissions);
+        
+        if (permissions.camera !== 'granted') {
+          console.log("🔓 Requesting camera permissions...");
+          const requested = await CapacitorCamera.requestPermissions({ permissions: ['camera'] });
+          console.log("📝 Permission request result:", requested);
+          
+          if (requested.camera !== 'granted') {
+            console.error("❌ Camera permission denied by user");
+            toast({
+              title: "Camera Permission Required",
+              description: "Please enable camera access in your device settings to use this feature.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+        
+        console.log("✅ Camera permissions granted, opening camera...");
         const image = await CapacitorCamera.getPhoto({
           quality: 90,
           allowEditing: false,
@@ -325,10 +349,20 @@ export function CameraInterface({
           // Auto-analyze the captured photo for food
           analysisMutation.mutate(file);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Error taking photo:', error);
-        // Fall back to web camera input
-        cameraInputRef.current?.click();
+        
+        // Handle user cancellation gracefully
+        if (error?.message?.includes('User cancelled') || error?.message?.includes('cancel')) {
+          console.log("ℹ️ User cancelled camera");
+          return;
+        }
+        
+        toast({
+          title: "Camera Error",
+          description: error?.message || "Failed to access camera. Please try again.",
+          variant: "destructive",
+        });
       }
     } else {
       // For web browsers, use camera input
