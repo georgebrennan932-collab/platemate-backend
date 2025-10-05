@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target, TrendingUp, HelpCircle, Mic, MicOff, Plus } from "lucide-react";
 import { Link } from "wouter";
@@ -27,6 +28,7 @@ import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAuthenticated, isGuestMode } = useAuth();
   const [activeTab, setActiveTab] = useState<'diary' | 'analytics' | 'weight'>('diary');
   const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
 
@@ -139,15 +141,23 @@ export function DiaryPage() {
 
   const { data: diaryEntries, isLoading } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
+    enabled: isAuthenticated,
   });
 
   const { data: drinkEntries, isLoading: drinksLoading } = useQuery<DrinkEntry[]>({
     queryKey: ['/api/drinks'],
+    enabled: isAuthenticated,
   });
 
   const { data: nutritionGoals } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
+    enabled: isAuthenticated,
   });
+
+  // For guest mode, use empty arrays as fallback
+  const displayDiaryEntries = isGuestMode ? [] : (diaryEntries || []);
+  const displayDrinkEntries = isGuestMode ? [] : (drinkEntries || []);
+  const displayNutritionGoals = isGuestMode ? undefined : nutritionGoals;
 
   const deleteMutation = useMutation({
     mutationFn: async (entryId: string) => {
@@ -226,7 +236,7 @@ export function DiaryPage() {
     },
   });
 
-  const groupedEntries = diaryEntries?.reduce((groups, entry) => {
+  const groupedEntries = displayDiaryEntries?.reduce((groups, entry) => {
     const date = new Date(entry.mealDate).toDateString();
     if (!groups[date]) {
       groups[date] = [];
@@ -235,7 +245,7 @@ export function DiaryPage() {
     return groups;
   }, {} as Record<string, DiaryEntryWithAnalysis[]>) || {};
 
-  const groupedDrinks = drinkEntries?.reduce((groups, drink) => {
+  const groupedDrinks = displayDrinkEntries?.reduce((groups, drink) => {
     const date = new Date(drink.loggedAt).toDateString();
     if (!groups[date]) {
       groups[date] = [];
@@ -247,7 +257,7 @@ export function DiaryPage() {
   // Calculate daily nutrition totals using standardized function
   const getDailyNutrition = (date: string) => {
     const targetDate = new Date(date);
-    return calculateDailyNutrition(diaryEntries || [], drinkEntries || [], targetDate);
+    return calculateDailyNutrition(displayDiaryEntries || [], displayDrinkEntries || [], targetDate);
   };
 
   // Get today's date string for filtering
@@ -256,12 +266,12 @@ export function DiaryPage() {
   
   // Calculate remaining to reach targets
   const getRemainingNutrition = () => {
-    if (!nutritionGoals) return null;
+    if (!displayNutritionGoals) return null;
     return {
-      calories: Math.max(0, (nutritionGoals.dailyCalories || 0) - todayNutrition.calories),
-      protein: Math.max(0, (nutritionGoals.dailyProtein || 0) - todayNutrition.protein),
-      carbs: Math.max(0, (nutritionGoals.dailyCarbs || 0) - todayNutrition.carbs),
-      fat: Math.max(0, (nutritionGoals.dailyFat || 0) - todayNutrition.fat),
+      calories: Math.max(0, (displayNutritionGoals.dailyCalories || 0) - todayNutrition.calories),
+      protein: Math.max(0, (displayNutritionGoals.dailyProtein || 0) - todayNutrition.protein),
+      carbs: Math.max(0, (displayNutritionGoals.dailyCarbs || 0) - todayNutrition.carbs),
+      fat: Math.max(0, (displayNutritionGoals.dailyFat || 0) - todayNutrition.fat),
     };
   };
   
@@ -270,7 +280,7 @@ export function DiaryPage() {
   const allDates = new Set([...Object.keys(groupedEntries), ...Object.keys(groupedDrinks)]);
   
   // Filter entries based on search and filters
-  const filteredEntries = diaryEntries?.filter(entry => {
+  const filteredEntries = displayDiaryEntries?.filter(entry => {
     // Text search
     if (searchQuery) {
       const searchLower = searchQuery.toLowerCase();
@@ -493,8 +503,8 @@ export function DiaryPage() {
       <div className="max-w-md mx-auto p-4 pb-32">
         {activeTab === 'analytics' ? (
           <div className="space-y-6">
-            <WeeklyAnalytics goals={nutritionGoals} />
-            <AdvancedAnalytics goals={nutritionGoals} />
+            <WeeklyAnalytics goals={displayNutritionGoals} />
+            <AdvancedAnalytics goals={displayNutritionGoals} />
           </div>
         ) : activeTab === 'weight' ? (
           <div className="space-y-6">
@@ -733,7 +743,7 @@ export function DiaryPage() {
               </div>
               
               {/* Macros Progress */}
-              {nutritionGoals && (
+              {displayNutritionGoals && (
                 <div className="space-y-3">
                   <div className="text-sm font-medium mb-2">Macronutrients</div>
                   <div className="grid grid-cols-3 gap-3">
@@ -760,16 +770,16 @@ export function DiaryPage() {
               )}
               
               {/* Progress Bar */}
-              {nutritionGoals && (
+              {displayNutritionGoals && (
                 <div className="mt-4">
                   <div className="flex justify-between text-sm mb-1">
                     <span>Daily Goal Progress</span>
-                    <span>{Math.round((todayNutrition.calories / (nutritionGoals.dailyCalories || 1)) * 100)}%</span>
+                    <span>{Math.round((todayNutrition.calories / (displayNutritionGoals.dailyCalories || 1)) * 100)}%</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div 
                       className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, (todayNutrition.calories / (nutritionGoals.dailyCalories || 1)) * 100)}%` }}
+                      style={{ width: `${Math.min(100, (todayNutrition.calories / (displayNutritionGoals.dailyCalories || 1)) * 100)}%` }}
                     ></div>
                   </div>
                 </div>
