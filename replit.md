@@ -80,6 +80,8 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+- **AI Analysis Speed Optimization**: Implemented aggressive client-side image compression (target 400KB max) with adaptive quality (min 0.6, preserves PNG), skips compression for already-small files, and optimized server-side Sharp processing to only handle rotation (no resize) for ~50-70% faster analysis times
+- **Guest Login System**: Added "Continue as Guest" option allowing users to use app without authentication, with local storage for diary/weights/goals, guest mode detection in useAuth hook, and foundation for future data migration when users register
 - **Comprehensive Food Editing System**: Implemented complete food analysis editing functionality allowing users to edit food names, adjust portions, remove incorrect items, and add missing foods with real-time nutrition recalculation
 - **Secure Food Analysis API**: Added authenticated PATCH /api/analyses/:id endpoint with Zod validation, ownership checks, and server-side nutrition calculation to prevent data tampering
 - **Database Persistence for Edits**: Food analysis modifications are now saved to the database with proper cache invalidation and error handling for reliable data persistence

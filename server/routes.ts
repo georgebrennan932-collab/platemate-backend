@@ -347,7 +347,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enable Replit authentication for all routes
   const authMiddleware = isAuthenticated;
   
-  app.post("/api/analyze", authMiddleware, upload.single('image'), async (req: any, res) => {
+  // Allow analyze endpoint without auth for guest mode (results not saved to DB)
+  app.post("/api/analyze", upload.single('image'), async (req: any, res) => {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const requestStartTime = Date.now();
     
@@ -396,11 +397,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const processedImagePath = path.join(uploadDir, `processed_${req.file.filename}.jpg`);
       
       try {
-        // Attempt to process the image with Sharp (more resilient approach)
+        // Light processing since client already compressed
+        // Only auto-rotate and ensure JPEG format
         await sharp(req.file.path)
-          .rotate() // Auto-rotate based on EXIF data
-          .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
-          .jpeg({ quality: 75 })
+          .rotate() // Auto-rotate based on EXIF data (important for mobile)
+          .jpeg({ quality: 85, mozjpeg: true }) // Higher quality since already compressed
           .toFile(processedImagePath);
           
         console.log("✅ Image processed successfully with Sharp");
@@ -521,8 +522,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } else {
           // High confidence (≥90%) - proceed with immediate analysis
-          console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - creating food analysis and returning 200 OK`);
-          const analysis = await storage.createFoodAnalysis(foodAnalysisData);
+          console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - returning analysis`);
+          
+          // For authenticated users, save to database; for guests, return without saving
+          let analysis;
+          if (req.user) {
+            analysis = await storage.createFoodAnalysis(foodAnalysisData);
+            console.log(`✅ [${requestId}] Analysis saved to database for authenticated user`);
+          } else {
+            // Guest mode: return analysis without saving to database
+            analysis = { id: `guest_${Date.now()}`, ...foodAnalysisData };
+            console.log(`✅ [${requestId}] Guest mode: returning analysis without database save`);
+          }
 
           // Optional: Auto-add to diary if user is authenticated and requests it
           if (req.user && req.body.autoAddToDiary === 'true') {
