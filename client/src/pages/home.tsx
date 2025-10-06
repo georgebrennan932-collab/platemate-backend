@@ -21,6 +21,7 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { ProgressIndicators } from "@/components/progress-indicators";
 import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
+import { launchLogin } from "@/lib/auth-launcher";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
@@ -743,15 +744,15 @@ export default function Home() {
               </div>
             </>
           ) : (
-            <a 
-              href="/api/login"
+            <button
+              onClick={launchLogin}
               className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 border border-white/20 text-white hover:scale-105 transform"
               data-testid="button-login"
               title="Login with Replit"
             >
               <User className="h-4 w-4" />
               <span className="text-sm font-medium">Login</span>
-            </a>
+            </button>
           )}
         </div>
         
