@@ -658,78 +658,84 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <strong>💡 Tip:</strong> Click the pencil icon <Edit3 className="h-3 w-3 inline mx-1" /> next to food names or portions to edit them. Nutrition values will update automatically!
         </AlertDescription>
       </Alert>
-      {/* Photo thumbnail and actions */}
-      <div className="modern-card glass-card p-6">
-        <div className="flex items-center space-x-4">
-          <div className="w-24 h-24 rounded-2xl overflow-hidden bg-muted relative">
-            {data.imageUrl ? (
-              <img 
-                src={data.imageUrl.startsWith('/') ? data.imageUrl : `/${data.imageUrl}`}
-                alt="Analyzed food plate thumbnail" 
-                className="w-full h-full object-cover"
-                data-testid="img-thumbnail"
-                onError={(e) => {
-                  console.log('Image failed to load:', data.imageUrl);
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 flex items-center justify-center">
-                <Camera className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
-          </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-xl gradient-text" data-testid="text-meal-title">
-              Food Analysis Complete
-            </h3>
-            <p className="text-muted-foreground text-sm space-x-2">
-              <span data-testid="text-timestamp">{formatTime(data.createdAt)}</span> • 
-              <span 
-                data-testid="text-confidence" 
-                className={`ml-1 px-2 py-1 rounded-full font-medium ${
-                  data.isAITemporarilyUnavailable 
-                    ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
-                    : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                }`}
-              >
-                {data.isAITemporarilyUnavailable ? 'Estimated values' : `${data.confidence}% confidence`}
-              </span>
-            </p>
+      {/* Beautiful Header with Purple Gradient */}
+      <div className="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-3xl p-6 shadow-2xl border border-purple-400/30">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-sm relative ring-2 ring-white/20">
+              {data.imageUrl ? (
+                <img 
+                  src={data.imageUrl.startsWith('/') ? data.imageUrl : `/${data.imageUrl}`}
+                  alt="Analyzed food plate thumbnail" 
+                  className="w-full h-full object-cover"
+                  data-testid="img-thumbnail"
+                  onError={(e) => {
+                    console.log('Image failed to load:', data.imageUrl);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-400 flex items-center justify-center">
+                  <Camera className="h-8 w-8 text-white/80" />
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="font-bold text-xl text-white drop-shadow-md" data-testid="text-meal-title">
+                Analysis Complete
+              </h3>
+              <p className="text-white/80 text-sm" data-testid="text-timestamp">
+                {formatTime(data.createdAt)}
+              </p>
+            </div>
           </div>
           <div className="flex flex-col space-y-2">
             <button 
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               data-testid="button-share"
             >
-              <Share2 className="h-4 w-4" />
+              <Share2 className="h-5 w-5" />
             </button>
             <button 
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               data-testid="button-bookmark"
             >
-              <Bookmark className="h-4 w-4" />
+              <Bookmark className="h-5 w-5" />
             </button>
           </div>
         </div>
+        
+        {/* Confidence Badge */}
+        <div 
+          data-testid="text-confidence" 
+          className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full font-semibold shadow-lg ${
+            data.isAITemporarilyUnavailable 
+              ? 'bg-amber-400 text-amber-900'
+              : 'bg-white text-purple-600'
+          }`}
+        >
+          <Zap className="h-4 w-4" />
+          <span>
+            {data.isAITemporarilyUnavailable ? 'Estimated values' : `${data.confidence}% confidence`}
+          </span>
+        </div>
       </div>
 
-      {/* Detected Foods - Now First */}
-      <div className="bg-card rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Utensils className="text-primary mr-2 h-5 w-5" />
+      {/* Detected Foods - Beautiful Cream/Beige Cards */}
+      <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-900/10 dark:via-amber-900/10 dark:to-yellow-900/10 rounded-3xl shadow-xl p-6 border border-orange-200/30 dark:border-orange-700/30">
+        <h3 className="text-xl font-bold mb-6 flex items-center text-gray-800 dark:text-gray-100">
+          <Utensils className="text-orange-600 dark:text-orange-400 mr-3 h-6 w-6" />
           Food Items Detected
         </h3>
         
-        <div className="space-y-4">
+        <div className="space-y-3">
           {editableFoods.map((food, index) => (
             <div 
               key={index}
-              className={`p-3 rounded-lg transition-all ${
+              className={`p-4 rounded-2xl transition-all duration-200 shadow-md hover:shadow-lg ${
                 editingIndex === index 
-                  ? 'bg-primary/10 border-2 border-primary/30' 
-                  : 'bg-secondary/50 border border-transparent'
+                  ? 'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 border-2 border-blue-400 dark:border-blue-500 scale-[1.02]' 
+                  : 'bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-800 dark:to-orange-900/20 border border-orange-100 dark:border-orange-800/30'
               }`}
               data-testid={`card-food-${index}`}
             >
@@ -909,59 +915,59 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           ))}
         </div>
 
-        {/* Add Missing Food Item - Enhanced Design */}
-        <div className="mt-4 bg-gradient-to-br from-slate-800 via-gray-800 to-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-700/50">
+        {/* Add Missing Foods - Beautiful Light Design */}
+        <div className="mt-4 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-orange-900/20 rounded-3xl p-6 shadow-lg border-2 border-purple-200/50 dark:border-purple-700/50">
           {/* Header with Instructions */}
           <div className="text-center mb-6">
-            <h3 className="text-white text-lg font-semibold mb-2">Add Missing Foods</h3>
-            <p className="text-gray-300 text-sm">
+            <h3 className="text-purple-700 dark:text-purple-300 text-lg font-bold mb-2">Add Missing Foods</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               AI might miss some items in your meal
             </p>
           </div>
           
           {/* Action Buttons */}
-          <div className="flex space-x-4">
-            {/* Add More Button (Voice) */}
+          <div className="flex space-x-3">
+            {/* Voice Add Button */}
             <button
               onClick={handleVoiceInput}
               disabled={!speechSupported}
-              className={`flex-1 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 backdrop-blur-xl border transition-all duration-300 shadow-xl hover:scale-105 font-semibold ${
+              className={`flex-1 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 border-2 transition-all duration-300 shadow-md hover:scale-105 font-semibold ${
                 isListening
-                  ? 'bg-red-500 text-white border-red-400 animate-pulse hover:shadow-red-500/25'
+                  ? 'bg-gradient-to-br from-red-500 to-pink-500 text-white border-red-400 animate-pulse shadow-xl'
                   : speechSupported
-                  ? 'bg-gradient-to-br from-slate-700/90 to-slate-800/90 text-white border-white/10 hover:from-slate-600/90 hover:to-slate-700/90 hover:shadow-purple-500/25'
-                  : 'bg-gray-400 text-gray-600 cursor-not-allowed border-gray-300'
+                  ? 'bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-800 dark:to-purple-900 text-purple-700 dark:text-purple-200 border-purple-300 dark:border-purple-600 hover:from-purple-200 hover:to-purple-300 hover:shadow-purple-500/25'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed border-gray-300 dark:border-gray-600'
               }`}
               data-testid="button-add-voice"
             >
               {isListening ? (
                 <MicOff className="h-5 w-5" />
               ) : (
-                <Mic className="h-5 w-5 text-purple-400" />
+                <Mic className="h-5 w-5" />
               )}
-              <span>{isListening ? 'Stop Listening' : 'Voice Add'}</span>
+              <span>{isListening ? 'Stop' : 'Voice Add'}</span>
             </button>
             
             {/* Type Button */}
             <button
               onClick={() => addNewFoodItem()}
-              className="flex-1 bg-gradient-to-br from-white to-gray-100 text-slate-800 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 shadow-xl hover:scale-105 transition-all duration-300 hover:shadow-green-500/25 border border-gray-200"
+              className="flex-1 bg-gradient-to-br from-white to-orange-50 dark:from-gray-700 dark:to-orange-900/30 text-gray-800 dark:text-gray-100 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 shadow-md hover:scale-105 transition-all duration-300 hover:shadow-lg border-2 border-orange-200 dark:border-orange-700"
               data-testid="button-add-type"
             >
-              <Plus className="h-5 w-5 text-green-500" />
+              <Plus className="h-5 w-5 text-green-600 dark:text-green-400" />
               <span className="font-semibold">Type</span>
             </button>
           </div>
         </div>
         
 
-        {/* Save Changes Button */}
+        {/* Save Changes Button - Beautiful Modern Design */}
         {hasChanges() && (
           <div className="mt-4 flex space-x-3">
             <button
               onClick={() => saveChanges()}
               disabled={saveChangesMutation.isPending}
-              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 disabled:transform-none shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
+              className="flex-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white py-4 px-6 rounded-2xl font-bold transition-all duration-200 transform hover:scale-105 disabled:transform-none shadow-xl hover:shadow-2xl disabled:shadow-none flex items-center justify-center space-x-2 border-2 border-green-400/30"
               data-testid="button-save-changes"
             >
               {saveChangesMutation.isPending ? (
@@ -978,7 +984,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </button>
             <button
               onClick={() => resetChanges()}
-              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+              className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-700 dark:text-gray-300 py-4 px-6 rounded-2xl font-bold hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border-2 border-gray-300 dark:border-gray-600"
               data-testid="button-reset-changes"
             >
               Reset
