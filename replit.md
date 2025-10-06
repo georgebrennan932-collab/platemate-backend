@@ -103,3 +103,6 @@ Preferred communication style: Simple, everyday language.
 - **Security-Hardened OAuth**: Strict returnUrl validation (allowlist-based), 256-bit cryptographic bridge tokens, 5-minute TTL with automatic cleanup, and SameSite=None cookies for cross-origin WebView compatibility
 - **Platform-Aware Auth**: Auth launcher utility with automatic platform detection, absolute HTTPS URLs for mobile, and graceful fallback for web authentication
 - **Deep-Link Configuration**: iOS CFBundleURLTypes and Android intent-filter setup for platemate:// scheme with host-based routing (auth-complete)
+- **System Browser OAuth Enforcement**: Enhanced auth launcher to ALWAYS use device's system browser (Chrome, Safari, etc.) for login/signup, preventing Google WebView OAuth blocks with comprehensive error handling and logging
+- **Eliminated WebView Login Traps**: Removed all hardcoded login links that could accidentally open in embedded WebView, ensuring smooth authentication flow
+- **Beautiful Results Page Design**: Completely transformed food analysis results page to match Diary/Rewards aesthetic with vibrant purple gradient header, cream/beige gradient food item cards, light gradient "Add Missing Foods" section (purple/pink/orange), modern gradient Save/Reset buttons, and polished shadows/spacing throughout
