@@ -113,7 +113,7 @@ export function AppHeader() {
               onClick={() => {
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('auth_user');
-                window.location.href = '/';
+                window.location.href = '/landing';
               }}
             >
               <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />

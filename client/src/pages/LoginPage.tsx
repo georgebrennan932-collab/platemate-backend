@@ -91,7 +91,9 @@ export default function LoginPage() {
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        padding: '20px'
+        padding: '20px',
+        opacity: doorsOpen ? 0 : 1,
+        transition: 'opacity 0.3s ease-in-out'
       }}>
         <div style={{
           background: 'white',
