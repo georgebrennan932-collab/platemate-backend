@@ -1,14 +1,16 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
-import { db } from "./db";
-import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import Database from "@replit/database";
 
 const router = Router();
+const db = new Database();
 
 // In-memory session storage (sessions = { token: email })
 const sessions: Record<string, string> = {};
+
+// Helper function to get user key in Replit DB
+const getUserKey = (email: string) => `user:${email}`;
 
 // POST /api/register - create a new user
 router.post("/register", async (req, res) => {
@@ -32,26 +34,23 @@ router.post("/register", async (req, res) => {
     }
 
     // Check if user already exists
-    const [existingUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email));
+    const userKey = getUserKey(email);
+    const existingUser: any = await db.get(userKey);
 
-    if (existingUser) {
+    if (existingUser && existingUser.ok === true) {
       return res.status(400).json({ error: "User already exists" });
     }
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        email,
-        passwordHash,
-      })
-      .returning();
+    // Create user in Replit Database
+    const userData = {
+      passwordHash,
+      createdAt: Date.now()
+    };
+
+    await db.set(userKey, userData);
 
     // Generate session token
     const token = uuidv4();
@@ -61,9 +60,8 @@ router.post("/register", async (req, res) => {
       success: true,
       token,
       user: {
-        id: newUser.id,
-        email: newUser.email,
-      },
+        email
+      }
     });
   } catch (error: any) {
     console.error("Registration error:", error);
@@ -82,14 +80,14 @@ router.post("/login", async (req, res) => {
     }
 
     // Find user by email
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email));
+    const userKey = getUserKey(email);
+    const userResult: any = await db.get(userKey);
 
-    if (!user || !user.passwordHash) {
+    if (!userResult || userResult.ok !== true || !userResult.value) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
+
+    const user = userResult.value;
 
     // Verify password
     const isValid = await bcrypt.compare(password, user.passwordHash);
@@ -105,9 +103,8 @@ router.post("/login", async (req, res) => {
       success: true,
       token,
       user: {
-        id: user.id,
-        email: user.email,
-      },
+        email
+      }
     });
   } catch (error: any) {
     console.error("Login error:", error);
@@ -129,13 +126,11 @@ router.get("/checkSession", async (req, res) => {
       return res.status(401).json({ error: "Invalid or expired token" });
     }
 
-    // Get user data
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email));
+    // Verify user still exists in database
+    const userKey = getUserKey(email);
+    const userResult: any = await db.get(userKey);
 
-    if (!user) {
+    if (!userResult || userResult.ok !== true) {
       delete sessions[token];
       return res.status(401).json({ error: "User not found" });
     }
@@ -143,9 +138,8 @@ router.get("/checkSession", async (req, res) => {
     res.json({
       success: true,
       user: {
-        id: user.id,
-        email: user.email,
-      },
+        email
+      }
     });
   } catch (error: any) {
     console.error("Check session error:", error);
