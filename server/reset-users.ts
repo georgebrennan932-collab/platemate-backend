@@ -1,24 +1,24 @@
 // One-time script to reset all user accounts
-// Run this ONCE with: npx tsx server/reset-users.ts
+// Run this with: npx tsx server/reset-users.ts
 
 import Database from "@replit/database";
 
 const db = new Database();
 
 async function resetAllUsers() {
-  console.log("🔄 Starting user account reset...");
+  console.log("🔄 Starting user account reset...\n");
   
   try {
-    // Get all keys from the database
-    const allKeys = await db.list();
-    console.log(`📋 Found ${allKeys.length} total keys in database`);
+    // List all user keys
+    const userKeysResult = await db.list("user:");
     
-    // Filter for user-related keys
-    const userKeys = allKeys.filter(key => 
-      key.startsWith('user:') || key.startsWith('reset:')
-    );
+    if (!userKeysResult.ok) {
+      console.error("❌ Error listing user keys:", userKeysResult.error);
+      process.exit(1);
+    }
     
-    console.log(`👥 Found ${userKeys.length} user-related keys to delete`);
+    const userKeys = userKeysResult.value || [];
+    console.log(`👥 Found ${userKeys.length} user accounts`);
     
     // Delete all user keys
     for (const key of userKeys) {
@@ -26,8 +26,24 @@ async function resetAllUsers() {
       console.log(`  ✅ Deleted: ${key}`);
     }
     
+    // List all reset token keys
+    const resetKeysResult = await db.list("reset:");
+    
+    if (!resetKeysResult.ok) {
+      console.error("⚠️  Warning: Could not list reset keys:", resetKeysResult.error);
+    } else {
+      const resetKeys = resetKeysResult.value || [];
+      console.log(`\n🔑 Found ${resetKeys.length} reset tokens`);
+      
+      // Delete all reset keys
+      for (const key of resetKeys) {
+        await db.delete(key);
+        console.log(`  ✅ Deleted: ${key}`);
+      }
+    }
+    
     console.log("\n✨ All user accounts have been reset!");
-    console.log("📝 Users will need to register again with their email and security question.");
+    console.log("📝 Users will need to register again with email and security question.");
     
   } catch (error) {
     console.error("❌ Error resetting users:", error);
