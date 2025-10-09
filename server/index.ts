@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import authRoutes from "./auth";
 
 const app = express();
 
@@ -49,6 +50,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Register email/password authentication routes
+app.use("/api", authRoutes);
 
 (async () => {
   const server = await registerRoutes(app);
