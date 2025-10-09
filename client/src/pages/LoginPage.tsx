@@ -101,7 +101,9 @@ export default function LoginPage() {
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           width: '100%',
           maxWidth: '360px',
-          textAlign: 'center'
+          textAlign: 'center',
+          opacity: doorsOpen ? 0 : 1,
+          transition: 'opacity 0.3s ease-in-out'
         }}>
         <h2 style={{ marginBottom: '20px', color: '#333' }}>Login to PlateMate</h2>
         
