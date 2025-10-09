@@ -16,8 +16,13 @@ export async function emailAuthMiddleware(req: any, res: Response, next: NextFun
 
     const email = sessions[token];
     
+    console.log(`🔐 Auth check - Token: ${token.substring(0, 20)}...`);
+    console.log(`📝 Sessions count: ${Object.keys(sessions).length}`);
+    console.log(`✉️ Email found: ${email || 'null'}`);
+    
     if (!email) {
       // Invalid token - continue as unauthenticated
+      console.log(`❌ Session not found for token - likely server restarted`);
       return next();
     }
 
