@@ -299,13 +299,28 @@ class WebBarcodeScanner implements ScannerService {
       const barcodes = await detector.detect(videoElement);
       if (barcodes.length > 0) {
         const barcode = barcodes[0];
+        console.log('🔍 RAW BARCODE DETECTED:', {
+          rawValue: barcode.rawValue,
+          format: barcode.format,
+          length: barcode.rawValue?.length
+        });
+        
         const normalized = this.normalizeBarcode(barcode.rawValue);
+        console.log('🔄 NORMALIZATION RESULT:', {
+          original: barcode.rawValue,
+          normalized: normalized,
+          accepted: normalized !== null
+        });
+        
         if (normalized) {
+          console.log('✅ BARCODE ACCEPTED:', normalized);
           this.onDetected?.({
             barcode: normalized,
             format: barcode.format
           });
           return; // Stop scanning on detection
+        } else {
+          console.log('❌ BARCODE REJECTED - continuing scan...');
         }
       }
     } catch (error) {
