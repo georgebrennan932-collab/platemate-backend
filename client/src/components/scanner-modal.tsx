@@ -56,14 +56,12 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
       
       // Auto-fallback to manual entry for permission errors
       if (scanError.type === 'permission') {
-        console.log('🔄 Scanner permission error, auto-opening manual entry in 2 seconds...');
+        console.log('🔄 Scanner permission error, opening manual entry immediately...');
         
-        setTimeout(() => {
-          console.log('🔄 Opening manual barcode entry automatically...');
-          const event = new CustomEvent('open-manual-barcode', { detail: { manual: true, autoFallback: true } });
-          window.dispatchEvent(event);
-          onClose();
-        }, 2000);
+        // Open manual entry immediately (no delay)
+        const event = new CustomEvent('open-manual-barcode', { detail: { manual: true, autoFallback: true } });
+        window.dispatchEvent(event);
+        onClose();
       }
     };
 
