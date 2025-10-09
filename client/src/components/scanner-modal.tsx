@@ -173,29 +173,77 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
             data-testid="video-scanner"
           />
           
-          {/* Scan Guide Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="relative">
-              {/* Scan Frame */}
-              <div className="w-64 h-32 border-2 border-white rounded-lg border-dashed opacity-80"></div>
-              
-              {/* Corner markers */}
-              <div className="absolute -top-1 -left-1 w-6 h-6 border-l-4 border-t-4 border-blue-500 rounded-tl"></div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 border-r-4 border-t-4 border-blue-500 rounded-tr"></div>
-              <div className="absolute -bottom-1 -left-1 w-6 h-6 border-l-4 border-b-4 border-blue-500 rounded-bl"></div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 border-r-4 border-b-4 border-blue-500 rounded-br"></div>
-              
-              {/* Status Text */}
-              <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-center">
-                <p className="text-white text-sm font-medium bg-black/60 px-3 py-1 rounded-full" data-testid="text-scan-status">
-                  {!scannerReady && isScanning && 'Starting camera...'}
-                  {scannerReady && 'Position barcode within frame'}
-                  {error && 'Camera access failed'}
-                  {!isScanning && !error && 'Click "Start Scan" or "Enter Manually"'}
-                </p>
+          {/* Initial State - Show Start Button */}
+          {!isScanning && !error && (
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-purple-600/90 flex items-center justify-center">
+              <div className="text-center max-w-sm mx-4">
+                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                  </svg>
+                </div>
+                <h3 className="text-white text-2xl font-bold mb-2">Ready to Scan</h3>
+                <p className="text-white/80 text-sm mb-8">Tap the button below to start scanning barcodes</p>
+                <div className="space-y-3">
+                  <Button 
+                    onClick={startScanning}
+                    size="lg"
+                    className="bg-white text-blue-600 hover:bg-blue-50 w-full text-lg font-bold py-6"
+                    data-testid="button-start-scan"
+                  >
+                    📷 Start Scan
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      handleClose();
+                      setTimeout(() => {
+                        const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
+                        window.dispatchEvent(event);
+                      }, 100);
+                    }}
+                    className="border-white/40 bg-white/10 hover:bg-white/20 text-white w-full"
+                    data-testid="button-manual-entry-initial"
+                  >
+                    ⌨️ Enter Manually Instead
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+          
+          {/* Scan Guide Overlay - Only show when scanning */}
+          {scannerReady && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="relative">
+                {/* Scan Frame */}
+                <div className="w-64 h-32 border-2 border-white rounded-lg border-dashed opacity-80"></div>
+                
+                {/* Corner markers */}
+                <div className="absolute -top-1 -left-1 w-6 h-6 border-l-4 border-t-4 border-blue-500 rounded-tl"></div>
+                <div className="absolute -top-1 -right-1 w-6 h-6 border-r-4 border-t-4 border-blue-500 rounded-tr"></div>
+                <div className="absolute -bottom-1 -left-1 w-6 h-6 border-l-4 border-b-4 border-blue-500 rounded-bl"></div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 border-r-4 border-b-4 border-blue-500 rounded-br"></div>
+                
+                {/* Status Text */}
+                <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-center">
+                  <p className="text-white text-sm font-medium bg-black/60 px-3 py-1 rounded-full" data-testid="text-scan-status">
+                    Position barcode within frame
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Loading State */}
+          {isScanning && !scannerReady && !error && (
+            <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+                <p className="text-white text-lg">Starting camera...</p>
+              </div>
+            </div>
+          )}
 
           {/* Error State */}
           {error && (
