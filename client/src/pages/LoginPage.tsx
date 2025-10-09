@@ -75,27 +75,15 @@ export default function LoginPage() {
           zIndex: 9999,
           pointerEvents: 'none'
         }}>
-          {/* Background Layer - Full intact logo on purple gradient */}
+          {/* Background Layer - Pure purple gradient (logo removed for seamless blend) */}
           <div style={{
             position: 'absolute',
             top: 0,
             left: 0,
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}>
-            <img 
-              src={pmLogo} 
-              alt="PM Logo"
-              style={{
-                width: '200px',
-                height: '200px'
-              }}
-            />
-          </div>
+            background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'
+          }} />
           
           {/* Left Metallic Door */}
           <div style={{
