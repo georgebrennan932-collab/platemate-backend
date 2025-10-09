@@ -45,6 +45,34 @@
         "accessCount": 1,
         "lastAccessed": 1760003392849
       }
+    ],
+    [
+      "d52928cff6e7726adc3af7ba65722ecbed5709f44c64e9bef0adc3fc60b6fc8c",
+      {
+        "imageHash": "d52928cff6e7726adc3af7ba65722ecbed5709f44c64e9bef0adc3fc60b6fc8c",
+        "analysis": {
+          "imageUrl": "/tmp/uploads/processed_2e66bfe5b254c28c8fc0ad9fa959d218.jpg",
+          "confidence": 90,
+          "totalCalories": 208,
+          "totalProtein": 11,
+          "totalCarbs": 22,
+          "totalFat": 9,
+          "detectedFoods": [
+            {
+              "name": "Soup, meatball",
+              "portion": "400g",
+              "calories": 208,
+              "protein": 11,
+              "carbs": 22,
+              "fat": 9,
+              "icon": "meatball"
+            }
+          ]
+        },
+        "timestamp": 1760009714952,
+        "accessCount": 1,
+        "lastAccessed": 1760009714952
+      }
     ]
   ],
   "stats": {
@@ -52,11 +80,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 1,
+    "currentSize": 2,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1760003392849,
-    "newestEntry": 1760003392849
+    "newestEntry": 1760009714952
   },
-  "timestamp": 1760003392853
+  "timestamp": 1760009714953
 }
