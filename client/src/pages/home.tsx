@@ -664,6 +664,14 @@ export default function Home() {
       length: barcode.length,
       type: barcode.length === 12 ? 'UPC-A' : barcode.length === 13 ? 'EAN-13' : 'Other'
     });
+    
+    // Show immediate success feedback
+    toast({
+      title: "✅ Barcode Detected!",
+      description: `Scanning: ${barcode}`,
+      duration: 2000,
+    });
+    
     barcodeMutation.mutate(barcode);
   };
 
