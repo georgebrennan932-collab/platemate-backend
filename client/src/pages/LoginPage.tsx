@@ -25,14 +25,24 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (data.success) {
+        console.log('✅ Login successful!');
+        console.log('  Token:', data.token.substring(0, 20) + '...');
+        console.log('  User:', data.user);
+        
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("auth_user", JSON.stringify(data.user));
+        
+        console.log('💾 Saved to localStorage:');
+        console.log('  auth_token:', localStorage.getItem("auth_token")?.substring(0, 20) + '...');
+        console.log('  auth_user:', localStorage.getItem("auth_user"));
         
         // Trigger elevator door animation
         setDoorsOpen(true);
         
         // Redirect after animation completes (3.2s animation + 0.2s buffer)
         setTimeout(() => {
+          console.log('🚀 Redirecting to homepage...');
+          console.log('  Token still in localStorage:', !!localStorage.getItem("auth_token"));
           setLocation("/");
         }, 3400);
       } else {
