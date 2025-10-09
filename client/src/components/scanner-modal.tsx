@@ -78,7 +78,10 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
       
       // CRITICAL: Request camera access SYNCHRONOUSLY before any state updates
       // This ensures the browser considers it part of the user gesture
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Use back camera (environment) for scanning barcodes
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
       console.log('✅ Camera permission granted! Stream obtained.');
       
       // Now update state after we have the stream
