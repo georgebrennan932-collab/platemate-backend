@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+// OAUTH DISABLED: import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
@@ -145,27 +145,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded images as static files from the correct upload directory
   app.use('/uploads', express.static(uploadDir));
   
-  // Setup authentication
-  await setupAuth(app);
+  // OAUTH DISABLED: Setup authentication
+  // await setupAuth(app);
 
-  // User authentication endpoint
-  app.get('/api/user', async (req: any, res) => {
-    if (req.user && req.user.claims) {
-      // User is authenticated, return user info
-      const user = await storage.getUser(req.user.claims.sub);
-      if (user) {
-        res.json(user);
-      } else {
-        res.status(404).json({ error: 'User not found' });
-      }
-    } else {
-      // User not authenticated
-      res.status(401).json({ error: 'Not authenticated' });
-    }
-  });
+  // OAUTH DISABLED: User authentication endpoint
+  // app.get('/api/user', async (req: any, res) => {
+  //   if (req.user && req.user.claims) {
+  //     // User is authenticated, return user info
+  //     const user = await storage.getUser(req.user.claims.sub);
+  //     if (user) {
+  //       res.json(user);
+  //     } else {
+  //       res.status(404).json({ error: 'User not found' });
+  //     }
+  //   } else {
+  //     // User not authenticated
+  //     res.status(401).json({ error: 'Not authenticated' });
+  //   }
+  // });
 
-  // Cache and monitoring endpoints
-  app.get('/api/cache/stats', isAuthenticated, async (req, res) => {
+  // Cache and monitoring endpoints (OAUTH DISABLED: removed isAuthenticated)
+  app.get('/api/cache/stats', async (req, res) => {
     try {
       const cacheStats = imageAnalysisCache.getStats();
       const queueStats = analysisQueue.getStats();
@@ -181,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/cache/clear', isAuthenticated, async (req, res) => {
+  app.post('/api/cache/clear', async (req, res) => {
     try {
       await imageAnalysisCache.clear();
       res.json({ message: 'Cache cleared successfully' });
@@ -191,76 +191,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // OAUTH DISABLED: Auth routes
+  // app.get('/api/auth/user',  async (req: any, res) => {
+  //   try {
+  //     const userId = req.user.claims.sub;
+  //     const user = await storage.getUser(userId);
+  //     res.json(user);
+  //   } catch (error) {
+  //     console.error("Error fetching user:", error);
+  //     res.status(500).json({ message: "Failed to fetch user" });
+  //   }
+  // });
 
-  // Mobile OAuth session bridge endpoint
-  app.post('/api/session/consume', express.json(), async (req: any, res) => {
-    try {
-      const { token } = req.body;
-      
-      if (!token || typeof token !== 'string') {
-        console.log('❌ Invalid bridge token request');
-        return res.status(400).json({ error: 'Invalid token' });
-      }
-      
-      console.log('🔑 Attempting to consume bridge token...');
-      
-      // Exchange the bridge token for a session ID
-      const sessionId = consumeBridgeToken(token);
-      
-      if (!sessionId) {
-        console.log('❌ Bridge token not found or expired');
-        return res.status(401).json({ error: 'Invalid or expired token' });
-      }
-      
-      console.log('✅ Bridge token valid for session:', sessionId);
-      
-      // Load the session data from the session store
-      const sessionStore = req.sessionStore;
-      
-      sessionStore.get(sessionId, (err: any, sessionData: any) => {
-        if (err) {
-          console.error('❌ Error loading session:', err);
-          return res.status(500).json({ error: 'Failed to load session' });
-        }
-        
-        if (!sessionData) {
-          console.log('❌ Session not found:', sessionId);
-          return res.status(401).json({ error: 'Session not found' });
-        }
-        
-        console.log('✅ Session data loaded, setting up new session...');
-        
-        // Copy only the authenticated passport data to the current request
-        req.session.passport = sessionData.passport;
-        
-        // Save the new session (don't copy cookie data, let it be generated fresh)
-        req.session.save((saveErr: any) => {
-          if (saveErr) {
-            console.error('❌ Error saving session:', saveErr);
-            return res.status(500).json({ error: 'Failed to save session' });
-          }
-          
-          console.log('🎉 Session successfully bridged to mobile app');
-          res.json({ ok: true });
-        });
-      });
-      
-    } catch (error: any) {
-      console.error('❌ Session consume error:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
+  // OAUTH DISABLED: Mobile OAuth session bridge endpoint
+  // app.post('/api/session/consume', express.json(), async (req: any, res) => {
+  //   try {
+  //     const { token } = req.body;
+  //     
+  //     if (!token || typeof token !== 'string') {
+  //       console.log('❌ Invalid bridge token request');
+  //       return res.status(400).json({ error: 'Invalid token' });
+  //     }
+  //     
+  //     console.log('🔑 Attempting to consume bridge token...');
+  //     
+  //     // Exchange the bridge token for a session ID
+  //     const sessionId = consumeBridgeToken(token);
+  //     
+  //     if (!sessionId) {
+  //       console.log('❌ Bridge token not found or expired');
+  //       return res.status(401).json({ error: 'Invalid or expired token' });
+  //     }
+  //     
+  //     console.log('✅ Bridge token valid for session:', sessionId);
+  //     
+  //     // Load the session data from the session store
+  //     const sessionStore = req.sessionStore;
+  //     
+  //     sessionStore.get(sessionId, (err: any, sessionData: any) => {
+  //       if (err) {
+  //         console.error('❌ Error loading session:', err);
+  //         return res.status(500).json({ error: 'Failed to load session' });
+  //       }
+  //       
+  //       if (!sessionData) {
+  //         console.log('❌ Session not found:', sessionId);
+  //         return res.status(401).json({ error: 'Session not found' });
+  //       }
+  //       
+  //       console.log('✅ Session data loaded, setting up new session...');
+  //       
+  //       // Copy only the authenticated passport data to the current request
+  //       req.session.passport = sessionData.passport;
+  //       
+  //       // Save the new session (don't copy cookie data, let it be generated fresh)
+  //       req.session.save((saveErr: any) => {
+  //         if (saveErr) {
+  //           console.error('❌ Error saving session:', saveErr);
+  //           return res.status(500).json({ error: 'Failed to save session' });
+  //         }
+  //         
+  //         console.log('🎉 Session successfully bridged to mobile app');
+  //         res.json({ ok: true });
+  //       });
+  //     });
+  //     
+  //   } catch (error: any) {
+  //     console.error('❌ Session consume error:', error);
+  //     res.status(500).json({ error: 'Internal server error' });
+  //   }
+  // });
 
   // saveFood endpoint for mobile app compatibility - accepts simple food entries
   app.post("/saveFood", async (req, res) => {
@@ -344,8 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Enable Replit authentication for all routes
-  const authMiddleware = isAuthenticated;
+  // OAUTH DISABLED: Enable Replit authentication for all routes
+  // const authMiddleware = isAuthenticated;
   
   // Allow analyze endpoint without auth for guest mode (results not saved to DB)
   app.post("/api/analyze", upload.single('image'), async (req: any, res) => {
@@ -621,7 +621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Barcode lookup endpoint - bypass auth in deployment like other food endpoints
-  app.post("/api/barcode", authMiddleware, async (req: any, res) => {
+  app.post("/api/barcode", async (req: any, res) => {
     try {
       const { barcode } = req.body;
       
@@ -675,7 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Text-based food analysis for voice input - bypass auth in deployment like image analysis
-  app.post("/api/analyze-text", authMiddleware, async (req: any, res) => {
+  app.post("/api/analyze-text", async (req: any, res) => {
     try {
       const { foodDescription } = req.body;
       
@@ -744,7 +744,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update food analysis (for editing detected foods) - PROTECTED
-  app.patch("/api/analyses/:id", authMiddleware, async (req: any, res) => {
+  app.patch("/api/analyses/:id", async (req: any, res) => {
     try {
       const { id } = req.params;
       const userId = req.user?.claims?.sub || 'anonymous-user';
@@ -872,7 +872,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // === FOOD CONFIRMATION API ENDPOINTS (for confidence threshold workflow) ===
   
   // Create food confirmation for low confidence analysis (<90%)
-  app.post("/api/food-confirmations", isAuthenticated, async (req: any, res) => {
+  app.post("/api/food-confirmations",  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedData = insertFoodConfirmationSchema.parse({
@@ -895,7 +895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get pending food confirmations for user
-  app.get("/api/food-confirmations", isAuthenticated, async (req: any, res) => {
+  app.get("/api/food-confirmations",  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const status = req.query.status as string | undefined;
@@ -909,7 +909,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get specific food confirmation
-  app.get("/api/food-confirmations/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/food-confirmations/:id",  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const confirmation = await storage.getFoodConfirmation(req.params.id);
@@ -931,7 +931,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Confirm or reject food analysis (user decision)
-  app.patch("/api/food-confirmations/:id", authMiddleware, async (req: any, res) => {
+  app.patch("/api/food-confirmations/:id", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const { id } = req.params;
@@ -994,7 +994,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Refresh analysis - reanalyze the image with current AI providers
-  app.post("/api/analyses/:id/refresh", isAuthenticated, async (req: any, res) => {
+  app.post("/api/analyses/:id/refresh",  async (req: any, res) => {
     try {
       const { id } = req.params;
       const userId = req.user.claims.sub;
@@ -1084,7 +1084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Diary routes - bypass auth in deployment with anonymous user support
-  app.post("/api/diary", authMiddleware, async (req: any, res) => {
+  app.post("/api/diary", async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
       const userId = req.user?.claims?.sub || 'anonymous-user';
@@ -1117,7 +1117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/diary", authMiddleware, async (req: any, res) => {
+  app.get("/api/diary", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
@@ -1133,7 +1133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/diary/:id", authMiddleware, async (req: any, res) => {
+  app.get("/api/diary/:id", async (req: any, res) => {
     try {
       const entry = await storage.getDiaryEntry(req.params.id);
       if (!entry) {
@@ -1153,7 +1153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/diary/:id", authMiddleware, async (req: any, res) => {
+  app.patch("/api/diary/:id", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getDiaryEntry(req.params.id);
@@ -1181,7 +1181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/diary/:id", authMiddleware, async (req: any, res) => {
+  app.delete("/api/diary/:id", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getDiaryEntry(req.params.id);
@@ -1208,7 +1208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === NUTRITION CALCULATION API ENDPOINTS ===
   
-  app.post("/api/calculate-nutrition", authMiddleware, async (req: any, res) => {
+  app.post("/api/calculate-nutrition", async (req: any, res) => {
     try {
       const { foods } = req.body;
       
@@ -1257,7 +1257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Diet advice routes (protected)
-  app.get("/api/diet-advice", isAuthenticated, async (req: any, res) => {
+  app.get("/api/diet-advice",  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const entries = await storage.getDiaryEntries(userId, 30); // Get last 30 entries for this user
@@ -1282,7 +1282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/diet-advice/generate", isAuthenticated, async (req: any, res) => {
+  app.post("/api/diet-advice/generate",  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const entries = await storage.getDiaryEntries(userId, 30);
@@ -1307,7 +1307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Custom AI question endpoint
-  app.post("/api/ai/ask", isAuthenticated, async (req: any, res) => {
+  app.post("/api/ai/ask",  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { question } = req.body;
@@ -1334,7 +1334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Drink routes (protected)
-  app.post("/api/drinks", authMiddleware, async (req: any, res) => {
+  app.post("/api/drinks", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const validatedEntry = insertDrinkEntrySchema.parse({
@@ -1349,7 +1349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/drinks", authMiddleware, async (req: any, res) => {
+  app.get("/api/drinks", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
@@ -1365,7 +1365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/drinks/:id", authMiddleware, async (req: any, res) => {
+  app.get("/api/drinks/:id", async (req: any, res) => {
     try {
       const entry = await storage.getDrinkEntry(req.params.id);
       if (!entry) {
@@ -1385,7 +1385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/drinks/:id", authMiddleware, async (req: any, res) => {
+  app.delete("/api/drinks/:id", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getDrinkEntry(req.params.id);
@@ -1411,7 +1411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Weight entry routes - bypass auth in deployment like diary routes
-  app.post("/api/weights", authMiddleware, async (req: any, res) => {
+  app.post("/api/weights", async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
       const userId = req.user?.claims?.sub || 'anonymous-user';
@@ -1427,7 +1427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/weights", authMiddleware, async (req: any, res) => {
+  app.get("/api/weights", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
@@ -1442,7 +1442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/weights/:id", authMiddleware, async (req: any, res) => {
+  app.get("/api/weights/:id", async (req: any, res) => {
     try {
       const entry = await storage.getWeightEntry(req.params.id);
       if (!entry) {
@@ -1462,7 +1462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/weights/:id", authMiddleware, async (req: any, res) => {
+  app.patch("/api/weights/:id", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || 'anonymous-user';
       const entry = await storage.getWeightEntry(req.params.id);
@@ -1490,7 +1490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/weights/:id", authMiddleware, async (req: any, res) => {
+  app.delete("/api/weights/:id", async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
       const userId = req.user?.claims?.sub || 'anonymous-user';
@@ -1517,7 +1517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Nutrition goals routes (protected in dev, open in deployment)
-  app.get("/api/nutrition-goals", authMiddleware, async (req: any, res) => {
+  app.get("/api/nutrition-goals", async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
       const userId = req.user?.claims?.sub || 'anonymous-user';
@@ -1529,7 +1529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/nutrition-goals", authMiddleware, async (req: any, res) => {
+  app.post("/api/nutrition-goals", async (req: any, res) => {
     try {
       // In deployment without auth, use anonymous user ID
       const userId = req.user?.claims?.sub || 'anonymous-user';
@@ -1546,7 +1546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User profile routes
-  app.get("/api/user-profile", isAuthenticated, async (req: any, res) => {
+  app.get("/api/user-profile",  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const profile = await storage.getUserProfile(userId);
@@ -1557,7 +1557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/user-profile", isAuthenticated, async (req: any, res) => {
+  app.post("/api/user-profile",  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedProfile = insertUserProfileSchema.parse({
@@ -1573,7 +1573,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Daily coaching endpoints
-  app.get('/api/coaching/daily', isAuthenticated, async (req: any, res) => {
+  app.get('/api/coaching/daily',  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       
@@ -1593,7 +1593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/coaching/generate', isAuthenticated, async (req: any, res) => {
+  app.post('/api/coaching/generate',  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       
