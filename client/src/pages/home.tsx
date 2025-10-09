@@ -124,6 +124,30 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
     }
   }, [isAuthenticated, queryClient]);
+
+  // Auto-create default nutrition goals if missing
+  useEffect(() => {
+    const createDefaultGoals = async () => {
+      if (isAuthenticated && nutritionGoals === undefined) {
+        try {
+          const response = await apiRequest('POST', '/api/nutrition-goals', {
+            dailyCalories: 2000,
+            dailyProtein: 150,
+            dailyCarbs: 250,
+            dailyFat: 65,
+            dailyWater: 2000
+          });
+          if (response.ok) {
+            queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+            console.log('✅ Default nutrition goals created');
+          }
+        } catch (error) {
+          console.error('Failed to create default nutrition goals:', error);
+        }
+      }
+    };
+    createDefaultGoals();
+  }, [isAuthenticated, nutritionGoals, queryClient]);
   
   // Handle page visibility/navigation
   useEffect(() => {
