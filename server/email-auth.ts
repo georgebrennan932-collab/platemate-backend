@@ -95,15 +95,25 @@ router.post("/login", async (req, res) => {
     const userKey = getUserKey(email);
     const userResult: any = await db.get(userKey);
 
+    console.log(`🔐 Login attempt for: ${email}`);
+    console.log(`📝 User key: ${userKey}`);
+    console.log(`📦 User found:`, !!userResult?.value);
+    
     if (!userResult || userResult.ok !== true || !userResult.value) {
+      console.log(`❌ User not found or invalid structure`);
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
     const user = userResult.value;
+    console.log(`🔑 Has passwordHash:`, !!user.passwordHash);
+    console.log(`🔒 Password length:`, password?.length);
 
     // Verify password
     const isValid = await bcrypt.compare(password, user.passwordHash);
+    console.log(`✅ Password valid:`, isValid);
+    
     if (!isValid) {
+      console.log(`❌ Password verification failed for ${email}`);
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
