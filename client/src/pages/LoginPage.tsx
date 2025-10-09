@@ -82,15 +82,15 @@ export default function LoginPage() {
         minHeight: '100vh',
         padding: '20px'
       }}>
-      <div style={{
-        background: 'white',
-        padding: '30px',
-        borderRadius: '15px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        width: '100%',
-        maxWidth: '360px',
-        textAlign: 'center'
-      }}>
+        <div style={{
+          background: 'white',
+          padding: '30px',
+          borderRadius: '15px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          width: '100%',
+          maxWidth: '360px',
+          textAlign: 'center'
+        }}>
         <h2 style={{ marginBottom: '20px', color: '#333' }}>Login to PlateMate</h2>
         
         <form onSubmit={handleLogin}>
@@ -204,8 +204,8 @@ export default function LoginPage() {
             Register here
           </a>
         </p>
+        </div>
       </div>
-    </div>
     </>
   );
 }
