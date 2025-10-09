@@ -7,6 +7,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [doorsOpen, setDoorsOpen] = useState(false);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -25,7 +26,14 @@ export default function LoginPage() {
       if (data.success) {
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("auth_user", JSON.stringify(data.user));
-        setLocation("/");
+        
+        // Trigger elevator door animation
+        setDoorsOpen(true);
+        
+        // Redirect after animation completes
+        setTimeout(() => {
+          setLocation("/");
+        }, 1500);
       } else {
         setError(data.error || "Login failed");
       }
@@ -37,15 +45,43 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ 
-      fontFamily: 'Arial, sans-serif', 
-      background: '#f3f0ff', 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      minHeight: '100vh',
-      padding: '20px'
-    }}>
+    <>
+      {/* Elevator Door Overlay */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        zIndex: 9999,
+        pointerEvents: 'none'
+      }}>
+        <div style={{
+          flex: 1,
+          background: 'linear-gradient(135deg, #5a007a, purple)',
+          transition: 'transform 1.5s ease-in-out',
+          transformOrigin: 'left center',
+          transform: doorsOpen ? 'translateX(-100%)' : 'translateX(0)'
+        }} />
+        <div style={{
+          flex: 1,
+          background: 'linear-gradient(135deg, #5a007a, purple)',
+          transition: 'transform 1.5s ease-in-out',
+          transformOrigin: 'right center',
+          transform: doorsOpen ? 'translateX(100%)' : 'translateX(0)'
+        }} />
+      </div>
+
+      <div style={{ 
+        fontFamily: 'Arial, sans-serif', 
+        background: '#f3f0ff', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        padding: '20px'
+      }}>
       <div style={{
         background: 'white',
         padding: '30px',
@@ -170,5 +206,6 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+    </>
   );
 }
