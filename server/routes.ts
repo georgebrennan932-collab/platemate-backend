@@ -1208,26 +1208,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/diary/:id", async (req: any, res) => {
     try {
+      console.log(`🗑️ DELETE /api/diary/${req.params.id} - Request received`);
       const userId = req.user?.claims?.sub;
+      console.log(`  User ID: ${userId}`);
+      console.log(`  User object:`, req.user);
       
       if (!userId) {
+        console.log(`❌ No user ID found - authentication required`);
         return res.status(401).json({ error: "Authentication required" });
       }
       const entry = await storage.getDiaryEntry(req.params.id);
+      console.log(`  Entry found:`, !!entry);
       
       if (!entry) {
+        console.log(`❌ Entry not found`);
         return res.status(404).json({ error: "Diary entry not found" });
       }
       
       // Verify the entry belongs to the user
+      console.log(`  Entry userId: ${entry.userId}, Current userId: ${userId}`);
       if (entry.userId !== userId) {
+        console.log(`❌ Access denied - entry belongs to different user`);
         return res.status(403).json({ error: "Access denied" });
       }
       
       const deleted = await storage.deleteDiaryEntry(req.params.id);
+      console.log(`  Deleted successfully: ${deleted}`);
       if (!deleted) {
+        console.log(`❌ Failed to delete entry`);
         return res.status(404).json({ error: "Diary entry not found" });
       }
+      console.log(`✅ Diary entry deleted successfully`);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete diary entry error:", error);
