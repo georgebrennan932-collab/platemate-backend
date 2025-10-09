@@ -738,7 +738,7 @@ export default function Home() {
                         onClick={() => {
                           localStorage.removeItem('auth_token');
                           localStorage.removeItem('auth_user');
-                          window.location.href = '/login';
+                          window.location.href = '/';
                         }}
                         className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors w-full" 
                         data-testid="button-nav-logout"
