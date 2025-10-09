@@ -748,7 +748,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/analyses/:id", async (req: any, res) => {
     try {
       const { id } = req.params;
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
 
       // Validate request body using zod schema (excludes client-side totals)
       const validatedData = updateFoodAnalysisSchema.parse(req.body);
@@ -934,7 +938,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Confirm or reject food analysis (user decision)
   app.patch("/api/food-confirmations/:id", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const { id } = req.params;
       
       // Verify ownership first
@@ -1084,11 +1092,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Diary routes - bypass auth in deployment with anonymous user support
+  // Diary routes - require authentication
   app.post("/api/diary", async (req: any, res) => {
     try {
-      // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       let analysisId = req.body.analysisId;
       
       // If modifiedAnalysis is provided, create a new analysis with the edited foods
@@ -1120,7 +1131,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/diary", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       // Disable caching for diary entries to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -1141,9 +1156,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Diary entry not found" });
       }
       
-      // Verify the entry belongs to the user (skip check for anonymous users in deployment)
-      const userId = req.user?.claims?.sub || 'anonymous-user';
-      if (req.user && entry.userId !== userId) {
+      // Verify the entry belongs to the authenticated user
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
       
@@ -1156,7 +1176,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/diary/:id", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const entry = await storage.getDiaryEntry(req.params.id);
       
       if (!entry) {
@@ -1184,7 +1208,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/diary/:id", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const entry = await storage.getDiaryEntry(req.params.id);
       
       if (!entry) {
@@ -1334,10 +1362,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Drink routes (protected)
+  // Drink routes - require authentication
   app.post("/api/drinks", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const validatedEntry = insertDrinkEntrySchema.parse({
         ...req.body,
         userId
@@ -1352,7 +1384,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/drinks", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       // Disable caching for drink entries to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -1373,9 +1409,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Drink entry not found" });
       }
       
-      // Verify the entry belongs to the user (skip check for anonymous users in deployment)
-      const userId = req.user?.claims?.sub || 'anonymous-user';
-      if (req.user && entry.userId !== userId) {
+      // Verify the entry belongs to the authenticated user
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
       
@@ -1388,7 +1429,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/drinks/:id", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const entry = await storage.getDrinkEntry(req.params.id);
       
       if (!entry) {
@@ -1414,8 +1459,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Weight entry routes - bypass auth in deployment like diary routes
   app.post("/api/weights", async (req: any, res) => {
     try {
-      // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const validatedEntry = insertWeightEntrySchema.parse({
         ...req.body,
         userId
@@ -1430,7 +1478,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/weights", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
       const start = req.query.start ? new Date(req.query.start as string) : undefined;
       const end = req.query.end ? new Date(req.query.end as string) : undefined;
@@ -1450,9 +1502,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Weight entry not found" });
       }
       
-      // Verify the entry belongs to the user (skip check for anonymous users in deployment)
-      const userId = req.user?.claims?.sub || 'anonymous-user';
-      if (req.user && entry.userId !== userId) {
+      // Verify the entry belongs to the authenticated user
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (entry.userId !== userId) {
         return res.status(403).json({ error: "Access denied" });
       }
       
@@ -1465,7 +1522,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/weights/:id", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const entry = await storage.getWeightEntry(req.params.id);
       
       if (!entry) {
@@ -1493,8 +1554,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/weights/:id", async (req: any, res) => {
     try {
-      // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const entry = await storage.getWeightEntry(req.params.id);
       
       if (!entry) {
@@ -1520,8 +1584,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Nutrition goals routes (protected in dev, open in deployment)
   app.get("/api/nutrition-goals", async (req: any, res) => {
     try {
-      // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const goals = await storage.getNutritionGoals(userId);
       res.json(goals);
     } catch (error) {
@@ -1532,8 +1599,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/nutrition-goals", async (req: any, res) => {
     try {
-      // In deployment without auth, use anonymous user ID
-      const userId = req.user?.claims?.sub || 'anonymous-user';
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const validatedGoals = insertNutritionGoalsSchema.parse({
         ...req.body,
         userId

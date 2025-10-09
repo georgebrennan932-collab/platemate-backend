@@ -1,16 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import Database from "@replit/database";
+import { sessions } from "./session-store";
 
 const db = new Database();
-
-// Import sessions from email-auth (shared reference)
-// Note: In production, sessions should be stored in database or Redis
-const sessions: Record<string, string> = {};
-
-// Helper to get sessions map (shared with email-auth)
-export function getSessionsMap(): Record<string, string> {
-  return sessions;
-}
 
 // Middleware to validate email/password auth session
 export async function emailAuthMiddleware(req: any, res: Response, next: NextFunction) {

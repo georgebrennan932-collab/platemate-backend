@@ -2,13 +2,10 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import Database from "@replit/database";
-import { getSessionsMap } from "./auth-middleware";
+import { sessions } from "./session-store";
 
 const router = Router();
 const db = new Database();
-
-// Use shared session storage from middleware
-const sessions = getSessionsMap();
 
 // Helper function to get user key in Replit DB
 const getUserKey = (email: string) => `user:${email}`;
