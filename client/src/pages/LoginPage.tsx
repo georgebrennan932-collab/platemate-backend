@@ -31,10 +31,10 @@ export default function LoginPage() {
         // Trigger elevator door animation
         setDoorsOpen(true);
         
-        // Redirect after animation completes (slower animation now)
+        // Redirect after animation completes (3.2s animation + 0.2s buffer)
         setTimeout(() => {
           setLocation("/");
-        }, 4200);
+        }, 3400);
       } else {
         setError(data.error || "Login failed");
       }
@@ -48,13 +48,19 @@ export default function LoginPage() {
   return (
     <>
       <style>{`
-        @keyframes slideLeft {
-          from { transform: translateX(0); }
-          to { transform: translateX(-100%); }
+        @keyframes doorLeft {
+          0% { transform: translateX(-100%); }
+          19% { transform: translateX(0); }
+          41% { transform: translateX(0); }
+          91% { transform: translateX(-100%); }
+          100% { transform: translateX(-100%); }
         }
-        @keyframes slideRight {
-          from { transform: translateX(0); }
-          to { transform: translateX(100%); }
+        @keyframes doorRight {
+          0% { transform: translateX(100%); }
+          19% { transform: translateX(0); }
+          41% { transform: translateX(0); }
+          91% { transform: translateX(100%); }
+          100% { transform: translateX(100%); }
         }
       `}</style>
       
@@ -66,57 +72,54 @@ export default function LoginPage() {
           left: 0,
           width: '100%',
           height: '100%',
-          display: 'flex',
           zIndex: 9999,
           pointerEvents: 'none'
         }}>
-          {/* Left Door with Left Half of Logo */}
+          {/* Background Layer - Full intact logo on purple gradient */}
           <div style={{
-            flex: 1,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
             background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-            animation: 'slideLeft 3.8s ease-in-out forwards',
-            transformOrigin: 'left center',
-            position: 'relative',
-            overflow: 'hidden'
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
           }}>
             <img 
               src={pmLogo} 
-              alt="PM Logo Left"
+              alt="PM Logo"
               style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
                 width: '200px',
-                height: '200px',
-                clipPath: 'inset(0 50% 0 0)'
+                height: '200px'
               }}
             />
           </div>
           
-          {/* Right Door with Right Half of Logo */}
+          {/* Left Metallic Door */}
           <div style={{
-            flex: 1,
-            background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-            animation: 'slideRight 3.8s ease-in-out forwards',
-            transformOrigin: 'right center',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <img 
-              src={pmLogo} 
-              alt="PM Logo Right"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                right: '50%',
-                transform: 'translate(50%, -50%)',
-                width: '200px',
-                height: '200px',
-                clipPath: 'inset(0 0 0 50%)'
-              }}
-            />
-          </div>
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '50%',
+            height: '100%',
+            background: 'linear-gradient(135deg, #111827 0%, #1f2937 35%, #4b5563 50%, #1f2937 65%, #0f172a 100%)',
+            animation: 'doorLeft 3.2s ease-in-out forwards',
+            boxShadow: 'inset -2px 0 8px rgba(0,0,0,0.5)'
+          }} />
+          
+          {/* Right Metallic Door */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '50%',
+            height: '100%',
+            background: 'linear-gradient(135deg, #111827 0%, #1f2937 35%, #4b5563 50%, #1f2937 65%, #0f172a 100%)',
+            animation: 'doorRight 3.2s ease-in-out forwards',
+            boxShadow: 'inset 2px 0 8px rgba(0,0,0,0.5)'
+          }} />
         </div>
       )}
 
