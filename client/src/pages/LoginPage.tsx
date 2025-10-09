@@ -62,6 +62,12 @@ export default function LoginPage() {
           91% { transform: translateX(100%); }
           100% { transform: translateX(100%); }
         }
+        @keyframes fadeInText {
+          0% { opacity: 0; }
+          40% { opacity: 0; }
+          55% { opacity: 1; }
+          100% { opacity: 1; }
+        }
       `}</style>
       
       {/* Elevator Door Overlay - Hidden until login succeeds */}
@@ -75,15 +81,47 @@ export default function LoginPage() {
           zIndex: 9999,
           pointerEvents: 'none'
         }}>
-          {/* Background Layer - Pure purple gradient (logo removed for seamless blend) */}
+          {/* Background Layer - Purple gradient with metallic welcome text */}
           <div style={{
             position: 'absolute',
             top: 0,
             left: 0,
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'
-          }} />
+            background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              background: 'linear-gradient(135deg, #e0e0e0 0%, #ffffff 25%, #c0c0c0 50%, #ffffff 75%, #e0e0e0 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: '0 0 20px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3)',
+              letterSpacing: '2px',
+              animation: 'fadeInText 3.2s ease-in-out forwards'
+            }}>
+              Welcome
+            </div>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '500',
+              background: 'linear-gradient(135deg, #d0d0d0 0%, #f5f5f5 50%, #d0d0d0 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: '0 0 15px rgba(255,255,255,0.4), 0 1px 3px rgba(0,0,0,0.2)',
+              letterSpacing: '1px',
+              animation: 'fadeInText 3.2s ease-in-out forwards'
+            }}>
+              to PlateMate
+            </div>
+          </div>
           
           {/* Left Metallic Door */}
           <div style={{
