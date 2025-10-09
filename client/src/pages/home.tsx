@@ -725,7 +725,7 @@ export default function Home() {
                     <div className="flex items-center space-x-2 mb-3">
                       <User className="h-4 w-4 text-foreground/80" />
                       <span className="text-sm font-medium text-foreground/90">
-                        {user?.firstName || user?.email || 'User'}
+                        {user?.email || 'User'}
                       </span>
                     </div>
                     {user?.email && (
@@ -734,10 +734,18 @@ export default function Home() {
                       </div>
                     )}
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                      <a href="/api/logout" className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors" data-testid="button-nav-logout">
+                      <button 
+                        onClick={() => {
+                          localStorage.removeItem('auth_token');
+                          localStorage.removeItem('auth_user');
+                          window.location.href = '/login';
+                        }}
+                        className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg p-2 transition-colors w-full" 
+                        data-testid="button-nav-logout"
+                      >
                         <LogOut className="h-4 w-4" />
                         <span className="text-sm font-medium">Logout</span>
-                      </a>
+                      </button>
                     </div>
                   </div>
                 )}

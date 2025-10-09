@@ -106,15 +106,18 @@ export function AppHeader() {
             <History className="h-5 w-5 text-foreground/80" />
           </button>
           {isAuthenticated && (
-            <a href="/api/logout">
-              <button 
-                className="p-3 rounded-xl bg-gradient-to-br from-red-100/50 to-red-200/30 dark:from-red-900/20 dark:to-red-800/10 backdrop-blur-sm hover:scale-110 smooth-transition border border-red-200/30 dark:border-red-700/20 hover:from-red-200/70 hover:to-red-300/50"
-                data-testid="button-logout"
-                title="Logout"
-              >
-                <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />
-              </button>
-            </a>
+            <button 
+              className="p-3 rounded-xl bg-gradient-to-br from-red-100/50 to-red-200/30 dark:from-red-900/20 dark:to-red-800/10 backdrop-blur-sm hover:scale-110 smooth-transition border border-red-200/30 dark:border-red-700/20 hover:from-red-200/70 hover:to-red-300/50"
+              data-testid="button-logout"
+              title="Logout"
+              onClick={() => {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('auth_user');
+                window.location.href = '/login';
+              }}
+            >
+              <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />
+            </button>
           )}
         </div>
       </div>
