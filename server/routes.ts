@@ -145,8 +145,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded images as static files from the correct upload directory
   app.use('/uploads', express.static(uploadDir));
   
-  // OAUTH DISABLED: Setup authentication
-  // await setupAuth(app);
+  // Email/password authentication middleware
+  const { emailAuthMiddleware } = await import('./auth-middleware');
+  app.use(emailAuthMiddleware);
 
   // OAUTH DISABLED: User authentication endpoint
   // app.get('/api/user', async (req: any, res) => {
