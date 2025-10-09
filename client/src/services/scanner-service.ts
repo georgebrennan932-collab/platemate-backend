@@ -163,7 +163,7 @@ function normalizeBarcodeValue(barcode: string): string | null {
 }
 
 export interface ScannerService {
-  startScanning(videoElement: HTMLVideoElement): Promise<void>;
+  startScanning(videoElement: HTMLVideoElement, stream?: MediaStream): Promise<void>;
   stopScanning(): void;
   isScanning(): boolean;
   toggleTorch(): Promise<boolean>;
@@ -187,9 +187,31 @@ class WebBarcodeScanner implements ScannerService {
     this.onError = onError;
   }
 
-  async startScanning(videoElement: HTMLVideoElement): Promise<void> {
+  async startScanning(videoElement: HTMLVideoElement, stream?: MediaStream): Promise<void> {
     try {
       console.log('🎥 Starting camera scanner...');
+      
+      // If stream is provided, use it directly
+      if (stream) {
+        console.log('✅ Using pre-authorized camera stream');
+        this.stream = stream;
+        this.track = this.stream.getVideoTracks()[0];
+        
+        // Try BarcodeDetector API first (Chrome, Edge, Android Chrome)
+        if ('BarcodeDetector' in window) {
+          console.log('📱 Using BarcodeDetector API');
+          await this.startBarcodeDetectorScanning(videoElement, stream);
+          return;
+        }
+
+        // Fallback to ZXing
+        console.log('📷 Using ZXing fallback');
+        await this.startZXingScanning(videoElement, stream);
+        return;
+      }
+      
+      // Legacy path - should not be used anymore
+      console.log('⚠️ WARNING: Camera stream not provided, requesting access...');
       console.log('🔐 Security context:', {
         isSecureContext: window.isSecureContext,
         location: window.location.href,
@@ -206,9 +228,6 @@ class WebBarcodeScanner implements ScannerService {
         throw new Error('Camera API not available in this browser');
       }
 
-      // More aggressive permission handling
-      console.log('📷 Requesting camera access directly...');
-      
       // Try BarcodeDetector API first (Chrome, Edge, Android Chrome)
       if ('BarcodeDetector' in window) {
         console.log('📱 Using BarcodeDetector API');
@@ -224,19 +243,23 @@ class WebBarcodeScanner implements ScannerService {
     }
   }
 
-  private async startBarcodeDetectorScanning(videoElement: HTMLVideoElement): Promise<void> {
-    // Use simple camera request like the photo feature - just ask for video: true
-    console.log('📷 Requesting camera access with simple constraints...');
-    
+  private async startBarcodeDetectorScanning(videoElement: HTMLVideoElement, stream?: MediaStream): Promise<void> {
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      this.track = this.stream.getVideoTracks()[0];
+      // Use provided stream or request new one
+      if (!stream) {
+        console.log('📷 Requesting camera access with simple constraints...');
+        this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        this.track = this.stream.getVideoTracks()[0];
+      } else {
+        // Stream already set in startScanning
+        console.log('✅ Using provided camera stream');
+      }
       
       console.log('✅ Camera access successful! Track details:', {
-        label: this.track.label,
-        kind: this.track.kind,
-        readyState: this.track.readyState,
-        enabled: this.track.enabled
+        label: this.track?.label,
+        kind: this.track?.kind,
+        readyState: this.track?.readyState,
+        enabled: this.track?.enabled
       });
       
       videoElement.srcObject = this.stream;
@@ -295,18 +318,22 @@ class WebBarcodeScanner implements ScannerService {
     }
   }
 
-  private async startZXingScanning(videoElement: HTMLVideoElement): Promise<void> {
-    const constraints = {
-      video: {
-        facingMode: 'environment',
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
-    };
-
+  private async startZXingScanning(videoElement: HTMLVideoElement, stream?: MediaStream): Promise<void> {
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-      this.track = this.stream.getVideoTracks()[0];
+      // Use provided stream or request new one
+      if (!stream) {
+        const constraints = {
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+        this.track = this.stream.getVideoTracks()[0];
+      }
+      // else stream already set in startScanning
+      
       videoElement.srcObject = this.stream;
       videoElement.playsInline = true;
       videoElement.muted = true;

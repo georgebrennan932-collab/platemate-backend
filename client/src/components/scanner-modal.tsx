@@ -73,12 +73,20 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
   const startScanning = async () => {
     if (!videoRef.current || !scannerRef.current) return;
     
-    setError(null);
-    setIsScanning(true);
-    
     try {
-      console.log('🚀 Starting camera scanner...');
-      await scannerRef.current.startScanning(videoRef.current);
+      console.log('🚀 Starting camera scanner - requesting permission IMMEDIATELY...');
+      
+      // CRITICAL: Request camera access SYNCHRONOUSLY before any state updates
+      // This ensures the browser considers it part of the user gesture
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log('✅ Camera permission granted! Stream obtained.');
+      
+      // Now update state after we have the stream
+      setError(null);
+      setIsScanning(true);
+      
+      // Pass the stream to the scanner
+      await scannerRef.current.startScanning(videoRef.current, stream);
       setScannerReady(true);
       console.log('✅ Camera scanner started successfully');
       
@@ -306,59 +314,42 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
           )}
         </div>
 
-        {/* Controls */}
-        <div className="p-4 bg-black/80 backdrop-blur-sm border-t border-white/10 flex items-center justify-center space-x-6">
-          {/* Torch Toggle */}
-          {torchSupported && (
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={toggleTorch}
-              className={`border-white/20 ${torchEnabled ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-white/10 hover:bg-white/20'}`}
-              data-testid="button-torch-toggle"
-            >
-              {torchEnabled ? <Zap className="h-5 w-5" /> : <ZapOff className="h-5 w-5" />}
-            </Button>
-          )}
+        {/* Controls - Only show when actively scanning */}
+        {scannerReady && (
+          <>
+            <div className="p-4 bg-black/80 backdrop-blur-sm border-t border-white/10 flex items-center justify-center space-x-6">
+              {/* Torch Toggle */}
+              {torchSupported && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={toggleTorch}
+                  className={`border-white/20 ${torchEnabled ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-white/10 hover:bg-white/20'}`}
+                  data-testid="button-torch-toggle"
+                >
+                  {torchEnabled ? <Zap className="h-5 w-5" /> : <ZapOff className="h-5 w-5" />}
+                </Button>
+              )}
 
-          {/* Manual Entry Fallback */}
-          <Button
-            variant="outline" 
-            onClick={() => {
-              handleClose();
-              // Open manual entry by clicking barcode button again
-              setTimeout(() => {
-                const barcodeButton = document.querySelector('[data-testid="button-barcode"]') as HTMLButtonElement;
-                if (barcodeButton) {
-                  // Create a manual entry event
-                  const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
-                  window.dispatchEvent(event);
-                }
-              }, 100);
-            }}
-            className="border-white/20 bg-white/10 hover:bg-white/20 text-white"
-            data-testid="button-manual-entry"
-          >
-            Enter Manually
-          </Button>
+              {/* Stop Scan Button */}
+              <Button
+                onClick={stopScanning}
+                size="lg"
+                className="bg-red-600 hover:bg-red-700 px-8"
+                data-testid="button-stop-scan"
+              >
+                Stop Scan
+              </Button>
+            </div>
 
-          {/* Rescan Button */}
-          <Button
-            onClick={scannerReady ? stopScanning : startScanning}
-            size="lg"
-            className="bg-blue-600 hover:bg-blue-700 px-8"
-            data-testid="button-rescan"
-          >
-            {scannerReady ? 'Stop' : 'Start'} Scan
-          </Button>
-        </div>
-
-        {/* Instructions */}
-        <div className="p-4 bg-black/60 text-center border-t border-white/10">
-          <p className="text-white/70 text-xs" data-testid="text-scan-instructions">
-            Hold steady and position the barcode within the frame. The scanner will automatically detect and process the code.
-          </p>
-        </div>
+            {/* Instructions */}
+            <div className="p-4 bg-black/60 text-center border-t border-white/10">
+              <p className="text-white/70 text-xs" data-testid="text-scan-instructions">
+                Hold steady and position the barcode within the frame. The scanner will automatically detect and process the code.
+              </p>
+            </div>
+          </>
+        )}
       </DialogContent>
       
       {/* Debug Modal - render outside Dialog to avoid z-index conflicts */}
