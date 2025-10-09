@@ -34,13 +34,14 @@ Preferred communication style: Simple, everyday language.
 - **Connection**: Neon Database serverless PostgreSQL integration ready
 
 ## Authentication and Authorization
-- **Replit OIDC Integration**: Full OpenID Connect authentication using Replit accounts for persistent user identity
-- **Session Management**: Connect-pg-simple for PostgreSQL session storage with secure cookie-based sessions (SameSite=None for mobile WebView compatibility)
-- **User Isolation**: Each authenticated user has isolated data (diary entries, analyses, weights) with proper ownership checks
-- **Authentication Middleware**: Express middleware protecting API endpoints with automatic session validation
-- **Frontend Integration**: useAuth React hook with automatic authentication state management and conditional UI rendering
-- **Mobile OAuth Flow**: Complete Capacitor-compatible authentication with Browser plugin, deep-link handling, and secure session bridging
-- **Bridge Token System**: One-time use cryptographic tokens (5-minute TTL) for secure mobile session establishment with automatic cleanup
+- **Email/Password Authentication**: Simple email and password authentication system using @replit/database for user storage
+- **Session Management**: In-memory session storage with bearer token authentication sent via Authorization headers
+- **Security Question System**: Password reset capability using security question ("What is your favorite food?") with bcrypt-hashed answers
+- **User Isolation**: Each authenticated user has isolated data (diary entries, analyses, weights, drinks, nutrition goals) with strict ownership validation
+- **Authentication Middleware**: Express middleware validating session tokens and attaching user info to all API requests
+- **Frontend Integration**: useAuth React hook with localStorage-based auth state, automatic token headers on all API requests
+- **Password Reset Flow**: Two-step reset process (verify email + security answer → set new password) with 15-minute expiring reset tokens
+- **Route Protection**: All user-specific API endpoints require authentication (401 errors for unauthenticated requests)
 
 ## AI Services Architecture
 - **Multi-Provider System**: Intelligent AI provider management with automatic failover
@@ -106,3 +107,8 @@ Preferred communication style: Simple, everyday language.
 - **System Browser OAuth Enforcement**: Enhanced auth launcher to ALWAYS use device's system browser (Chrome, Safari, etc.) for login/signup, preventing Google WebView OAuth blocks with comprehensive error handling and logging
 - **Eliminated WebView Login Traps**: Removed all hardcoded login links that could accidentally open in embedded WebView, ensuring smooth authentication flow
 - **Beautiful Results Page Design**: Completely transformed food analysis results page to match Diary/Rewards aesthetic with vibrant purple gradient header, cream/beige gradient food item cards, light gradient "Add Missing Foods" section (purple/pink/orange), modern gradient Save/Reset buttons, and polished shadows/spacing throughout
+- **Complete Email/Password Authentication System**: Replaced Replit OIDC with standalone email/password auth using @replit/database for user storage, bcrypt password hashing, in-memory session management with bearer tokens, and Authorization header-based authentication on all API requests
+- **Security Question Password Reset**: Implemented two-step password reset flow with security question verification ("What is your favorite food?"), 15-minute expiring reset tokens stored in Replit DB, and complete UI with /forgot-password page
+- **Data Isolation Fixed**: Eliminated anonymous-user fallback that caused all users to share the same diary - each authenticated user now has completely isolated diary entries, weights, drinks, and nutrition goals with strict ownership validation
+- **Authentication Middleware**: Created singleton session storage (server/session-store.ts) shared between middleware and auth routes, with automatic token validation and user attachment to all API requests
+- **Frontend Auth Integration**: Updated queryClient to send Authorization: Bearer {token} headers with all API requests (GET and POST), localStorage-based auth state, and useAuth hook for authentication checks
