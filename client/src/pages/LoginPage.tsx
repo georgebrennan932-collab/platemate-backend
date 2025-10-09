@@ -34,7 +34,7 @@ export default function LoginPage() {
         // Redirect after animation completes (slower animation now)
         setTimeout(() => {
           setLocation("/");
-        }, 2800);
+        }, 4200);
       } else {
         setError(data.error || "Login failed");
       }
@@ -73,8 +73,8 @@ export default function LoginPage() {
           {/* Left Door with Left Half of Logo */}
           <div style={{
             flex: 1,
-            background: 'linear-gradient(135deg, #c0c0c0, #e8e8e8)',
-            animation: 'slideLeft 2.5s ease-in-out forwards',
+            background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+            animation: 'slideLeft 3.8s ease-in-out forwards',
             transformOrigin: 'left center',
             position: 'relative',
             overflow: 'hidden'
@@ -97,8 +97,8 @@ export default function LoginPage() {
           {/* Right Door with Right Half of Logo */}
           <div style={{
             flex: 1,
-            background: 'linear-gradient(135deg, #c0c0c0, #e8e8e8)',
-            animation: 'slideRight 2.5s ease-in-out forwards',
+            background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+            animation: 'slideRight 3.8s ease-in-out forwards',
             transformOrigin: 'right center',
             position: 'relative',
             overflow: 'hidden'
