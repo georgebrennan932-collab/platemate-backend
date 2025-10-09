@@ -86,14 +86,13 @@ export default function LoginPage() {
 
       <div style={{ 
         fontFamily: 'Arial, sans-serif', 
-        background: '#f3f0ff', 
+        background: doorsOpen ? 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)' : '#f3f0ff',
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
         padding: '20px',
-        opacity: doorsOpen ? 0 : 1,
-        transition: 'opacity 0.3s ease-in-out'
+        transition: 'background 0.5s ease-in-out'
       }}>
         <div style={{
           background: 'white',
