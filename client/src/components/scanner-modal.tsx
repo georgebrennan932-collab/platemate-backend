@@ -54,14 +54,9 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
       setIsScanning(false);
       setScannerReady(false);
       
-      // Auto-fallback to manual entry for permission errors
+      // Keep error visible for user to see and manually choose manual entry if needed
       if (scanError.type === 'permission') {
-        console.log('🔄 Scanner permission error, opening manual entry immediately...');
-        
-        // Open manual entry immediately (no delay)
-        const event = new CustomEvent('open-manual-barcode', { detail: { manual: true, autoFallback: true } });
-        window.dispatchEvent(event);
-        onClose();
+        console.log('🔄 Scanner permission error - user can click manual entry button');
       }
     };
 
@@ -97,20 +92,12 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
       setIsScanning(false);
       setScannerReady(false);
       
-      // Auto-fallback to manual entry for permission errors
+      // Show error to user - they can manually choose manual entry if needed
       if (error instanceof Error && 
           (error.name === 'NotAllowedError' || 
            error.message.includes('Permission denied') ||
            error.message.includes('Camera access'))) {
-        console.log('🔄 Camera permission denied, auto-opening manual entry in 2 seconds...');
-        
-        // Brief delay to let user see the error, then auto-open manual entry
-        setTimeout(() => {
-          console.log('🔄 Opening manual barcode entry automatically...');
-          const event = new CustomEvent('open-manual-barcode', { detail: { manual: true, autoFallback: true } });
-          window.dispatchEvent(event);
-          onClose();
-        }, 2000);
+        console.log('🔄 Camera permission denied - user can click manual entry button');
       }
     }
   };

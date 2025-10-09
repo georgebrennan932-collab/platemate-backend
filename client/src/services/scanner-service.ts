@@ -225,86 +225,48 @@ class WebBarcodeScanner implements ScannerService {
   }
 
   private async startBarcodeDetectorScanning(videoElement: HTMLVideoElement): Promise<void> {
-    // Try multiple constraint strategies for better browser compatibility
-    const constraintStrategies = [
-      {
-        video: {
-          facingMode: { exact: 'environment' }, // Try exact back camera first
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      },
-      {
-        video: {
-          facingMode: 'environment', // Fallback to preferred back camera
-          width: { min: 640 },
-          height: { min: 480 }
-        }
-      },
-      {
-        video: true // Final fallback - any camera
-      }
-    ];
-
-    let lastError;
+    // Use simple camera request like the photo feature - just ask for video: true
+    console.log('📷 Requesting camera access with simple constraints...');
     
-    for (let i = 0; i < constraintStrategies.length; i++) {
-      const constraints = constraintStrategies[i];
-      console.log(`📷 Trying camera constraints ${i + 1}/${constraintStrategies.length}:`, constraints);
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      this.track = this.stream.getVideoTracks()[0];
       
-      try {
-        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-        this.track = this.stream.getVideoTracks()[0];
-        
-        console.log('✅ Camera access successful! Track details:', {
-          label: this.track.label,
-          kind: this.track.kind,
-          readyState: this.track.readyState,
-          enabled: this.track.enabled
-        });
-        
-        videoElement.srcObject = this.stream;
-        videoElement.playsInline = true;
-        videoElement.muted = true;
-        videoElement.autoplay = true;
-        
-        // Wait for video to be ready
-        await new Promise((resolve, reject) => {
-          videoElement.addEventListener('loadedmetadata', resolve, { once: true });
-          videoElement.addEventListener('error', reject, { once: true });
-          setTimeout(reject, 5000); // 5 second timeout
-        });
-        
-        await videoElement.play();
-        this.isActive = true;
+      console.log('✅ Camera access successful! Track details:', {
+        label: this.track.label,
+        kind: this.track.kind,
+        readyState: this.track.readyState,
+        enabled: this.track.enabled
+      });
+      
+      videoElement.srcObject = this.stream;
+      videoElement.playsInline = true;
+      videoElement.muted = true;
+      videoElement.autoplay = true;
+      
+      // Wait for video to be ready
+      await new Promise((resolve, reject) => {
+        videoElement.addEventListener('loadedmetadata', resolve, { once: true });
+        videoElement.addEventListener('error', reject, { once: true });
+        setTimeout(reject, 5000); // 5 second timeout
+      });
+      
+      await videoElement.play();
+      this.isActive = true;
 
-        // Create BarcodeDetector with supported formats
-        const barcodeDetector = new (window as any).BarcodeDetector({
-          formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39']
-        });
+      // Create BarcodeDetector with supported formats
+      const barcodeDetector = new (window as any).BarcodeDetector({
+        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39']
+      });
 
-        console.log('🔍 Starting barcode detection...');
-        // Start detection loop
-        this.detectBarcodes(barcodeDetector, videoElement);
-        return; // Success!
-        
-      } catch (error) {
-        console.log(`❌ Camera constraints ${i + 1} failed:`, error);
-        lastError = error;
-        
-        // Clean up failed attempt
-        if (this.stream) {
-          this.stream.getTracks().forEach(track => track.stop());
-          this.stream = null;
-          this.track = null;
-        }
-        
-        // Continue to next strategy
-      }
+      console.log('🔍 Starting barcode detection...');
+      // Start detection loop
+      this.detectBarcodes(barcodeDetector, videoElement);
+      
+    } catch (error) {
+      console.log('❌ Camera access failed:', error);
+      throw error;
     }
-    
-    // All strategies failed
-    throw lastError || new Error('All camera access strategies failed');
   }
 
   private async detectBarcodes(detector: any, videoElement: HTMLVideoElement): Promise<void> {
