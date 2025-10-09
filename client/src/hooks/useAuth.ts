@@ -1,23 +1,27 @@
-import { useQuery } from "@tanstack/react-query";
-import type { User } from "@shared/schema";
-import { getQueryFn } from "../lib/queryClient";
+import { useState, useEffect } from "react";
 
 export function useAuth() {
-  const { data: user, isLoading, error } = useQuery<User | null>({
-    queryKey: ['/api/user'],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: false,
-    // Prevent refetching on window focus/mount to avoid loops
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    // Cache for longer to reduce requests
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Log any errors for debugging (but don't crash)
-  if (error) {
-    console.error('⚠️ Auth check error (non-fatal):', error);
-  }
+  useEffect(() => {
+    // Check for stored auth token and user
+    const token = localStorage.getItem("auth_token");
+    const storedUser = localStorage.getItem("auth_user");
+
+    if (token && storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+      } catch (error) {
+        console.error('Failed to parse user data:', error);
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_user");
+      }
+    }
+
+    setIsLoading(false);
+  }, []);
 
   return {
     user,
