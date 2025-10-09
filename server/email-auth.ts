@@ -174,4 +174,113 @@ router.post("/logout", async (req, res) => {
   }
 });
 
+// POST /api/reset-password-verify - verify email and security answer for password reset
+router.post("/reset-password-verify", async (req, res) => {
+  try {
+    const { email, securityAnswer } = req.body;
+
+    // Validate input
+    if (!email || !securityAnswer) {
+      return res.status(400).json({ error: "Email and security answer are required" });
+    }
+
+    // Find user by email
+    const userKey = getUserKey(email);
+    const userResult: any = await db.get(userKey);
+
+    if (!userResult || userResult.ok !== true || !userResult.value) {
+      return res.status(401).json({ error: "Invalid email or security answer" });
+    }
+
+    const user = userResult.value;
+
+    // Verify security answer (case-insensitive)
+    const isValid = await bcrypt.compare(securityAnswer.trim().toLowerCase(), user.securityAnswerHash);
+    
+    if (!isValid) {
+      return res.status(401).json({ error: "Invalid email or security answer" });
+    }
+
+    // Generate a temporary reset token (valid for 15 minutes)
+    const resetToken = uuidv4();
+    const resetKey = `reset:${resetToken}`;
+    await db.set(resetKey, {
+      email,
+      expiresAt: Date.now() + 15 * 60 * 1000 // 15 minutes
+    });
+
+    res.json({
+      success: true,
+      resetToken,
+      message: "Security answer verified. You can now reset your password."
+    });
+  } catch (error: any) {
+    console.error("Reset password verify error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/reset-password - reset password using reset token
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+
+    // Validate input
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ error: "Reset token and new password are required" });
+    }
+
+    // Check if password meets minimum requirements
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+
+    // Verify reset token
+    const resetKey = `reset:${resetToken}`;
+    const resetData: any = await db.get(resetKey);
+
+    if (!resetData || resetData.ok !== true || !resetData.value) {
+      return res.status(401).json({ error: "Invalid or expired reset token" });
+    }
+
+    const { email, expiresAt } = resetData.value;
+
+    // Check if token is expired
+    if (Date.now() > expiresAt) {
+      await db.delete(resetKey);
+      return res.status(401).json({ error: "Reset token has expired" });
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update user password
+    const userKey = getUserKey(email);
+    const userResult: any = await db.get(userKey);
+    
+    if (!userResult || userResult.ok !== true || !userResult.value) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userData = {
+      ...userResult.value,
+      passwordHash,
+      updatedAt: Date.now()
+    };
+
+    await db.set(userKey, userData);
+
+    // Delete reset token
+    await db.delete(resetKey);
+
+    res.json({
+      success: true,
+      message: "Password reset successfully. You can now log in with your new password."
+    });
+  } catch (error: any) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;
