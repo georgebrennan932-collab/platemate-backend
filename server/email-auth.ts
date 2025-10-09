@@ -108,6 +108,14 @@ router.post("/login", async (req, res) => {
     console.log(`🔑 Has passwordHash:`, !!user.passwordHash);
     console.log(`🔒 Password length:`, password?.length);
 
+    // Check if user has a password hash (old users from OIDC system might not)
+    if (!user.passwordHash) {
+      console.log(`❌ No password hash found for ${email} - likely old user from previous system`);
+      return res.status(401).json({ 
+        error: "Account needs password setup. Please use 'Forgot Password' to set a new password or register again." 
+      });
+    }
+
     // Verify password
     const isValid = await bcrypt.compare(password, user.passwordHash);
     console.log(`✅ Password valid:`, isValid);
