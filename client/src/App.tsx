@@ -10,6 +10,8 @@ import CameraPage from "./pages/CameraPage";
 import CameraTestPage from "./pages/CameraTestPage";
 import VoicePage from "./pages/VoicePage";
 import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import Home from "./pages/home";
 import DiaryPage from "./pages/DiaryPage";
 import DietAdvicePage from "./pages/DietAdvicePage";
@@ -136,6 +138,8 @@ function App() {
     <Switch>
       <Route path="/" component={RootRoute} />
       <Route path="/landing" component={LandingPage} />
+      <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
       <Route path="/scan" component={CameraPage} />
       <Route path="/home" component={Home} />
       <Route path="/diary" component={DiaryPage} />
