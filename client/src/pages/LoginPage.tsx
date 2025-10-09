@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import pmLogo from "@assets/pm-logo.png";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
@@ -69,18 +70,53 @@ export default function LoginPage() {
           zIndex: 9999,
           pointerEvents: 'none'
         }}>
+          {/* Left Door with Left Half of Logo */}
           <div style={{
             flex: 1,
             background: 'linear-gradient(135deg, #5a007a, purple)',
             animation: 'slideLeft 1.5s ease-in-out forwards',
-            transformOrigin: 'left center'
-          }} />
+            transformOrigin: 'left center',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <img 
+              src={pmLogo} 
+              alt="PM Logo Left"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '200px',
+                height: '200px',
+                clipPath: 'inset(0 50% 0 0)'
+              }}
+            />
+          </div>
+          
+          {/* Right Door with Right Half of Logo */}
           <div style={{
             flex: 1,
             background: 'linear-gradient(135deg, #5a007a, purple)',
             animation: 'slideRight 1.5s ease-in-out forwards',
-            transformOrigin: 'right center'
-          }} />
+            transformOrigin: 'right center',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <img 
+              src={pmLogo} 
+              alt="PM Logo Right"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: '50%',
+                transform: 'translate(50%, -50%)',
+                width: '200px',
+                height: '200px',
+                clipPath: 'inset(0 0 0 50%)'
+              }}
+            />
+          </div>
         </div>
       )}
 
