@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import Database from "@replit/database";
 import { sessions } from "./session-store";
+import { storage } from "./storage";
 
 const router = Router();
 const db = new Database();
@@ -57,6 +58,12 @@ router.post("/register", async (req, res) => {
 
     await db.set(userKey, userData);
 
+    // Create user in PostgreSQL database (using email as id for consistency)
+    await storage.upsertUser({
+      id: email, // Use email as the user ID for consistency with session management
+      email,
+    });
+
     // Generate session token
     const token = uuidv4();
     sessions[token] = email;
@@ -99,6 +106,12 @@ router.post("/login", async (req, res) => {
     if (!isValid) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
+
+    // Ensure user exists in PostgreSQL database (for backward compatibility)
+    await storage.upsertUser({
+      id: email,
+      email,
+    });
 
     // Generate session token
     const token = uuidv4();
