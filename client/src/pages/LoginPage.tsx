@@ -46,32 +46,43 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* Elevator Door Overlay */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        zIndex: 9999,
-        pointerEvents: 'none'
-      }}>
+      <style>{`
+        @keyframes slideLeft {
+          from { transform: translateX(0); }
+          to { transform: translateX(-100%); }
+        }
+        @keyframes slideRight {
+          from { transform: translateX(0); }
+          to { transform: translateX(100%); }
+        }
+      `}</style>
+      
+      {/* Elevator Door Overlay - Hidden until login succeeds */}
+      {doorsOpen && (
         <div style={{
-          flex: 1,
-          background: 'linear-gradient(135deg, #5a007a, purple)',
-          transition: 'transform 1.5s ease-in-out',
-          transformOrigin: 'left center',
-          transform: doorsOpen ? 'translateX(-100%)' : 'translateX(0)'
-        }} />
-        <div style={{
-          flex: 1,
-          background: 'linear-gradient(135deg, #5a007a, purple)',
-          transition: 'transform 1.5s ease-in-out',
-          transformOrigin: 'right center',
-          transform: doorsOpen ? 'translateX(100%)' : 'translateX(0)'
-        }} />
-      </div>
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          zIndex: 9999,
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            flex: 1,
+            background: 'linear-gradient(135deg, #5a007a, purple)',
+            animation: 'slideLeft 1.5s ease-in-out forwards',
+            transformOrigin: 'left center'
+          }} />
+          <div style={{
+            flex: 1,
+            background: 'linear-gradient(135deg, #5a007a, purple)',
+            animation: 'slideRight 1.5s ease-in-out forwards',
+            transformOrigin: 'right center'
+          }} />
+        </div>
+      )}
 
       <div style={{ 
         fontFamily: 'Arial, sans-serif', 
