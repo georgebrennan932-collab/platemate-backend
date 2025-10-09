@@ -12,6 +12,7 @@ import VoicePage from "./pages/VoicePage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import Home from "./pages/home";
 import DiaryPage from "./pages/DiaryPage";
 import DietAdvicePage from "./pages/DietAdvicePage";
@@ -140,6 +141,7 @@ function App() {
       <Route path="/landing" component={LandingPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/scan" component={CameraPage} />
       <Route path="/home" component={Home} />
       <Route path="/diary" component={DiaryPage} />

@@ -132,7 +132,25 @@ export default function LoginPage() {
           </button>
         </form>
         
-        <p style={{ marginTop: '15px', fontSize: '14px', color: '#666' }}>
+        <p style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
+          <a
+            data-testid="link-forgot-password"
+            href="/forgot-password"
+            onClick={(e) => {
+              e.preventDefault();
+              setLocation("/forgot-password");
+            }}
+            style={{
+              color: 'purple',
+              textDecoration: 'none',
+              fontWeight: 'bold'
+            }}
+          >
+            Forgot Password?
+          </a>
+        </p>
+        
+        <p style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
           No account?{' '}
           <a
             data-testid="link-register"
