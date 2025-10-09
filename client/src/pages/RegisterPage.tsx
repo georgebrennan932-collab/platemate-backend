@@ -5,6 +5,7 @@ export default function RegisterPage() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [securityAnswer, setSecurityAnswer] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -17,7 +18,11 @@ export default function RegisterPage() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+        body: JSON.stringify({ 
+          email: email.trim(), 
+          password: password.trim(),
+          securityAnswer: securityAnswer.trim()
+        }),
       });
 
       const data = await res.json();
@@ -83,6 +88,35 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
+            style={{
+              width: '90%',
+              padding: '10px',
+              margin: '8px 0',
+              borderRadius: '8px',
+              border: '1px solid #ccc',
+              fontSize: '14px'
+            }}
+          />
+          <br />
+          
+          <div style={{ 
+            textAlign: 'left', 
+            width: '90%', 
+            margin: '15px auto 5px', 
+            fontSize: '13px', 
+            color: '#555',
+            fontWeight: '500'
+          }}>
+            Security Question: What is your favorite food?
+          </div>
+          
+          <input
+            data-testid="input-security-answer"
+            type="text"
+            placeholder="Your answer (for password reset)"
+            value={securityAnswer}
+            onChange={(e) => setSecurityAnswer(e.target.value)}
+            required
             style={{
               width: '90%',
               padding: '10px',

@@ -13,11 +13,16 @@ const getUserKey = (email: string) => `user:${email}`;
 // POST /api/register - create a new user
 router.post("/register", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, securityAnswer } = req.body;
 
     // Validate input
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // Validate security answer
+    if (!securityAnswer || securityAnswer.trim().length === 0) {
+      return res.status(400).json({ error: "Security answer is required" });
     }
 
     // Check if email is valid
@@ -39,12 +44,14 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    // Hash password
+    // Hash password and security answer
     const passwordHash = await bcrypt.hash(password, 10);
+    const securityAnswerHash = await bcrypt.hash(securityAnswer.trim().toLowerCase(), 10);
 
     // Create user in Replit Database
     const userData = {
       passwordHash,
+      securityAnswerHash,
       createdAt: Date.now()
     };
 
