@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Edit2, Save, X, Clock, Type, FileText, UtensilsCrossed } from "lucide-react";
+import { Edit2, Salad, Clock, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -34,38 +34,15 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   
-  const [mealType, setMealType] = useState(entry.mealType || "lunch");
   const [mealDate, setMealDate] = useState(
     format(new Date(entry.mealDate), "yyyy-MM-dd'T'HH:mm")
   );
   const [notes, setNotes] = useState(entry.notes || "");
-  const [customMealName, setCustomMealName] = useState("");
+  const [servingSize, setServingSize] = useState(entry.notes?.match(/:\s*"([^"]+)"/)?.[1] || "");
   
-  // Store original foods for proper multiplier calculation
-  const originalFoods = entry.analysis?.detectedFoods || [];
-  
-  // Serving size multipliers for each food (1 = original portion)
-  const [servingSizes, setServingSizes] = useState<{[key: number]: number}>(
-    originalFoods.reduce((acc, _, index) => ({ ...acc, [index]: 1 }), {})
-  );
-  
-  // Calculate updated nutrition based on serving sizes
-  const [updatedFoods, setUpdatedFoods] = useState(originalFoods);
-  
-  // Recalculate nutrition when serving sizes change
-  useEffect(() => {
-    const recalculated = originalFoods.map((food, index) => {
-      const multiplier = servingSizes[index] || 1;
-      return {
-        ...food,
-        calories: Math.round(food.calories * multiplier),
-        protein: Math.round(food.protein * multiplier * 10) / 10,
-        carbs: Math.round(food.carbs * multiplier * 10) / 10,
-        fat: Math.round(food.fat * multiplier * 10) / 10,
-      };
-    });
-    setUpdatedFoods(recalculated);
-  }, [servingSizes]);
+  // Get first food item for display
+  const firstFood = entry.analysis?.detectedFoods?.[0];
+  const foodName = firstFood?.name || "Food Item";
 
   const updateMutation = useMutation({
     mutationFn: async (updateData: any) => {
@@ -123,52 +100,52 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
   });
 
   const handleSave = async () => {
-    // Check if serving sizes changed
-    const servingsChanged = Object.keys(servingSizes).some((index) => 
-      servingSizes[parseInt(index)] !== 1
-    );
-
-    if (servingsChanged && entry.analysis) {
+    // If serving size changed, trigger re-analysis
+    if (servingSize.trim() && entry.analysis) {
       try {
-        // Update food analysis with recalculated nutrition
-        await apiRequest("PATCH", `/api/analyses/${entry.analysis.id}`, {
-          detectedFoods: updatedFoods
+        toast({
+          title: "Re-analyzing food...",
+          description: "Calculating nutrition for new serving size",
+        });
+
+        const response = await apiRequest("POST", "/api/calculate-nutrition", {
+          foods: [{ name: foodName, portion: servingSize }]
         });
         
-        // Invalidate analyses cache
-        queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
+        const nutritionData = await response.json();
+        
+        if (nutritionData.foods && nutritionData.foods.length > 0) {
+          // Update analysis with new nutrition data
+          await apiRequest("PATCH", `/api/analyses/${entry.analysis.id}`, {
+            detectedFoods: nutritionData.foods
+          });
+          
+          queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
+        }
       } catch (error) {
-        console.error("Failed to update food portions:", error);
+        console.error("Failed to re-analyze:", error);
         toast({
-          title: "Portion Update Failed",
-          description: "Could not update food portions. Other changes will still be saved.",
+          title: "Re-analysis Failed",
+          description: "Could not calculate new nutrition values",
           variant: "destructive",
         });
       }
     }
 
-    // Update diary entry metadata
+    // Update diary entry
     const updateData: any = {
-      mealType,
+      mealType: entry.mealType,
       mealDate: new Date(mealDate).toISOString(),
       notes: notes.trim() || undefined,
     };
-
-    if (mealType === "custom" && customMealName.trim()) {
-      updateData.customMealName = customMealName.trim();
-    }
 
     updateMutation.mutate(updateData);
   };
 
   const resetForm = () => {
-    setMealType(entry.mealType || "lunch");
     setMealDate(format(new Date(entry.mealDate), "yyyy-MM-dd'T'HH:mm"));
     setNotes(entry.notes || "");
-    setCustomMealName("");
-    setServingSizes(
-      originalFoods.reduce((acc, _, index) => ({ ...acc, [index]: 1 }), {})
-    );
+    setServingSize(entry.notes?.match(/:\s*"([^"]+)"/)?.[1] || "");
   };
 
   return (
@@ -185,128 +162,92 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
-            <Edit2 className="h-6 w-6 text-purple-600" />
-            Edit Meal
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          {/* Meal Type & Date/Time - Combined */}
-          <div className="bg-gradient-to-br from-purple-50 to-orange-50 dark:from-purple-900/20 dark:to-orange-900/20 rounded-2xl p-4 space-y-3">
-            <div>
-              <Label htmlFor="meal-type" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                Meal Type
-              </Label>
-              <Select value={mealType} onValueChange={setMealType}>
-                <SelectTrigger data-testid="select-meal-type" className="bg-white dark:bg-gray-800">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="breakfast">🌅 Breakfast</SelectItem>
-                  <SelectItem value="lunch">🌞 Lunch</SelectItem>
-                  <SelectItem value="dinner">🌜 Dinner</SelectItem>
-                  <SelectItem value="snack">🍎 Snack</SelectItem>
-                </SelectContent>
-              </Select>
+      <DialogContent className="max-w-md bg-white dark:bg-gray-900">
+        <div className="space-y-6 py-4">
+          {/* Food Header */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <Salad className="w-8 h-8 text-purple-600 dark:text-purple-400" />
             </div>
-
-            <div>
-              <Label htmlFor="meal-date" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                Date & Time
-              </Label>
-              <Input
-                id="meal-date"
-                type="datetime-local"
-                value={mealDate}
-                onChange={(e) => setMealDate(e.target.value)}
-                className="bg-white dark:bg-gray-800"
-                data-testid="input-meal-date"
-              />
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {foodName}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {firstFood?.portion || "Serving"}
+              </p>
             </div>
           </div>
 
-          {/* Serving Sizes */}
-          {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl p-4 space-y-3">
-              <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                <UtensilsCrossed className="h-4 w-4 text-orange-600" />
-                Adjust Servings
-              </h3>
-              {originalFoods.map((food, index) => {
-                const updated = updatedFoods[index];
-                return (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-                          {food.name}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {food.portion}
-                        </div>
-                      </div>
-                      <Input
-                        type="number"
-                        min="0.1"
-                        step="0.5"
-                        value={servingSizes[index] || 1}
-                        onChange={(e) => setServingSizes({ ...servingSizes, [index]: parseFloat(e.target.value) || 1 })}
-                        className="w-16 text-center bg-white dark:bg-gray-800"
-                        data-testid={`input-serving-${index}`}
-                      />
-                      <span className="text-xs text-gray-500 dark:text-gray-400 w-8">×</span>
-                    </div>
-                    {updated && (
-                      <div className="flex gap-2 text-xs text-gray-600 dark:text-gray-400 pl-2">
-                        <span>🔥 {updated.calories}cal</span>
-                        <span>💪 {updated.protein}g</span>
-                        <span>🌾 {updated.carbs}g</span>
-                        <span>🥑 {updated.fat}g</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {/* Serving Size */}
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              Serving Size
+            </h3>
+            <Input
+              type="text"
+              value={servingSize}
+              onChange={(e) => setServingSize(e.target.value)}
+              placeholder="e.g., 4 biscuits, 100g, 2 slices"
+              className="text-lg"
+              data-testid="input-serving-size"
+            />
+          </div>
+
+          {/* Date & Time */}
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Date & Time
+            </h3>
+            <Input
+              id="meal-date"
+              type="datetime-local"
+              value={mealDate}
+              onChange={(e) => setMealDate(e.target.value)}
+              className="text-base"
+              data-testid="input-meal-date"
+            />
+          </div>
 
           {/* Notes */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-4 space-y-2">
-            <Label htmlFor="notes" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <FileText className="w-5 h-5" />
               Notes (Optional)
-            </Label>
+            </h3>
             <Textarea
               id="notes"
               placeholder="Add any notes..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="bg-white dark:bg-gray-800"
+              className="text-base"
               data-testid="input-notes"
             />
           </div>
-        </div>
 
-        <div className="flex gap-3 pt-4">
-          <Button
-            onClick={() => setOpen(false)}
-            variant="outline"
-            className="flex-1"
-            data-testid="button-cancel"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={updateMutation.isPending}
-            className="flex-1 bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white"
-            data-testid="button-save"
-          >
-            {updateMutation.isPending ? "Saving..." : "Save"}
-          </Button>
+          {/* Buttons */}
+          <div className="flex gap-3 pt-2">
+            <Button
+              onClick={() => setOpen(false)}
+              variant="outline"
+              size="lg"
+              className="flex-1 text-base"
+              data-testid="button-cancel"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={updateMutation.isPending}
+              size="lg"
+              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white text-base"
+              data-testid="button-save"
+            >
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
