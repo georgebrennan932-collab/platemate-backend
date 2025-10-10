@@ -67,7 +67,7 @@ export default function Home() {
   
   
   // Fetch nutrition goals and diary data for consumed values calculation
-  const { data: nutritionGoals } = useQuery<NutritionGoals>({
+  const { data: nutritionGoals, status: nutritionGoalsStatus } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
     retry: false,
     enabled: isAuthenticated, // Enable when authenticated
@@ -126,10 +126,11 @@ export default function Home() {
     }
   }, [isAuthenticated, queryClient]);
 
-  // Auto-create default nutrition goals if missing
+  // Auto-create default nutrition goals if missing - ONLY after query successfully returns empty
   useEffect(() => {
     const createDefaultGoals = async () => {
-      if (isAuthenticated && nutritionGoals === undefined) {
+      // Only create defaults if query completed successfully and returned no data
+      if (isAuthenticated && nutritionGoalsStatus === 'success' && !nutritionGoals) {
         try {
           const response = await apiRequest('POST', '/api/nutrition-goals', {
             dailyCalories: 2000,
@@ -148,7 +149,7 @@ export default function Home() {
       }
     };
     createDefaultGoals();
-  }, [isAuthenticated, nutritionGoals, queryClient]);
+  }, [isAuthenticated, nutritionGoalsStatus, nutritionGoals, queryClient]);
   
   // Handle page visibility/navigation
   useEffect(() => {
