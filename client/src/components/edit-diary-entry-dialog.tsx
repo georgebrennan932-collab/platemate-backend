@@ -144,6 +144,9 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
         await apiRequest("PATCH", `/api/analyses/${entry.analysis.id}`, {
           detectedFoods: updatedFoods
         });
+        
+        // Invalidate analyses cache
+        queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
       } catch (error) {
         console.error("Failed to update food portions:", error);
         toast({
@@ -151,6 +154,7 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
           description: "Could not update food portions. Other changes will still be saved.",
           variant: "destructive",
         });
+        // Continue to update diary entry even if portion update fails
       }
     }
 
