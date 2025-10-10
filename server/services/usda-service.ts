@@ -185,6 +185,24 @@ export class USDAService {
   private preprocessFoodName(foodName: string): string {
     const name = foodName.toLowerCase().trim();
     
+    // ===== FAST FOOD & RESTAURANT ITEMS =====
+    // Map branded restaurant items to generic USDA equivalents
+    if (name.includes('big mac')) {
+      return 'hamburger double patty cheese bun'; // Big Mac equivalent
+    }
+    if (name.includes('quarter pounder') || name.includes('quarterpounder')) {
+      return 'hamburger single patty cheese'; // Quarter Pounder equivalent
+    }
+    if (name.includes('whopper')) {
+      return 'hamburger single patty cheese bun'; // Whopper equivalent
+    }
+    if (name.includes('mcnuggets') || name.includes('chicken nugget')) {
+      return 'chicken nuggets breaded fried';
+    }
+    if (name.includes('happy meal')) {
+      return 'hamburger kids meal'; // Generic kids meal
+    }
+    
     // ===== SNACK FOODS & CRISPS HANDLING =====
     // Handle British "crisps" and American "chips" - focus on the snack food category
     if (name.includes('crisps') || (name.includes('chips') && !name.includes('fish') && !name.includes('wood'))) {
