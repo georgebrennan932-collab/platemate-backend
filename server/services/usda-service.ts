@@ -475,9 +475,17 @@ export class USDAService {
         .map(x => `${x.food.description} [${x.score}]`)
         .join(' | '));
       
+      // Extract quantity from food name (e.g., "2 eggs" → 2, "4 Weetabix" → 4)
+      const quantityMatch = foodName.trim().match(/^(\d+\.?\d*)\s+/);
+      const quantity = quantityMatch ? parseFloat(quantityMatch[1]) : 1;
+      console.log(`📊 Detected quantity: ${quantity} from "${foodName}"`);
+      
       // Fetch full food details for complete nutrition data
       const fullFoodDetails = await this.getFoodDetails(bestMatch.food.fdcId);
-      const nutrition = this.extractNutritionData(fullFoodDetails);
+      
+      // Calculate portion grams: base 100g * quantity
+      const portionGrams = 100 * quantity;
+      const nutrition = this.extractNutritionData(fullFoodDetails, portionGrams);
       
       console.log(`🧪 Nutrient numbers present:`, fullFoodDetails.foodNutrients.map(n => n.nutrient?.number));
       console.log(`✅ Best USDA match for "${foodName}": ${fullFoodDetails.description}`);
