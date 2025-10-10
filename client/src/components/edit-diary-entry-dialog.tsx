@@ -113,14 +113,25 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
         });
         
         const nutritionData = await response.json();
+        console.log("Nutrition API response:", nutritionData);
         
         if (nutritionData.foods && nutritionData.foods.length > 0) {
           // Update analysis with new nutrition data, preserving icon
-          const updatedFoods = nutritionData.foods.map((food: any, index: number) => ({
-            ...food,
-            icon: entry.analysis?.detectedFoods[index]?.icon || "🍽️"
-          }));
+          const updatedFoods = nutritionData.foods.map((food: any, index: number) => {
+            const updated = {
+              name: food.name,
+              portion: food.portion,
+              calories: food.calories || 0,
+              protein: food.protein || 0,
+              carbs: food.carbs || 0,
+              fat: food.fat || 0,
+              icon: entry.analysis?.detectedFoods[index]?.icon || "🍽️"
+            };
+            console.log("Updated food:", updated);
+            return updated;
+          });
           
+          console.log("Sending to PATCH:", updatedFoods);
           await apiRequest("PATCH", `/api/analyses/${entry.analysis.id}`, {
             detectedFoods: updatedFoods
           });
