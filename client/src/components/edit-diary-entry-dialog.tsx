@@ -121,62 +121,56 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
     // Combine amount and unit for the new portion
     const newPortion = `${portionAmount} ${unit}`.trim();
     
-    // If serving size changed, trigger re-analysis
+    // If serving size changed, trigger fresh AI analysis (like adding new meal)
     if (portionAmount.trim() && entry.analysis) {
       try {
         toast({
           title: "Re-analyzing food...",
-          description: "Calculating nutrition for new serving size",
+          description: "Getting fresh nutrition analysis",
         });
 
-        const response = await apiRequest("POST", "/api/calculate-nutrition", {
-          foods: [{ name: foodName, portion: newPortion }]
+        // Build food description for AI (e.g., "2 biscuits weetabix")
+        const foodDescription = `${newPortion} ${foodName}`.trim();
+        console.log("🔄 Sending to AI for fresh analysis:", foodDescription);
+
+        const response = await apiRequest("POST", "/api/analyze-text", {
+          foodDescription
         });
         
-        const nutritionData = await response.json();
-        console.log("Nutrition API response:", nutritionData);
+        const newAnalysis = await response.json();
+        console.log("✅ Fresh AI analysis received:", newAnalysis);
         
-        if (nutritionData.foods && nutritionData.foods.length > 0) {
-          // Update analysis with new nutrition data, preserving icon
-          const updatedFoods = nutritionData.foods.map((food: any, index: number) => {
-            const updated = {
-              name: food.name,
-              portion: food.portion,
-              calories: food.calories || 0,
-              protein: food.protein || 0,
-              carbs: food.carbs || 0,
-              fat: food.fat || 0,
-              icon: entry.analysis?.detectedFoods[index]?.icon || "🍽️"
-            };
-            console.log("Updated food:", updated);
-            return updated;
-          });
+        if (newAnalysis && newAnalysis.id) {
+          // Update diary entry to use new analysis ID and delete old one
+          const updateData: any = {
+            mealType: entry.mealType,
+            mealDate: new Date(mealDate).toISOString(),
+            notes: notes.trim() || undefined,
+            analysisId: newAnalysis.id,
+            deleteOldAnalysisId: entry.analysis.id // Signal backend to clean up old analysis
+          };
           
-          console.log("Sending to PATCH:", updatedFoods);
-          await apiRequest("PATCH", `/api/analyses/${entry.analysis.id}`, {
-            detectedFoods: updatedFoods
-          });
-          
+          updateMutation.mutate(updateData);
           queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
         }
       } catch (error) {
         console.error("Failed to re-analyze:", error);
         toast({
           title: "Re-analysis Failed",
-          description: "Could not calculate new nutrition values",
+          description: "Could not get fresh nutrition analysis",
           variant: "destructive",
         });
       }
+    } else {
+      // No serving size change, just update date/notes
+      const updateData: any = {
+        mealType: entry.mealType,
+        mealDate: new Date(mealDate).toISOString(),
+        notes: notes.trim() || undefined,
+      };
+
+      updateMutation.mutate(updateData);
     }
-
-    // Update diary entry
-    const updateData: any = {
-      mealType: entry.mealType,
-      mealDate: new Date(mealDate).toISOString(),
-      notes: notes.trim() || undefined,
-    };
-
-    updateMutation.mutate(updateData);
   };
 
   const resetForm = () => {
