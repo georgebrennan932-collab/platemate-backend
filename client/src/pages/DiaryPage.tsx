@@ -562,9 +562,27 @@ export function DiaryPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Section Header - Purple Background */}
-                <div className="bg-gradient-to-r from-purple-600 to-purple-500 rounded-xl px-4 py-3 shadow-md">
-                  <h3 className="text-xl font-bold text-white">Today's Meals</h3>
+                {/* Section Header - Purple Background with View Meals Toggle */}
+                <div className="bg-gradient-to-r from-purple-600 to-purple-500 rounded-xl px-4 py-4 shadow-md">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-white">Today's Meals</h3>
+                    <button
+                      onClick={() => {
+                        const totalEntries = filteredGroupedEntries[sortedDates[0]]?.length || 0;
+                        if (expandedEntries.size > 0) {
+                          setExpandedEntries(new Set());
+                        } else {
+                          const allIds = new Set(filteredGroupedEntries[sortedDates[0]]?.map(e => e.id) || []);
+                          setExpandedEntries(allIds);
+                        }
+                      }}
+                      className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 backdrop-blur-sm"
+                      data-testid="button-toggle-all-meals"
+                    >
+                      <Utensils className="h-4 w-4" />
+                      <span>{expandedEntries.size > 0 ? 'Hide All Meals' : 'View All Meals'}</span>
+                    </button>
+                  </div>
                 </div>
                 
                 {sortedDates.map((date) => (
@@ -623,7 +641,7 @@ export function DiaryPage() {
                           </div>
                           
                           {/* Macros with emoji icons - compact grid */}
-                          <div className="grid grid-cols-4 gap-2 mb-3 bg-white/60 dark:bg-gray-900/40 rounded-lg p-3">
+                          <div className="grid grid-cols-4 gap-2 bg-white/60 dark:bg-gray-900/40 rounded-lg p-3">
                             <div className="flex items-center space-x-1">
                               <span className="text-lg">🔥</span>
                               <span className="text-sm font-semibold" data-testid={`meal-calories-${entry.id}`}>
@@ -650,21 +668,9 @@ export function DiaryPage() {
                             </div>
                           </div>
                           
-                          {/* View Meals Button */}
-                          {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                            <button
-                              onClick={toggleExpanded}
-                              className="w-full py-2 px-3 mb-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-sm font-medium transition-all flex items-center justify-center space-x-2"
-                              data-testid={`button-view-meals-${entry.id}`}
-                            >
-                              <Utensils className="h-4 w-4" />
-                              <span>{isExpanded ? 'Hide Meals' : `View Meals (${entry.analysis.detectedFoods.length})`}</span>
-                            </button>
-                          )}
-                          
                           {/* Food items list - Collapsible */}
                           {isExpanded && entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                            <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+                            <div className="space-y-2 mt-3 animate-in slide-in-from-top-2 duration-200">
                               {entry.analysis.detectedFoods.map((food, index) => (
                                 <div key={index} className="flex items-center justify-between py-2 px-3 bg-white/50 dark:bg-gray-900/30 rounded-lg border border-purple-100 dark:border-purple-900">
                                   <div className="flex-1 min-w-0">
