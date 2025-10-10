@@ -92,28 +92,20 @@ export default function CalculatorPage() {
 
   return (
     <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
-      {/* Enhanced Header with back button */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white sticky top-0 z-10 shadow-lg">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center space-x-4">
-            <Link href="/">
-              <button 
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                data-testid="button-back-to-home"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  🎨
-                </div>
-                Smart Nutrition Calculator
-              </h1>
-              <p className="text-indigo-100 mt-1">
-                ✨ Calculate your personalized calorie needs and plan optimal meals
-              </p>
+      {/* Header */}
+      <div className="bg-card border-b sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Link href="/">
+                <button 
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  data-testid="button-back-to-home"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              </Link>
+              <h1 className="text-xl font-bold">Smart Nutrition Calculator</h1>
             </div>
           </div>
         </div>
