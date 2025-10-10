@@ -582,7 +582,7 @@ export function DiaryPage() {
                 
                 {sortedDates.map((date) => (
                   <div key={date} className="space-y-3">
-                    {filteredGroupedEntries[date]?.map((entry) => {
+                    {filteredGroupedEntries[date]?.map((entry, index) => {
                       const isExpanded = expandedEntries.has(entry.id);
                       
                       const getMealColor = (mealType: string) => {
@@ -601,7 +601,13 @@ export function DiaryPage() {
                       };
                       
                       return (
-                        <div key={entry.id} className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 border border-purple-200 dark:border-purple-800 rounded-xl p-4 shadow-sm">
+                        <motion.div 
+                          key={entry.id} 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1, ease: "easeOut" }}
+                          className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 border border-purple-200 dark:border-purple-800 rounded-xl p-4 shadow-sm"
+                        >
                           {/* Header with colored meal badge and time */}
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
@@ -682,7 +688,7 @@ export function DiaryPage() {
                               ))}
                             </div>
                           )}
-                        </div>
+                        </motion.div>
                       );
                     })}
                     
