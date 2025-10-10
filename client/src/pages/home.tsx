@@ -23,6 +23,8 @@ import { BottomHelpSection } from "@/components/bottom-help-section";
 import { ProgressIndicators } from "@/components/progress-indicators";
 import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
 import { launchLogin } from "@/lib/auth-launcher";
+import { StreakCounter } from "@/components/streak-counter";
+import { updateStreak } from "@/lib/streak-tracker";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
@@ -538,15 +540,21 @@ export default function Home() {
       return await diaryResponse.json();
     },
     onSuccess: () => {
+      // Update streak when meal is added
+      const streakData = updateStreak();
+      
       toast({
         title: "Meal Added!",
-        description: "Your meal has been added to your diary.",
+        description: `Your meal has been added to your diary. ${streakData.currentStreak > 0 ? `Streak: ${streakData.currentStreak} days!` : ''}`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
       setShowVoiceMealDialog(false);
       setShowTextMealDialog(false);
       setVoiceInput('');
       setTextInput('');
+      
+      // Trigger a re-render of the StreakCounter component
+      window.dispatchEvent(new Event('streakUpdated'));
     },
     onError: (error: Error) => {
       toast({
@@ -832,6 +840,13 @@ export default function Home() {
           </div>
         </Link>
       </div>
+
+      {/* Streak Counter */}
+      {isAuthenticated && currentState === 'camera' && (
+        <div className="max-w-md mx-auto px-6 mb-6">
+          <StreakCounter />
+        </div>
+      )}
 
       {/* All Add Buttons */}
       {currentState === 'camera' && (

@@ -6,6 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { motion } from "framer-motion";
+import { updateStreak } from "@/lib/streak-tracker";
 
 interface ResultsDisplayProps {
   data: FoodAnalysis;
@@ -548,12 +549,18 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       return await response.json();
     },
     onSuccess: () => {
+      // Update streak when diary entry is saved
+      const streakData = updateStreak();
+      
       toast({
         title: "Added to Diary!",
-        description: "Your meal has been saved to your food diary.",
+        description: `Your meal has been saved to your food diary. ${streakData.currentStreak > 0 ? `Streak: ${streakData.currentStreak} days!` : ''}`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
       setShowDiaryDialog(false);
+      
+      // Trigger a re-render of the StreakCounter component
+      window.dispatchEvent(new Event('streakUpdated'));
     },
     onError: (error: Error) => {
       toast({
