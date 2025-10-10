@@ -140,25 +140,33 @@ export class USDAService {
     const nutrients = usdaFood.foodNutrients;
     
     // USDA nutrient IDs for key macronutrients
-    const findNutrient = (numbers: string[]) => {
+    const findNutrient = (numbers: string[], label: string) => {
       for (const number of numbers) {
         const nutrient = nutrients.find(n => n.nutrient && n.nutrient.number === number);
-        if (nutrient) return nutrient.amount;
+        if (nutrient) {
+          console.log(`  ${label} (${number}):`, nutrient.amount || 0, nutrient);
+          return nutrient.amount || 0;
+        }
       }
+      console.log(`  ${label} NOT FOUND in numbers:`, numbers);
       return 0;
     };
 
+    console.log(`🧮 Extracting nutrition for ${portionGrams}g from USDA food:`, usdaFood.description);
+    console.log(`  Total nutrients available:`, nutrients.length);
+    
     // Extract key nutrients (per 100g in USDA database)
-    const calories = findNutrient(['208']); // Energy
-    const protein = findNutrient(['203']); // Protein
-    const carbs = findNutrient(['205']); // Carbohydrate, by difference
-    const fat = findNutrient(['204']); // Total lipid (fat)
-    const fiber = findNutrient(['291']); // Fiber, total dietary
-    const sugar = findNutrient(['269']); // Sugars, total including NLEA
-    const sodium = findNutrient(['307']); // Sodium, Na
+    const calories = findNutrient(['208'], 'Calories'); // Energy
+    const protein = findNutrient(['203'], 'Protein'); // Protein
+    const carbs = findNutrient(['205'], 'Carbs'); // Carbohydrate, by difference
+    const fat = findNutrient(['204'], 'Fat'); // Total lipid (fat)
+    const fiber = findNutrient(['291'], 'Fiber'); // Fiber, total dietary
+    const sugar = findNutrient(['269'], 'Sugar'); // Sugars, total including NLEA
+    const sodium = findNutrient(['307'], 'Sodium'); // Sodium, Na
 
     // Scale to requested portion size
     const scaleFactor = portionGrams / 100;
+    console.log(`  Scale factor: ${portionGrams}g / 100g = ${scaleFactor}`);
 
     return {
       calories: Math.round(calories * scaleFactor),
