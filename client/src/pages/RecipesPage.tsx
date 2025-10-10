@@ -102,32 +102,25 @@ export function RecipesPage() {
   return (
     <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Header */}
-      <div className="bg-primary/5 border-b border-primary/10 p-4 sticky top-0 z-10 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Link href="/">
-              <button 
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
-                data-testid="button-back-home"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-                <ChefHat className="h-6 w-6" />
-                Recipe Collection
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Discover healthy recipes tailored to your dietary needs
-              </p>
+      <div className="bg-card border-b sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <Link href="/">
+                <button 
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  data-testid="button-back-home"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              </Link>
+              <h1 className="text-xl font-bold">Recipe Collection</h1>
             </div>
           </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 relative">
+          
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Select value={selectedDiet} onValueChange={handleDietChange}>
               <SelectTrigger className="pl-10" data-testid="select-dietary-filter">
@@ -141,25 +134,26 @@ export function RecipesPage() {
                 ))}
               </SelectContent>
             </Select>
+            </div>
           </div>
-        </div>
 
-        {/* Selected Filter Display */}
-        {selectedDiet && selectedDiet !== 'all' && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Filtering by:</span>
-            <Badge variant="secondary" className="flex items-center gap-1">
-              {DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label}
-              <button 
-                onClick={() => setSelectedDiet("all")}
-                className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
-                data-testid="button-clear-filter"
-              >
-                ×
-              </button>
-            </Badge>
-          </div>
-        )}
+          {/* Selected Filter Display */}
+          {selectedDiet && selectedDiet !== 'all' && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Filtering by:</span>
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label}
+                <button 
+                  onClick={() => setSelectedDiet("all")}
+                  className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                  data-testid="button-clear-filter"
+                >
+                  ×
+                </button>
+              </Badge>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content */}
