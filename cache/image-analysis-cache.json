@@ -73,6 +73,43 @@
         "accessCount": 1,
         "lastAccessed": 1760009714952
       }
+    ],
+    [
+      "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
+      {
+        "imageHash": "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
+        "analysis": {
+          "imageUrl": "/tmp/uploads/processed_9899f24e3e047a42a6dafe840e37c853.jpg",
+          "confidence": 85,
+          "totalCalories": 59,
+          "totalProtein": 2,
+          "totalCarbs": 11,
+          "totalFat": 1,
+          "detectedFoods": [
+            {
+              "name": "Soup, tomato",
+              "portion": "300ml",
+              "calories": 57,
+              "protein": 2,
+              "carbs": 11,
+              "fat": 1,
+              "icon": "bowl"
+            },
+            {
+              "name": "Cilantro, raw",
+              "portion": "10g",
+              "calories": 2,
+              "protein": 0,
+              "carbs": 0,
+              "fat": 0,
+              "icon": "apple-alt"
+            }
+          ]
+        },
+        "timestamp": 1760123818795,
+        "accessCount": 1,
+        "lastAccessed": 1760123818795
+      }
     ]
   ],
   "stats": {
@@ -80,11 +117,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 2,
+    "currentSize": 3,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1760003392849,
-    "newestEntry": 1760009714952
+    "newestEntry": 1760123818795
   },
-  "timestamp": 1760009714953
+  "timestamp": 1760123818795
 }

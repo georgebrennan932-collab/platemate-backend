@@ -16,6 +16,7 @@ import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap
 import { ConfettiCelebration } from "@/components/confetti-celebration";
 import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
+import { OfflineIndicator } from "@/components/offline-indicator";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis, DrinkEntry } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
@@ -716,6 +717,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
+      {/* Offline Status Indicator */}
+      <OfflineIndicator />
+      
       {/* Custom Header for New Design */}
       <div className="px-4 pt-8 pb-6 text-center relative">
         {/* Navigation Menu - moved above title */}
