@@ -2,6 +2,7 @@ import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, 
 import { OpenAIProvider } from "./openai-provider";
 import { GeminiProvider } from "./gemini-provider";
 import { usdaService } from "../services/usda-service";
+import { openFoodFactsService } from "../services/openfoodfacts-service";
 import { imageAnalysisCache } from "../services/image-analysis-cache";
 
 export class AIManager {
@@ -310,6 +311,39 @@ export class AIManager {
   }
 
   /**
+   * Try OpenFoodFacts as fallback when USDA doesn't have data
+   */
+  async tryOpenFoodFactsFallback(foodName: string): Promise<{ name: string; nutrition: any } | null> {
+    try {
+      console.log(`🔄 Trying OpenFoodFacts fallback for: ${foodName}`);
+      
+      const results = await openFoodFactsService.getNutritionData([foodName]);
+      
+      if (results && results.length > 0 && results[0].nutrition_per_100g !== "not found") {
+        const nutrition = results[0].nutrition_per_100g as any;
+        console.log(`✅ OpenFoodFacts found data for ${foodName}:`, nutrition);
+        
+        return {
+          name: foodName,
+          nutrition: {
+            calories: nutrition.calories || 0,
+            protein: nutrition.protein || 0,
+            carbs: nutrition.carbs || 0,
+            fat: nutrition.fat || 0
+          }
+        };
+      }
+      
+      console.log(`❌ OpenFoodFacts also has no data for: ${foodName}`);
+      return null;
+      
+    } catch (error: any) {
+      console.warn(`OpenFoodFacts fallback failed for ${foodName}:`, error.message);
+      return null;
+    }
+  }
+
+  /**
    * Combine AI detection results with USDA nutrition data
    */
   async combineDetectionWithNutrition(
@@ -347,24 +381,47 @@ export class AIManager {
         
         console.log(`✅ Enhanced: ${foodName} → ${food.name} (${food.calories} cal)`);
       } else {
-        // Fallback for foods not found in USDA
-        const fallbackFood = {
-          name: foodName,
-          portion: '1 serving',
-          calories: 150, // Conservative estimate
-          protein: 8,
-          carbs: 15,
-          fat: 6,
-          icon: this.getFoodIcon(foodName)
-        };
+        // Try OpenFoodFacts as fallback
+        const offData = await this.tryOpenFoodFactsFallback(foodName);
         
-        detectedFoods.push(fallbackFood);
-        totalCalories += fallbackFood.calories;
-        totalProtein += fallbackFood.protein;
-        totalCarbs += fallbackFood.carbs;
-        totalFat += fallbackFood.fat;
-        
-        console.log(`⚠️ Fallback: ${foodName} (USDA data not available)`);
+        if (offData) {
+          const food = {
+            name: offData.name,
+            portion: '100g',
+            calories: offData.nutrition.calories,
+            protein: Math.round(offData.nutrition.protein),
+            carbs: Math.round(offData.nutrition.carbs),
+            fat: Math.round(offData.nutrition.fat),
+            icon: this.getFoodIcon(foodName)
+          };
+          
+          detectedFoods.push(food);
+          totalCalories += food.calories;
+          totalProtein += food.protein;
+          totalCarbs += food.carbs;
+          totalFat += food.fat;
+          
+          console.log(`✅ OpenFoodFacts fallback: ${foodName} (${food.calories} cal)`);
+        } else {
+          // Final hardcoded fallback
+          const fallbackFood = {
+            name: foodName,
+            portion: '1 serving',
+            calories: 150, // Conservative estimate
+            protein: 8,
+            carbs: 15,
+            fat: 6,
+            icon: this.getFoodIcon(foodName)
+          };
+          
+          detectedFoods.push(fallbackFood);
+          totalCalories += fallbackFood.calories;
+          totalProtein += fallbackFood.protein;
+          totalCarbs += fallbackFood.carbs;
+          totalFat += fallbackFood.fat;
+          
+          console.log(`⚠️ Hardcoded fallback: ${foodName} (no data in USDA or OpenFoodFacts)`);
+        }
       }
     }
 
@@ -424,14 +481,41 @@ export class AIManager {
         
         console.log(`✅ Enhanced: ${aiFood.name} (${aiFood.portion}) → ${food.name} (${food.calories} cal)`);
       } else {
-        // Use AI nutrition data if no USDA match found
-        detectedFoods.push(aiFood);
-        totalCalories += aiFood.calories;
-        totalProtein += aiFood.protein;
-        totalCarbs += aiFood.carbs;
-        totalFat += aiFood.fat;
+        // Try OpenFoodFacts as fallback
+        const offData = await this.tryOpenFoodFactsFallback(aiFood.name);
         
-        console.log(`⚠️ AI fallback: ${aiFood.name} (${aiFood.portion}) - ${aiFood.calories} cal`);
+        if (offData) {
+          // Convert AI portion to grams for scaling
+          const portionGrams = this.convertPortionToGrams(aiFood.portion, aiFood.name);
+          const scaleFactor = portionGrams / 100; // OpenFoodFacts data is per 100g
+          
+          const food = {
+            name: offData.name,
+            portion: aiFood.portion,
+            calories: Math.round(offData.nutrition.calories * scaleFactor),
+            protein: Math.round(offData.nutrition.protein * scaleFactor),
+            carbs: Math.round(offData.nutrition.carbs * scaleFactor),
+            fat: Math.round(offData.nutrition.fat * scaleFactor),
+            icon: aiFood.icon || this.getFoodIcon(aiFood.name)
+          };
+          
+          detectedFoods.push(food);
+          totalCalories += food.calories;
+          totalProtein += food.protein;
+          totalCarbs += food.carbs;
+          totalFat += food.fat;
+          
+          console.log(`✅ OpenFoodFacts fallback: ${aiFood.name} (${aiFood.portion}) = ${food.calories} cal`);
+        } else {
+          // Final fallback: Use AI nutrition data if no USDA or OpenFoodFacts match found
+          detectedFoods.push(aiFood);
+          totalCalories += aiFood.calories;
+          totalProtein += aiFood.protein;
+          totalCarbs += aiFood.carbs;
+          totalFat += aiFood.fat;
+          
+          console.log(`⚠️ AI fallback: ${aiFood.name} (${aiFood.portion}) - ${aiFood.calories} cal`);
+        }
       }
     }
 
@@ -829,24 +913,51 @@ export class AIManager {
         
         console.log(`✅ Enhanced: ${foodName} → ${food.name} (${food.portion}) = ${food.calories} cal`);
       } else {
-        // Fallback for foods not found in USDA
-        const fallbackFood = {
-          name: foodName,
-          portion: '1 serving',
-          calories: 150, // Conservative estimate
-          protein: 8,
-          carbs: 15,
-          fat: 6,
-          icon: this.getFoodIcon(foodName)
-        };
+        // Try OpenFoodFacts as fallback
+        const offData = await this.tryOpenFoodFactsFallback(foodName);
         
-        detectedFoods.push(fallbackFood);
-        totalCalories += fallbackFood.calories;
-        totalProtein += fallbackFood.protein;
-        totalCarbs += fallbackFood.carbs;
-        totalFat += fallbackFood.fat;
-        
-        console.log(`⚠️ Fallback: ${foodName} (USDA data not available)`);
+        if (offData) {
+          // Convert text portion to grams for scaling
+          const portionGrams = this.convertPortionToGrams(originalText, foodName);
+          const scaleFactor = portionGrams / 100; // OpenFoodFacts data is per 100g
+          
+          const food = {
+            name: offData.name,
+            portion: originalText,
+            calories: Math.round(offData.nutrition.calories * scaleFactor),
+            protein: Math.round(offData.nutrition.protein * scaleFactor),
+            carbs: Math.round(offData.nutrition.carbs * scaleFactor),
+            fat: Math.round(offData.nutrition.fat * scaleFactor),
+            icon: this.getFoodIcon(foodName)
+          };
+          
+          detectedFoods.push(food);
+          totalCalories += food.calories;
+          totalProtein += food.protein;
+          totalCarbs += food.carbs;
+          totalFat += food.fat;
+          
+          console.log(`✅ OpenFoodFacts fallback: ${foodName} (${originalText}) = ${food.calories} cal`);
+        } else {
+          // Final hardcoded fallback
+          const fallbackFood = {
+            name: foodName,
+            portion: '1 serving',
+            calories: 150, // Conservative estimate
+            protein: 8,
+            carbs: 15,
+            fat: 6,
+            icon: this.getFoodIcon(foodName)
+          };
+          
+          detectedFoods.push(fallbackFood);
+          totalCalories += fallbackFood.calories;
+          totalProtein += fallbackFood.protein;
+          totalCarbs += fallbackFood.carbs;
+          totalFat += fallbackFood.fat;
+          
+          console.log(`⚠️ Hardcoded fallback: ${foodName} (no data in USDA or OpenFoodFacts)`);
+        }
       }
     }
 
