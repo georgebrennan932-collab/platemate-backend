@@ -781,72 +781,27 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         </button>
                       </div>
                     )}
-                    {editingIndex === index ? (
-                      <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-2 mt-2">
+                      <div className="flex-1">
+                        <label className="text-xs text-muted-foreground mb-1 block">Serving Size</label>
                         <input
                           type="text"
                           value={food.portion}
                           onChange={(e) => updateFoodPortion(index, e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              setEditingIndex(null);
-                            }
-                          }}
-                          className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
-                          placeholder="e.g., 200g, 1 cup"
+                          className="w-full px-3 py-2 text-sm border-2 border-orange-200 dark:border-orange-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-800 transition-all"
+                          placeholder="e.g., 200g, 1 cup, 2 slices"
                           data-testid={`input-food-portion-${index}`}
                         />
-                        <button
-                          onClick={() => setEditingIndex(null)}
-                          className="p-1 text-green-600 hover:bg-green-100 rounded"
-                          data-testid={`button-save-portion-${index}`}
-                        >
-                          <Check className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditableFoods([...data.detectedFoods]); // Reset to original
-                            setEditingIndex(null);
-                          }}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded"
-                          title="Cancel changes"
-                          data-testid={`button-cancel-portion-${index}`}
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => removeFoodItem(index)}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded"
-                          title="Remove this food item"
-                          data-testid={`button-remove-food-${index}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
                       </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <p className="text-sm text-muted-foreground" data-testid={`text-food-portion-${index}`}>
-                          {food.portion}
-                        </p>
-                        <button
-                          onClick={() => setEditingIndex(index)}
-                          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
-                          title="Click to edit portion size"
-                          data-testid={`button-edit-portion-${index}`}
-                        >
-                          <Edit3 className="h-3 w-3 inline mr-1" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => removeFoodItem(index)}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded opacity-70 hover:opacity-100 transition-opacity"
-                          title="Remove this food item"
-                          data-testid={`button-remove-food-${index}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
+                      <button
+                        onClick={() => removeFoodItem(index)}
+                        className="mt-5 p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                        title="Remove this food item"
+                        data-testid={`button-remove-food-${index}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
