@@ -1274,16 +1274,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const portionGrams = parsePortionToGrams(food.portion);
             console.log(`📊 Portion calculation: "${food.portion}" → ${portionGrams}g`);
             
-            // Extract nutrition data scaled to the portion
-            const nutritionData = usdaService.extractNutritionData(match.usdaFood, portionGrams);
-            console.log(`🔢 Calculated nutrition:`, nutritionData);
+            // Scale the pre-calculated nutrition values (which are for 100g) to the requested portion
+            const scaleFactor = portionGrams / 100;
+            console.log(`📏 Scale factor: ${portionGrams}g / 100g = ${scaleFactor}`);
+            console.log(`📦 Base nutrition (100g):`, match.nutrition);
+            
+            const scaledNutrition = {
+              calories: Math.round(match.nutrition.calories * scaleFactor),
+              protein: Math.round(match.nutrition.protein * scaleFactor * 10) / 10,
+              carbs: Math.round(match.nutrition.carbs * scaleFactor * 10) / 10,
+              fat: Math.round(match.nutrition.fat * scaleFactor * 10) / 10
+            };
+            console.log(`🔢 Scaled nutrition (${portionGrams}g):`, scaledNutrition);
             
             calculatedFoods.push({
               ...food,
-              calories: nutritionData.calories,
-              protein: nutritionData.protein,
-              carbs: nutritionData.carbs,
-              fat: nutritionData.fat
+              ...scaledNutrition
             });
           } else {
             // Fallback to original values if no match found
