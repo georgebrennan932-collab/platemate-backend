@@ -1,12 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DiaryEntryWithAnalysis, NutritionGoals } from "@shared/schema";
 import { Card } from "@/components/ui/card";
-import { Flame, Dumbbell, Wheat, Droplet, TrendingUp, Award, Target } from "lucide-react";
+import { Flame, Dumbbell, Wheat, Droplet, TrendingUp, Award, Target, Utensils } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 import { useEffect, useState } from "react";
 
-export function Dashboard() {
+interface DashboardProps {
+  onViewMeals?: () => void;
+}
+
+export function Dashboard({ onViewMeals }: DashboardProps = {}) {
   const { data: diaryEntries } = useQuery<DiaryEntryWithAnalysis[]>({
     queryKey: ['/api/diary'],
   });
@@ -238,6 +242,18 @@ export function Dashboard() {
           </p>
         </Card>
       </div>
+
+      {/* View All Meals Button */}
+      {onViewMeals && todayEntries.length > 0 && (
+        <button
+          onClick={onViewMeals}
+          className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl text-base font-semibold transition-all flex items-center justify-center space-x-2 shadow-lg"
+          data-testid="button-view-all-meals"
+        >
+          <Utensils className="h-5 w-5" />
+          <span>View All Meals</span>
+        </button>
+      )}
     </div>
   );
 }

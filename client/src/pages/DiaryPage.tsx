@@ -511,7 +511,13 @@ export function DiaryPage() {
       {/* Content */}
       <div className="max-w-md mx-auto p-4 pb-32">
         {activeTab === 'dashboard' ? (
-          <Dashboard />
+          <Dashboard 
+            onViewMeals={() => {
+              setActiveTab('diary');
+              const allIds = new Set(filteredGroupedEntries[sortedDates[0]]?.map(e => e.id) || []);
+              setExpandedEntries(allIds);
+            }}
+          />
         ) : activeTab === 'analytics' ? (
           <div className="space-y-6">
             <WeeklyAnalytics goals={nutritionGoals} />
