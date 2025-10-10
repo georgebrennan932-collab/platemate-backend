@@ -81,6 +81,9 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+- **Quantity Detection & Nutrition Multiplication**: AI prompts now extract food quantities from user input (e.g., "4 Weetabix", "2 eggs") and automatically multiply nutrition values (calories, protein, carbs, fat) by the detected quantity for accurate tracking
+- **UK-to-US Food Term Mapping**: Implemented conservative food term translation system that maps unambiguous UK-specific terms (aubergine→eggplant, beef mince→ground beef, courgette→zucchini) to improve USDA database lookups without corrupting US food names
+- **Verified Diary Editing**: Confirmed PATCH /api/diary/:id endpoint fully functional with authentication, validation, loading states, and cache invalidation for seamless meal entry updates
 - **Legacy User Migration System**: Implemented automatic account upgrade for old OIDC users - when they "register" with existing email that lacks password, system upgrades their account with new credentials while preserving all historical data (diary entries, weights, goals)
 - **Persistent Session Storage**: Sessions now survive server restarts by persisting to Replit Database with automatic load-on-startup, eliminating authentication loss during development
 - **Beautiful Categorized Diary Layout**: Transformed diary page with purple gradient "Today's Meals" header, colored meal badges (orange for breakfast/lunch/dinner, purple for snacks), emoji macro indicators (🔥 calories, 💪 protein, 🌾 carbs, 🥑 fat), cream/beige gradient cards, and improved visual hierarchy matching modern nutrition app design patterns
