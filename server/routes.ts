@@ -1198,7 +1198,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied" });
       }
       
-      const validatedUpdate = updateDiaryEntrySchema.parse(req.body);
+      // Extract special fields for analysis swapping (not in schema)
+      const { analysisId, deleteOldAnalysisId, ...updateFields } = req.body;
+      
+      // If new analysis provided, swap it in
+      if (analysisId) {
+        console.log(`🔄 Swapping analysis: ${entry.analysisId} → ${analysisId}`);
+        updateFields.analysisId = analysisId;
+        // Note: Old analysis will remain in database but won't be linked to any diary entry
+        if (deleteOldAnalysisId) {
+          console.log(`📝 Old analysis ${deleteOldAnalysisId} replaced (cleanup not implemented yet)`);
+        }
+      }
+      
+      const validatedUpdate = updateDiaryEntrySchema.parse(updateFields);
       const updatedEntry = await storage.updateDiaryEntry(req.params.id, validatedUpdate);
       
       if (!updatedEntry) {
