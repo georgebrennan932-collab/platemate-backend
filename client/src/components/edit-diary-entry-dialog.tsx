@@ -29,20 +29,38 @@ interface EditDiaryEntryDialogProps {
   entry: DiaryEntryWithAnalysis;
 }
 
+// Helper function to parse portion into number and unit
+function parsePortion(portion: string): { amount: number; unit: string } {
+  if (!portion) return { amount: 1, unit: "serving" };
+  
+  const match = portion.match(/^([\d.]+)\s*(.*)$/);
+  if (match) {
+    return {
+      amount: parseFloat(match[1]) || 1,
+      unit: match[2].trim() || "serving"
+    };
+  }
+  return { amount: 1, unit: portion };
+}
+
 export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   
+  // Get first food item for display
+  const firstFood = entry.analysis?.detectedFoods?.[0];
+  const foodName = firstFood?.name || "Food Item";
+  
+  // Parse portion into number and unit
+  const originalPortion = firstFood?.portion || "1 serving";
+  const { amount: initialAmount, unit } = parsePortion(originalPortion);
+  
   const [mealDate, setMealDate] = useState(
     format(new Date(entry.mealDate), "yyyy-MM-dd'T'HH:mm")
   );
   const [notes, setNotes] = useState(entry.notes || "");
-  const [servingSize, setServingSize] = useState(entry.notes?.match(/:\s*"([^"]+)"/)?.[1] || "");
-  
-  // Get first food item for display
-  const firstFood = entry.analysis?.detectedFoods?.[0];
-  const foodName = firstFood?.name || "Food Item";
+  const [portionAmount, setPortionAmount] = useState(initialAmount.toString());
 
   const updateMutation = useMutation({
     mutationFn: async (updateData: any) => {
@@ -100,8 +118,11 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
   });
 
   const handleSave = async () => {
+    // Combine amount and unit for the new portion
+    const newPortion = `${portionAmount} ${unit}`.trim();
+    
     // If serving size changed, trigger re-analysis
-    if (servingSize.trim() && entry.analysis) {
+    if (portionAmount.trim() && entry.analysis) {
       try {
         toast({
           title: "Re-analyzing food...",
@@ -109,7 +130,7 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
         });
 
         const response = await apiRequest("POST", "/api/calculate-nutrition", {
-          foods: [{ name: foodName, portion: servingSize }]
+          foods: [{ name: foodName, portion: newPortion }]
         });
         
         const nutritionData = await response.json();
@@ -161,7 +182,7 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
   const resetForm = () => {
     setMealDate(format(new Date(entry.mealDate), "yyyy-MM-dd'T'HH:mm"));
     setNotes(entry.notes || "");
-    setServingSize(entry.notes?.match(/:\s*"([^"]+)"/)?.[1] || "");
+    setPortionAmount(initialAmount.toString());
   };
 
   return (
@@ -200,14 +221,20 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
             <h3 className="text-base font-bold text-gray-900 dark:text-white">
               Serving Size
             </h3>
-            <Input
-              type="text"
-              value={servingSize}
-              onChange={(e) => setServingSize(e.target.value)}
-              placeholder="e.g., 4 biscuits"
-              className="text-base"
-              data-testid="input-serving-size"
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                step="0.5"
+                min="0.1"
+                value={portionAmount}
+                onChange={(e) => setPortionAmount(e.target.value)}
+                className="text-base w-20 text-center"
+                data-testid="input-portion-amount"
+              />
+              <span className="text-base text-gray-700 dark:text-gray-300 font-medium">
+                {unit}
+              </span>
+            </div>
           </div>
 
           {/* Date & Time */}
