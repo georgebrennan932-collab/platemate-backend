@@ -602,15 +602,15 @@ export function DiaryPage() {
                       
                       return (
                         <motion.div 
-                          key={entry.id} 
-                          initial={{ opacity: 0, x: -30, scale: 0.9 }}
+                          key={`${entry.id}-${activeTab}`}
+                          initial={{ opacity: 0, x: -50, scale: 0.85 }}
                           animate={{ opacity: 1, x: 0, scale: 1 }}
                           transition={{ 
-                            duration: 0.5, 
-                            delay: index * 0.15, 
-                            ease: "easeOut",
+                            duration: 0.6,
+                            delay: index * 0.1,
                             type: "spring",
-                            stiffness: 100
+                            stiffness: 120,
+                            damping: 12
                           }}
                           whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
                           className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 border border-purple-200 dark:border-purple-800 rounded-xl p-4 shadow-sm"
