@@ -53,6 +53,9 @@ export function DiaryPage() {
   // Diary edit dialog state
   const [editingDiaryEntry, setEditingDiaryEntry] = useState<DiaryEntryWithAnalysis | null>(null);
   const [isDiaryEditDialogOpen, setIsDiaryEditDialogOpen] = useState(false);
+  
+  // Track which entries have expanded food lists
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
 
   // Voice input state
   const [isListening, setIsListening] = useState(false);
@@ -567,9 +570,21 @@ export function DiaryPage() {
                 {sortedDates.map((date) => (
                   <div key={date} className="space-y-3">
                     {filteredGroupedEntries[date]?.map((entry) => {
+                      const isExpanded = expandedEntries.has(entry.id);
+                      
                       const getMealColor = (mealType: string) => {
                         if (mealType === 'snack') return 'bg-purple-500';
                         return 'bg-orange-500';
+                      };
+                      
+                      const toggleExpanded = () => {
+                        const newExpanded = new Set(expandedEntries);
+                        if (isExpanded) {
+                          newExpanded.delete(entry.id);
+                        } else {
+                          newExpanded.add(entry.id);
+                        }
+                        setExpandedEntries(newExpanded);
                       };
                       
                       return (
@@ -635,9 +650,21 @@ export function DiaryPage() {
                             </div>
                           </div>
                           
-                          {/* Food items list */}
+                          {/* View Meals Button */}
                           {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-                            <div className="space-y-2">
+                            <button
+                              onClick={toggleExpanded}
+                              className="w-full py-2 px-3 mb-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-sm font-medium transition-all flex items-center justify-center space-x-2"
+                              data-testid={`button-view-meals-${entry.id}`}
+                            >
+                              <Utensils className="h-4 w-4" />
+                              <span>{isExpanded ? 'Hide Meals' : `View Meals (${entry.analysis.detectedFoods.length})`}</span>
+                            </button>
+                          )}
+                          
+                          {/* Food items list - Collapsible */}
+                          {isExpanded && entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
+                            <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
                               {entry.analysis.detectedFoods.map((food, index) => (
                                 <div key={index} className="flex items-center justify-between py-2 px-3 bg-white/50 dark:bg-gray-900/30 rounded-lg border border-purple-100 dark:border-purple-900">
                                   <div className="flex-1 min-w-0">
