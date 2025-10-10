@@ -98,7 +98,7 @@ export default function CalculatorPage() {
           <div className="flex items-center space-x-4">
             <Link href="/">
               <button 
-                className="p-3 hover:bg-white/20 rounded-xl transition-all duration-200 hover:scale-110"
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 data-testid="button-back-to-home"
               >
                 <ArrowLeft className="h-5 w-5" />

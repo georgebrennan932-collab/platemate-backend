@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -105,15 +105,14 @@ export function RecipesPage() {
       <div className="bg-primary/5 border-b border-primary/10 p-4 sticky top-0 z-10 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/')}
-              className="p-2 hover:bg-primary/10"
-              data-testid="button-back-home"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
+            <Link href="/">
+              <button 
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                data-testid="button-back-home"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            </Link>
             <div>
               <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
                 <ChefHat className="h-6 w-6" />
