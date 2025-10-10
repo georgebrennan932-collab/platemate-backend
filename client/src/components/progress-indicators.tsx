@@ -124,9 +124,16 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
         return (
           <motion.div 
             key={label}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
+            initial={{ opacity: 0, scale: 0.8, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ 
+              duration: 0.6, 
+              delay: index * 0.15, 
+              ease: "easeOut",
+              type: "spring",
+              stiffness: 100
+            }}
+            whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
             className={`relative bg-gradient-to-br ${colors.bg} rounded-2xl p-6 shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden`}
             data-testid={testId}
           >

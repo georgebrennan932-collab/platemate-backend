@@ -93,9 +93,9 @@ export default function CalculatorPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
       className="min-h-screen text-foreground" 
       style={{background: 'var(--bg-gradient)'}}
     >

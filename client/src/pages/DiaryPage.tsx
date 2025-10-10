@@ -356,9 +356,9 @@ export function DiaryPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
       className="min-h-screen text-foreground" 
       style={{background: 'var(--bg-gradient)'}}
     >
@@ -603,9 +603,16 @@ export function DiaryPage() {
                       return (
                         <motion.div 
                           key={entry.id} 
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1, ease: "easeOut" }}
+                          initial={{ opacity: 0, x: -30, scale: 0.9 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          transition={{ 
+                            duration: 0.5, 
+                            delay: index * 0.15, 
+                            ease: "easeOut",
+                            type: "spring",
+                            stiffness: 100
+                          }}
+                          whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
                           className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 border border-purple-200 dark:border-purple-800 rounded-xl p-4 shadow-sm"
                         >
                           {/* Header with colored meal badge and time */}
