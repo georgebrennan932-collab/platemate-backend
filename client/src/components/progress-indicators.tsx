@@ -67,21 +67,21 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
     }
   ];
 
-  // Check for newly achieved goals and trigger confetti
-  useEffect(() => {
-    progressData.forEach(({ label, consumed, target }) => {
-      const progress = calculateProgress(consumed, target);
-      const isAchieved = progress >= 100;
-      const wasAchieved = previousAchievements.current[label] || false;
-      
-      if (isAchieved && !wasAchieved) {
-        triggerConfetti();
-        console.log(`🎉 ${label} goal achieved! Triggering confetti celebration`);
-      }
-      
-      previousAchievements.current[label] = isAchieved;
-    });
-  }, [progressData, triggerConfetti]);
+  // Confetti celebration disabled per user request
+  // useEffect(() => {
+  //   progressData.forEach(({ label, consumed, target }) => {
+  //     const progress = calculateProgress(consumed, target);
+  //     const isAchieved = progress >= 100;
+  //     const wasAchieved = previousAchievements.current[label] || false;
+  //     
+  //     if (isAchieved && !wasAchieved) {
+  //       triggerConfetti();
+  //       console.log(`🎉 ${label} goal achieved! Triggering confetti celebration`);
+  //     }
+  //     
+  //     previousAchievements.current[label] = isAchieved;
+  //   });
+  // }, [progressData, triggerConfetti]);
 
   return (
     <div className="space-y-6">
