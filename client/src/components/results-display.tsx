@@ -781,21 +781,24 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         </button>
                       </div>
                     )}
-                    <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-2 mt-3">
                       <div className="flex-1">
-                        <label className="text-xs text-muted-foreground mb-1 block">Serving Size</label>
+                        <label className="text-sm font-semibold text-orange-700 dark:text-orange-300 mb-2 block">
+                          📏 Portion Size
+                        </label>
                         <input
                           type="text"
                           value={food.portion}
                           onChange={(e) => updateFoodPortion(index, e.target.value)}
-                          className="w-full px-3 py-2 text-sm border-2 border-orange-200 dark:border-orange-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-800 transition-all"
+                          className="w-full px-4 py-3 text-base font-medium border-3 border-orange-300 dark:border-orange-700 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-400 focus:border-orange-400 bg-white dark:bg-gray-800 transition-all shadow-sm"
                           placeholder="e.g., 200g, 1 cup, 2 slices"
                           data-testid={`input-food-portion-${index}`}
                         />
+                        <p className="text-xs text-muted-foreground mt-1">Change the amount to adjust calories</p>
                       </div>
                       <button
                         onClick={() => removeFoodItem(index)}
-                        className="mt-5 p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                        className="mt-8 p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                         title="Remove this food item"
                         data-testid={`button-remove-food-${index}`}
                       >
