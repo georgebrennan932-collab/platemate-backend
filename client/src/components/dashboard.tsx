@@ -5,6 +5,7 @@ import { Flame, Dumbbell, Wheat, Droplet, TrendingUp, Award, Target, Utensils } 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 interface DashboardProps {
   onViewMeals?: () => void;
@@ -245,14 +246,16 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
 
       {/* View All Meals Button */}
       {onViewMeals && todayEntries.length > 0 && (
-        <button
+        <motion.button
           onClick={onViewMeals}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl text-base font-semibold transition-all flex items-center justify-center space-x-2 shadow-lg"
           data-testid="button-view-all-meals"
         >
           <Utensils className="h-5 w-5" />
           <span>View All Meals</span>
-        </button>
+        </motion.button>
       )}
     </div>
   );

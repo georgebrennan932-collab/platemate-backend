@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Flame, Beef, Wheat, Droplets } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import type { NutritionGoals } from "@shared/schema";
 import { ConfettiCelebration, useConfetti } from "@/components/confetti-celebration";
+import { motion } from "framer-motion";
 
 interface ProgressIndicatorsProps {
   goals: NutritionGoals | undefined;
@@ -85,7 +86,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
 
   return (
     <div className="space-y-6">
-      {progressData.map(({ icon: Icon, label, consumed, target, unit, testId }) => {
+      {progressData.map(({ icon: Icon, label, consumed, target, unit, testId }, index) => {
         const progress = calculateProgress(consumed, target);
         const progressColor = getProgressColor(progress);
         const isAchieved = progress >= 100;
@@ -121,8 +122,11 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
         const colors = colorSchemes[label as keyof typeof colorSchemes];
         
         return (
-          <div 
-            key={label} 
+          <motion.div 
+            key={label}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
             className={`relative bg-gradient-to-br ${colors.bg} rounded-2xl p-6 shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden`}
             data-testid={testId}
           >
@@ -187,7 +191,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         );
       })}
       
