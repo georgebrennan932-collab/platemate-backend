@@ -22,6 +22,7 @@ export function NutritionGoals() {
 
   const { data: goals, isLoading } = useQuery<NutritionGoals>({
     queryKey: ['/api/nutrition-goals'],
+    refetchOnMount: true, // Always refetch on mount to prevent stale data
   });
 
   const form = useForm<z.infer<typeof formSchema>>({

@@ -72,6 +72,7 @@ export default function Home() {
     retry: false,
     enabled: isAuthenticated, // Enable when authenticated
     throwOnError: false,
+    refetchOnMount: true, // Always refetch on mount to prevent stale data
   });
 
   // Fetch diary and drink data to calculate consumed nutrition
