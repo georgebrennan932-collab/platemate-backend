@@ -1272,9 +1272,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (match) {
             // Parse portion to extract grams for accurate calculation
             const portionGrams = parsePortionToGrams(food.portion);
+            console.log(`📊 Portion calculation: "${food.portion}" → ${portionGrams}g`);
             
             // Extract nutrition data scaled to the portion
             const nutritionData = usdaService.extractNutritionData(match.usdaFood, portionGrams);
+            console.log(`🔢 Calculated nutrition:`, nutritionData);
             
             calculatedFoods.push({
               ...food,

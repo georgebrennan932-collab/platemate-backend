@@ -200,6 +200,10 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-sm bg-white dark:bg-gray-900">
+        <DialogHeader>
+          <DialogTitle>Edit Meal Entry</DialogTitle>
+          <DialogDescription>Update the serving size, time, or notes for this meal</DialogDescription>
+        </DialogHeader>
         <div className="space-y-4">
           {/* Food Header */}
           <div className="flex items-center gap-3">
