@@ -7,7 +7,6 @@ import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Ta
 import { Link } from "wouter";
 import { ProgressIndicators } from "@/components/progress-indicators";
 import { WeeklyAnalytics } from "@/components/weekly-analytics";
-import { EditDiaryEntryDialog } from "@/components/edit-diary-entry-dialog";
 import { SearchFilterBar } from "@/components/search-filter-bar";
 import { MealTemplatesDialog } from "@/components/meal-templates-dialog";
 import { AdvancedAnalytics } from "@/components/advanced-analytics";
@@ -567,7 +566,6 @@ export function DiaryPage() {
                               </span>
                             </div>
                             <div className="flex items-center space-x-1">
-                              <EditDiaryEntryDialog entry={entry} />
                               <button
                                 onClick={() => deleteMutation.mutate(entry.id)}
                                 className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
