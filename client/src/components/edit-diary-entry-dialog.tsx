@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Edit2, Save, X, Clock, Type, FileText } from "lucide-react";
+import { Edit2, Save, X, Clock, Type, FileText, UtensilsCrossed } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +40,14 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
   );
   const [notes, setNotes] = useState(entry.notes || "");
   const [customMealName, setCustomMealName] = useState("");
+  
+  // Food portions state - initialize from analysis
+  const [foodPortions, setFoodPortions] = useState<{[key: number]: string}>(
+    entry.analysis?.detectedFoods?.reduce((acc, food, index) => ({
+      ...acc,
+      [index]: food.portion
+    }), {}) || {}
+  );
 
   const updateMutation = useMutation({
     mutationFn: async (updateData: any) => {
@@ -96,7 +104,57 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
     },
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // First, check if food portions changed and update analysis if needed
+    const originalPortions = entry.analysis?.detectedFoods?.map(f => f.portion) || [];
+    const portionsChanged = Object.keys(foodPortions).some((index) => 
+      foodPortions[parseInt(index)] !== originalPortions[parseInt(index)]
+    );
+
+    if (portionsChanged && entry.analysis) {
+      try {
+        // Calculate updated nutrition based on new portions
+        const updatedFoods = entry.analysis.detectedFoods.map((food, index) => {
+          const newPortion = foodPortions[index] || food.portion;
+          
+          // Extract numeric multiplier from portions
+          const getMultiplier = (original: string, updated: string): number => {
+            const originalMatch = original.match(/\d+(\.\d+)?/);
+            const updatedMatch = updated.match(/\d+(\.\d+)?/);
+            
+            if (originalMatch && updatedMatch) {
+              return parseFloat(updatedMatch[0]) / parseFloat(originalMatch[0]);
+            }
+            return 1;
+          };
+          
+          const multiplier = getMultiplier(food.portion, newPortion);
+          
+          return {
+            ...food,
+            portion: newPortion,
+            calories: Math.round(food.calories * multiplier),
+            protein: Math.round(food.protein * multiplier * 10) / 10,
+            carbs: Math.round(food.carbs * multiplier * 10) / 10,
+            fat: Math.round(food.fat * multiplier * 10) / 10,
+          };
+        });
+
+        // Update food analysis
+        await apiRequest("PATCH", `/api/analyses/${entry.analysis.id}`, {
+          detectedFoods: updatedFoods
+        });
+      } catch (error) {
+        console.error("Failed to update food portions:", error);
+        toast({
+          title: "Portion Update Failed",
+          description: "Could not update food portions. Other changes will still be saved.",
+          variant: "destructive",
+        });
+      }
+    }
+
+    // Update diary entry metadata
     const updateData: any = {
       mealType,
       mealDate: new Date(mealDate).toISOString(),
@@ -115,6 +173,12 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
     setMealDate(format(new Date(entry.mealDate), "yyyy-MM-dd'T'HH:mm"));
     setNotes(entry.notes || "");
     setCustomMealName("");
+    setFoodPortions(
+      entry.analysis?.detectedFoods?.reduce((acc, food, index) => ({
+        ...acc,
+        [index]: food.portion
+      }), {}) || {}
+    );
   };
 
   return (
@@ -207,6 +271,31 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
               data-testid="input-notes"
             />
           </div>
+
+          {/* Food Portions */}
+          {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <UtensilsCrossed className="h-4 w-4" />
+                Food Portions
+              </Label>
+              <div className="space-y-2 p-3 rounded-md bg-muted/50">
+                {entry.analysis.detectedFoods.map((food, index) => (
+                  <div key={index} className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium">{food.name}</span>
+                    <Input
+                      type="text"
+                      value={foodPortions[index] || food.portion}
+                      onChange={(e) => setFoodPortions({ ...foodPortions, [index]: e.target.value })}
+                      className="w-32 h-8 text-sm"
+                      placeholder="e.g., 100g"
+                      data-testid={`input-portion-${index}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 pt-4">
