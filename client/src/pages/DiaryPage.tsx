@@ -562,27 +562,9 @@ export function DiaryPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Section Header - Purple Background with View Meals Toggle */}
-                <div className="bg-gradient-to-r from-purple-600 to-purple-500 rounded-xl px-4 py-4 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-white">Today's Meals</h3>
-                    <button
-                      onClick={() => {
-                        const totalEntries = filteredGroupedEntries[sortedDates[0]]?.length || 0;
-                        if (expandedEntries.size > 0) {
-                          setExpandedEntries(new Set());
-                        } else {
-                          const allIds = new Set(filteredGroupedEntries[sortedDates[0]]?.map(e => e.id) || []);
-                          setExpandedEntries(allIds);
-                        }
-                      }}
-                      className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 backdrop-blur-sm"
-                      data-testid="button-toggle-all-meals"
-                    >
-                      <Utensils className="h-4 w-4" />
-                      <span>{expandedEntries.size > 0 ? 'Hide All Meals' : 'View All Meals'}</span>
-                    </button>
-                  </div>
+                {/* Section Header - Purple Background */}
+                <div className="bg-gradient-to-r from-purple-600 to-purple-500 rounded-xl px-4 py-3 shadow-md">
+                  <h3 className="text-xl font-bold text-white">Today's Meals</h3>
                 </div>
                 
                 {sortedDates.map((date) => (
@@ -825,6 +807,24 @@ export function DiaryPage() {
                 </div>
               )}
             </div>
+            
+            {/* View All Meals Button - Placed under Today's Intake */}
+            <button
+              onClick={() => {
+                const totalEntries = filteredGroupedEntries[sortedDates[0]]?.length || 0;
+                if (expandedEntries.size > 0) {
+                  setExpandedEntries(new Set());
+                } else {
+                  const allIds = new Set(filteredGroupedEntries[sortedDates[0]]?.map(e => e.id) || []);
+                  setExpandedEntries(allIds);
+                }
+              }}
+              className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl text-base font-semibold transition-all flex items-center justify-center space-x-2 shadow-lg"
+              data-testid="button-toggle-all-meals"
+            >
+              <Utensils className="h-5 w-5" />
+              <span>{expandedEntries.size > 0 ? 'Hide All Meals' : 'View All Meals'}</span>
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
