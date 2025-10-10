@@ -866,35 +866,41 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-3 gap-3">
-            <button
+            <motion.button
               onClick={handleCameraCapture}
-              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-blue-600 text-white hover:bg-blue-500"
+              className="py-4 px-6 rounded-full font-bold flex items-center justify-center space-x-3 transition-all duration-300 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl hover:scale-105 transform"
               data-testid="button-add-camera"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <Camera className="h-4 w-4" />
+              <Camera className="h-5 w-5" />
               <span className="text-sm">Camera</span>
-            </button>
+            </motion.button>
             
-            <button
+            <motion.button
               onClick={handleGallerySelect}
-              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-green-600 text-white hover:bg-green-500"
+              className="py-4 px-6 rounded-full font-bold flex items-center justify-center space-x-3 transition-all duration-300 bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl hover:scale-105 transform"
               data-testid="button-add-gallery"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <Images className="h-4 w-4" />
+              <Images className="h-5 w-5" />
               <span className="text-sm">Gallery</span>
-            </button>
+            </motion.button>
             
-            <button
+            <motion.button
               onClick={() => {
                 console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner");
                 setShowBarcodeScanner(true);
               }}
-              className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-orange-500 text-white hover:bg-orange-600"
+              className="py-4 px-6 rounded-full font-bold flex items-center justify-center space-x-3 transition-all duration-300 bg-gradient-to-r from-orange-500 to-pink-600 text-white hover:from-orange-600 hover:to-pink-700 shadow-lg hover:shadow-xl hover:scale-105 transform"
               data-testid="button-add-barcode"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <QrCode className="h-4 w-4" />
+              <QrCode className="h-5 w-5" />
               <span className="text-sm">Barcode</span>
-            </button>
+            </motion.button>
           </div>
         </div>
       )}
