@@ -115,9 +115,14 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
         const nutritionData = await response.json();
         
         if (nutritionData.foods && nutritionData.foods.length > 0) {
-          // Update analysis with new nutrition data
+          // Update analysis with new nutrition data, preserving icon
+          const updatedFoods = nutritionData.foods.map((food: any, index: number) => ({
+            ...food,
+            icon: entry.analysis?.detectedFoods[index]?.icon || "🍽️"
+          }));
+          
           await apiRequest("PATCH", `/api/analyses/${entry.analysis.id}`, {
-            detectedFoods: nutritionData.foods
+            detectedFoods: updatedFoods
           });
           
           queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
@@ -162,42 +167,42 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md bg-white dark:bg-gray-900">
-        <div className="space-y-6 py-4">
+      <DialogContent className="max-w-sm bg-white dark:bg-gray-900">
+        <div className="space-y-4">
           {/* Food Header */}
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-              <Salad className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+              <Salad className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white truncate">
                 {foodName}
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                 {firstFood?.portion || "Serving"}
               </p>
             </div>
           </div>
 
           {/* Serving Size */}
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white">
               Serving Size
             </h3>
             <Input
               type="text"
               value={servingSize}
               onChange={(e) => setServingSize(e.target.value)}
-              placeholder="e.g., 4 biscuits, 100g, 2 slices"
-              className="text-lg"
+              placeholder="e.g., 4 biscuits"
+              className="text-base"
               data-testid="input-serving-size"
             />
           </div>
 
           {/* Date & Time */}
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Clock className="w-5 h-5" />
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Clock className="w-4 h-4" />
               Date & Time
             </h3>
             <Input
@@ -205,15 +210,15 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
               type="datetime-local"
               value={mealDate}
               onChange={(e) => setMealDate(e.target.value)}
-              className="text-base"
+              className="text-sm"
               data-testid="input-meal-date"
             />
           </div>
 
           {/* Notes */}
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <FileText className="w-5 h-5" />
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <FileText className="w-4 h-4" />
               Notes (Optional)
             </h3>
             <Textarea
@@ -222,18 +227,17 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="text-base"
+              className="text-sm"
               data-testid="input-notes"
             />
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-2 pt-2">
             <Button
               onClick={() => setOpen(false)}
               variant="outline"
-              size="lg"
-              className="flex-1 text-base"
+              className="flex-1"
               data-testid="button-cancel"
             >
               Cancel
@@ -241,11 +245,10 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
             <Button
               onClick={handleSave}
               disabled={updateMutation.isPending}
-              size="lg"
-              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white text-base"
+              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white"
               data-testid="button-save"
             >
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              {updateMutation.isPending ? "Saving..." : "Add to Diary"}
             </Button>
           </div>
         </div>
