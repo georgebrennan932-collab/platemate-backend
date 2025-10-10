@@ -22,11 +22,12 @@ import { WeightChart } from "@/components/weight-chart";
 import { DrinksBar } from "@/components/drinks-bar";
 import type { WeightEntry } from "@shared/schema";
 import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
+import { Dashboard } from "@/components/dashboard";
 
 export function DiaryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'diary' | 'analytics' | 'weight'>('diary');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'diary' | 'analytics' | 'weight'>('dashboard');
   const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
 
   // Check URL parameters for tab switching
@@ -418,6 +419,17 @@ export function DiaryPage() {
             <div className="flex items-center space-x-2">
               <div className="flex bg-muted rounded-lg p-1">
                 <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'dashboard' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid="tab-dashboard"
+                >
+                  <Target className="h-4 w-4" />
+                </button>
+                <button
                   onClick={() => setActiveTab('diary')}
                   className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'diary' 
@@ -448,7 +460,7 @@ export function DiaryPage() {
                   }`}
                   data-testid="tab-weight"
                 >
-                  <Target className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" />
                 </button>
               </div>
               <Link href="/help">
@@ -490,7 +502,9 @@ export function DiaryPage() {
       
       {/* Content */}
       <div className="max-w-md mx-auto p-4 pb-32">
-        {activeTab === 'analytics' ? (
+        {activeTab === 'dashboard' ? (
+          <Dashboard />
+        ) : activeTab === 'analytics' ? (
           <div className="space-y-6">
             <WeeklyAnalytics goals={nutritionGoals} />
             <AdvancedAnalytics goals={nutritionGoals} />
