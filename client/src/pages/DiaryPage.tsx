@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target, TrendingUp, HelpCircle, Mic, MicOff, Plus } from "lucide-react";
+import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { ProgressIndicators } from "@/components/progress-indicators";
 import { WeeklyAnalytics } from "@/components/weekly-analytics";
@@ -354,7 +355,13 @@ export function DiaryPage() {
   }
 
   return (
-    <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="min-h-screen text-foreground" 
+      style={{background: 'var(--bg-gradient)'}}
+    >
       {/* Header */}
       <div className="bg-card border-b sticky top-0 z-10">
         <div className="max-w-md mx-auto px-4 py-4">
@@ -967,7 +974,7 @@ export function DiaryPage() {
           setEditingDiaryEntry(null);
         }}
       />
-    </div>
+    </motion.div>
   );
 }
 
