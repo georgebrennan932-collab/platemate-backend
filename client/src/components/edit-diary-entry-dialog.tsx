@@ -129,8 +129,19 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
           description: "Getting fresh nutrition analysis",
         });
 
-        // Build food description for AI (e.g., "2 biscuits weetabix")
-        const foodDescription = `${newPortion} ${foodName}`.trim();
+        // Extract original food description from notes (e.g., "Added via text input: \"four Weetabix\"")
+        // Or use the unit as base food name (e.g., "biscuits" from "4 biscuits")
+        let baseFoodName = unit; // Fallback to unit
+        
+        if (entry.notes && entry.notes.includes('Added via text input:')) {
+          const match = entry.notes.match(/Added via text input:\s*"(.+?)"/);
+          if (match && match[1]) {
+            baseFoodName = match[1]; // Use original input like "four Weetabix"
+          }
+        }
+        
+        // Build food description for AI with new portion (e.g., "2 weetabix")
+        const foodDescription = `${portionAmount} ${baseFoodName}`.trim();
         console.log("🔄 Sending to AI for fresh analysis:", foodDescription);
 
         const response = await apiRequest("POST", "/api/analyze-text", {
