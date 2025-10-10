@@ -237,15 +237,17 @@ export class USDAService {
     
     // Handle common modifiers that confuse USDA search
     let processed = name
+      .replace(/^\d+\s+/, '') // CRITICAL: Remove leading numbers (e.g., "4 Weetabix" → "Weetabix")
+      .replace(/^(one|two|three|four|five|six|seven|eight|nine|ten)\s+/i, '') // Remove leading word numbers
       .replace(/\b(2|two|3|three|1|one)\s+(slice|slices|piece|pieces|strip|strips)\b/g, '') // Remove portion descriptors
       .replace(/\b(approx\.?|approximately)\s*\d+g?\b/g, '') // Remove weight estimates
       .replace(/\b\d+g\b/g, '') // Remove gram measurements
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim();
     
-    // If we removed too much, return the original
+    // If we removed too much, return the original (without numbers)
     if (processed.length < 3) {
-      return foodName;
+      return foodName.replace(/^\d+\s+/, '').trim();
     }
     
     return processed;
