@@ -23,6 +23,7 @@ import { DrinksBar } from "@/components/drinks-bar";
 import type { WeightEntry } from "@shared/schema";
 import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 import { Dashboard } from "@/components/dashboard";
+import { DiaryEditDialog } from "@/components/diary-edit-dialog";
 
 export function DiaryPage() {
   const { toast } = useToast();
@@ -48,6 +49,10 @@ export function DiaryPage() {
   // Weight edit dialog state
   const [editingWeightEntry, setEditingWeightEntry] = useState<WeightEntry | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Diary edit dialog state
+  const [editingDiaryEntry, setEditingDiaryEntry] = useState<DiaryEntryWithAnalysis | null>(null);
+  const [isDiaryEditDialogOpen, setIsDiaryEditDialogOpen] = useState(false);
 
   // Voice input state
   const [isListening, setIsListening] = useState(false);
@@ -581,6 +586,17 @@ export function DiaryPage() {
                             </div>
                             <div className="flex items-center space-x-1">
                               <button
+                                onClick={() => {
+                                  setEditingDiaryEntry(entry);
+                                  setIsDiaryEditDialogOpen(true);
+                                }}
+                                className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                                title="Edit entry"
+                                data-testid={`button-edit-${entry.id}`}
+                              >
+                                <Utensils className="h-4 w-4" />
+                              </button>
+                              <button
                                 onClick={() => deleteMutation.mutate(entry.id)}
                                 className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                 title="Delete entry"
@@ -901,6 +917,15 @@ export function DiaryPage() {
         onOpenChange={setIsEditDialogOpen}
         onSuccess={() => {
           setEditingWeightEntry(null);
+        }}
+      />
+
+      <DiaryEditDialog
+        entry={editingDiaryEntry}
+        open={isDiaryEditDialogOpen}
+        onOpenChange={setIsDiaryEditDialogOpen}
+        onSuccess={() => {
+          setEditingDiaryEntry(null);
         }}
       />
     </div>

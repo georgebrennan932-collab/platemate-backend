@@ -244,13 +244,17 @@ export function calculateDailyNutrition(
     drink.loggedAt && format(new Date(drink.loggedAt), 'yyyy-MM-dd') === dateStr
   );
 
-  // Calculate nutrition from food diary entries
-  const nutrition = targetDiaryEntries.reduce((total, entry) => ({
-    calories: total.calories + (entry.analysis?.totalCalories || 0),
-    protein: total.protein + (entry.analysis?.totalProtein || 0),
-    carbs: total.carbs + (entry.analysis?.totalCarbs || 0),
-    fat: total.fat + (entry.analysis?.totalFat || 0),
-  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  // Calculate nutrition from food diary entries (with portion multiplier support)
+  const nutrition = targetDiaryEntries.reduce((total, entry) => {
+    // portionMultiplier is stored as integer (100 = 1.0x), default to 100 if not set
+    const multiplier = (entry.portionMultiplier || 100) / 100;
+    return {
+      calories: total.calories + Math.round((entry.analysis?.totalCalories || 0) * multiplier),
+      protein: total.protein + Math.round((entry.analysis?.totalProtein || 0) * multiplier),
+      carbs: total.carbs + Math.round((entry.analysis?.totalCarbs || 0) * multiplier),
+      fat: total.fat + Math.round((entry.analysis?.totalFat || 0) * multiplier),
+    };
+  }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   // Add calories from drinks
   const drinkCalories = targetDrinkEntries.reduce((total, drink) => total + (drink.calories || 0), 0);

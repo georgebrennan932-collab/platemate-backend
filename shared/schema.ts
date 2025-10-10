@@ -91,6 +91,7 @@ export const diaryEntries = pgTable("diary_entries", {
   customMealName: text("custom_meal_name"), // for custom meal types
   mealDate: timestamp("meal_date").notNull(), // when the meal was eaten
   notes: text("notes"), // optional user notes
+  portionMultiplier: integer("portion_multiplier").default(100), // 100 = 1.0x serving (stored as integer percentage)
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -164,11 +165,12 @@ export const insertDiaryEntrySchema = createInsertSchema(diaryEntries).omit({
   mealType: z.enum(["breakfast", "lunch", "dinner", "snack", "custom"]),
   mealDate: z.string().or(z.date()), // Accept string or Date
   notes: z.string().optional(),
+  portionMultiplier: z.number().int().min(10).max(1000).default(100).optional(), // 100 = 1.0x serving
 });
 
 export const updateDiaryEntrySchema = insertDiaryEntrySchema.partial().extend({
   customMealName: z.string().optional(), // For custom meal types
-  portionMultiplier: z.number().min(0.1).max(10).optional(), // For portion adjustments
+  portionMultiplier: z.number().int().min(10).max(1000).optional(), // 100 = 1.0x serving (10% to 10x)
 });
 
 export const insertDrinkEntrySchema = createInsertSchema(drinkEntries).omit({
