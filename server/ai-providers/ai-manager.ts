@@ -601,6 +601,9 @@ export class AIManager {
       { keywords: ['muffin'], portion: num * 60, label: 'muffin' },
       { keywords: ['toast slice'], portion: num * 25, label: 'toast slice' },
       
+      // Cereals (UK specific)
+      { keywords: ['weetabix', 'weetbix', 'weet-bix'], portion: num * 19, label: 'Weetabix biscuit' },
+      
       // Fruits
       { keywords: ['apple', 'medium apple'], portion: num * 180, label: 'apple' },
       { keywords: ['banana', 'medium banana'], portion: num * 120, label: 'banana' },
@@ -801,14 +804,20 @@ export class AIManager {
       const usdaData = nutritionMap.get(foodName);
       
       if (usdaData) {
-        // Use accurate USDA nutrition data
+        // Convert the original text portion to grams for scaling
+        const portionGrams = this.convertPortionToGrams(originalText, foodName);
+        const scaleFactor = portionGrams / 100; // USDA data is per 100g
+        
+        console.log(`🔧 Scaling nutrition for "${originalText}" → ${portionGrams}g (factor: ${scaleFactor})`);
+        
+        // Use accurate USDA nutrition data scaled by the portion
         const food = {
           name: usdaData.usdaFood.description,
-          portion: originalText, // PRESERVE original user input (e.g., "2 large eggs")
-          calories: usdaData.nutrition.calories,
-          protein: Math.round(usdaData.nutrition.protein),
-          carbs: Math.round(usdaData.nutrition.carbs),
-          fat: Math.round(usdaData.nutrition.fat),
+          portion: originalText, // PRESERVE original user input (e.g., "2 large eggs", "3 Weetabix")
+          calories: Math.round(usdaData.nutrition.calories * scaleFactor),
+          protein: Math.round(usdaData.nutrition.protein * scaleFactor),
+          carbs: Math.round(usdaData.nutrition.carbs * scaleFactor),
+          fat: Math.round(usdaData.nutrition.fat * scaleFactor),
           icon: this.getFoodIcon(foodName)
         };
         
@@ -818,7 +827,7 @@ export class AIManager {
         totalCarbs += food.carbs;
         totalFat += food.fat;
         
-        console.log(`✅ Enhanced: ${foodName} → ${food.name} (${food.calories} cal)`);
+        console.log(`✅ Enhanced: ${foodName} → ${food.name} (${food.portion}) = ${food.calories} cal`);
       } else {
         // Fallback for foods not found in USDA
         const fallbackFood = {
