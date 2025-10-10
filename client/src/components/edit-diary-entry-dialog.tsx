@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Edit2, Save, X, Clock, Type, FileText, UtensilsCrossed } from "lucide-react";
@@ -41,13 +41,31 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
   const [notes, setNotes] = useState(entry.notes || "");
   const [customMealName, setCustomMealName] = useState("");
   
-  // Food portions state - initialize from analysis
-  const [foodPortions, setFoodPortions] = useState<{[key: number]: string}>(
-    entry.analysis?.detectedFoods?.reduce((acc, food, index) => ({
-      ...acc,
-      [index]: food.portion
-    }), {}) || {}
+  // Store original foods for proper multiplier calculation
+  const originalFoods = entry.analysis?.detectedFoods || [];
+  
+  // Serving size multipliers for each food (1 = original portion)
+  const [servingSizes, setServingSizes] = useState<{[key: number]: number}>(
+    originalFoods.reduce((acc, _, index) => ({ ...acc, [index]: 1 }), {})
   );
+  
+  // Calculate updated nutrition based on serving sizes
+  const [updatedFoods, setUpdatedFoods] = useState(originalFoods);
+  
+  // Recalculate nutrition when serving sizes change
+  useEffect(() => {
+    const recalculated = originalFoods.map((food, index) => {
+      const multiplier = servingSizes[index] || 1;
+      return {
+        ...food,
+        calories: Math.round(food.calories * multiplier),
+        protein: Math.round(food.protein * multiplier * 10) / 10,
+        carbs: Math.round(food.carbs * multiplier * 10) / 10,
+        fat: Math.round(food.fat * multiplier * 10) / 10,
+      };
+    });
+    setUpdatedFoods(recalculated);
+  }, [servingSizes]);
 
   const updateMutation = useMutation({
     mutationFn: async (updateData: any) => {
@@ -105,42 +123,14 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
   });
 
   const handleSave = async () => {
-    // First, check if food portions changed and update analysis if needed
-    const originalPortions = entry.analysis?.detectedFoods?.map(f => f.portion) || [];
-    const portionsChanged = Object.keys(foodPortions).some((index) => 
-      foodPortions[parseInt(index)] !== originalPortions[parseInt(index)]
+    // Check if serving sizes changed
+    const servingsChanged = Object.keys(servingSizes).some((index) => 
+      servingSizes[parseInt(index)] !== 1
     );
 
-    if (portionsChanged && entry.analysis) {
+    if (servingsChanged && entry.analysis) {
       try {
-        // Calculate updated nutrition based on new portions
-        const updatedFoods = entry.analysis.detectedFoods.map((food, index) => {
-          const newPortion = foodPortions[index] || food.portion;
-          
-          // Extract numeric multiplier from portions
-          const getMultiplier = (original: string, updated: string): number => {
-            const originalMatch = original.match(/\d+(\.\d+)?/);
-            const updatedMatch = updated.match(/\d+(\.\d+)?/);
-            
-            if (originalMatch && updatedMatch) {
-              return parseFloat(updatedMatch[0]) / parseFloat(originalMatch[0]);
-            }
-            return 1;
-          };
-          
-          const multiplier = getMultiplier(food.portion, newPortion);
-          
-          return {
-            ...food,
-            portion: newPortion,
-            calories: Math.round(food.calories * multiplier),
-            protein: Math.round(food.protein * multiplier * 10) / 10,
-            carbs: Math.round(food.carbs * multiplier * 10) / 10,
-            fat: Math.round(food.fat * multiplier * 10) / 10,
-          };
-        });
-
-        // Update food analysis
+        // Update food analysis with recalculated nutrition
         await apiRequest("PATCH", `/api/analyses/${entry.analysis.id}`, {
           detectedFoods: updatedFoods
         });
@@ -154,7 +144,6 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
           description: "Could not update food portions. Other changes will still be saved.",
           variant: "destructive",
         });
-        // Continue to update diary entry even if portion update fails
       }
     }
 
@@ -177,11 +166,8 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
     setMealDate(format(new Date(entry.mealDate), "yyyy-MM-dd'T'HH:mm"));
     setNotes(entry.notes || "");
     setCustomMealName("");
-    setFoodPortions(
-      entry.analysis?.detectedFoods?.reduce((acc, food, index) => ({
-        ...acc,
-        [index]: food.portion
-      }), {}) || {}
+    setServingSizes(
+      originalFoods.reduce((acc, _, index) => ({ ...acc, [index]: 1 }), {})
     );
   };
 
@@ -242,30 +228,48 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
             </div>
           </div>
 
-          {/* Portion Sizes */}
+          {/* Serving Sizes */}
           {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
             <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl p-4 space-y-3">
               <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                 <UtensilsCrossed className="h-4 w-4 text-orange-600" />
-                Portions
+                Adjust Servings
               </h3>
-              {entry.analysis.detectedFoods.map((food, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-                      {food.name}
+              {originalFoods.map((food, index) => {
+                const updated = updatedFoods[index];
+                return (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                          {food.name}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {food.portion}
+                        </div>
+                      </div>
+                      <Input
+                        type="number"
+                        min="0.1"
+                        step="0.5"
+                        value={servingSizes[index] || 1}
+                        onChange={(e) => setServingSizes({ ...servingSizes, [index]: parseFloat(e.target.value) || 1 })}
+                        className="w-16 text-center bg-white dark:bg-gray-800"
+                        data-testid={`input-serving-${index}`}
+                      />
+                      <span className="text-xs text-gray-500 dark:text-gray-400 w-8">×</span>
                     </div>
+                    {updated && (
+                      <div className="flex gap-2 text-xs text-gray-600 dark:text-gray-400 pl-2">
+                        <span>🔥 {updated.calories}cal</span>
+                        <span>💪 {updated.protein}g</span>
+                        <span>🌾 {updated.carbs}g</span>
+                        <span>🥑 {updated.fat}g</span>
+                      </div>
+                    )}
                   </div>
-                  <Input
-                    type="text"
-                    value={foodPortions[index] || food.portion}
-                    onChange={(e) => setFoodPortions({ ...foodPortions, [index]: e.target.value })}
-                    className="w-28 bg-white dark:bg-gray-800"
-                    placeholder="e.g., 100g"
-                    data-testid={`input-portion-${index}`}
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
