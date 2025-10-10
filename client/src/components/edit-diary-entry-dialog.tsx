@@ -29,17 +29,25 @@ interface EditDiaryEntryDialogProps {
   entry: DiaryEntryWithAnalysis;
 }
 
-// Helper function to parse portion into number and unit (first word only)
+// Helper function to parse portion into number and unit, skipping quantity words
 function parsePortion(portion: string): { amount: number; unit: string } {
   if (!portion) return { amount: 1, unit: "serving" };
   
-  // Extract number and first word only as unit (e.g., "4 biscuits ..." => amount: 4, unit: "biscuits")
-  const match = portion.match(/^([\d.]+)\s+(\w+)/);
+  // Extract number and skip quantity words to get actual food name
+  // e.g., "1 four Weetabix" => amount: 1, unit: "Weetabix"
+  const match = portion.match(/^([\d.]+)\s+(.+)$/);
   if (match) {
-    return {
-      amount: parseFloat(match[1]) || 1,
-      unit: match[2].trim() || "serving"
-    };
+    const amount = parseFloat(match[1]) || 1;
+    let remainingText = match[2].trim();
+    
+    // Skip quantity words (one, two, three, four, etc.)
+    remainingText = remainingText.replace(/^(one|two|three|four|five|six|seven|eight|nine|ten|a|an)\s+/i, '');
+    
+    // Extract first word as unit
+    const unitMatch = remainingText.match(/^(\w+)/);
+    const unit = unitMatch ? unitMatch[1] : "serving";
+    
+    return { amount, unit };
   }
   return { amount: 1, unit: "serving" };
 }
