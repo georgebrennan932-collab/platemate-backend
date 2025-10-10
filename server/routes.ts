@@ -122,6 +122,9 @@ function parsePortionToGrams(portion: string): number {
   if (/\b(slices?)\b/.test(portionLower)) {
     return amount * 30; // 1 slice ≈ 30g (bread)
   }
+  if (/\b(biscuits?|cookies?)\b/.test(portionLower)) {
+    return amount * 37.5; // 1 Weetabix biscuit ≈ 37.5g
+  }
   if (/\b(pieces?|items?)\b/.test(portionLower)) {
     return amount * 50; // 1 piece ≈ 50g average
   }
@@ -129,8 +132,11 @@ function parsePortionToGrams(portion: string): number {
     return amount * 100; // 1 serving ≈ 100g
   }
   
-  // Default: assume it's already in grams or treat as specified amount
-  return amount > 0 ? amount : 100;
+  // Default: if amount looks reasonable as grams use it, otherwise assume servings
+  if (amount >= 10) {
+    return amount; // Probably already in grams
+  }
+  return amount * 100; // Treat as servings (e.g., "2" = 200g)
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
