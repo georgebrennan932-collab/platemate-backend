@@ -263,6 +263,7 @@ export default function Home() {
       soundService.playSuccess();
       setAnalysisData(data as FoodAnalysis);
       setCurrentState('results');
+      setShowPersistentConfetti(true); // Trigger success confetti
     }
   };
 
@@ -401,6 +402,7 @@ export default function Home() {
       setEditableFoods([]); // Clear edited foods
       setEditingIndex(null); // Clear editing state
       setCurrentState('results');
+      setShowPersistentConfetti(true); // Trigger success confetti
       
       toast({
         title: "Analysis Confirmed",

@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { motion } from "framer-motion";
 
 interface ResultsDisplayProps {
   data: FoodAnalysis;
@@ -627,9 +628,19 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const fatPercent = Math.round((data.totalFat * 9 / totalMacros) * 100);
 
   return (
-    <div className="p-4 space-y-4">
+    <motion.div 
+      className="p-4 space-y-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Back Button */}
-      <div className="flex items-center mb-4">
+      <motion.div 
+        className="flex items-center mb-4"
+        initial={{ x: -20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
         <button 
           onClick={onScanAnother}
           className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted/30 rounded-xl"
@@ -638,7 +649,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <ArrowLeft className="h-5 w-5" />
           <span className="font-medium">Back to Camera</span>
         </button>
-      </div>
+      </motion.div>
       
       {/* AI Unavailable Warning */}
       {data.isAITemporarilyUnavailable && (
@@ -659,7 +670,28 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         </AlertDescription>
       </Alert>
       {/* Beautiful Header with Purple Gradient */}
-      <div className="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-3xl p-6 shadow-2xl border border-purple-400/30">
+      <motion.div 
+        className="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-3xl p-6 shadow-2xl border border-purple-400/30"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ 
+          scale: 1, 
+          opacity: 1,
+          boxShadow: [
+            "0 20px 25px -5px rgba(147, 51, 234, 0.3), 0 10px 10px -5px rgba(147, 51, 234, 0.2)",
+            "0 20px 25px -5px rgba(147, 51, 234, 0.5), 0 10px 10px -5px rgba(147, 51, 234, 0.4)",
+            "0 20px 25px -5px rgba(147, 51, 234, 0.3), 0 10px 10px -5px rgba(147, 51, 234, 0.2)",
+          ]
+        }}
+        transition={{ 
+          duration: 0.5,
+          delay: 0.2,
+          boxShadow: {
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-sm relative ring-2 ring-white/20">
@@ -719,7 +751,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             {data.isAITemporarilyUnavailable ? 'Estimated values' : `${data.confidence}% confidence`}
           </span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Detected Foods - Beautiful Cream/Beige Cards */}
       <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-900/10 dark:via-amber-900/10 dark:to-yellow-900/10 rounded-3xl shadow-xl p-6 border border-orange-200/30 dark:border-orange-700/30">
@@ -1358,6 +1390,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
