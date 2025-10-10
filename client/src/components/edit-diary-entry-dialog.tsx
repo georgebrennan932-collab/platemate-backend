@@ -141,6 +141,10 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
           }
         }
         
+        // Strip any leading quantity (numbers or words) from the base food name
+        // e.g., "four Weetabix" → "Weetabix", "2 eggs" → "eggs"
+        baseFoodName = baseFoodName.replace(/^(\d+\.?\d*|one|two|three|four|five|six|seven|eight|nine|ten|a|an)\s+/i, '').trim();
+        
         // Build food description for AI with new portion (e.g., "2 weetabix")
         const foodDescription = `${portionAmount} ${baseFoodName}`.trim();
         console.log("🔄 Sending to AI for fresh analysis:", foodDescription);
