@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { promises as fs } from "fs";
 import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, DiaryEntry, ProviderError, DailyCoaching, EducationalTip, HealthCheckResult } from "./types";
+import { mapUKFoodTerms } from "../uk-food-mapping";
 
 export class OpenAIProvider extends AIProvider {
   public readonly name = "OpenAI";
@@ -290,31 +291,33 @@ If you can't clearly identify something, don't include it. Be as accurate as pos
 
   async analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
     try {
+      // Apply UK to US food term mapping BEFORE sending to AI
+      const mappedDescription = mapUKFoodTerms(foodDescription);
+      
       const response = await this.client.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {
             role: "user",
-            content: `Analyze this food description and extract nutritional information. Parse the quantity, unit, and food name from: "${foodDescription}"
+            content: `Analyze this food description and extract nutritional information. Parse the quantity, unit, and food name from: "${mappedDescription}"
 
-CRITICAL: Use simple, basic food names. Do NOT use complex preparations or processed versions unless explicitly stated.
+CRITICAL QUANTITY HANDLING:
+- If the user specifies a quantity (e.g., "4 Weetabix", "2 eggs", "three bananas"), you MUST:
+  1. Extract the quantity number
+  2. Multiply ALL nutrition values (calories, protein, carbs, fat) by that quantity
+  3. Preserve the original portion description including the quantity
 
-Examples:
-- "2 large eggs" → "Eggs, raw, large" (NOT egg custard, egg salad, or any preparation)
-- "100g salmon" → "Salmon, raw"
-- "one apple" → "Apple, raw, medium"
-- "two slices of bread" → "Bread, white, slice"
-- "half cup rice" → "Rice, cooked, white"
-- "chicken breast" → "Chicken breast, raw, skinless"
-- "banana" → "Banana, raw, medium"
+Examples with quantities:
+- "4 Weetabix" → quantity=4, multiply nutrition by 4, portion="4 Weetabix"
+- "2 large eggs" → quantity=2, multiply nutrition by 2, portion="2 large eggs"
+- "three bananas" → quantity=3, multiply nutrition by 3, portion="3 bananas"
 
 FOOD NAME RULES:
-- Always assume RAW/FRESH unless cooking method is specified
-- Use simple ingredient names, not recipe names
-- For eggs: always use "Eggs, raw, large" unless cooking method mentioned
+- Use simple, basic food names (raw/fresh unless cooking method specified)
+- For eggs: "Eggs, raw, large" unless cooking method mentioned
 - For meat: assume raw, skinless unless specified
-- For vegetables: assume raw unless cooking mentioned
-- For fruits: assume raw, fresh
+- For Weetabix: "Weetabix cereal biscuit"
+- Do NOT use complex preparations unless explicitly stated
 
 Provide accurate nutritional information based on standard USDA values. Return the response as a JSON object with this exact structure:
 
@@ -322,18 +325,19 @@ Provide accurate nutritional information based on standard USDA values. Return t
   "confidence": number (0-100),
   "detectedFoods": [
     {
-      "name": "Simple, basic food name (raw/fresh unless specified)",
-      "portion": "PRESERVE original portion description from user (e.g., keep '2 large eggs' as '2 large eggs', not '100g')",
-      "calories": number,
-      "protein": number,
-      "carbs": number,
-      "fat": number,
+      "name": "Simple, basic food name",
+      "portion": "PRESERVE original portion with quantity (e.g., '4 Weetabix', '2 large eggs')",
+      "quantity": number (extract from portion text, default 1),
+      "calories": number (ALREADY MULTIPLIED by quantity),
+      "protein": number (ALREADY MULTIPLIED by quantity),
+      "carbs": number (ALREADY MULTIPLIED by quantity),
+      "fat": number (ALREADY MULTIPLIED by quantity),
       "icon": "🍽️"
     }
   ]
 }
 
-Be as accurate as possible with portion estimates and nutritional values. Use standard USDA nutritional values for basic, unprocessed foods.`
+IMPORTANT: All nutrition values should be TOTAL amounts including the quantity multiplier.`
           }
         ],
         max_tokens: 1000,
