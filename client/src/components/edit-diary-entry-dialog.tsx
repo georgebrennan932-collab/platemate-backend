@@ -199,135 +199,109 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Edit2 className="h-5 w-5" />
-            Edit Meal Entry
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
+            <Edit2 className="h-6 w-6 text-purple-600" />
+            Edit Meal
           </DialogTitle>
-          <DialogDescription>
-            Update the details of your meal entry
-          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
-          {/* Meal Type */}
-          <div className="space-y-2">
-            <Label htmlFor="meal-type" className="flex items-center gap-2">
-              <Type className="h-4 w-4" />
-              Meal Type
-            </Label>
-            <Select value={mealType} onValueChange={setMealType}>
-              <SelectTrigger data-testid="select-meal-type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="breakfast">🌅 Breakfast</SelectItem>
-                <SelectItem value="lunch">🌞 Lunch</SelectItem>
-                <SelectItem value="dinner">🌜 Dinner</SelectItem>
-                <SelectItem value="snack">🍎 Snack</SelectItem>
-                <SelectItem value="custom">✨ Custom</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Meal Type & Date/Time - Combined */}
+          <div className="bg-gradient-to-br from-purple-50 to-orange-50 dark:from-purple-900/20 dark:to-orange-900/20 rounded-2xl p-4 space-y-3">
+            <div>
+              <Label htmlFor="meal-type" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                Meal Type
+              </Label>
+              <Select value={mealType} onValueChange={setMealType}>
+                <SelectTrigger data-testid="select-meal-type" className="bg-white dark:bg-gray-800">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="breakfast">🌅 Breakfast</SelectItem>
+                  <SelectItem value="lunch">🌞 Lunch</SelectItem>
+                  <SelectItem value="dinner">🌜 Dinner</SelectItem>
+                  <SelectItem value="snack">🍎 Snack</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="meal-date" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                Date & Time
+              </Label>
+              <Input
+                id="meal-date"
+                type="datetime-local"
+                value={mealDate}
+                onChange={(e) => setMealDate(e.target.value)}
+                className="bg-white dark:bg-gray-800"
+                data-testid="input-meal-date"
+              />
+            </div>
           </div>
 
-          {/* Custom Meal Name */}
-          {mealType === "custom" && (
-            <div className="space-y-2">
-              <Label htmlFor="custom-name">Custom Meal Name</Label>
-              <Input
-                id="custom-name"
-                placeholder="e.g., Post-workout snack"
-                value={customMealName}
-                onChange={(e) => setCustomMealName(e.target.value)}
-                data-testid="input-custom-meal-name"
-              />
+          {/* Portion Sizes */}
+          {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
+            <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl p-4 space-y-3">
+              <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                <UtensilsCrossed className="h-4 w-4 text-orange-600" />
+                Portions
+              </h3>
+              {entry.analysis.detectedFoods.map((food, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                      {food.name}
+                    </div>
+                  </div>
+                  <Input
+                    type="text"
+                    value={foodPortions[index] || food.portion}
+                    onChange={(e) => setFoodPortions({ ...foodPortions, [index]: e.target.value })}
+                    className="w-28 bg-white dark:bg-gray-800"
+                    placeholder="e.g., 100g"
+                    data-testid={`input-portion-${index}`}
+                  />
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Meal Date and Time */}
-          <div className="space-y-2">
-            <Label htmlFor="meal-date" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Date & Time
-            </Label>
-            <Input
-              id="meal-date"
-              type="datetime-local"
-              value={mealDate}
-              onChange={(e) => setMealDate(e.target.value)}
-              data-testid="input-meal-date"
-            />
-          </div>
-
           {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-4 space-y-2">
+            <Label htmlFor="notes" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               Notes (Optional)
             </Label>
             <Textarea
               id="notes"
-              placeholder="Add any notes about this meal..."
+              placeholder="Add any notes..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              rows={3}
+              rows={2}
+              className="bg-white dark:bg-gray-800"
               data-testid="input-notes"
             />
           </div>
-
-          {/* Food Portions */}
-          {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-            <div className="space-y-3">
-              <Label className="flex items-center gap-2 text-base font-semibold">
-                <UtensilsCrossed className="h-5 w-5" />
-                Adjust Portions
-              </Label>
-              <div className="space-y-3">
-                {entry.analysis.detectedFoods.map((food, index) => (
-                  <div key={index} className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 space-y-2">
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 line-clamp-2">
-                      {food.name}
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor={`portion-${index}`} className="text-xs text-muted-foreground">
-                        Portion Size
-                      </Label>
-                      <Input
-                        id={`portion-${index}`}
-                        type="text"
-                        value={foodPortions[index] || food.portion}
-                        onChange={(e) => setFoodPortions({ ...foodPortions, [index]: e.target.value })}
-                        className="w-full"
-                        placeholder="e.g., 100g, 1 cup"
-                        data-testid={`input-portion-${index}`}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        <div className="flex gap-2 pt-4">
+        <div className="flex gap-3 pt-4">
           <Button
             onClick={() => setOpen(false)}
             variant="outline"
             className="flex-1"
             data-testid="button-cancel"
           >
-            <X className="h-4 w-4 mr-1" />
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={updateMutation.isPending}
-            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            className="flex-1 bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white"
             data-testid="button-save"
           >
-            <Save className="h-4 w-4 mr-1" />
-            {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            {updateMutation.isPending ? "Saving..." : "Save"}
           </Button>
         </div>
       </DialogContent>
