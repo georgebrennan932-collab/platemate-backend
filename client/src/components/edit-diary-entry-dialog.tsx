@@ -278,23 +278,31 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
 
           {/* Food Portions */}
           {entry.analysis?.detectedFoods && entry.analysis.detectedFoods.length > 0 && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <UtensilsCrossed className="h-4 w-4" />
-                Food Portions
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-base font-semibold">
+                <UtensilsCrossed className="h-5 w-5" />
+                Adjust Portions
               </Label>
-              <div className="space-y-2 p-3 rounded-md bg-muted/50">
+              <div className="space-y-3">
                 {entry.analysis.detectedFoods.map((food, index) => (
-                  <div key={index} className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium">{food.name}</span>
-                    <Input
-                      type="text"
-                      value={foodPortions[index] || food.portion}
-                      onChange={(e) => setFoodPortions({ ...foodPortions, [index]: e.target.value })}
-                      className="w-32 h-8 text-sm"
-                      placeholder="e.g., 100g"
-                      data-testid={`input-portion-${index}`}
-                    />
+                  <div key={index} className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 space-y-2">
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 line-clamp-2">
+                      {food.name}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor={`portion-${index}`} className="text-xs text-muted-foreground">
+                        Portion Size
+                      </Label>
+                      <Input
+                        id={`portion-${index}`}
+                        type="text"
+                        value={foodPortions[index] || food.portion}
+                        onChange={(e) => setFoodPortions({ ...foodPortions, [index]: e.target.value })}
+                        className="w-full"
+                        placeholder="e.g., 100g, 1 cup"
+                        data-testid={`input-portion-${index}`}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
