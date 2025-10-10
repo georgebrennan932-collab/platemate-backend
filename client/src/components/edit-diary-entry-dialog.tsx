@@ -29,18 +29,19 @@ interface EditDiaryEntryDialogProps {
   entry: DiaryEntryWithAnalysis;
 }
 
-// Helper function to parse portion into number and unit
+// Helper function to parse portion into number and unit (first word only)
 function parsePortion(portion: string): { amount: number; unit: string } {
   if (!portion) return { amount: 1, unit: "serving" };
   
-  const match = portion.match(/^([\d.]+)\s*(.*)$/);
+  // Extract number and first word only as unit (e.g., "4 biscuits ..." => amount: 4, unit: "biscuits")
+  const match = portion.match(/^([\d.]+)\s+(\w+)/);
   if (match) {
     return {
       amount: parseFloat(match[1]) || 1,
       unit: match[2].trim() || "serving"
     };
   }
-  return { amount: 1, unit: portion };
+  return { amount: 1, unit: "serving" };
 }
 
 export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
@@ -204,12 +205,12 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-sm bg-white dark:bg-gray-900">
+      <DialogContent className="max-w-sm max-h-[90vh] flex flex-col bg-white dark:bg-gray-900">
         <DialogHeader>
           <DialogTitle>Edit Meal Entry</DialogTitle>
           <DialogDescription>Update the serving size, time, or notes for this meal</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto flex-1 pr-2">
           {/* Food Header */}
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
@@ -278,26 +279,26 @@ export function EditDiaryEntryDialog({ entry }: EditDiaryEntryDialogProps) {
               data-testid="input-notes"
             />
           </div>
+        </div>
 
-          {/* Buttons */}
-          <div className="flex gap-2 pt-2">
-            <Button
-              onClick={() => setOpen(false)}
-              variant="outline"
-              className="flex-1"
-              data-testid="button-cancel"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={updateMutation.isPending}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white"
-              data-testid="button-save"
-            >
-              {updateMutation.isPending ? "Saving..." : "Add to Diary"}
-            </Button>
-          </div>
+        {/* Buttons - Fixed at bottom */}
+        <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
+          <Button
+            onClick={() => setOpen(false)}
+            variant="outline"
+            className="flex-1"
+            data-testid="button-cancel"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={updateMutation.isPending}
+            className="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white"
+            data-testid="button-save"
+          >
+            {updateMutation.isPending ? "Saving..." : "Add to Diary"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
