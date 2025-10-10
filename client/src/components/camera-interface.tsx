@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { scanBarcodeFromImage } from "@/services/scanner-service";
-import { compressImage } from "@/lib/image-compression";
+import { compressImage, preprocessAndCompress } from "@/lib/image-compression";
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -63,19 +63,28 @@ export function CameraInterface({
         fileType: file.type
       });
       
-      // Compress image before upload for faster analysis
+      // Preprocess and compress image for optimal AI analysis
       let imageToUpload = file;
       try {
-        imageToUpload = await compressImage(file, {
-          maxWidth: 800,
-          maxHeight: 800,
-          quality: 0.8,
-          maxSizeKB: 400
-        });
-        console.log("✅ Image compressed successfully");
-      } catch (compressionError) {
-        console.warn("⚠️ Image compression failed, using original:", compressionError);
-        // Fallback to original if compression fails
+        imageToUpload = await preprocessAndCompress(
+          file,
+          {
+            enhanceContrast: true,
+            blurBackground: false,
+            centerCrop: false,
+            contrastAmount: 1.25
+          },
+          {
+            maxWidth: 800,
+            maxHeight: 800,
+            quality: 0.8,
+            maxSizeKB: 400
+          }
+        );
+        console.log("✅ Image preprocessed and compressed successfully");
+      } catch (processingError) {
+        console.warn("⚠️ Image processing failed, using original:", processingError);
+        // Fallback to original if processing fails
       }
       
       const formData = new FormData();
