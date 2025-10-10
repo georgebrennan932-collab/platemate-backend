@@ -40,23 +40,32 @@ router.post("/register", async (req, res) => {
     // Check if user already exists
     const userKey = getUserKey(email);
     const existingUser: any = await db.get(userKey);
+    const existingUserData = existingUser?.value;
 
-    if (existingUser && existingUser.ok === true) {
-      return res.status(400).json({ error: "User already exists" });
+    // If user exists AND has a password, they must login
+    if (existingUserData && existingUserData.passwordHash) {
+      return res.status(400).json({ error: "User already exists. Please login instead." });
     }
 
     // Hash password and security answer
     const passwordHash = await bcrypt.hash(password, 10);
     const securityAnswerHash = await bcrypt.hash(securityAnswer.trim().toLowerCase(), 10);
 
-    // Create user in Replit Database
+    // Create or upgrade user in Replit Database
     const userData = {
       passwordHash,
       securityAnswerHash,
-      createdAt: Date.now()
+      createdAt: existingUserData?.createdAt || Date.now(),
+      migratedAt: existingUserData ? Date.now() : undefined
     };
 
     await db.set(userKey, userData);
+    
+    if (existingUserData) {
+      console.log(`✅ Upgraded legacy user to email/password auth: ${email}`);
+    } else {
+      console.log(`✅ Created new user: ${email}`);
+    }
 
     // Create user in PostgreSQL database (using email as id for consistency)
     await storage.upsertUser({
