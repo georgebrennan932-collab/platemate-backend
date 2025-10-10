@@ -674,6 +674,13 @@ export class AIManager {
     
     // STEP 3: Enhanced food-specific standardized portions
     const standardPortions = [
+      // Fast Food / Burgers (restaurant-specific weights)
+      { keywords: ['big mac'], portion: num * 195, label: 'Big Mac' },
+      { keywords: ['quarter pounder', 'quarterpounder'], portion: num * 200, label: 'Quarter Pounder' },
+      { keywords: ['whopper'], portion: num * 290, label: 'Whopper' },
+      { keywords: ['cheeseburger'], portion: num * 120, label: 'cheeseburger' },
+      { keywords: ['hamburger', 'burger'], portion: num * 110, label: 'hamburger' },
+      
       // Proteins  
       { keywords: ['chicken breast', 'chicken fillet'], portion: num * 150, label: 'chicken breast' },
       { keywords: ['fish fillet', 'salmon fillet'], portion: num * 120, label: 'fish fillet' },
