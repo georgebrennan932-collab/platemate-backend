@@ -1,11 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-import type { DiaryEntryWithAnalysis, NutritionGoals } from "@shared/schema";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import type { DiaryEntryWithAnalysis, NutritionGoals, DrinkEntry } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Flame, Dumbbell, Wheat, Droplet, TrendingUp, Award, Target, Utensils } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
+import { apiRequest } from "@/lib/queryClient";
 
 interface DashboardProps {
   onViewMeals?: () => void;
@@ -20,7 +21,12 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
     queryKey: ['/api/nutrition-goals'],
   });
 
+  const { data: drinkEntries } = useQuery<DrinkEntry[]>({
+    queryKey: ['/api/drinks'],
+  });
+
   const [motivationalQuote, setMotivationalQuote] = useState("");
+  const lastCheckRef = useRef<string>('');
 
   // Get today's entries (using local date to avoid timezone issues)
   const today = new Date().toDateString();
@@ -29,8 +35,56 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
     return entryDate === today;
   }) || [];
 
-  // Calculate today's totals
-  const totals = calculateDailyNutrition(todayEntries);
+  // Calculate today's totals (including water from drinks)
+  const totals = calculateDailyNutrition(todayEntries, drinkEntries || []);
+
+  // Mutation to check goal challenges
+  const checkGoalsMutation = useMutation({
+    mutationFn: async (data: {
+      totalWater: number;
+      totalCalories: number;
+      totalProtein: number;
+      dailyGoals: { water: number; calories: number; protein: number };
+    }) => {
+      return apiRequest('POST', '/api/challenges/check-goals', data);
+    },
+  });
+
+  // Check goals whenever totals or goals change
+  useEffect(() => {
+    console.log('🎯 Dashboard useEffect triggered', {
+      hasGoals: !!nutritionGoals,
+      calories: totals.calories,
+      water: totals.water,
+      protein: totals.protein,
+    });
+    
+    if (nutritionGoals && totals.calories > 0) {
+      const checkKey = `${totals.calories}-${totals.water}-${totals.protein}`;
+      
+      console.log('🔍 Checking goals:', { checkKey, lastCheck: lastCheckRef.current });
+      
+      // Only check if values have changed
+      if (checkKey !== lastCheckRef.current) {
+        lastCheckRef.current = checkKey;
+        
+        console.log('✅ Calling goal check API');
+        // Call the API directly to avoid dependency issues
+        apiRequest('POST', '/api/challenges/check-goals', {
+          totalWater: totals.water,
+          totalCalories: totals.calories,
+          totalProtein: totals.protein,
+          dailyGoals: {
+            water: nutritionGoals.dailyWater || 2000,
+            calories: nutritionGoals.dailyCalories || 2000,
+            protein: nutritionGoals.dailyProtein || 150,
+          },
+        }).catch(err => {
+          console.error('Goal check failed:', err);
+        });
+      }
+    }
+  }, [totals.calories, totals.water, totals.protein, nutritionGoals]);
 
   // AI motivational quotes
   const quotes = [
