@@ -56,6 +56,14 @@ app.use("/api", emailAuthRoutes);
 
 (async () => {
   const server = await registerRoutes(app);
+  
+  // Initialize gamification challenges in database
+  try {
+    const { challengeService } = await import("./services/challenge-service");
+    await challengeService.initializeChallenges();
+  } catch (error) {
+    console.error("❌ Failed to initialize challenges:", error);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

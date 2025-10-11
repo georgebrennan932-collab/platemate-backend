@@ -13,6 +13,7 @@ import { usdaService } from "./services/usda-service";
 import { imageAnalysisCache } from "./services/image-analysis-cache";
 import { openFoodFactsService } from "./services/openfoodfacts-service";
 import { reflectionService } from "./services/reflection-service";
+import { challengeService } from "./services/challenge-service";
 import { consumeBridgeToken } from "./bridgeTokens";
 import type { Session } from "express-session";
 
@@ -1129,7 +1130,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId
       });
       const diaryEntry = await storage.createDiaryEntry(validatedEntry);
-      res.json(diaryEntry);
+      
+      // Track meal logged challenges
+      try {
+        const completedChallenges = await challengeService.trackMealLogged(userId);
+        
+        // Also check streak challenges
+        const currentStreak = await challengeService.calculateCurrentStreak(userId);
+        const streakChallenges = await challengeService.checkStreakChallenge(userId, currentStreak);
+        
+        const allCompleted = [...completedChallenges, ...streakChallenges];
+        
+        // Return diary entry with completed challenges info
+        res.json({ 
+          ...diaryEntry, 
+          completedChallenges: allCompleted.length > 0 ? allCompleted : undefined 
+        });
+      } catch (challengeError) {
+        console.error("Challenge tracking error:", challengeError);
+        // Don't fail the diary entry creation if challenge tracking fails
+        res.json(diaryEntry);
+      }
     } catch (error) {
       console.error("Create diary entry error:", error);
       res.status(400).json({ error: "Invalid diary entry data" });
@@ -1508,7 +1529,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId
       });
       const weightEntry = await storage.createWeightEntry(validatedEntry);
-      res.json(weightEntry);
+      
+      // Track weight logged challenges
+      try {
+        const completedChallenges = await challengeService.trackWeightLogged(userId);
+        
+        // Return weight entry with completed challenges info
+        res.json({ 
+          ...weightEntry, 
+          completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined 
+        });
+      } catch (challengeError) {
+        console.error("Challenge tracking error:", challengeError);
+        // Don't fail the weight entry creation if challenge tracking fails
+        res.json(weightEntry);
+      }
     } catch (error) {
       console.error("Create weight entry error:", error);
       res.status(400).json({ error: "Invalid weight entry data" });
@@ -1716,6 +1751,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Share reflection error:", error);
       res.status(500).json({ error: "Failed to share reflection" });
+    }
+  });
+
+  // Gamification: Challenge routes
+  app.get("/api/challenges", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const challengesWithProgress = await challengeService.getUserChallengesWithProgress(userId);
+      res.json(challengesWithProgress);
+    } catch (error) {
+      console.error("Get challenges error:", error);
+      res.status(500).json({ error: "Failed to retrieve challenges" });
+    }
+  });
+
+  app.get("/api/challenges/completed", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const completedChallenges = await challengeService.getUserCompletedChallenges(userId);
+      res.json(completedChallenges);
+    } catch (error) {
+      console.error("Get completed challenges error:", error);
+      res.status(500).json({ error: "Failed to retrieve completed challenges" });
+    }
+  });
+
+  app.get("/api/challenges/points", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const points = await challengeService.getUserTotalPoints(userId);
+      res.json({ points });
+    } catch (error) {
+      console.error("Get user points error:", error);
+      res.status(500).json({ error: "Failed to retrieve user points" });
+    }
+  });
+
+  app.get("/api/challenges/streak", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const streak = await challengeService.calculateCurrentStreak(userId);
+      res.json({ streak });
+    } catch (error) {
+      console.error("Get streak error:", error);
+      res.status(500).json({ error: "Failed to calculate streak" });
+    }
+  });
+
+  // Check daily goals and update goal-based challenges
+  app.post("/api/challenges/check-goals", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const completedChallenges = [];
+      
+      // Get today's totals (passed from client)
+      const { totalWater, totalCalories, totalProtein, dailyGoals } = req.body;
+      
+      // Check water goal
+      if (totalWater >= dailyGoals.water) {
+        const waterChallenges = await challengeService.checkGoalChallenge(userId, 'water');
+        completedChallenges.push(...waterChallenges);
+      }
+      
+      // Check calorie goal (within 10% range)
+      if (totalCalories >= dailyGoals.calories * 0.9 && totalCalories <= dailyGoals.calories * 1.1) {
+        const calorieChallenges = await challengeService.checkGoalChallenge(userId, 'calorie');
+        completedChallenges.push(...calorieChallenges);
+      }
+      
+      // Check protein goal
+      if (totalProtein >= dailyGoals.protein) {
+        const proteinChallenges = await challengeService.checkGoalChallenge(userId, 'protein');
+        completedChallenges.push(...proteinChallenges);
+      }
+      
+      res.json({ completedChallenges });
+    } catch (error) {
+      console.error("Check goals error:", error);
+      res.status(500).json({ error: "Failed to check goals" });
     }
   });
 

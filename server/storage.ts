@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, type Challenge, type InsertChallenge, type UserChallengeProgress, type InsertUserChallengeProgress, type ChallengeWithProgress, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections, challenges, userChallengeProgress } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
@@ -61,6 +61,17 @@ export interface IStorage {
   getReflectionsByUser(userId: string, period?: 'daily' | 'weekly'): Promise<Reflection[]>;
   getLatestReflection(userId: string, period: 'daily' | 'weekly'): Promise<Reflection | undefined>;
   updateReflectionShared(id: string, shareChannel: string): Promise<Reflection | undefined>;
+  
+  // Gamification methods (challenges and rewards)
+  getAllChallenges(): Promise<Challenge[]>;
+  getChallenge(id: string): Promise<Challenge | undefined>;
+  getChallengeByKey(challengeKey: string): Promise<Challenge | undefined>;
+  getUserChallengeProgress(userId: string, challengeId: string): Promise<UserChallengeProgress | undefined>;
+  getUserAllChallengesProgress(userId: string): Promise<ChallengeWithProgress[]>;
+  createOrUpdateProgress(userId: string, challengeId: string, increment: number): Promise<UserChallengeProgress>;
+  completeChallenge(userId: string, challengeId: string): Promise<UserChallengeProgress | undefined>;
+  getUserCompletedChallenges(userId: string): Promise<ChallengeWithProgress[]>;
+  getUserPoints(userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -505,6 +516,135 @@ export class DatabaseStorage implements IStorage {
       .where(eq(reflections.id, id))
       .returning();
     return reflection || undefined;
+  }
+
+  // Gamification methods
+  async getAllChallenges(): Promise<Challenge[]> {
+    const allChallenges = await db
+      .select()
+      .from(challenges)
+      .where(eq(challenges.isActive, 1))
+      .orderBy(challenges.difficulty, challenges.rewardPoints);
+    return allChallenges;
+  }
+
+  async getChallenge(id: string): Promise<Challenge | undefined> {
+    const [challenge] = await db
+      .select()
+      .from(challenges)
+      .where(eq(challenges.id, id));
+    return challenge || undefined;
+  }
+
+  async getChallengeByKey(challengeKey: string): Promise<Challenge | undefined> {
+    const [challenge] = await db
+      .select()
+      .from(challenges)
+      .where(eq(challenges.challengeKey, challengeKey));
+    return challenge || undefined;
+  }
+
+  async getUserChallengeProgress(userId: string, challengeId: string): Promise<UserChallengeProgress | undefined> {
+    const [progress] = await db
+      .select()
+      .from(userChallengeProgress)
+      .where(and(
+        eq(userChallengeProgress.userId, userId),
+        eq(userChallengeProgress.challengeId, challengeId)
+      ));
+    return progress || undefined;
+  }
+
+  async getUserAllChallengesProgress(userId: string): Promise<ChallengeWithProgress[]> {
+    const allChallenges = await this.getAllChallenges();
+    
+    const challengesWithProgress: ChallengeWithProgress[] = await Promise.all(
+      allChallenges.map(async (challenge) => {
+        const progress = await this.getUserChallengeProgress(userId, challenge.id);
+        return {
+          ...challenge,
+          progress: progress || undefined,
+        };
+      })
+    );
+    
+    return challengesWithProgress;
+  }
+
+  async createOrUpdateProgress(userId: string, challengeId: string, increment: number): Promise<UserChallengeProgress> {
+    const existingProgress = await this.getUserChallengeProgress(userId, challengeId);
+    
+    if (existingProgress) {
+      const newCount = existingProgress.currentCount + increment;
+      const [updated] = await db
+        .update(userChallengeProgress)
+        .set({
+          currentCount: newCount,
+          lastUpdatedAt: new Date(),
+        })
+        .where(eq(userChallengeProgress.id, existingProgress.id))
+        .returning();
+      return updated;
+    } else {
+      const [newProgress] = await db
+        .insert(userChallengeProgress)
+        .values({
+          userId,
+          challengeId,
+          currentCount: increment,
+          lastUpdatedAt: new Date(),
+        } as any)
+        .returning();
+      return newProgress;
+    }
+  }
+
+  async completeChallenge(userId: string, challengeId: string): Promise<UserChallengeProgress | undefined> {
+    const progress = await this.getUserChallengeProgress(userId, challengeId);
+    
+    if (!progress || progress.isCompleted === 1) {
+      return progress || undefined;
+    }
+
+    const [completed] = await db
+      .update(userChallengeProgress)
+      .set({
+        isCompleted: 1,
+        completedAt: new Date(),
+      })
+      .where(eq(userChallengeProgress.id, progress.id))
+      .returning();
+    
+    return completed || undefined;
+  }
+
+  async getUserCompletedChallenges(userId: string): Promise<ChallengeWithProgress[]> {
+    const completedProgress = await db
+      .select()
+      .from(userChallengeProgress)
+      .where(and(
+        eq(userChallengeProgress.userId, userId),
+        eq(userChallengeProgress.isCompleted, 1)
+      ))
+      .orderBy(desc(userChallengeProgress.completedAt));
+    
+    const challengesWithProgress: ChallengeWithProgress[] = await Promise.all(
+      completedProgress.map(async (progress) => {
+        const challenge = await this.getChallenge(progress.challengeId);
+        if (!challenge) return null;
+        return {
+          ...challenge,
+          progress,
+        };
+      })
+    );
+    
+    return challengesWithProgress.filter((c): c is ChallengeWithProgress => c !== null);
+  }
+
+  async getUserPoints(userId: string): Promise<number> {
+    const completedChallenges = await this.getUserCompletedChallenges(userId);
+    return completedChallenges.reduce((total, challenge) => total + challenge.rewardPoints, 0);
   }
 }
 

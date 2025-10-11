@@ -63,6 +63,17 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+- **Gamification: Challenges & Rewards System**: Implemented comprehensive gamification system with:
+  - PostgreSQL challenges and userChallengeProgress tables for tracking achievements
+  - 10 predefined challenges across 3 types: count (meal/weight logging), streak (consecutive days), and goal (meeting nutrition targets)
+  - ChallengeService with automatic progress tracking when users log meals, weights, or meet daily goals
+  - Automatic challenge completion detection and point rewards system
+  - Challenges page with beautiful card-based UI showing active and completed challenges with progress bars
+  - Trophy icon navigation tab replacing Rewards in bottom navigation
+  - Challenge initialization on server startup (idempotent seeding)
+  - Integration hooks in diary and weight entry creation for automatic progress updates
+  - Goal-checking endpoint for water/calorie/protein target achievements
+  - Points and streak tracking with visual stats cards
 - **AI Daily Reflections (MVP)**: Implemented AI-powered daily nutrition reflections feature with:
   - PostgreSQL reflections table storing insights (what went well, areas to improve, action steps), sentiment scores, and sharing metadata
   - ReflectionService using existing AI providers (OpenAI/Gemini) to analyze user's daily nutrition data and generate personalized insights

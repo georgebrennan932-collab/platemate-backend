@@ -147,6 +147,33 @@ export const reflections = pgTable("reflections", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Gamification: Predefined challenges
+export const challenges = pgTable("challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengeKey: varchar("challenge_key").notNull().unique(), // unique identifier for code reference
+  name: varchar("name").notNull(),
+  description: text("description").notNull(),
+  challengeType: varchar("challenge_type").notNull(), // 'streak', 'count', 'goal'
+  targetCount: integer("target_count").notNull(), // target value to complete
+  rewardPoints: integer("reward_points").notNull().default(10),
+  rewardBadge: varchar("reward_badge"), // badge/emoji awarded
+  difficulty: varchar("difficulty").notNull().default("medium"), // 'easy', 'medium', 'hard'
+  isActive: integer("is_active").notNull().default(1), // 1 = active, 0 = disabled
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Gamification: User progress on challenges
+export const userChallengeProgress = pgTable("user_challenge_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  challengeId: varchar("challenge_id").notNull().references(() => challenges.id),
+  currentCount: integer("current_count").notNull().default(0),
+  isCompleted: integer("is_completed").notNull().default(0), // 0 = in progress, 1 = completed
+  completedAt: timestamp("completed_at"),
+  lastUpdatedAt: timestamp("last_updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const DetectedFoodSchema = z.object({
   name: z.string(),
   portion: z.string(),
@@ -287,6 +314,31 @@ export const insertReflectionSchema = createInsertSchema(reflections).omit({
 export type InsertReflection = z.infer<typeof insertReflectionSchema>;
 export type Reflection = typeof reflections.$inferSelect;
 
+// Gamification schemas
+export const insertChallengeSchema = createInsertSchema(challenges).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  challengeType: z.enum(["streak", "count", "goal"]),
+  difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
+});
+
+export const insertUserChallengeProgressSchema = createInsertSchema(userChallengeProgress).omit({
+  id: true,
+  createdAt: true,
+  lastUpdatedAt: true,
+});
+
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type Challenge = typeof challenges.$inferSelect;
+export type InsertUserChallengeProgress = z.infer<typeof insertUserChallengeProgressSchema>;
+export type UserChallengeProgress = typeof userChallengeProgress.$inferSelect;
+
+// Type for challenge with progress (for frontend display)
+export type ChallengeWithProgress = Challenge & {
+  progress?: UserChallengeProgress;
+};
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   diaryEntries: many(diaryEntries),
@@ -294,6 +346,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   weightEntries: many(weightEntries),
   simpleFoodEntries: many(simpleFoodEntries),
   reflections: many(reflections),
+  challengeProgress: many(userChallengeProgress),
   nutritionGoals: one(nutritionGoals),
   profile: one(userProfiles),
 }));
@@ -352,6 +405,21 @@ export const reflectionsRelations = relations(reflections, ({ one }) => ({
   user: one(users, {
     fields: [reflections.userId],
     references: [users.id],
+  }),
+}));
+
+export const challengesRelations = relations(challenges, ({ many }) => ({
+  userProgress: many(userChallengeProgress),
+}));
+
+export const userChallengeProgressRelations = relations(userChallengeProgress, ({ one }) => ({
+  user: one(users, {
+    fields: [userChallengeProgress.userId],
+    references: [users.id],
+  }),
+  challenge: one(challenges, {
+    fields: [userChallengeProgress.challengeId],
+    references: [challenges.id],
   }),
 }));
 

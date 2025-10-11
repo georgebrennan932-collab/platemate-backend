@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Camera, Book, Calculator, Target, ChefHat, Brain, Award, Lightbulb } from "lucide-react";
+import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNavigation() {
@@ -49,10 +49,10 @@ export function BottomNavigation() {
       isActive: location === "/recipes"
     },
     {
-      href: "/rewards",
-      icon: Award,
-      label: "Rewards",
-      isActive: location === "/rewards"
+      href: "/challenges",
+      icon: Trophy,
+      label: "Challenges",
+      isActive: location === "/challenges"
     }
   ];
 
