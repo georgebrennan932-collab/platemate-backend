@@ -63,6 +63,14 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+- **AI Daily Reflections (MVP)**: Implemented AI-powered daily nutrition reflections feature with:
+  - PostgreSQL reflections table storing insights (what went well, areas to improve, action steps), sentiment scores, and sharing metadata
+  - ReflectionService using existing AI providers (OpenAI/Gemini) to analyze user's daily nutrition data and generate personalized insights
+  - Insights page with Lightbulb icon added to bottom navigation (between Diary and Calculator tabs)
+  - Generate/refresh functionality with one-reflection-per-day limit to prevent duplicate generations
+  - Sound effects integration (success on generate, error on failure)
+  - Share tracking (placeholder for future social media integration)
+  - Period toggle UI prepared for future weekly reflections (currently shows "coming soon" message)
 - **Engaging Page Animations**: Implemented Framer Motion animations throughout app including fade-in/scale page transitions (0.6s), staggered diary meal cards with dramatic spring bounce effects (slide from -100px, scale 0.7→1, 3D rotation), progress indicator cards with scale-up animations, and hover effects (scale 1.02-1.03) on interactive cards. Auto-scroll to top when switching to diary tab ensures animations are visible
 - **Sound Effects System**: Integrated soundService throughout app with success sounds for saving meals/adding foods, click sounds for deleting entries, scan sounds for analysis start, and error sounds for failures. Web Audio API generates sounds programmatically with localStorage persistence for user preferences
 - **Diary Navigation**: Added back button to "Today's Meals" header for easy return to dashboard view

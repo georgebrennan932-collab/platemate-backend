@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 // OAUTH DISABLED: import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -12,6 +12,7 @@ import { aiManager } from "./ai-providers/ai-manager";
 import { usdaService } from "./services/usda-service";
 import { imageAnalysisCache } from "./services/image-analysis-cache";
 import { openFoodFactsService } from "./services/openfoodfacts-service";
+import { reflectionService } from "./services/reflection-service";
 import { consumeBridgeToken } from "./bridgeTokens";
 import type { Session } from "express-session";
 
@@ -1616,6 +1617,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete weight entry error:", error);
       res.status(500).json({ error: "Failed to delete weight entry" });
+    }
+  });
+
+  // Reflection routes - AI-powered daily/weekly insights
+  app.get("/api/reflections", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const period = req.query.period as 'daily' | 'weekly' | undefined;
+      const reflections = await storage.getReflectionsByUser(userId, period);
+      res.json(reflections);
+    } catch (error) {
+      console.error("Get reflections error:", error);
+      res.status(500).json({ error: "Failed to retrieve reflections" });
+    }
+  });
+
+  app.get("/api/reflections/latest", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const period = (req.query.period as 'daily' | 'weekly') || 'daily';
+      
+      // Get or generate reflection based on period
+      let reflection;
+      if (period === 'weekly') {
+        // For weekly, try to get latest or return null if none exists yet
+        reflection = await storage.getLatestReflection(userId, 'weekly');
+        if (!reflection) {
+          // No weekly reflection exists yet, return message
+          return res.status(404).json({ error: "No weekly reflection available yet. Generate one first." });
+        }
+      } else {
+        // For daily, use the getOrGenerate method
+        reflection = await reflectionService.getOrGenerateDailyReflection(userId);
+      }
+      
+      res.json(reflection);
+    } catch (error) {
+      console.error("Get latest reflection error:", error);
+      res.status(500).json({ error: "Failed to retrieve latest reflection" });
+    }
+  });
+
+  app.post("/api/reflections/generate", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const period = (req.query.period as 'daily' | 'weekly') || 'daily';
+      
+      // Currently only daily reflections are supported
+      if (period === 'weekly') {
+        return res.status(501).json({ error: "Weekly reflections coming soon! For now, use daily reflections." });
+      }
+
+      const reflection = await reflectionService.generateDailyReflection(userId);
+      res.json(reflection);
+    } catch (error) {
+      console.error("Generate reflection error:", error);
+      res.status(500).json({ error: "Failed to generate reflection" });
+    }
+  });
+
+  app.patch("/api/reflections/:id/share", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const reflection = await storage.getReflection(req.params.id);
+      
+      if (!reflection) {
+        return res.status(404).json({ error: "Reflection not found" });
+      }
+
+      if (reflection.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const { shareChannel } = req.body;
+      const updatedReflection = await storage.updateReflectionShared(req.params.id, shareChannel);
+      res.json(updatedReflection);
+    } catch (error) {
+      console.error("Share reflection error:", error);
+      res.status(500).json({ error: "Failed to share reflection" });
     }
   });
 

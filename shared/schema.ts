@@ -129,6 +129,24 @@ export const simpleFoodEntries = pgTable("simple_food_entries", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const reflections = pgTable("reflections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  reflectionPeriod: varchar("reflection_period").notNull(), // 'daily' or 'weekly'
+  periodStart: timestamp("period_start").notNull(), // start of the period being reflected on
+  periodEnd: timestamp("period_end").notNull(), // end of the period being reflected on
+  wentWell: text("went_well").notNull(), // what went well (AI generated)
+  couldImprove: text("could_improve").notNull(), // what could improve (AI generated)
+  actionSteps: text("action_steps").notNull().array(), // array of action items
+  sentimentScore: integer("sentiment_score").notNull(), // 0-100, overall positivity
+  aiProvider: varchar("ai_provider").notNull(), // 'openai' or 'gemini'
+  aiModel: varchar("ai_model").notNull(), // specific model used
+  status: varchar("status").notNull().default("final"), // 'draft' or 'final'
+  sharedAt: timestamp("shared_at"), // when shared to social media
+  shareChannel: varchar("share_channel"), // 'facebook', 'twitter', etc.
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const DetectedFoodSchema = z.object({
   name: z.string(),
   portion: z.string(),
@@ -255,12 +273,27 @@ export const insertSimpleFoodEntrySchema = createInsertSchema(simpleFoodEntries)
 export type SimpleFoodEntry = typeof simpleFoodEntries.$inferSelect;
 export type InsertSimpleFoodEntry = z.infer<typeof insertSimpleFoodEntrySchema>;
 
+export const insertReflectionSchema = createInsertSchema(reflections).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  reflectionPeriod: z.enum(["daily", "weekly"]),
+  periodStart: z.string().or(z.date()),
+  periodEnd: z.string().or(z.date()),
+  status: z.enum(["draft", "final"]).default("final"),
+  shareChannel: z.enum(["facebook", "twitter", "instagram"]).optional(),
+});
+
+export type InsertReflection = z.infer<typeof insertReflectionSchema>;
+export type Reflection = typeof reflections.$inferSelect;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   diaryEntries: many(diaryEntries),
   drinkEntries: many(drinkEntries),
   weightEntries: many(weightEntries),
   simpleFoodEntries: many(simpleFoodEntries),
+  reflections: many(reflections),
   nutritionGoals: one(nutritionGoals),
   profile: one(userProfiles),
 }));
@@ -311,6 +344,13 @@ export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({
 export const simpleFoodEntriesRelations = relations(simpleFoodEntries, ({ one }) => ({
   user: one(users, {
     fields: [simpleFoodEntries.userId],
+    references: [users.id],
+  }),
+}));
+
+export const reflectionsRelations = relations(reflections, ({ one }) => ({
+  user: one(users, {
+    fields: [reflections.userId],
     references: [users.id],
   }),
 }));

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Camera, Book, Calculator, Target, ChefHat, Brain, Award } from "lucide-react";
+import { Camera, Book, Calculator, Target, ChefHat, Brain, Award, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNavigation() {
@@ -17,6 +17,12 @@ export function BottomNavigation() {
       icon: Book,
       label: "Diary",
       isActive: location === "/diary"
+    },
+    {
+      href: "/insights",
+      icon: Lightbulb,
+      label: "Insights",
+      isActive: location === "/insights"
     },
     {
       href: "/calculator",

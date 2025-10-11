@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
@@ -54,6 +54,13 @@ export interface IStorage {
   getFoodConfirmationsByUser(userId: string, status?: string): Promise<FoodConfirmation[]>;
   updateFoodConfirmation(id: string, updates: UpdateFoodConfirmation): Promise<FoodConfirmation | undefined>;
   deleteFoodConfirmation(id: string): Promise<boolean>;
+  
+  // Reflection methods (for AI-powered daily/weekly insights)
+  createReflection(reflection: InsertReflection): Promise<Reflection>;
+  getReflection(id: string): Promise<Reflection | undefined>;
+  getReflectionsByUser(userId: string, period?: 'daily' | 'weekly'): Promise<Reflection[]>;
+  getLatestReflection(userId: string, period: 'daily' | 'weekly'): Promise<Reflection | undefined>;
+  updateReflectionShared(id: string, shareChannel: string): Promise<Reflection | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -432,6 +439,72 @@ export class DatabaseStorage implements IStorage {
       .delete(foodConfirmations)
       .where(eq(foodConfirmations.id, id));
     return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Reflection methods
+  async createReflection(reflectionData: InsertReflection): Promise<Reflection> {
+    const [reflection] = await db
+      .insert(reflections)
+      .values({
+        userId: reflectionData.userId,
+        reflectionPeriod: reflectionData.reflectionPeriod,
+        periodStart: typeof reflectionData.periodStart === 'string' ? new Date(reflectionData.periodStart) : reflectionData.periodStart,
+        periodEnd: typeof reflectionData.periodEnd === 'string' ? new Date(reflectionData.periodEnd) : reflectionData.periodEnd,
+        wentWell: reflectionData.wentWell,
+        couldImprove: reflectionData.couldImprove,
+        actionSteps: reflectionData.actionSteps,
+        sentimentScore: reflectionData.sentimentScore,
+        aiProvider: reflectionData.aiProvider,
+        aiModel: reflectionData.aiModel,
+        status: reflectionData.status || 'final',
+      } as any)
+      .returning();
+    return reflection;
+  }
+
+  async getReflection(id: string): Promise<Reflection | undefined> {
+    const [reflection] = await db
+      .select()
+      .from(reflections)
+      .where(eq(reflections.id, id));
+    return reflection || undefined;
+  }
+
+  async getReflectionsByUser(userId: string, period?: 'daily' | 'weekly'): Promise<Reflection[]> {
+    const whereClause = period
+      ? and(eq(reflections.userId, userId), eq(reflections.reflectionPeriod, period))
+      : eq(reflections.userId, userId);
+
+    const userReflections = await db
+      .select()
+      .from(reflections)
+      .where(whereClause)
+      .orderBy(desc(reflections.createdAt));
+    
+    return userReflections;
+  }
+
+  async getLatestReflection(userId: string, period: 'daily' | 'weekly'): Promise<Reflection | undefined> {
+    const [reflection] = await db
+      .select()
+      .from(reflections)
+      .where(and(eq(reflections.userId, userId), eq(reflections.reflectionPeriod, period)))
+      .orderBy(desc(reflections.createdAt))
+      .limit(1);
+    
+    return reflection || undefined;
+  }
+
+  async updateReflectionShared(id: string, shareChannel: string): Promise<Reflection | undefined> {
+    const [reflection] = await db
+      .update(reflections)
+      .set({
+        sharedAt: new Date(),
+        shareChannel: shareChannel,
+      })
+      .where(eq(reflections.id, id))
+      .returning();
+    return reflection || undefined;
   }
 }
 
