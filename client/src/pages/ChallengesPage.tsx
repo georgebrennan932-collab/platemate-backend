@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Star, Flame, Target, CheckCircle2, Lock } from "lucide-react";
+import { Trophy, Star, Flame, Target, CheckCircle2, Lock, ArrowLeft } from "lucide-react";
 import type { ChallengeWithProgress } from "@shared/schema";
 import { motion } from "framer-motion";
 import { ShareToFacebook } from "@/components/share-to-facebook";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { soundService } from "@/lib/sound-service";
 import { ChallengeShareCard } from "@/components/challenge-share-card";
 import { generateAndShareCard } from "@/lib/share-image-generator";
+import { Link } from "wouter";
 
 export function ChallengesPage() {
   const { isAuthenticated } = useAuth();
@@ -84,7 +85,7 @@ export function ChallengesPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
         <div className="max-w-md mx-auto pt-20">
           <Card className="p-8 text-center">
             <Lock className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -100,15 +101,23 @@ export function ChallengesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-32">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-32">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-700 dark:to-pink-700 text-white p-6 pb-8">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 text-white p-6 pb-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
+            <Link to="/">
+              <button
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                data-testid="button-back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            </Link>
             <Trophy className="w-8 h-8" />
             <h1 className="text-3xl font-bold">Challenges</h1>
           </div>
-          <p className="text-purple-100">Complete challenges to earn rewards and track your progress</p>
+          <p className="text-blue-100">Complete challenges to earn rewards and track your progress</p>
         </div>
       </div>
 
@@ -171,7 +180,7 @@ export function ChallengesPage() {
         {/* In Progress Challenges */}
         <div className="mb-6">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Target className="w-6 h-6 text-purple-600" />
+            <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Active Challenges
           </h2>
           
