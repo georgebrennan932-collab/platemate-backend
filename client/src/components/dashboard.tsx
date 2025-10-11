@@ -52,24 +52,14 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
 
   // Check goals whenever totals or goals change
   useEffect(() => {
-    console.log('🎯 Dashboard useEffect triggered', {
-      hasGoals: !!nutritionGoals,
-      calories: totals.calories,
-      water: totals.water,
-      protein: totals.protein,
-    });
-    
     if (nutritionGoals && totals.calories > 0) {
       const checkKey = `${totals.calories}-${totals.water}-${totals.protein}`;
-      
-      console.log('🔍 Checking goals:', { checkKey, lastCheck: lastCheckRef.current });
       
       // Only check if values have changed
       if (checkKey !== lastCheckRef.current) {
         lastCheckRef.current = checkKey;
         
-        console.log('✅ Calling goal check API');
-        // Call the API directly to avoid dependency issues
+        // Call the API to check goal-based challenges
         apiRequest('POST', '/api/challenges/check-goals', {
           totalWater: totals.water,
           totalCalories: totals.calories,
