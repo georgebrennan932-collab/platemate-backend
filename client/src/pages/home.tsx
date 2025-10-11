@@ -548,6 +548,9 @@ export default function Home() {
         description: `Your meal has been added to your diary. ${streakData.currentStreak > 0 ? `Streak: ${streakData.currentStreak} days!` : ''}`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
       setShowVoiceMealDialog(false);
       setShowTextMealDialog(false);
       setVoiceInput('');

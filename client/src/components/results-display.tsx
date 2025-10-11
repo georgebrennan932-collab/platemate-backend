@@ -421,6 +421,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
       queryClient.invalidateQueries({ queryKey: ['/api/analyses', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
     },
     onError: (error: Error) => {
       console.error("❌ Failed to save changes:", error);
@@ -508,6 +511,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       
       queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
       setShowVoiceMealDialog(false);
       setVoiceInput('');
     },
@@ -561,6 +567,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         description: `Your meal has been saved to your food diary. ${streakData.currentStreak > 0 ? `Streak: ${streakData.currentStreak} days!` : ''}`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
       setShowDiaryDialog(false);
       
       // Trigger a re-render of the StreakCounter component

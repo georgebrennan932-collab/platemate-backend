@@ -93,6 +93,9 @@ export function QuickActionsBar({ onQuickLog }: QuickActionsBarProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/diary"] });
       queryClient.invalidateQueries({ queryKey: ["/api/analyses"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
     },
   });
 

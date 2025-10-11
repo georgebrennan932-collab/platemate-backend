@@ -232,6 +232,10 @@ export function DiaryPage() {
         description: "Your voice meal has been added to your diary.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      // Invalidate challenges to update progress
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
       setShowVoiceMealDialog(false);
       setVoiceInput('');
     },
