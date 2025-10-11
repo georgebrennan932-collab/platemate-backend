@@ -5,7 +5,7 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Lightbulb, RefreshCw, Calendar, TrendingUp, Check, AlertCircle } from "lucide-react";
+import { Lightbulb, RefreshCw, Calendar, TrendingUp, Check, AlertCircle, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Reflection } from "@shared/schema";
 import { motion } from "framer-motion";
@@ -13,6 +13,7 @@ import { soundService } from "@/lib/sound-service";
 import { ShareToFacebook } from "@/components/share-to-facebook";
 import { InsightShareCard } from "@/components/insight-share-card";
 import { generateAndShareCard } from "@/lib/share-image-generator";
+import { Link } from "wouter";
 
 export function InsightsPage() {
   const { toast } = useToast();
@@ -99,7 +100,7 @@ export function InsightsPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
         <div className="max-w-md mx-auto pt-20">
           <Card className="p-8 text-center">
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -115,15 +116,23 @@ export function InsightsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-32">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-32">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 text-white p-6 pb-8">
+      <div className="bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-700 dark:to-emerald-700 text-white p-6 pb-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
+            <Link to="/">
+              <button
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                data-testid="button-back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            </Link>
             <Lightbulb className="w-8 h-8" />
             <h1 className="text-3xl font-bold">Insights</h1>
           </div>
-          <p className="text-indigo-100">AI-powered reflections on your nutrition journey</p>
+          <p className="text-green-100">AI-powered reflections on your nutrition journey</p>
         </div>
       </div>
 
@@ -162,7 +171,7 @@ export function InsightsPage() {
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-gray-600 dark:text-gray-400">Loading your insights...</p>
           </motion.div>
         )}
