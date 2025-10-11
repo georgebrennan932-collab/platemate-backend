@@ -76,6 +76,9 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
         description: "Your weight entry has been saved successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/weights'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
       
       // Reset form with proper default values - delay to avoid validation conflicts
       setTimeout(() => {

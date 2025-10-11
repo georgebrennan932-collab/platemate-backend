@@ -37,6 +37,9 @@ export function WeightList({ onEdit, displayUnit = "kg", compact = false }: Weig
         description: "Weight entry has been deleted successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/weights'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
       setDeleteId(null);
     },
     onError: (error: any) => {

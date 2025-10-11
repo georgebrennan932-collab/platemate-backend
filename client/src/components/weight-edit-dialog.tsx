@@ -99,6 +99,9 @@ export function WeightEditDialog({ entry, open, onOpenChange, onSuccess }: Weigh
         description: "Weight entry updated successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/weights'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
       onOpenChange(false);
       onSuccess?.();
     },
