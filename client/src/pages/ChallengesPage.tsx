@@ -56,7 +56,8 @@ export function ChallengesPage() {
           description: "Your achievement card has been shared successfully.",
         });
       }
-      // User cancelled or share was unsuccessful - no action needed
+      // If false: either user cancelled or browser doesn't support file sharing (will auto-download)
+      // No message needed - browser's download notification will show if downloaded
     } catch (error) {
       soundService.playError();
       toast({
