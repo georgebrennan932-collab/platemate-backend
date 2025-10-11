@@ -40,6 +40,13 @@ export function DiaryPage() {
       setActiveTab('weight');
     }
   }, []);
+
+  // Scroll to top when switching to diary tab to see animations
+  useEffect(() => {
+    if (activeTab === 'diary') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeTab]);
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
