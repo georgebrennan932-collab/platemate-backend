@@ -5,11 +5,12 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Lightbulb, RefreshCw, Share2, Calendar, TrendingUp, Check, AlertCircle } from "lucide-react";
+import { Lightbulb, RefreshCw, Calendar, TrendingUp, Check, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Reflection } from "@shared/schema";
 import { motion } from "framer-motion";
 import { soundService } from "@/lib/sound-service";
+import { ShareToFacebook } from "@/components/share-to-facebook";
 
 export function InsightsPage() {
   const { toast } = useToast();
@@ -204,14 +205,13 @@ export function InsightsPage() {
                   >
                     <RefreshCw className={`w-4 h-4 ${generateMutation.isPending ? 'animate-spin' : ''}`} />
                   </Button>
-                  <Button
+                  <ShareToFacebook
+                    title={`My ${period === 'daily' ? 'Daily' : 'Weekly'} Nutrition Reflection - PlateMate`}
+                    description={reflection.wentWell}
                     variant="outline"
                     size="sm"
                     onClick={handleShare}
-                    data-testid="button-share"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </Button>
+                  />
                 </div>
               </div>
 

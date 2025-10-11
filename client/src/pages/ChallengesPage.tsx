@@ -6,9 +6,13 @@ import { Progress } from "@/components/ui/progress";
 import { Trophy, Star, Flame, Target, CheckCircle2, Lock } from "lucide-react";
 import type { ChallengeWithProgress } from "@shared/schema";
 import { motion } from "framer-motion";
+import { ShareToFacebook } from "@/components/share-to-facebook";
+import { useToast } from "@/hooks/use-toast";
+import { soundService } from "@/lib/sound-service";
 
 export function ChallengesPage() {
   const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
 
   const { data: challenges = [], isLoading: challengesLoading } = useQuery<ChallengeWithProgress[]>({
     queryKey: ['/api/challenges'],
@@ -30,6 +34,14 @@ export function ChallengesPage() {
 
   const inProgressChallenges = challenges.filter(c => !c.progress || c.progress.isCompleted === 0);
   const completedChallenges = challenges.filter(c => c.progress?.isCompleted === 1);
+
+  const handleShare = () => {
+    soundService.playSuccess();
+    toast({
+      title: "Sharing to Facebook!",
+      description: "Share your achievements with friends and family.",
+    });
+  };
 
   const getProgressPercentage = (challenge: ChallengeWithProgress) => {
     if (!challenge.progress) return 0;
@@ -114,6 +126,22 @@ export function ChallengesPage() {
             </Card>
           </motion.div>
         </div>
+
+        {/* Share Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="mb-6"
+        >
+          <ShareToFacebook
+            title={`I've earned ${totalPoints} points and have a ${currentStreak} day streak on PlateMate! 🏆`}
+            description={`Check out my progress: ${completedChallenges.length} challenges completed!`}
+            variant="default"
+            className="w-full bg-[#1877f2] hover:bg-[#166fe5] text-white"
+            onClick={handleShare}
+          />
+        </motion.div>
 
         {/* In Progress Challenges */}
         <div className="mb-6">
