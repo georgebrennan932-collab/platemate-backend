@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Flame, Beef, Wheat, Droplets } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import type { NutritionGoals } from "@shared/schema";
-import { ConfettiCelebration, useConfetti } from "@/components/confetti-celebration";
+// Confetti disabled: import { ConfettiCelebration, useConfetti } from "@/components/confetti-celebration";
 import { motion } from "framer-motion";
 
 interface ProgressIndicatorsProps {
@@ -19,9 +19,9 @@ interface ProgressIndicatorsProps {
 export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps) {
   if (!goals) return null;
 
-  // Track previous achievement status to trigger confetti only on new achievements
-  const previousAchievements = useRef<Record<string, boolean>>({});
-  const { shouldTrigger, triggerConfetti, resetTrigger } = useConfetti();
+  // Confetti disabled per user request
+  // const previousAchievements = useRef<Record<string, boolean>>({});
+  // const { shouldTrigger, triggerConfetti, resetTrigger } = useConfetti();
 
   const calculateProgress = (consumed: number, target: number) => {
     return Math.min((consumed / target) * 100, 100);
@@ -202,13 +202,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
         );
       })}
       
-      {/* Confetti celebration */}
-      <ConfettiCelebration 
-        trigger={shouldTrigger} 
-        onComplete={resetTrigger}
-        duration={2500}
-        particleCount={40}
-      />
+      {/* Confetti celebration disabled per user request */}
     </div>
   );
 }

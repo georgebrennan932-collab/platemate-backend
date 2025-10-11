@@ -12,7 +12,7 @@ import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale } from "lucide-react";
-import { ConfettiCelebration } from "@/components/confetti-celebration";
+// Confetti disabled: import { ConfettiCelebration } from "@/components/confetti-celebration";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
@@ -38,8 +38,8 @@ export function CameraPage() {
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   
   
-  // Persistent confetti celebration state
-  const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
+  // Confetti disabled per user request
+  // const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
   
   
   // Fetch nutrition goals and diary entries to check for achievements
@@ -478,14 +478,7 @@ export function CameraPage() {
       {/* Bottom Help Section */}
       <BottomHelpSection />
       
-      {/* Persistent Confetti */}
-      {showPersistentConfetti && (
-        <ConfettiCelebration 
-          trigger={showPersistentConfetti}
-          duration={5000} 
-          onComplete={() => setShowPersistentConfetti(false)}
-        />
-      )}
+      {/* Confetti celebration disabled per user request */}
     </div>
   );
 }

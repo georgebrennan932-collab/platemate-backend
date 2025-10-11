@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
 import { Link } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Flame, Camera, QrCode, Images } from "lucide-react";
-import { ConfettiCelebration } from "@/components/confetti-celebration";
+// Confetti disabled: import { ConfettiCelebration } from "@/components/confetti-celebration";
 import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { OfflineIndicator } from "@/components/offline-indicator";
@@ -65,8 +65,8 @@ export default function Home() {
   const [showManualEntry, setShowManualEntry] = useState(false);
   
   
-  // Persistent confetti celebration state
-  const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
+  // Confetti disabled per user request
+  // const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
   
   
   // Fetch nutrition goals and diary data for consumed values calculation
@@ -266,7 +266,7 @@ export default function Home() {
       soundService.playSuccess();
       setAnalysisData(data as FoodAnalysis);
       setCurrentState('results');
-      setShowPersistentConfetti(true); // Trigger success confetti
+      // setShowPersistentConfetti(true); // Confetti disabled
     }
   };
 
@@ -405,7 +405,7 @@ export default function Home() {
       setEditableFoods([]); // Clear edited foods
       setEditingIndex(null); // Clear editing state
       setCurrentState('results');
-      setShowPersistentConfetti(true); // Trigger success confetti
+      // setShowPersistentConfetti(true); // Confetti disabled
       
       toast({
         title: "Analysis Confirmed",
@@ -1464,13 +1464,7 @@ export default function Home() {
         data-testid="input-file-gallery"
       />
 
-      {/* Persistent confetti celebration */}
-      <ConfettiCelebration 
-        trigger={showPersistentConfetti} 
-        onComplete={() => setShowPersistentConfetti(false)}
-        duration={4000}
-        particleCount={80}
-      />
+      {/* Confetti celebration disabled per user request */}
     </div>
   );
 }
