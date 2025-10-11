@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/bottom-navigation";
@@ -11,12 +11,15 @@ import type { Reflection } from "@shared/schema";
 import { motion } from "framer-motion";
 import { soundService } from "@/lib/sound-service";
 import { ShareToFacebook } from "@/components/share-to-facebook";
+import { InsightShareCard } from "@/components/insight-share-card";
+import { generateAndShareCard } from "@/lib/share-image-generator";
 
 export function InsightsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const [period, setPeriod] = useState<'daily' | 'weekly'>('daily');
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   // Fetch latest reflection
   const { data: reflection, isLoading, error } = useQuery<Reflection>({
@@ -55,29 +58,39 @@ export function InsightsPage() {
   });
 
   const handleShare = async () => {
-    if (!reflection) return;
+    if (!reflection || !shareCardRef.current) return;
 
     try {
-      // Update share status
-      await fetch(`/api/reflections/${reflection.id}/share`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ shareChannel: 'facebook' }),
-      });
+      // Generate and share the image
+      const shared = await generateAndShareCard(
+        shareCardRef.current,
+        `My ${period === 'daily' ? 'Daily' : 'Weekly'} Nutrition Reflection - PlateMate`,
+        reflection.wentWell
+      );
 
-      soundService.playSuccess();
-      toast({
-        title: "Shared!",
-        description: "Your reflection has been marked as shared.",
-      });
+      // Only update share status if user actually shared
+      if (shared) {
+        await fetch(`/api/reflections/${reflection.id}/share`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({ shareChannel: 'facebook' }),
+        });
+
+        soundService.playSuccess();
+        toast({
+          title: "Reflection Shared!",
+          description: "Your reflection card has been shared successfully.",
+        });
+      }
+      // User cancelled or share was unsuccessful - no action needed
     } catch (error) {
       soundService.playError();
       toast({
         title: "Share Failed",
-        description: "Could not share reflection.",
+        description: "Could not generate reflection card. Please try again.",
         variant: "destructive",
       });
     }
@@ -289,6 +302,25 @@ export function InsightsPage() {
           </motion.div>
         )}
       </div>
+
+      {/* Hidden Share Card for Image Generation */}
+      {reflection && (
+        <div className="fixed -left-[9999px] -top-[9999px]">
+          <InsightShareCard
+            ref={shareCardRef}
+            period={period}
+            wentWell={reflection.wentWell}
+            couldImprove={reflection.couldImprove}
+            sentimentScore={reflection.sentimentScore}
+            date={new Date(reflection.createdAt).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          />
+        </div>
+      )}
 
       <BottomNavigation />
       <BottomHelpSection />

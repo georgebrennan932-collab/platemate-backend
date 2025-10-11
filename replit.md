@@ -86,3 +86,11 @@ Preferred communication style: Simple, everyday language.
 - **Sound Effects System**: Integrated soundService throughout app with success sounds for saving meals/adding foods, click sounds for deleting entries, scan sounds for analysis start, and error sounds for failures. Web Audio API generates sounds programmatically with localStorage persistence for user preferences
 - **Diary Navigation**: Added back button to "Today's Meals" header for easy return to dashboard view
 - **Confetti Celebrations Disabled**: Removed all confetti celebration effects per user request from home page, camera page, and progress indicators
+- **Shareable Achievement Cards**: Implemented image-based social sharing for Challenges and Insights pages with:
+  - html2canvas library for generating beautiful achievement card images from DOM elements
+  - Custom share card components (ChallengeShareCard and InsightShareCard) with branded designs
+  - Web Share API integration with automatic fallback to download for desktop browsers
+  - Challenge cards showing points, streak, and completed challenges with gradient backgrounds
+  - Insight cards displaying reflection highlights, positivity scores, and action steps
+  - Proper share cancellation handling to avoid false success states
+  - Share tracking in database only when user confirms the share

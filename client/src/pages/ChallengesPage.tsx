@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/bottom-navigation";
@@ -9,10 +10,13 @@ import { motion } from "framer-motion";
 import { ShareToFacebook } from "@/components/share-to-facebook";
 import { useToast } from "@/hooks/use-toast";
 import { soundService } from "@/lib/sound-service";
+import { ChallengeShareCard } from "@/components/challenge-share-card";
+import { generateAndShareCard } from "@/lib/share-image-generator";
 
 export function ChallengesPage() {
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   const { data: challenges = [], isLoading: challengesLoading } = useQuery<ChallengeWithProgress[]>({
     queryKey: ['/api/challenges'],
@@ -35,12 +39,32 @@ export function ChallengesPage() {
   const inProgressChallenges = challenges.filter(c => !c.progress || c.progress.isCompleted === 0);
   const completedChallenges = challenges.filter(c => c.progress?.isCompleted === 1);
 
-  const handleShare = () => {
-    soundService.playSuccess();
-    toast({
-      title: "Sharing to Facebook!",
-      description: "Share your achievements with friends and family.",
-    });
+  const handleShare = async () => {
+    if (!shareCardRef.current) return;
+
+    try {
+      const shared = await generateAndShareCard(
+        shareCardRef.current,
+        `I've earned ${totalPoints} points and have a ${currentStreak} day streak on PlateMate! 🏆`,
+        `Check out my progress: ${completedChallenges.length} challenges completed!`
+      );
+      
+      if (shared) {
+        soundService.playSuccess();
+        toast({
+          title: "Achievement Shared!",
+          description: "Your achievement card has been shared successfully.",
+        });
+      }
+      // User cancelled or share was unsuccessful - no action needed
+    } catch (error) {
+      soundService.playError();
+      toast({
+        title: "Share Failed",
+        description: "Could not generate achievement card. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getProgressPercentage = (challenge: ChallengeWithProgress) => {
@@ -250,6 +274,16 @@ export function ChallengesPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Hidden Share Card for Image Generation */}
+      <div className="fixed -left-[9999px] -top-[9999px]">
+        <ChallengeShareCard
+          ref={shareCardRef}
+          points={totalPoints}
+          streak={currentStreak}
+          completedChallenges={completedChallenges.length}
+        />
       </div>
 
       <BottomNavigation />
