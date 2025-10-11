@@ -4,6 +4,7 @@ import { useAuth } from "./hooks/useAuth";
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { queryClient } from "./lib/queryClient";
+import { soundService } from "./lib/sound-service";
 
 // ✅ Pages in your /pages folder
 import CameraPage from "./pages/CameraPage";
@@ -49,6 +50,11 @@ function RootRoute() {
 function App() {
   useEffect(() => {
     console.log("App loaded");
+    
+    // Initialize sound service
+    soundService.initialize().catch(err => 
+      console.warn('Sound service initialization failed:', err)
+    );
     
     // Set up deep-link handler for mobile OAuth return
     let listenerHandle: any;
