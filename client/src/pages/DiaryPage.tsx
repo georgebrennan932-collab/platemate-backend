@@ -602,17 +602,34 @@ export function DiaryPage() {
                       
                       return (
                         <motion.div 
-                          key={`${entry.id}-${activeTab}`}
-                          initial={{ opacity: 0, x: -50, scale: 0.85 }}
-                          animate={{ opacity: 1, x: 0, scale: 1 }}
-                          transition={{ 
-                            duration: 0.6,
-                            delay: index * 0.1,
-                            type: "spring",
-                            stiffness: 120,
-                            damping: 12
+                          key={`${entry.id}-${activeTab}-${viewMode}`}
+                          initial={{ 
+                            opacity: 0, 
+                            x: -100,
+                            y: 20, 
+                            scale: 0.7,
+                            rotateY: -15
                           }}
-                          whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                          animate={{ 
+                            opacity: 1, 
+                            x: 0,
+                            y: 0, 
+                            scale: 1,
+                            rotateY: 0
+                          }}
+                          transition={{ 
+                            duration: 0.8,
+                            delay: index * 0.12,
+                            type: "spring",
+                            stiffness: 100,
+                            damping: 15,
+                            mass: 1
+                          }}
+                          whileHover={{ 
+                            scale: 1.03, 
+                            y: -5,
+                            transition: { duration: 0.2 } 
+                          }}
                           className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 border border-purple-200 dark:border-purple-800 rounded-xl p-4 shadow-sm"
                         >
                           {/* Header with colored meal badge and time */}
