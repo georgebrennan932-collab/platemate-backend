@@ -87,13 +87,16 @@ Preferred communication style: Simple, everyday language.
 - **Diary Navigation**: Added back button to "Today's Meals" header for easy return to dashboard view
 - **Confetti Celebrations Disabled**: Removed all confetti celebration effects per user request from home page, camera page, and progress indicators
 - **Shareable Achievement Cards**: Implemented image-based social sharing for Challenges and Insights pages with:
-  - html2canvas library for generating beautiful achievement card images from DOM elements
-  - Custom share card components (ChallengeShareCard and InsightShareCard) with branded designs
-  - Web Share API integration with automatic fallback to download for desktop browsers
+  - dom-to-image-more library for generating beautiful achievement card images (Safari-compatible with toBlob)
+  - Custom share card components (ChallengeShareCard with blue gradient, InsightShareCard with purple/metallic gradient)
+  - Web Share API integration with cascading fallback chain: image share → text-only share → download
+  - Text-only fallback summaries with emojis when image sharing is unsupported or fails
+  - Context-aware filenames for downloads (e.g., platemate-reflection-daily-2025-10-11.png)
   - Challenge cards showing points, streak, and completed challenges with gradient backgrounds
-  - Insight cards displaying reflection highlights, positivity scores, and action steps
+  - Insight cards displaying reflection highlights, positivity scores, and action steps with white text on purple/metallic gradient
   - Proper share cancellation handling to avoid false success states
   - Share tracking in database only when user confirms the share
+  - Fixes Facebook login issue by sharing images/text instead of session-protected URLs
 - **UI Design Consistency Updates**: Updated Challenges and Insights pages for consistency with app design:
   - Added back buttons to both pages matching the pattern used in Diary and other pages (Link with ArrowLeft icon)
   - Updated Challenges page color scheme to blue/indigo gradients (from purple/pink) for better harmony
