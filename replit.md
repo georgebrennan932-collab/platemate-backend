@@ -94,3 +94,9 @@ Preferred communication style: Simple, everyday language.
   - Insight cards displaying reflection highlights, positivity scores, and action steps
   - Proper share cancellation handling to avoid false success states
   - Share tracking in database only when user confirms the share
+- **UI Design Consistency Updates**: Updated Challenges and Insights pages for consistency with app design:
+  - Added back buttons to both pages matching the pattern used in Diary and other pages (Link with ArrowLeft icon)
+  - Updated Challenges page color scheme to blue/indigo gradients (from purple/pink) for better harmony
+  - Updated Insights page color scheme to green/emerald gradients (from indigo/purple) for better differentiation
+  - Maintained dark mode support across all color changes
+  - Ensured all interactive elements have proper data-testid attributes for accessibility
