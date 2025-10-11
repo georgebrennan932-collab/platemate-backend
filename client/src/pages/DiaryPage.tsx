@@ -25,6 +25,7 @@ import type { WeightEntry } from "@shared/schema";
 import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 import { Dashboard } from "@/components/dashboard";
 import { DiaryEditDialog } from "@/components/diary-edit-dialog";
+import { soundService } from "@/lib/sound-service";
 
 export function DiaryPage() {
   const { toast } = useToast();
@@ -170,6 +171,7 @@ export function DiaryPage() {
       await apiRequest('DELETE', `/api/diary/${entryId}`);
     },
     onSuccess: () => {
+      soundService.playClick();
       toast({
         title: "Entry Deleted",
         description: "Meal has been removed from your diary.",
@@ -191,6 +193,7 @@ export function DiaryPage() {
       await apiRequest('DELETE', `/api/drinks/${drinkId}`);
     },
     onSuccess: () => {
+      soundService.playClick();
       toast({
         title: "Drink Deleted",
         description: "Drink has been removed from your diary.",

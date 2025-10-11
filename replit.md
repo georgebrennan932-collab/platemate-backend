@@ -60,3 +60,9 @@ Preferred communication style: Simple, everyday language.
 - **Fonts**: Google Fonts (Roboto)
 - **Mobile Platform**: Capacitor (for iOS/Android native app deployment)
 - **Barcode Data**: OpenFoodFacts API
+
+# Recent Changes
+
+- **Engaging Page Animations**: Implemented Framer Motion animations throughout app including fade-in/scale page transitions (0.6s), staggered diary meal cards with dramatic spring bounce effects (slide from -100px, scale 0.7→1, 3D rotation), progress indicator cards with scale-up animations, and hover effects (scale 1.02-1.03) on interactive cards. Auto-scroll to top when switching to diary tab ensures animations are visible
+- **Sound Effects System**: Integrated soundService throughout app with success sounds for saving meals/adding foods, click sounds for deleting entries, scan sounds for analysis start, and error sounds for failures. Web Audio API generates sounds programmatically with localStorage persistence for user preferences
+- **Diary Navigation**: Added back button to "Today's Meals" header for easy return to dashboard view

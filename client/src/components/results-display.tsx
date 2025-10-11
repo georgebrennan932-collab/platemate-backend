@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { motion } from "framer-motion";
 import { updateStreak } from "@/lib/streak-tracker";
+import { soundService } from "@/lib/sound-service";
 
 interface ResultsDisplayProps {
   data: FoodAnalysis;
@@ -395,6 +396,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       return await response.json();
     },
     onSuccess: (updatedAnalysis) => {
+      soundService.playClick();
       // Update the original data with server-calculated values
       data.detectedFoods = [...updatedAnalysis.detectedFoods];
       data.totalCalories = updatedAnalysis.totalCalories;
@@ -488,6 +490,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       return analysis;
     },
     onSuccess: (updatedAnalysis) => {
+      soundService.playSuccess();
       toast({
         title: "Food Added!",
         description: "Voice food item has been added to your analysis.",
@@ -549,6 +552,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       return await response.json();
     },
     onSuccess: () => {
+      soundService.playSuccess();
       // Update streak when diary entry is saved
       const streakData = updateStreak();
       
