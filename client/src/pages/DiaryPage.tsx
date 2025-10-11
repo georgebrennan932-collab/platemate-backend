@@ -41,10 +41,10 @@ export function DiaryPage() {
     }
   }, []);
 
-  // Scroll to top when switching to diary tab to see animations
+  // Scroll to top instantly when switching to diary tab to see animations
   useEffect(() => {
     if (activeTab === 'diary') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'instant' });
     }
   }, [activeTab]);
   
