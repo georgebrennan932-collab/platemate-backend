@@ -44,10 +44,21 @@ export function ChallengesPage() {
     if (!shareCardRef.current) return;
 
     try {
+      // Create text fallback for when image sharing fails
+      const textFallback = `🏆 My PlateMate Achievements
+
+📊 Total Points: ${totalPoints}
+🔥 Current Streak: ${currentStreak} days
+✅ Challenges Completed: ${completedChallenges.length}
+
+Track your nutrition goals and earn rewards on PlateMate!`;
+
       const shared = await generateAndShareCard(
         shareCardRef.current,
         `I've earned ${totalPoints} points and have a ${currentStreak} day streak on PlateMate! 🏆`,
-        `Check out my progress: ${completedChallenges.length} challenges completed!`
+        `Check out my progress: ${completedChallenges.length} challenges completed!`,
+        textFallback,
+        `platemate-achievements-${new Date().toISOString().split('T')[0]}.png`
       );
       
       if (shared) {

@@ -62,11 +62,26 @@ export function InsightsPage() {
     if (!reflection || !shareCardRef.current) return;
 
     try {
-      // Generate and share the image
+      // Create text fallback for when image sharing fails
+      const textFallback = `🍽️ My ${period === 'daily' ? 'Daily' : 'Weekly'} Nutrition Reflection 💜
+
+✅ What Went Well:
+${reflection.wentWell}
+
+⚠️ Room for Growth:
+${reflection.couldImprove}
+
+💪 Positivity Score: ${reflection.sentimentScore}%
+
+Track your nutrition with AI-powered insights on PlateMate!`;
+
+      // Generate and share the image with text fallback
       const shared = await generateAndShareCard(
         shareCardRef.current,
         `My ${period === 'daily' ? 'Daily' : 'Weekly'} Nutrition Reflection - PlateMate`,
-        reflection.wentWell
+        reflection.wentWell,
+        textFallback,
+        `platemate-reflection-${period}-${new Date().toISOString().split('T')[0]}.png`
       );
 
       // Only update share status if user actually shared

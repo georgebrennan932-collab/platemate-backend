@@ -1,4 +1,4 @@
-import html2canvas from 'html2canvas';
+import domtoimage from 'dom-to-image-more';
 
 export interface ShareImageOptions {
   element: HTMLElement;
@@ -7,36 +7,38 @@ export interface ShareImageOptions {
 }
 
 /**
- * Generate a shareable image from a DOM element
+ * Generate a shareable image from a DOM element using dom-to-image-more
+ * 
+ * Note: Ensure all images in the element have crossOrigin="anonymous" to avoid CORS issues.
+ * Avoid capturing iframes or videos as they may cause the generation to fail.
  */
 export async function generateShareImage(options: ShareImageOptions): Promise<Blob> {
-  const { element, backgroundColor = '#ffffff' } = options;
+  const { element, backgroundColor = 'transparent' } = options;
 
-  // Generate canvas from the element
-  const canvas = await html2canvas(element, {
-    backgroundColor,
-    scale: 2, // Higher quality
-    logging: false,
-    useCORS: true,
+  // Generate blob directly for better Safari compatibility
+  const blob = await domtoimage.toBlob(element, {
+    bgcolor: backgroundColor,
+    quality: 1.0,
+    style: {
+      transform: 'scale(1)',
+      transformOrigin: 'top left'
+    }
   });
 
-  // Convert canvas to blob
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) {
-        resolve(blob);
-      } else {
-        reject(new Error('Failed to generate image'));
-      }
-    }, 'image/png');
-  });
+  return blob;
 }
 
 /**
  * Share image using Web Share API or download as fallback
  */
-export async function shareImage(blob: Blob, title: string, text?: string): Promise<boolean> {
-  const file = new File([blob], 'achievement.png', { type: 'image/png' });
+export async function shareImage(
+  blob: Blob, 
+  title: string, 
+  text?: string,
+  textFallback?: string,
+  filename: string = 'platemate-share.png'
+): Promise<boolean> {
+  const file = new File([blob], filename, { type: 'image/png' });
 
   console.log('🔍 Share Debug - navigator.share exists:', !!navigator.share);
   console.log('🔍 Share Debug - navigator.canShare exists:', !!navigator.canShare);
@@ -65,10 +67,43 @@ export async function shareImage(blob: Blob, title: string, text?: string): Prom
           // User explicitly cancelled
           return false;
         }
-        // Fall through to download
+        // Fall through to text fallback if available
+        if (textFallback && navigator.share) {
+          try {
+            console.log('📝 Attempting text-only share fallback');
+            await navigator.share({
+              title,
+              text: textFallback,
+            });
+            console.log('✅ Text share successful');
+            return true;
+          } catch (textError: any) {
+            console.log('❌ Text share failed:', textError.name);
+            if (textError.name === 'AbortError') {
+              return false;
+            }
+          }
+        }
       }
     } else {
-      console.log('⚠️ File sharing not supported on this browser, falling back to download');
+      // Try text-only share if files aren't supported
+      if (textFallback && navigator.share) {
+        try {
+          console.log('📝 File sharing not supported, trying text-only share');
+          await navigator.share({
+            title,
+            text: textFallback,
+          });
+          console.log('✅ Text share successful');
+          return true;
+        } catch (textError: any) {
+          console.log('❌ Text share failed:', textError.name);
+          if (textError.name === 'AbortError') {
+            return false;
+          }
+        }
+      }
+      console.log('⚠️ File sharing not supported, falling back to download');
     }
   }
 
@@ -77,7 +112,7 @@ export async function shareImage(blob: Blob, title: string, text?: string): Prom
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'achievement.png';
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -88,18 +123,37 @@ export async function shareImage(blob: Blob, title: string, text?: string): Prom
 }
 
 /**
- * Generate and share an achievement card
+ * Generate and share an achievement card with text fallback
  */
 export async function generateAndShareCard(
   element: HTMLElement,
   title: string,
-  description?: string
+  description?: string,
+  textFallback?: string,
+  filename?: string
 ): Promise<boolean> {
   try {
     const blob = await generateShareImage({ element });
-    return await shareImage(blob, title, description);
+    return await shareImage(blob, title, description, textFallback, filename);
   } catch (error) {
     console.error('Error generating share image:', error);
+    
+    // If image generation fails and we have a text fallback, try that
+    if (textFallback && navigator.share) {
+      try {
+        console.log('💬 Image generation failed, trying text-only share');
+        await navigator.share({
+          title,
+          text: textFallback,
+        });
+        return true;
+      } catch (shareError: any) {
+        if (shareError.name === 'AbortError') {
+          return false;
+        }
+      }
+    }
+    
     throw error;
   }
 }
