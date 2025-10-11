@@ -582,9 +582,19 @@ export function DiaryPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Section Header - Purple Background */}
+                {/* Section Header - Purple Background with Back Button */}
                 <div className="bg-gradient-to-r from-purple-600 to-purple-500 rounded-xl px-4 py-3 shadow-md">
-                  <h3 className="text-xl font-bold text-white">Today's Meals</h3>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => setActiveTab('dashboard')}
+                      className="text-white/80 hover:text-white transition-colors"
+                      data-testid="button-back-to-dashboard"
+                      title="Back to Dashboard"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <h3 className="text-xl font-bold text-white">Today's Meals</h3>
+                  </div>
                 </div>
                 
                 {sortedDates.map((date) => (
