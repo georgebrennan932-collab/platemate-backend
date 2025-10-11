@@ -5,12 +5,11 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Lightbulb, RefreshCw, Calendar, TrendingUp, Check, AlertCircle, ArrowLeft } from "lucide-react";
+import { Lightbulb, RefreshCw, Calendar, TrendingUp, Check, AlertCircle, ArrowLeft, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Reflection } from "@shared/schema";
 import { motion } from "framer-motion";
 import { soundService } from "@/lib/sound-service";
-import { ShareToFacebook } from "@/components/share-to-facebook";
 import { InsightShareCard } from "@/components/insight-share-card";
 import { generateAndShareCard } from "@/lib/share-image-generator";
 import { Link } from "wouter";
@@ -243,13 +242,14 @@ Track your nutrition with AI-powered insights on PlateMate!`;
                   >
                     <RefreshCw className={`w-4 h-4 ${generateMutation.isPending ? 'animate-spin' : ''}`} />
                   </Button>
-                  <ShareToFacebook
-                    title={`My ${period === 'daily' ? 'Daily' : 'Weekly'} Nutrition Reflection - PlateMate`}
-                    description={reflection.wentWell}
+                  <Button
                     variant="outline"
                     size="sm"
                     onClick={handleShare}
-                  />
+                    data-testid="button-share-reflection"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
 

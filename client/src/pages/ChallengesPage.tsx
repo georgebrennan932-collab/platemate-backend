@@ -4,10 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Star, Flame, Target, CheckCircle2, Lock, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, Star, Flame, Target, CheckCircle2, Lock, ArrowLeft, Share2 } from "lucide-react";
 import type { ChallengeWithProgress } from "@shared/schema";
 import { motion } from "framer-motion";
-import { ShareToFacebook } from "@/components/share-to-facebook";
 import { useToast } from "@/hooks/use-toast";
 import { soundService } from "@/lib/sound-service";
 import { ChallengeShareCard } from "@/components/challenge-share-card";
@@ -179,13 +179,14 @@ Track your nutrition goals and earn rewards on PlateMate!`;
           transition={{ duration: 0.3, delay: 0.2 }}
           className="mb-6"
         >
-          <ShareToFacebook
-            title={`I've earned ${totalPoints} points and have a ${currentStreak} day streak on PlateMate! 🏆`}
-            description={`Check out my progress: ${completedChallenges.length} challenges completed!`}
-            variant="default"
-            className="w-full bg-[#1877f2] hover:bg-[#166fe5] text-white"
+          <Button
             onClick={handleShare}
-          />
+            className="w-full"
+            data-testid="button-share-achievements"
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            Share My Achievements
+          </Button>
         </motion.div>
 
         {/* In Progress Challenges */}
