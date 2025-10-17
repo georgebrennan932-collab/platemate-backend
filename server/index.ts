@@ -5,6 +5,8 @@ import emailAuthRoutes from "./email-auth";
 
 const app = express();
 
+// Disable ETags globally to prevent 304 Not Modified responses
+app.set('etag', false);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

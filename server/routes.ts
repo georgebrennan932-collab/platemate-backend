@@ -2291,8 +2291,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get user's saved recipes
   app.get("/api/recipes/saved", async (req: any, res) => {
+    console.log("🚨 SAVED RECIPES ENDPOINT HIT - timestamp:", Date.now());
     try {
       const userId = req.user?.claims?.sub;
+      console.log("🚨 User ID:", userId);
       
       if (!userId) {
         return res.status(401).json({ error: "Authentication required" });
