@@ -47,7 +47,7 @@
   --shadow-soft: 0 4px 16px rgba(20, 184, 166, 0.12);
   --shadow-medium: 0 8px 32px rgba(20, 184, 166, 0.16);
   --shadow-strong: 0 16px 48px rgba(20, 184, 166, 0.20);
-  --bg-gradient: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+  --bg-gradient: linear-gradient(135deg, rgb(250 245 255) 0%, rgb(255 255 255) 50%, rgb(245 243 255) 100%);
 }
 
 .dark {

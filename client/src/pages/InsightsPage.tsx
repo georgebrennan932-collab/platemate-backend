@@ -114,7 +114,7 @@ Track your nutrition with AI-powered insights on PlateMate!`;
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
         <div className="max-w-md mx-auto pt-20">
           <Card className="p-8 text-center">
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -130,9 +130,9 @@ Track your nutrition with AI-powered insights on PlateMate!`;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-32">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-32">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-700 dark:to-emerald-700 text-white p-6 pb-8">
+      <div className="bg-gradient-to-r from-purple-600 to-violet-600 dark:from-purple-700 dark:to-violet-700 text-white p-6 pb-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <Link to="/">

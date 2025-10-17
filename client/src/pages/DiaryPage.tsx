@@ -353,7 +353,7 @@ export function DiaryPage() {
 
   if (isLoading || drinksLoading) {
     return (
-      <div className="min-h-screen bg-background p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
         <div className="max-w-md mx-auto">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-muted rounded"></div>
@@ -566,10 +566,10 @@ export function DiaryPage() {
         ) : activeTab === 'weight' ? (
           <div className="space-y-6">
             {/* Weight Tracking Header */}
-            <div className="bg-gradient-to-br from-blue/5 to-blue/10 border border-blue/20 rounded-xl p-6">
+            <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 dark:border-purple-800 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2">
-                  <Target className="h-5 w-5 text-blue-600" />
+                  <Target className="h-5 w-5 text-purple-600" />
                   <h2 className="text-lg font-bold">Weight Progress</h2>
                 </div>
                 <div className="text-sm text-muted-foreground">
