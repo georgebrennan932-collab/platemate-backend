@@ -590,8 +590,18 @@ Generate 4-6 meal ideas that address the user's specific nutritional needs, defi
       
       // Build profile context if available
       let profileContext = "";
+      let userDisplayName = "";
       if (userProfile) {
         const profileParts = [];
+        
+        // Set user display name (prefer nickname, fall back to name)
+        if (userProfile.nickname) {
+          userDisplayName = userProfile.nickname;
+          profileParts.push(`Preferred Name: ${userProfile.nickname}`);
+        } else if (userProfile.name) {
+          userDisplayName = userProfile.name;
+          profileParts.push(`Name: ${userProfile.name}`);
+        }
         
         if (userProfile.dietaryRequirements && userProfile.dietaryRequirements.length > 0) {
           profileParts.push(`Dietary Requirements: ${userProfile.dietaryRequirements.join(', ')}`);
@@ -616,7 +626,7 @@ Generate 4-6 meal ideas that address the user's specific nutritional needs, defi
         messages: [
           {
             role: "system",
-            content: `You are PlateMate's AI nutrition assistant. Answer the user's nutrition question based on their eating patterns and profile information. Provide personalized, helpful advice that respects their dietary needs and restrictions. Be conversational but informative.
+            content: `You are PlateMate's AI nutrition assistant. Answer the user's nutrition question based on their eating patterns and profile information. Provide personalized, helpful advice that respects their dietary needs and restrictions. Be conversational but informative.${userDisplayName ? `\n\nThe user prefers to be called "${userDisplayName}". Use this name naturally when addressing them to make the conversation more personal and friendly.` : ''}
 
 User's Recent Nutrition Data:
 ${contextData}${profileContext}
@@ -624,7 +634,7 @@ ${contextData}${profileContext}
 Guidelines:
 - IMPORTANT: Consider their dietary requirements, allergies, and health conditions in your advice
 - Never suggest foods they're allergic to or that violate their dietary restrictions
-- Provide personalized advice based on their actual eating patterns and preferences
+- Provide personalized advice based on their actual eating patterns and preferences${userDisplayName ? `\n- Address the user as "${userDisplayName}" to make the conversation feel personal` : ''}
 - Be encouraging and supportive
 - Give practical, actionable recommendations
 - If the question requires medical advice, recommend consulting a healthcare professional
