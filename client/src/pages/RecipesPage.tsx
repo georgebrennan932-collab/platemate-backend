@@ -246,10 +246,10 @@ export function RecipesPage() {
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <Link href="/">
+              <Link to="/">
                 <button 
                   className="p-2 hover:bg-muted rounded-lg transition-colors"
-                  data-testid="button-back-home"
+                  data-testid="button-back"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>

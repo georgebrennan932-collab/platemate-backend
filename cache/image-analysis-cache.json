@@ -164,18 +164,100 @@
         "accessCount": 1,
         "lastAccessed": 1760694112533
       }
+    ],
+    [
+      "b86d60c6cc8fbc6baa8e4633f5296d1a3c5a36597c79fd2d5cdcaacd4082f9c8",
+      {
+        "imageHash": "b86d60c6cc8fbc6baa8e4633f5296d1a3c5a36597c79fd2d5cdcaacd4082f9c8",
+        "analysis": {
+          "imageUrl": "/tmp/uploads/processed_9fad310d6244cb46e77d9138fa393428.jpg",
+          "confidence": 95,
+          "totalCalories": 1364,
+          "totalProtein": 67,
+          "totalCarbs": 65,
+          "totalFat": 94,
+          "detectedFoods": [
+            {
+              "name": "Sausage, smoked link sausage, pork",
+              "portion": "2 sausages (130g)",
+              "calories": 402,
+              "protein": 16,
+              "carbs": 1,
+              "fat": 37,
+              "icon": "🍽️"
+            },
+            {
+              "name": "Baked beans",
+              "portion": "200g",
+              "calories": 210,
+              "protein": 9,
+              "carbs": 43,
+              "fat": 2,
+              "icon": "🍽️"
+            },
+            {
+              "name": "CHICK-FIL-A, hash browns",
+              "portion": "1 hash brown (50g)",
+              "calories": 151,
+              "protein": 2,
+              "carbs": 15,
+              "fat": 9,
+              "icon": "🍽️"
+            },
+            {
+              "name": "Egg, whole, cooked, scrambled",
+              "portion": "110g",
+              "calories": 164,
+              "protein": 11,
+              "carbs": 2,
+              "fat": 12,
+              "icon": "egg"
+            },
+            {
+              "name": "Blood sausage",
+              "portion": "1 slice (60g)",
+              "calories": 227,
+              "protein": 9,
+              "carbs": 1,
+              "fat": 21,
+              "icon": "🍽️"
+            },
+            {
+              "name": "Pork bacon, NS as to fresh, smoked or cured, cooked",
+              "portion": "1 rasher (30g)",
+              "calories": 145,
+              "protein": 11,
+              "carbs": 1,
+              "fat": 11,
+              "icon": "bacon"
+            },
+            {
+              "name": "Scallops, grilled",
+              "portion": "1/2 medium tomato (60g)",
+              "calories": 65,
+              "protein": 9,
+              "carbs": 2,
+              "fat": 2,
+              "icon": "🍽️"
+            }
+          ]
+        },
+        "timestamp": 1760701628408,
+        "accessCount": 1,
+        "lastAccessed": 1760701628408
+      }
     ]
   ],
   "stats": {
-    "totalRequests": 3,
-    "cacheHits": 1,
-    "cacheMisses": 2,
-    "hitRate": 33,
-    "currentSize": 3,
+    "totalRequests": 1,
+    "cacheHits": 0,
+    "cacheMisses": 1,
+    "hitRate": 0,
+    "currentSize": 4,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1760693590780,
-    "newestEntry": 1760694112533
+    "newestEntry": 1760701628408
   },
-  "timestamp": 1760694112533
+  "timestamp": 1760701628409
 }
