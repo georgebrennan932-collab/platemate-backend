@@ -50,6 +50,8 @@ export function RecipesPage() {
   const [selectedDiet, setSelectedDiet] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
+  const [expandedIngredients, setExpandedIngredients] = useState<Set<string>>(new Set());
+  const [expandedInstructions, setExpandedInstructions] = useState<Set<string>>(new Set());
 
   // Get diet filter from URL parameters if provided
   useEffect(() => {
@@ -99,6 +101,30 @@ export function RecipesPage() {
   });
 
   const filteredRecipes = recipes || [];
+
+  const toggleIngredients = (recipeId: string) => {
+    setExpandedIngredients(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(recipeId)) {
+        newSet.delete(recipeId);
+      } else {
+        newSet.add(recipeId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleInstructions = (recipeId: string) => {
+    setExpandedInstructions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(recipeId)) {
+        newSet.delete(recipeId);
+      } else {
+        newSet.add(recipeId);
+      }
+      return newSet;
+    });
+  };
 
   return (
     <motion.div 
@@ -274,24 +300,37 @@ export function RecipesPage() {
                     </div>
                   )}
 
-                  {/* Ingredients Preview */}
+                  {/* Ingredients */}
                   <div>
                     <h4 className="text-sm font-medium mb-2">Ingredients:</h4>
                     <div className="flex flex-wrap gap-1">
-                      {recipe.ingredients.slice(0, 6).map((ingredient, idx) => (
+                      {(expandedIngredients.has(recipe.id) ? recipe.ingredients : recipe.ingredients.slice(0, 6)).map((ingredient, idx) => (
                         <span key={idx} className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
                           {ingredient}
                         </span>
                       ))}
-                      {recipe.ingredients.length > 6 && (
-                        <span className="text-xs text-muted-foreground px-2 py-1">
+                      {recipe.ingredients.length > 6 && !expandedIngredients.has(recipe.id) && (
+                        <button
+                          onClick={() => toggleIngredients(recipe.id)}
+                          className="text-xs text-primary hover:underline px-2 py-1 font-medium"
+                          data-testid={`button-show-all-ingredients-${index}`}
+                        >
                           +{recipe.ingredients.length - 6} more
-                        </span>
+                        </button>
+                      )}
+                      {expandedIngredients.has(recipe.id) && recipe.ingredients.length > 6 && (
+                        <button
+                          onClick={() => toggleIngredients(recipe.id)}
+                          className="text-xs text-primary hover:underline px-2 py-1 font-medium"
+                          data-testid={`button-show-less-ingredients-${index}`}
+                        >
+                          Show less
+                        </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Instructions Preview */}
+                  {/* Instructions */}
                   {recipe.instructions && recipe.instructions.length > 0 && (
                     <div className="bg-muted/50 rounded p-3">
                       <h4 className="text-sm font-medium mb-2 flex items-center">
@@ -299,18 +338,24 @@ export function RecipesPage() {
                         How to Make It:
                       </h4>
                       <ol className="text-sm text-muted-foreground space-y-1">
-                        {recipe.instructions.slice(0, 3).map((instruction, idx) => (
+                        {(expandedInstructions.has(recipe.id) ? recipe.instructions : recipe.instructions.slice(0, 3)).map((instruction, idx) => (
                           <li key={idx} className="flex items-start">
                             <span className="text-primary font-medium mr-2 flex-shrink-0">{idx + 1}.</span>
                             <span>{instruction}</span>
                           </li>
                         ))}
-                        {recipe.instructions.length > 3 && (
-                          <li className="text-xs text-muted-foreground italic">
-                            ...and {recipe.instructions.length - 3} more steps
-                          </li>
-                        )}
                       </ol>
+                      {recipe.instructions.length > 3 && (
+                        <button
+                          onClick={() => toggleInstructions(recipe.id)}
+                          className="text-xs text-primary hover:underline mt-2 font-medium"
+                          data-testid={`button-toggle-instructions-${index}`}
+                        >
+                          {expandedInstructions.has(recipe.id) 
+                            ? 'Show less' 
+                            : `Show all ${recipe.instructions.length} steps`}
+                        </button>
+                      )}
                     </div>
                   )}
 
