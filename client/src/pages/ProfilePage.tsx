@@ -15,6 +15,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { motion } from "framer-motion";
 
 const profileFormSchema = z.object({
+  name: z.string().optional(),
+  nickname: z.string().optional(),
   dietaryRequirements: z.string().optional(),
   allergies: z.string().optional(),
   foodDislikes: z.string().optional(),
@@ -36,6 +38,8 @@ export function ProfilePage() {
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
+      name: "",
+      nickname: "",
       dietaryRequirements: "",
       allergies: "",
       foodDislikes: "",
@@ -54,6 +58,8 @@ export function ProfilePage() {
       }
       // Reset form with profile data
       form.reset({
+        name: profile.name || "",
+        nickname: profile.nickname || "",
         dietaryRequirements: "",
         allergies: "",
         foodDislikes: profile.foodDislikes || "",
@@ -85,6 +91,8 @@ export function ProfilePage() {
 
   const onSubmit = (data: ProfileFormData) => {
     saveMutation.mutate({
+      name: data.name || null,
+      nickname: data.nickname || null,
       dietaryRequirements: dietaryTags,
       allergies: allergyTags,
       foodDislikes: data.foodDislikes || null,
@@ -166,6 +174,43 @@ export function ProfilePage() {
         className="max-w-4xl mx-auto p-4 space-y-6"
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Personal Information Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Help your AI Coach address you personally
+            </p>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name" className="block mb-2">
+                  Your Name
+                </Label>
+                <Input
+                  id="name"
+                  {...form.register("name")}
+                  placeholder="e.g., Sarah Johnson"
+                  className="w-full"
+                  data-testid="input-name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="nickname" className="block mb-2">
+                  Preferred Name / Nickname
+                </Label>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  What should your AI Coach call you?
+                </p>
+                <Input
+                  id="nickname"
+                  {...form.register("nickname")}
+                  placeholder="e.g., Sarah, SJ, Coach..."
+                  className="w-full"
+                  data-testid="input-nickname"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Dietary Requirements Section */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
             <h2 className="text-lg font-semibold mb-4">Dietary Requirements</h2>
