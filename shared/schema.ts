@@ -124,6 +124,7 @@ export const weightEntries = pgTable("weight_entries", {
   weightGrams: integer("weight_grams").notNull(), // weight in grams for decimal precision
   loggedAt: timestamp("logged_at").notNull(), // when the weight was recorded
   notes: text("notes"), // optional user notes
+  imageUrl: text("image_url"), // optional progress photo
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
