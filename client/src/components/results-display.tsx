@@ -633,32 +633,28 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     mutationFn: async () => {
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
       
-      // Create a modified analysis with updated food data (strip baseline data)
-      const modifiedAnalysis = {
-        ...data,
-        detectedFoods: editableFoods.map(stripBaselineData),
-        totalCalories: totals.calories,
-        totalProtein: totals.protein,
-        totalCarbs: totals.carbs,
-        totalFat: totals.fat
-      };
-      
-      const requestBody = {
+      // Only send modified analysis if there are unsaved changes
+      const requestBody: any = {
         analysisId: data.id,
         mealType: selectedMealType,
         mealDate: mealDateTime.toISOString(),
         notes: "",
-        modifiedAnalysis // Send the modified data
       };
       
-      const response = await apiRequest('POST', '/api/diary', requestBody);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("  Response error:", errorData);
-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to save to diary`);
+      // If there are unsaved changes, include them as modifiedAnalysis
+      if (hasChanges()) {
+        requestBody.modifiedAnalysis = {
+          imageUrl: data.imageUrl,
+          confidence: data.confidence,
+          detectedFoods: editableFoods.map(stripBaselineData),
+          totalCalories: totals.calories,
+          totalProtein: totals.protein,
+          totalCarbs: totals.carbs,
+          totalFat: totals.fat
+        };
       }
       
+      const response = await apiRequest('POST', '/api/diary', requestBody);
       const result = await response.json();
       return result;
     },
