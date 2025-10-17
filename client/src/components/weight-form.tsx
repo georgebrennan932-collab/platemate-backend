@@ -98,7 +98,7 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
         formData.append('progressPhoto', progressPhoto);
       }
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const headers: Record<string, string> = {};
       
       if (token) {
