@@ -20,10 +20,10 @@ export function DropdownNavigation() {
       isActive: location === "/" || location === "/home"
     },
     {
-      href: "/diary",
+      href: "/diary?tab=diary",
       icon: Book,
       label: "Diary",
-      isActive: location === "/diary"
+      isActive: location === "/diary" || location.startsWith("/diary?")
     },
     {
       href: "/progress-photos",

@@ -39,6 +39,10 @@ export function DiaryPage() {
     const tabParam = urlParams.get('tab');
     if (tabParam === 'weight') {
       setActiveTab('weight');
+    } else if (tabParam === 'diary') {
+      setActiveTab('diary');
+    } else if (tabParam === 'analytics') {
+      setActiveTab('analytics');
     }
   }, []);
 
