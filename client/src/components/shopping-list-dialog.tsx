@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 
@@ -288,6 +288,9 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
               ({shoppingList.length - checkedItems.size} of {shoppingList.length} remaining)
             </span>
           </DialogTitle>
+          <DialogDescription>
+            Check off items as you add them to your cart
+          </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto pr-2">
