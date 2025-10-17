@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
-import { BottomNavigation } from "@/components/bottom-navigation";
+import { DropdownNavigation } from "@/components/dropdown-navigation";
 
 export function HelpPage() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -285,7 +285,7 @@ export function HelpPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <BottomNavigation />
+      <DropdownNavigation />
     </div>
   );
 }

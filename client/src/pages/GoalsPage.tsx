@@ -1,7 +1,7 @@
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { Link } from "wouter";
 import { NutritionGoals } from "@/components/nutrition-goals";
-import { BottomNavigation } from "@/components/bottom-navigation";
+import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 
 export function GoalsPage() {
@@ -41,7 +41,7 @@ export function GoalsPage() {
       </div>
       
       {/* Bottom Navigation */}
-      <BottomNavigation />
+      <DropdownNavigation />
       
       {/* Bottom Help Section */}
       <BottomHelpSection />

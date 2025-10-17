@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { BottomNavigation } from "@/components/bottom-navigation";
+import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -106,7 +106,7 @@ Track your nutrition goals and earn rewards on PlateMate!`;
             </p>
           </Card>
         </div>
-        <BottomNavigation />
+        <DropdownNavigation />
       </div>
     );
   }
@@ -308,7 +308,7 @@ Track your nutrition goals and earn rewards on PlateMate!`;
         />
       </div>
 
-      <BottomNavigation />
+      <DropdownNavigation />
     </div>
   );
 }

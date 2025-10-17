@@ -14,7 +14,7 @@ import { AdvancedAnalytics } from "@/components/advanced-analytics";
 import { QuickActionsBar } from "@/components/quick-actions-bar";
 import { DataManagementDialog } from "@/components/data-management-dialog";
 import type { DiaryEntryWithAnalysis, DrinkEntry, NutritionGoals } from "@shared/schema";
-import { BottomNavigation } from "@/components/bottom-navigation";
+import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { WeightForm } from "@/components/weight-form";
 import { WeightList } from "@/components/weight-list";
@@ -1025,7 +1025,7 @@ export function DiaryPage() {
       )}
 
       {/* Bottom Navigation */}
-      <BottomNavigation />
+      <DropdownNavigation />
       
       {/* Bottom Help Section */}
       <BottomHelpSection />

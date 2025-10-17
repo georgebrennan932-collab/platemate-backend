@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { ArrowLeft, Lightbulb, TrendingUp, Heart, Brain, Zap, RefreshCw, Utensils, Clock, Users, Send, Bot, ChefHat, ExternalLink, Mic, MicOff } from "lucide-react";
 import { useState, useEffect } from "react";
-import { BottomNavigation } from "@/components/bottom-navigation";
+import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -597,7 +597,7 @@ export function DietAdvicePage() {
       </div>
       
       {/* Bottom Navigation */}
-      <BottomNavigation />
+      <DropdownNavigation />
       
       {/* Bottom Help Section */}
       <BottomHelpSection />

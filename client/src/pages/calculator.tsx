@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, Target, ArrowLeft } from 'lucide-react';
 import { Link } from 'wouter';
 import type { DiaryEntry, DrinkEntry, FoodAnalysis, DiaryEntryWithAnalysis, NutritionGoals } from '@shared/schema';
-import { BottomNavigation } from '@/components/bottom-navigation';
+import { DropdownNavigation } from '@/components/dropdown-navigation';
 import { BottomHelpSection } from '@/components/bottom-help-section';
 import { motion } from 'framer-motion';
 
@@ -142,7 +142,7 @@ export default function CalculatorPage() {
       </div>
       
       {/* Bottom Navigation */}
-      <BottomNavigation />
+      <DropdownNavigation />
       
       {/* Bottom Help Section */}
       <BottomHelpSection />

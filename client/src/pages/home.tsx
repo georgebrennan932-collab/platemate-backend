@@ -18,7 +18,7 @@ import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis, DrinkEntry } from "@shared/schema";
-import { BottomNavigation } from "@/components/bottom-navigation";
+import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { ProgressIndicators } from "@/components/progress-indicators";
 import { calculateTodayNutrition } from "@/lib/nutrition-calculator";
@@ -1509,8 +1509,8 @@ export default function Home() {
       )}
 
 
-      {/* Bottom Navigation */}
-      <BottomNavigation />
+      {/* Dropdown Navigation */}
+      <DropdownNavigation />
       
       {/* Bottom Help Section */}
       <BottomHelpSection />

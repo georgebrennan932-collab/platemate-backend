@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { BottomNavigation } from "@/components/bottom-navigation";
+import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -124,7 +124,7 @@ Track your nutrition with AI-powered insights on PlateMate!`;
             </p>
           </Card>
         </div>
-        <BottomNavigation />
+        <DropdownNavigation />
       </div>
     );
   }
@@ -347,7 +347,7 @@ Track your nutrition with AI-powered insights on PlateMate!`;
         </div>
       )}
 
-      <BottomNavigation />
+      <DropdownNavigation />
       <BottomHelpSection />
     </div>
   );

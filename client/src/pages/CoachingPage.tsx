@@ -6,7 +6,7 @@ import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calen
 import { useState, useEffect } from "react";
 import { notificationService } from "@/lib/notification-service";
 import { soundService } from "@/lib/sound-service";
-import { BottomNavigation } from "@/components/bottom-navigation";
+import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -607,7 +607,7 @@ export function CoachingPage() {
         </Card>
       </div>
 
-      <BottomNavigation />
+      <DropdownNavigation />
       
       {/* Bottom Help Section */}
       <BottomHelpSection />
