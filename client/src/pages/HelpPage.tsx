@@ -19,7 +19,7 @@ export function HelpPage() {
   return (
     <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Header */}
-      <div className="bg-card border-b sticky top-0 z-10">
+      <div className="bg-card border-b">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center space-x-3">
             <Link href="/">
