@@ -779,11 +779,15 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     }
   };
 
-  // Calculate percentages for macro breakdown
-  const totalMacros = data.totalProtein * 4 + data.totalCarbs * 4 + data.totalFat * 9;
-  const proteinPercent = Math.round((data.totalProtein * 4 / totalMacros) * 100);
-  const carbsPercent = Math.round((data.totalCarbs * 4 / totalMacros) * 100);
-  const fatPercent = Math.round((data.totalFat * 9 / totalMacros) * 100);
+  // Memoized calculation for macro percentages - only recalculates when data changes
+  const macroPercentages = useMemo(() => {
+    const totalMacros = data.totalProtein * 4 + data.totalCarbs * 4 + data.totalFat * 9;
+    return {
+      protein: Math.round((data.totalProtein * 4 / totalMacros) * 100),
+      carbs: Math.round((data.totalCarbs * 4 / totalMacros) * 100),
+      fat: Math.round((data.totalFat * 9 / totalMacros) * 100),
+    };
+  }, [data.totalProtein, data.totalCarbs, data.totalFat]);
 
   return (
     <motion.div 
@@ -1272,13 +1276,13 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               <span className="font-medium">Protein</span>
             </div>
             <span className="text-sm text-muted-foreground" data-testid="text-protein-percent">
-              {proteinPercent}%
+              {macroPercentages.protein}%
             </span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
             <div 
               className="bg-blue-500 h-2 rounded-full transition-all duration-1000" 
-              style={{width: `${proteinPercent}%`}}
+              style={{width: `${macroPercentages.protein}%`}}
             ></div>
           </div>
 
@@ -1289,13 +1293,13 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               <span className="font-medium">Carbohydrates</span>
             </div>
             <span className="text-sm text-muted-foreground" data-testid="text-carbs-percent">
-              {carbsPercent}%
+              {macroPercentages.carbs}%
             </span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
             <div 
               className="bg-orange-500 h-2 rounded-full transition-all duration-1000" 
-              style={{width: `${carbsPercent}%`}}
+              style={{width: `${macroPercentages.carbs}%`}}
             ></div>
           </div>
 
@@ -1306,13 +1310,13 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               <span className="font-medium">Fat</span>
             </div>
             <span className="text-sm text-muted-foreground" data-testid="text-fat-percent">
-              {fatPercent}%
+              {macroPercentages.fat}%
             </span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
             <div 
               className="bg-yellow-500 h-2 rounded-full transition-all duration-1000" 
-              style={{width: `${fatPercent}%`}}
+              style={{width: `${macroPercentages.fat}%`}}
             ></div>
           </div>
         </div>
