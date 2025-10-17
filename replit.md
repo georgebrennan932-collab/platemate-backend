@@ -134,14 +134,14 @@ Preferred communication style: Simple, everyday language.
   - System prompts emphasize never suggesting foods that violate user's dietary requirements or allergies
   - Profile persists across sessions in PostgreSQL database with automatic sync on updates
   - Purple/pink gradient design matching AI Coach theme for visual consistency
-- **Unified Purple Theme Across All Pages**: Implemented consistent purple/violet color scheme throughout entire application for cohesive brand identity:
-  - All page backgrounds: Soft pastel gradient from-purple-50 via-white to-violet-50 for minimal, clean aesthetic
-  - Page headers: Purple-to-violet gradients (from-purple-600 to-violet-600) replacing previous varied color schemes
-  - Pages updated: Progress Photos, Weight Tracking, Insights (was green), Challenges (was blue), Menu Analysis, Diary
+- **Unified Purple Theme Across All Pages**: Implemented consistent vibrant purple color scheme throughout entire application for cohesive brand identity:
+  - All page backgrounds: Solid vibrant purple (bg-purple-500) matching homepage aesthetic
+  - Page headers: Purple-to-violet gradients (from-purple-600 to-violet-600) for visual depth
+  - Pages updated: Home, Progress Photos, Weight Tracking, Insights, Challenges, Menu Analysis, Diary
   - Weight tracking: Purple icons, purple weight values, purple-to-violet gradient save button
   - Progress Photos: Purple camera icon, purple timeline, purple weight displays
-  - Insights page: Purple header replacing green theme
-  - Challenges page: Purple header replacing blue theme
-  - CSS variable --bg-gradient updated to light purple gradient for Diary page consistency
+  - Insights page: Purple header and background replacing green theme
+  - Challenges page: Purple header and background replacing blue theme
+  - CSS variable --bg-gradient set to solid purple-500 for consistent branding
   - All interactive elements use purple as primary accent color throughout app
   - Timeline dots, badges, and UI accents all use purple/violet palette for unified look

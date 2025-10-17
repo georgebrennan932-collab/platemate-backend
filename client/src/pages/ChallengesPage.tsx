@@ -96,7 +96,7 @@ Track your nutrition goals and earn rewards on PlateMate!`;
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 to-violet-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="min-h-screen bg-purple-500 dark:bg-gray-900 p-4">
         <div className="max-w-md mx-auto pt-20">
           <Card className="p-8 text-center">
             <Lock className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -112,7 +112,7 @@ Track your nutrition goals and earn rewards on PlateMate!`;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-violet-100 dark:from-gray-900 dark:to-gray-800 pb-32">
+    <div className="min-h-screen bg-purple-500 dark:bg-gray-900 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-violet-600 dark:from-purple-700 dark:to-violet-700 text-white p-6 pb-8">
         <div className="max-w-4xl mx-auto">
