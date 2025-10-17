@@ -32,6 +32,9 @@ export function MenuAnalysisPage() {
     const url = params.get('url');
     if (url) {
       setMenuUrl(decodeURIComponent(url));
+    } else {
+      // No URL provided, go straight to manual input mode
+      setUseManualInput(true);
     }
   }, [location]);
 
