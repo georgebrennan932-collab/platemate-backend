@@ -946,8 +946,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         </button>
                       </div>
                     )}
-                    <div className="flex items-center space-x-2 mt-3">
-                      <div className="flex-1">
+                    <div className="flex items-start gap-2 mt-3">
+                      <div className="flex-1 min-w-0">
                         <label className="text-sm font-semibold text-orange-700 dark:text-orange-300 mb-2 block">
                           📏 Portion Size
                         </label>
@@ -956,7 +956,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                             type="number"
                             value={parsePortionString(food.portion).value}
                             onChange={(e) => updateFoodPortionValue(index, parseFloat(e.target.value) || 0)}
-                            className="flex-1 px-4 py-3 text-base font-medium border-2 border-orange-300 dark:border-orange-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-white dark:bg-gray-800 transition-all shadow-sm"
+                            className="w-20 sm:w-24 px-2 sm:px-4 py-3 text-base font-medium border-2 border-orange-300 dark:border-orange-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-white dark:bg-gray-800 transition-all shadow-sm"
                             placeholder="100"
                             min="0"
                             step="any"
@@ -965,7 +965,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                           <select
                             value={food.baselinePortionUnit}
                             onChange={(e) => updateFoodPortionUnit(index, e.target.value)}
-                            className="px-3 py-3 text-base font-medium border-2 border-orange-300 dark:border-orange-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-white dark:bg-gray-800 transition-all shadow-sm"
+                            className="flex-1 min-w-0 px-2 sm:px-3 py-3 text-sm sm:text-base font-medium border-2 border-orange-300 dark:border-orange-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-white dark:bg-gray-800 transition-all shadow-sm"
                             data-testid={`select-food-portion-unit-${index}`}
                           >
                             <option value="g">g</option>
@@ -987,7 +987,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                       </div>
                       <button
                         onClick={() => removeFoodItem(index)}
-                        className="mt-8 p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                        className="mt-8 p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors flex-shrink-0"
                         aria-label={`Remove ${food.name} from list`}
                         title="Remove this food item"
                         data-testid={`button-remove-food-${index}`}
@@ -1490,8 +1490,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
       {/* Low Confidence Warning Dialog */}
       {showLowConfidenceDialog && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-gradient-to-br from-white via-orange-50 to-red-50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-orange-200/50 dark:border-orange-700/50 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-gradient-to-br from-white via-orange-50 to-red-50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20 rounded-2xl p-4 sm:p-6 w-full max-w-md shadow-2xl border border-orange-200/50 dark:border-orange-700/50 animate-in slide-in-from-bottom-4 duration-300">
             
             {/* Warning Header */}
             <div className="text-center mb-6">
@@ -1524,25 +1524,25 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setShowLowConfidenceDialog(false)}
-                className="flex-1 py-3 px-4 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-xl font-semibold hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md border border-orange-200 dark:border-orange-700"
+                className="flex-1 py-3 px-4 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-xl font-semibold hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md border border-orange-200 dark:border-orange-700 flex items-center justify-center"
                 data-testid="button-review-foods"
               >
-                <Edit3 className="h-4 w-4 mr-2 inline" />
-                Review & Edit
+                <Edit3 className="h-4 w-4 mr-2" aria-hidden="true" />
+                <span className="whitespace-nowrap">Review & Edit</span>
               </button>
               <button
                 onClick={() => {
                   setShowLowConfidenceDialog(false);
                   setShowDiaryDialog(true);
                 }}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
                 data-testid="button-proceed-anyway"
               >
-                <Check className="h-4 w-4 mr-2 inline" />
-                Use Anyway
+                <Check className="h-4 w-4 mr-2" aria-hidden="true" />
+                <span className="whitespace-nowrap">Use Anyway</span>
               </button>
             </div>
           </div>
