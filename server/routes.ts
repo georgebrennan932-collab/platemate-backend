@@ -2156,6 +2156,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's saved recipes (MUST be before dynamic route)
+  app.get("/api/recipes/saved", async (req: any, res) => {
+    console.log("🚨 SAVED RECIPES ENDPOINT HIT - timestamp:", Date.now());
+    try {
+      const userId = req.user?.claims?.sub;
+      console.log("🚨 User ID:", userId);
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // Disable all caching including ETag
+      res.set({
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'ETag': undefined // Explicitly disable ETag to prevent 304 responses
+      });
+      
+      console.log("🔍 Fetching saved recipes for user:", userId);
+      const saved = await db.query.savedRecipes.findMany({
+        where: eq(savedRecipes.userId, userId),
+        orderBy: (savedRecipes, { desc }) => [desc(savedRecipes.savedAt)],
+      });
+      
+      console.log("📦 Found", saved.length, "saved recipes from DB");
+      if (saved.length > 0) {
+        console.log("First recipe recipeId:", saved[0].recipeId);
+      }
+      
+      // Return the recipe data from each saved recipe
+      const recipes = saved.map((s: any) => ({
+        ...s.recipeData,
+        id: s.recipeId, // Ensure the ID matches for UI consistency
+        isSaved: true,
+      }));
+      
+      console.log("✅ Returning", recipes.length, "recipes, first ID:", recipes[0]?.id);
+      res.json(recipes);
+    } catch (error) {
+      console.error("Error fetching saved recipes:", error);
+      res.status(500).json({ message: "Failed to fetch saved recipes" });
+    }
+  });
+
   // Dynamic recipe route for diet filtering
   app.get("/api/recipes/:diet?/:search?", async (req, res) => {
     try {
@@ -2286,51 +2331,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error unsaving recipe:", error);
       res.status(500).json({ message: "Failed to unsave recipe" });
-    }
-  });
-
-  // Get user's saved recipes
-  app.get("/api/recipes/saved", async (req: any, res) => {
-    console.log("🚨 SAVED RECIPES ENDPOINT HIT - timestamp:", Date.now());
-    try {
-      const userId = req.user?.claims?.sub;
-      console.log("🚨 User ID:", userId);
-      
-      if (!userId) {
-        return res.status(401).json({ error: "Authentication required" });
-      }
-      
-      // Disable all caching including ETag
-      res.set({
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'ETag': undefined // Explicitly disable ETag to prevent 304 responses
-      });
-      
-      console.log("🔍 Fetching saved recipes for user:", userId);
-      const saved = await db.query.savedRecipes.findMany({
-        where: eq(savedRecipes.userId, userId),
-        orderBy: (savedRecipes, { desc }) => [desc(savedRecipes.savedAt)],
-      });
-      
-      console.log("📦 Found", saved.length, "saved recipes from DB");
-      if (saved.length > 0) {
-        console.log("First recipe recipeId:", saved[0].recipeId);
-      }
-      
-      // Return the recipe data from each saved recipe
-      const recipes = saved.map((s: any) => ({
-        ...s.recipeData,
-        id: s.recipeId, // Ensure the ID matches for UI consistency
-        isSaved: true,
-      }));
-      
-      console.log("✅ Returning", recipes.length, "recipes, first ID:", recipes[0]?.id);
-      res.json(recipes);
-    } catch (error) {
-      console.error("Error fetching saved recipes:", error);
-      res.status(500).json({ message: "Failed to fetch saved recipes" });
     }
   });
 
