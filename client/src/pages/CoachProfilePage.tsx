@@ -97,6 +97,28 @@ export function CoachProfilePage() {
   };
 
   const handleSave = () => {
+    // Validate that at least one field has meaningful content
+    const hasContent = 
+      (age && age > 0) ||
+      (occupation && occupation.trim().length > 0) ||
+      (lifestyleDetails && lifestyleDetails.trim().length > 0) ||
+      (interests && interests.length > 0) ||
+      (fitnessGoals && fitnessGoals.trim().length > 0) ||
+      (stressGoals && stressGoals.trim().length > 0) ||
+      (sleepGoals && sleepGoals.trim().length > 0) ||
+      (mentalHealthGoals && mentalHealthGoals.trim().length > 0) ||
+      (workSchedule && workSchedule.trim().length > 0) ||
+      (exerciseFrequency && exerciseFrequency.trim().length > 0);
+    
+    if (!hasContent) {
+      toast({
+        title: "No Changes",
+        description: "Please add at least one piece of information to save.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     updateMemory.mutate();
   };
 

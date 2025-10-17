@@ -1468,8 +1468,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userProfile = await storage.getUserProfile(userId);
       
       // Get AI coach memory and personality for personalized coaching
-      const coachMemory = await coachMemoryService.getMemory(userId);
-      const personality = coachMemory ? personalityManager.getPersonality(coachMemory.selectedPersonality || 'zen') : personalityManager.getPersonality('zen');
+      const coachMemory = await coachMemoryService.getOrCreateMemory(userId);
+      const personality = personalityManager.getPersonality(coachMemory.selectedPersonality || 'zen');
       
       // Build full context including conversation history for continuity
       let contextualPrompt = prompt.trim();
@@ -1492,6 +1492,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("AI Coach error:", error);
       res.status(500).json({ error: "Failed to get AI Coach response" });
+    }
+  });
+
+  // Coach Memory endpoints - require authentication
+  app.get("/api/coach-memory",  async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get or create memory for the user (auto-creates default if doesn't exist)
+      const memory = await coachMemoryService.getOrCreateMemory(userId);
+      
+      res.json(memory);
+    } catch (error) {
+      console.error("Get coach memory error:", error);
+      res.status(500).json({ error: "Failed to retrieve coach memory" });
+    }
+  });
+
+  app.patch("/api/coach-memory",  async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate the update data
+      const updateData = updateAiCoachMemorySchema.parse(req.body);
+      
+      // Ensure memory exists before updating
+      await coachMemoryService.getOrCreateMemory(userId);
+      
+      // Update memory
+      const updated = await coachMemoryService.updateMemory(userId, updateData);
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Update coach memory error:", error);
+      res.status(500).json({ error: "Failed to update coach memory" });
+    }
+  });
+
+  // Personalities endpoint - returns available personality configurations
+  app.get("/api/coach-personalities",  async (req: any, res) => {
+    try {
+      const personalities = personalityManager.getAllPersonalities();
+      res.json(personalities);
+    } catch (error) {
+      console.error("Get personalities error:", error);
+      res.status(500).json({ error: "Failed to retrieve personalities" });
     }
   });
 

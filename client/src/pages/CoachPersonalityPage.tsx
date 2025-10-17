@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ArrowLeft, Sparkles, Check } from "lucide-react";
@@ -63,9 +63,11 @@ export function CoachPersonalityPage() {
   const currentPersonality = memory?.selectedPersonality || "zen";
 
   // Initialize selected personality when data loads
-  if (selectedPersonality === null && memory?.selectedPersonality) {
-    setSelectedPersonality(memory.selectedPersonality);
-  }
+  useEffect(() => {
+    if (memory?.selectedPersonality && selectedPersonality === null) {
+      setSelectedPersonality(memory.selectedPersonality);
+    }
+  }, [memory, selectedPersonality]);
 
   const handleSelectPersonality = (personalityId: string) => {
     setSelectedPersonality(personalityId);
