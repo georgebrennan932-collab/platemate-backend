@@ -1,8 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 // OAUTH DISABLED: import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema, savedRecipes } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { promises as fs } from "fs";
@@ -2064,6 +2066,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching dynamic recipes:", error);
       res.status(500).json({ message: "Failed to fetch recipes" });
+    }
+  });
+
+  // Refresh recipes - clear cache and get new ones
+  app.post("/api/recipes/refresh", async (req, res) => {
+    try {
+      const dietaryFilter = req.body.dietaryFilter || "";
+      
+      // Clear the cache for this dietary filter
+      const cacheKey = dietaryFilter || 'all';
+      recipeCache.delete(cacheKey);
+      
+      // Generate new recipes
+      try {
+        const recipes = await aiManager.generateRecipes(dietaryFilter);
+        setCachedRecipes(dietaryFilter, recipes);
+        res.json(recipes);
+      } catch (aiError) {
+        console.log('AI providers unavailable, serving fallback recipes');
+        const filteredRecipes = fallbackRecipes.filter(recipe => 
+          !dietaryFilter || dietaryFilter === 'all' || recipe.dietaryInfo.includes(dietaryFilter)
+        );
+        res.json(filteredRecipes.length > 0 ? filteredRecipes : fallbackRecipes);
+      }
+    } catch (error) {
+      console.error("Error refreshing recipes:", error);
+      res.status(500).json({ message: "Failed to refresh recipes" });
+    }
+  });
+
+  // Save a recipe to favorites
+  app.post("/api/recipes/save", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const { recipeId, recipeName, recipeData } = req.body;
+      
+      if (!recipeId || !recipeName || !recipeData) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Check if already saved
+      const existing = await db.query.savedRecipes.findFirst({
+        where: and(
+          eq(savedRecipes.userId, userId),
+          eq(savedRecipes.recipeId, recipeId)
+        ),
+      });
+      
+      if (existing) {
+        return res.status(400).json({ message: "Recipe already saved" });
+      }
+      
+      const [savedRecipe] = await db.insert(savedRecipes).values({
+        userId,
+        recipeId,
+        recipeName,
+        recipeData,
+      }).returning();
+      
+      res.json(savedRecipe);
+    } catch (error) {
+      console.error("Error saving recipe:", error);
+      res.status(500).json({ message: "Failed to save recipe" });
+    }
+  });
+
+  // Unsave a recipe
+  app.delete("/api/recipes/save/:recipeId", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const { recipeId } = req.params;
+      
+      await db.delete(savedRecipes).where(
+        and(
+          eq(savedRecipes.userId, userId),
+          eq(savedRecipes.recipeId, recipeId)
+        )
+      );
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unsaving recipe:", error);
+      res.status(500).json({ message: "Failed to unsave recipe" });
+    }
+  });
+
+  // Get user's saved recipes
+  app.get("/api/recipes/saved", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const saved = await db.query.savedRecipes.findMany({
+        where: eq(savedRecipes.userId, userId),
+        orderBy: (savedRecipes, { desc }) => [desc(savedRecipes.savedAt)],
+      });
+      
+      // Return the recipe data from each saved recipe
+      const recipes = saved.map((s: any) => ({
+        ...s.recipeData,
+        id: s.recipeId, // Ensure the ID matches for UI consistency
+        isSaved: true,
+      }));
+      
+      res.json(recipes);
+    } catch (error) {
+      console.error("Error fetching saved recipes:", error);
+      res.status(500).json({ message: "Failed to fetch saved recipes" });
     }
   });
 
