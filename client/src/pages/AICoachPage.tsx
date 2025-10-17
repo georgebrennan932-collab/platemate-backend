@@ -127,49 +127,36 @@ export default function AICoachPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-pink-50 to-white dark:from-gray-900 dark:via-purple-950/20 dark:to-gray-900">
-      <div className="pt-6 pb-32 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-teal-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      {/* Header Bar */}
+      <div className="bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-700 dark:to-cyan-700 text-white p-6 pb-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-6"
-          >
+          <div className="flex items-center gap-3 mb-2">
             <Link href="/">
-              <Button 
-                variant="ghost" 
-                className="mb-4 -ml-2 hover:bg-purple-100 dark:hover:bg-purple-900/30"
+              <button
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 data-testid="button-back"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
+                <ArrowLeft className="h-5 w-5" />
+              </button>
             </Link>
-            
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl">
-                <Lightbulb className="h-8 w-8 text-white" />
-              </div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                AI Coach
-              </h1>
-            </div>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Your personal nutrition and recipe assistant
-            </p>
-          </motion.div>
+            <Lightbulb className="w-8 h-8" />
+            <h1 className="text-3xl font-bold">AI Coach</h1>
+          </div>
+          <p className="text-teal-100">Your personal nutrition and recipe assistant</p>
+        </div>
+      </div>
 
-          {/* Quick Actions - Always visible */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-8"
-          >
+      <div className="max-w-4xl mx-auto p-4 -mt-4 pb-32">
+        {/* Quick Actions - Always visible */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-8"
+        >
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-600" />
+              <Sparkles className="h-5 w-5 text-teal-600 dark:text-teal-400" />
               Quick Actions
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -207,7 +194,7 @@ export default function AICoachPage() {
                   <div
                     className={`max-w-[80%] p-4 rounded-2xl ${
                       message.role === 'user'
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                        ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white'
                         : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700'
                     }`}
                   >
@@ -225,7 +212,7 @@ export default function AICoachPage() {
                   className="flex justify-start"
                 >
                   <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-2xl">
-                    <Loader2 className="h-5 w-5 animate-spin text-purple-600" />
+                    <Loader2 className="h-5 w-5 animate-spin text-teal-600 dark:text-teal-400" />
                   </div>
                 </motion.div>
               )}
@@ -243,14 +230,14 @@ export default function AICoachPage() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyPress}
                   placeholder="Ask me about recipes, nutrition advice, meal planning..."
-                  className="flex-1 min-h-[60px] max-h-[120px] resize-none rounded-2xl border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 min-h-[60px] max-h-[120px] resize-none rounded-2xl border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-teal-500"
                   disabled={chatMutation.isPending}
                   data-testid="input-chat"
                 />
                 <Button
                   onClick={handleSend}
                   disabled={!input.trim() || chatMutation.isPending}
-                  className="h-[60px] px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl"
+                  className="h-[60px] px-6 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white rounded-2xl"
                   data-testid="button-send"
                 >
                   <Send className="h-5 w-5" />
@@ -262,7 +249,6 @@ export default function AICoachPage() {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }
