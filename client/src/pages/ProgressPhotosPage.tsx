@@ -175,18 +175,27 @@ export function ProgressPhotosPage() {
                       <div className="md:flex">
                         {/* Photo */}
                         <button
-                          onClick={() => setSelectedPhotoIndex(index)}
-                          className="relative group w-full md:w-64 h-64 md:h-auto overflow-hidden"
+                          onClick={() => entry.imageUrl ? setSelectedPhotoIndex(index) : undefined}
+                          className={`relative group w-full md:w-64 h-64 md:h-auto overflow-hidden ${!entry.imageUrl ? 'cursor-default' : ''}`}
                           data-testid={`button-view-photo-${entry.id}`}
                         >
-                          <img
-                            src={entry.imageUrl!}
-                            alt={`Progress photo from ${formatDate(entry.loggedAt)}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-                            <Camera className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
+                          {entry.imageUrl ? (
+                            <>
+                              <img
+                                src={entry.imageUrl}
+                                alt={`Progress photo from ${formatDate(entry.loggedAt)}`}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                                <Camera className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </>
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex flex-col items-center justify-center">
+                              <Camera className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-2" />
+                              <p className="text-sm text-gray-500 dark:text-gray-400">No photo added</p>
+                            </div>
+                          )}
                           
                           {/* Badge for first/last */}
                           {isFirst && (
