@@ -208,6 +208,48 @@ export const savedRecipes = pgTable("saved_recipes", {
   savedAt: timestamp("saved_at").notNull().defaultNow(),
 });
 
+// AI Coach Memory: Personalized companion memory system
+export const aiCoachMemory = pgTable("ai_coach_memory", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique().references(() => users.id),
+  
+  // Personal Details
+  age: integer("age"),
+  occupation: text("occupation"),
+  lifestyleDetails: text("lifestyle_details"), // night shifts, ex-military, nurse, etc.
+  
+  // Interests and Hobbies
+  interests: text("interests").array(), // gym, football, mental health, music, cars, kids, gaming
+  
+  // AI Personality Configuration
+  selectedPersonality: varchar("selected_personality").notNull().default("zen"), // military, gym_bro, zen, clinical, dark_humour
+  motivationalStyle: varchar("motivational_style").default("positive"), // positive, tough_love, humour, inspirational
+  
+  // Goals Beyond Nutrition
+  fitnessGoals: text("fitness_goals"), // strength, cardio, flexibility, etc.
+  stressGoals: text("stress_goals"), // work-life balance, mindfulness, etc.
+  sleepGoals: text("sleep_goals"), // better sleep quality, consistent schedule
+  mentalHealthGoals: text("mental_health_goals"), // anxiety management, confidence building
+  
+  // Mood Tracking
+  recentMoods: jsonb("recent_moods").$type<Array<{
+    date: string;
+    mood: string; // tired, stressed, motivated, excited, low, energized
+    sentiment: number; // -100 to 100
+  }>>().default([]),
+  
+  // Conversation Context
+  lastInteraction: timestamp("last_interaction"),
+  conversationTopics: text("conversation_topics").array(), // recent topics discussed
+  
+  // Additional Context
+  workSchedule: text("work_schedule"), // day shifts, night shifts, rotating, etc.
+  exerciseFrequency: text("exercise_frequency"), // daily, 3x week, weekend warrior
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const DetectedFoodSchema = z.object({
   name: z.string(),
   portion: z.string(),
@@ -388,6 +430,35 @@ export const insertSavedRecipeSchema = createInsertSchema(savedRecipes).omit({
 
 export type InsertSavedRecipe = z.infer<typeof insertSavedRecipeSchema>;
 export type SavedRecipe = typeof savedRecipes.$inferSelect;
+
+// AI Coach Memory schemas
+export const insertAiCoachMemorySchema = createInsertSchema(aiCoachMemory).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  selectedPersonality: z.enum(["military", "gym_bro", "zen", "clinical", "dark_humour"]).default("zen"),
+  motivationalStyle: z.enum(["positive", "tough_love", "humour", "inspirational"]).optional(),
+  age: z.number().int().positive().optional(),
+  occupation: z.string().optional(),
+  lifestyleDetails: z.string().optional(),
+  interests: z.array(z.string()).optional(),
+  fitnessGoals: z.string().optional(),
+  stressGoals: z.string().optional(),
+  sleepGoals: z.string().optional(),
+  mentalHealthGoals: z.string().optional(),
+  workSchedule: z.string().optional(),
+  exerciseFrequency: z.string().optional(),
+  conversationTopics: z.array(z.string()).optional(),
+});
+
+export const updateAiCoachMemorySchema = insertAiCoachMemorySchema.partial().omit({
+  userId: true,
+});
+
+export type InsertAiCoachMemory = z.infer<typeof insertAiCoachMemorySchema>;
+export type UpdateAiCoachMemory = z.infer<typeof updateAiCoachMemorySchema>;
+export type AiCoachMemory = typeof aiCoachMemory.$inferSelect;
 
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
