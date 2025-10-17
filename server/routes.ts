@@ -2298,10 +2298,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      // Prevent caching of saved recipes
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
+      // Disable all caching including ETag
+      res.set({
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'ETag': undefined // Explicitly disable ETag to prevent 304 responses
+      });
       
       console.log("🔍 Fetching saved recipes for user:", userId);
       const saved = await db.query.savedRecipes.findMany({
