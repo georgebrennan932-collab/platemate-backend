@@ -622,18 +622,43 @@ ${JSON.stringify(analysisData, null, 2)}`;
     return JSON.stringify(summary, null, 2);
   }
 
-  async answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string> {
+  async answerNutritionQuestion(question: string, entries: DiaryEntry[], userProfile?: any): Promise<string> {
     try {
       // Prepare context from user's nutrition data
       const contextData = this.prepareNutritionContextData(entries);
       
-      const systemPrompt = `You are PlateMate's AI nutrition assistant. Answer the user's nutrition question based on their eating patterns and provide personalized, helpful advice. Be conversational but informative.
+      // Build profile context if available
+      let profileContext = "";
+      if (userProfile) {
+        const profileParts = [];
+        
+        if (userProfile.dietaryRequirements && userProfile.dietaryRequirements.length > 0) {
+          profileParts.push(`Dietary Requirements: ${userProfile.dietaryRequirements.join(', ')}`);
+        }
+        if (userProfile.allergies && userProfile.allergies.length > 0) {
+          profileParts.push(`Allergies/Intolerances: ${userProfile.allergies.join(', ')}`);
+        }
+        if (userProfile.foodDislikes) {
+          profileParts.push(`Foods They Dislike: ${userProfile.foodDislikes}`);
+        }
+        if (userProfile.healthConditions) {
+          profileParts.push(`Health Conditions: ${userProfile.healthConditions}`);
+        }
+        
+        if (profileParts.length > 0) {
+          profileContext = `\n\nUser Profile:\n${profileParts.join('\n')}`;
+        }
+      }
+      
+      const systemPrompt = `You are PlateMate's AI nutrition assistant. Answer the user's nutrition question based on their eating patterns and profile information. Provide personalized, helpful advice that respects their dietary needs and restrictions. Be conversational but informative.
 
 User's Recent Nutrition Data:
-${JSON.stringify(contextData, null, 2)}
+${JSON.stringify(contextData, null, 2)}${profileContext}
 
 Guidelines:
-- Provide personalized advice based on their actual eating patterns
+- IMPORTANT: Consider their dietary requirements, allergies, and health conditions in your advice
+- Never suggest foods they're allergic to or that violate their dietary restrictions
+- Provide personalized advice based on their actual eating patterns and preferences
 - Be encouraging and supportive
 - Give practical, actionable recommendations
 - If the question requires medical advice, recommend consulting a healthcare professional

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, User, Save, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -38,26 +38,29 @@ export function ProfilePage() {
     defaultValues: {
       dietaryRequirements: "",
       allergies: "",
-      foodDislikes: profile?.foodDislikes || "",
-      healthConditions: profile?.healthConditions || "",
+      foodDislikes: "",
+      healthConditions: "",
     },
   });
 
-  // Initialize tags when profile loads
-  useState(() => {
-    if (profile?.dietaryRequirements) {
-      setDietaryTags(profile.dietaryRequirements);
+  // Initialize tags and form fields when profile loads
+  useEffect(() => {
+    if (profile) {
+      if (profile.dietaryRequirements && Array.isArray(profile.dietaryRequirements)) {
+        setDietaryTags(profile.dietaryRequirements);
+      }
+      if (profile.allergies && Array.isArray(profile.allergies)) {
+        setAllergyTags(profile.allergies);
+      }
+      // Reset form with profile data
+      form.reset({
+        dietaryRequirements: "",
+        allergies: "",
+        foodDislikes: profile.foodDislikes || "",
+        healthConditions: profile.healthConditions || "",
+      });
     }
-    if (profile?.allergies) {
-      setAllergyTags(profile.allergies);
-    }
-    if (profile?.foodDislikes) {
-      form.setValue("foodDislikes", profile.foodDislikes);
-    }
-    if (profile?.healthConditions) {
-      form.setValue("healthConditions", profile.healthConditions);
-    }
-  });
+  }, [profile, form]);
 
   // Save profile mutation
   const saveMutation = useMutation({

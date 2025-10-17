@@ -123,7 +123,7 @@ export abstract class AIProvider {
   // New method for food detection only (no nutrition calculation)
   abstract detectFoodNames(imagePath: string): Promise<FoodDetectionResult>;
   abstract generateDietAdvice(entries: DiaryEntry[], userProfile?: any): Promise<DietAdviceResult>;
-  abstract answerNutritionQuestion(question: string, entries: DiaryEntry[]): Promise<string>;
+  abstract answerNutritionQuestion(question: string, entries: DiaryEntry[], userProfile?: any): Promise<string>;
   abstract generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching>;
   abstract generateEducationalTips(category: 'all' | 'nutrition' | 'medication' | 'motivation'): Promise<EducationalTip[]>;
   

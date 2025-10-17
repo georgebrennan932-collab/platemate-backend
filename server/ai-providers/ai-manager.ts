@@ -1085,9 +1085,9 @@ export class AIManager {
   }
 
   /**
-   * Answer a custom nutrition question based on user's diary data
+   * Answer a custom nutrition question based on user's diary data and profile
    */
-  async answerNutritionQuestion(question: string, userEntries: DiaryEntry[]): Promise<string> {
+  async answerNutritionQuestion(question: string, userEntries: DiaryEntry[], userProfile?: any): Promise<string> {
     const availableProviders = this.getAvailableProviders();
     
     // Try each available provider
@@ -1095,7 +1095,7 @@ export class AIManager {
       for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
         try {
           
-          const response = await provider.answerNutritionQuestion(question, userEntries);
+          const response = await provider.answerNutritionQuestion(question, userEntries, userProfile);
           
           return response;
           

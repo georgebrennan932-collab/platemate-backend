@@ -1459,6 +1459,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user's nutrition goals for more personalized advice
       const nutritionGoals = await storage.getNutritionGoals(userId);
       
+      // Get user's profile for dietary requirements, allergies, and preferences
+      const userProfile = await storage.getUserProfile(userId);
+      
       // Build full context including conversation history for continuity
       let contextualPrompt = prompt.trim();
       if (conversationHistory && Array.isArray(conversationHistory) && conversationHistory.length > 0) {
@@ -1470,8 +1473,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contextualPrompt = `Previous conversation:\n${historyText}\n\nCurrent question: ${prompt.trim()}`;
       }
       
-      // Generate conversational response with full context
-      const response = await aiManager.answerNutritionQuestion(contextualPrompt, entries);
+      // Generate conversational response with full context including user profile
+      const response = await aiManager.answerNutritionQuestion(contextualPrompt, entries, userProfile);
       
       res.json({ 
         response,
