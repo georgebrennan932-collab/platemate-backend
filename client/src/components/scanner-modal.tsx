@@ -124,18 +124,11 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose, mode = 'barcode' 
     onClose();
   };
 
-  // Reset state when modal closes and auto-start scanning when opened
+  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
       stopScanning();
       setError(null);
-    } else {
-      // Auto-start scanning when modal opens
-      const timer = setTimeout(() => {
-        startScanning();
-      }, 500); // Small delay to allow modal to fully render
-      
-      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
