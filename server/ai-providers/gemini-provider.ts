@@ -622,7 +622,14 @@ ${JSON.stringify(analysisData, null, 2)}`;
     return JSON.stringify(summary, null, 2);
   }
 
-  async answerNutritionQuestion(question: string, entries: DiaryEntry[], userProfile?: any): Promise<string> {
+  async answerNutritionQuestion(
+    question: string, 
+    entries: DiaryEntry[], 
+    userProfile?: any,
+    nutritionGoals?: any,
+    coachMemory?: any,
+    personality?: any
+  ): Promise<string> {
     try {
       // Prepare context from user's nutrition data
       const contextData = this.prepareNutritionContextData(entries);
@@ -660,20 +667,81 @@ ${JSON.stringify(analysisData, null, 2)}`;
         }
       }
       
-      const systemPrompt = `You are PlateMate's AI nutrition assistant. Answer the user's nutrition question based on their eating patterns and profile information. Provide personalized, helpful advice that respects their dietary needs and restrictions. Be conversational but informative.${userDisplayName ? `\n\nThe user prefers to be called "${userDisplayName}". Use this name naturally when addressing them to make the conversation more personal and friendly.` : ''}
+      // Build coach memory context if available
+      let memoryContext = "";
+      if (coachMemory) {
+        const memoryParts = [];
+        
+        if (coachMemory.age) memoryParts.push(`Age: ${coachMemory.age}`);
+        if (coachMemory.occupation) memoryParts.push(`Occupation: ${coachMemory.occupation}`);
+        if (coachMemory.lifestyleDetails) memoryParts.push(`Lifestyle: ${coachMemory.lifestyleDetails}`);
+        if (coachMemory.workSchedule) memoryParts.push(`Work Schedule: ${coachMemory.workSchedule}`);
+        if (coachMemory.exerciseFrequency) memoryParts.push(`Exercise Frequency: ${coachMemory.exerciseFrequency}`);
+        if (coachMemory.interests && coachMemory.interests.length > 0) {
+          memoryParts.push(`Interests: ${coachMemory.interests.join(', ')}`);
+        }
+        if (coachMemory.fitnessGoals) memoryParts.push(`Fitness Goals: ${coachMemory.fitnessGoals}`);
+        if (coachMemory.stressGoals) memoryParts.push(`Stress Management Goals: ${coachMemory.stressGoals}`);
+        if (coachMemory.sleepGoals) memoryParts.push(`Sleep Goals: ${coachMemory.sleepGoals}`);
+        if (coachMemory.mentalHealthGoals) memoryParts.push(`Mental Health Goals: ${coachMemory.mentalHealthGoals}`);
+        
+        if (memoryParts.length > 0) {
+          memoryContext = `\n\nPersonal Information:\n${memoryParts.join('\n')}`;
+        }
+      }
+      
+      // Build goals context if available
+      let goalsContext = "";
+      if (nutritionGoals) {
+        const goalsParts = [];
+        if (nutritionGoals.caloriesGoal) goalsParts.push(`Calorie Goal: ${nutritionGoals.caloriesGoal} kcal`);
+        if (nutritionGoals.proteinGoal) goalsParts.push(`Protein Goal: ${nutritionGoals.proteinGoal}g`);
+        if (nutritionGoals.carbsGoal) goalsParts.push(`Carbs Goal: ${nutritionGoals.carbsGoal}g`);
+        if (nutritionGoals.fatGoal) goalsParts.push(`Fat Goal: ${nutritionGoals.fatGoal}g`);
+        if (nutritionGoals.waterGoal) goalsParts.push(`Water Goal: ${nutritionGoals.waterGoal} glasses`);
+        
+        if (goalsParts.length > 0) {
+          goalsContext = `\n\nNutrition Goals:\n${goalsParts.join('\n')}`;
+        }
+      }
+      
+      // Get personality settings or use defaults
+      const personalitySettings = personality || {
+        name: 'Zen Wellness Coach',
+        systemPrompt: 'You are a calm, mindful wellness coach who focuses on balance and self-compassion.',
+        greetingPhrase: 'Welcome! Let\'s work together on your journey to better health.',
+        encouragementPhrases: ['You\'re doing great!', 'Every step forward is progress.'],
+        responseStyle: {
+          tone: 'Calm and supportive',
+          formality: 'Casual',
+          emoji: false,
+          directness: 'Gentle'
+        }
+      };
+      
+      // Build system prompt with personality
+      const systemPrompt = `${personalitySettings.systemPrompt}
+
+You are PlateMate's AI nutrition coach. Your communication style is:
+- Tone: ${personalitySettings.responseStyle.tone}
+- Formality: ${personalitySettings.responseStyle.formality}
+- Directness: ${personalitySettings.responseStyle.directness}
+${personalitySettings.responseStyle.emoji ? '- Use emojis to make conversations more engaging' : '- Keep responses professional without emojis'}
+
+${userDisplayName ? `The user prefers to be called "${userDisplayName}". Use this name naturally when addressing them to make the conversation more personal and friendly.` : ''}
 
 User's Recent Nutrition Data:
-${JSON.stringify(contextData, null, 2)}${profileContext}
+${contextData}${profileContext}${memoryContext}${goalsContext}
 
 Guidelines:
+- You can discuss nutrition, fitness, stress, sleep, mental health, and general wellness - not just food
 - IMPORTANT: Consider their dietary requirements, allergies, and health conditions in your advice
 - Never suggest foods they're allergic to or that violate their dietary restrictions
-- Provide personalized advice based on their actual eating patterns and preferences${userDisplayName ? `\n- Address the user as "${userDisplayName}" to make the conversation feel personal` : ''}
-- Be encouraging and supportive
+- Reference their personal goals, interests, and lifestyle when relevant${userDisplayName ? `\n- Address the user as "${userDisplayName}" to make the conversation feel personal` : ''}
+- Be encouraging and supportive in your unique coaching style
 - Give practical, actionable recommendations
 - If the question requires medical advice, recommend consulting a healthcare professional
-- Keep responses focused and helpful (200-300 words max)
-- Use a friendly, conversational tone`;
+- Keep responses focused and helpful (200-300 words max)`;
 
       const response = await this.client.models.generateContent({
         model: "gemini-2.5-flash",
