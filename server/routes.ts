@@ -9,6 +9,9 @@ import multer from "multer";
 import sharp from "sharp";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
+import { coachMemoryService } from "./coach-memory-service";
+import { personalityManager } from "./personality-manager";
+import { insertAiCoachMemorySchema, updateAiCoachMemorySchema, aiCoachMemory } from "@shared/schema";
 import { promises as fs } from "fs";
 import path from "path";
 import express from "express";
@@ -2482,6 +2485,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error unsaving recipe:", error);
       res.status(500).json({ message: "Failed to unsave recipe" });
+    }
+  });
+
+  // === AI Coach Memory & Personality Endpoints ===
+
+  // Get coach memory for the current user
+  app.get("/api/coach-memory", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const memory = await coachMemoryService.getOrCreateMemory(userId);
+      res.json(memory);
+    } catch (error) {
+      console.error("Error fetching coach memory:", error);
+      res.status(500).json({ error: "Failed to fetch coach memory" });
+    }
+  });
+
+  // Update coach memory
+  app.patch("/api/coach-memory", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const validatedData = updateAiCoachMemorySchema.parse(req.body);
+      const updated = await coachMemoryService.updateMemory(userId, validatedData);
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating coach memory:", error);
+      res.status(400).json({ error: "Failed to update coach memory" });
+    }
+  });
+
+  // Get all available personalities
+  app.get("/api/coach-personalities", async (req: any, res) => {
+    try {
+      const personalities = personalityManager.getAllPersonalities();
+      res.json(personalities);
+    } catch (error) {
+      console.error("Error fetching personalities:", error);
+      res.status(500).json({ error: "Failed to fetch personalities" });
+    }
+  });
+
+  // Get user context for AI (memory + profile combined)
+  app.get("/api/coach-context", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const context = await coachMemoryService.getUserContext(userId);
+      res.json(context);
+    } catch (error) {
+      console.error("Error fetching coach context:", error);
+      res.status(500).json({ error: "Failed to fetch coach context" });
+    }
+  });
+
+  // Add a mood entry
+  app.post("/api/coach-memory/mood", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { mood, sentiment } = req.body;
+      
+      if (!mood || typeof sentiment !== 'number') {
+        return res.status(400).json({ error: "Mood and sentiment are required" });
+      }
+
+      await coachMemoryService.addMoodEntry(userId, mood, sentiment);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error adding mood entry:", error);
+      res.status(500).json({ error: "Failed to add mood entry" });
     }
   });
 
