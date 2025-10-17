@@ -176,7 +176,8 @@ export function RecipesPage() {
       return apiRequest("DELETE", `/api/recipes/save/${recipeId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/recipes/saved"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/recipes/saved"], refetchType: 'active' });
+      queryClient.refetchQueries({ queryKey: ["/api/recipes/saved"] });
       soundService.playClick();
       toast({
         title: "Recipe removed",

@@ -2298,10 +2298,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Authentication required" });
       }
       
+      // Prevent caching of saved recipes
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      console.log("🔍 Fetching saved recipes for user:", userId);
       const saved = await db.query.savedRecipes.findMany({
         where: eq(savedRecipes.userId, userId),
         orderBy: (savedRecipes, { desc }) => [desc(savedRecipes.savedAt)],
       });
+      
+      console.log("📦 Found", saved.length, "saved recipes from DB");
+      if (saved.length > 0) {
+        console.log("First recipe recipeId:", saved[0].recipeId);
+      }
       
       // Return the recipe data from each saved recipe
       const recipes = saved.map((s: any) => ({
@@ -2310,6 +2321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isSaved: true,
       }));
       
+      console.log("✅ Returning", recipes.length, "recipes, first ID:", recipes[0]?.id);
       res.json(recipes);
     } catch (error) {
       console.error("Error fetching saved recipes:", error);
