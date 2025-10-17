@@ -98,10 +98,18 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
         formData.append('progressPhoto', progressPhoto);
       }
 
+      const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       return fetch('/api/weights', {
         method: 'POST',
         body: formData,
         credentials: 'include',
+        headers,
       }).then(async (res) => {
         if (!res.ok) {
           const error = await res.json();
