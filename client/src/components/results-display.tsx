@@ -9,9 +9,74 @@ import { motion } from "framer-motion";
 import { updateStreak } from "@/lib/streak-tracker";
 import { soundService } from "@/lib/sound-service";
 
+// Extended food item with baseline data for editing
+interface EditableFood extends DetectedFood {
+  baselinePortionValue: number;
+  baselinePortionUnit: string;
+  baselineCalories: number;
+  baselineProtein: number;
+  baselineCarbs: number;
+  baselineFat: number;
+}
+
 interface ResultsDisplayProps {
   data: FoodAnalysis;
   onScanAnother: () => void;
+}
+
+// Helper function to parse portion string and extract numeric value and unit
+function parsePortionString(portion: string): { value: number; unit: string } {
+  // Remove extra spaces and lowercase for matching
+  const cleaned = portion.trim().toLowerCase();
+  
+  // Common unit patterns (prioritize longer matches first)
+  const unitPatterns = [
+    { regex: /(\d+(?:\.\d+)?)\s*(?:servings?|srv)/i, unit: 'serving' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:cups?)/i, unit: 'cup' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:tablespoons?|tbsp)/i, unit: 'tbsp' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:teaspoons?|tsp)/i, unit: 'tsp' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:ounces?|oz)/i, unit: 'oz' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:pounds?|lbs?)/i, unit: 'lb' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:grams?|g)(?:\s|$|,)/i, unit: 'g' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:kilograms?|kg)/i, unit: 'kg' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:milliliters?|ml)/i, unit: 'ml' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:liters?|l)(?:\s|$|,)/i, unit: 'L' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:slices?)/i, unit: 'slice' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:pieces?|pcs?)/i, unit: 'piece' },
+    { regex: /(\d+(?:\.\d+)?)\s*(?:items?)/i, unit: 'item' },
+  ];
+  
+  // Try to match each pattern
+  for (const { regex, unit } of unitPatterns) {
+    const match = cleaned.match(regex);
+    if (match && match[1]) {
+      return { value: parseFloat(match[1]), unit };
+    }
+  }
+  
+  // Fallback: just grab the first number
+  const numMatch = cleaned.match(/(\d+(?:\.\d+)?)/);
+  if (numMatch && numMatch[1]) {
+    return { value: parseFloat(numMatch[1]), unit: 'g' }; // default to grams
+  }
+  
+  // Ultimate fallback
+  return { value: 100, unit: 'g' };
+}
+
+// Helper function to initialize editable food with baseline data
+function initializeEditableFood(food: DetectedFood): EditableFood {
+  const { value, unit } = parsePortionString(food.portion);
+  
+  return {
+    ...food,
+    baselinePortionValue: value,
+    baselinePortionUnit: unit,
+    baselineCalories: food.calories,
+    baselineProtein: food.protein,
+    baselineCarbs: food.carbs,
+    baselineFat: food.fat,
+  };
 }
 
 export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
@@ -19,7 +84,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [selectedMealType, setSelectedMealType] = useState<"breakfast" | "lunch" | "dinner" | "snack">("lunch");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
-  const [editableFoods, setEditableFoods] = useState<DetectedFood[]>(data.detectedFoods);
+  const [editableFoods, setEditableFoods] = useState<EditableFood[]>(
+    data.detectedFoods.map(initializeEditableFood)
+  );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -171,40 +238,57 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     }
   };
 
-  // Function to update portion for a specific food item
-  const updateFoodPortion = (index: number, newPortion: string) => {
+  // Function to update portion for a specific food item using numeric value
+  const updateFoodPortionValue = (index: number, newValue: number) => {
     const updatedFoods = [...editableFoods];
-    const currentFood = editableFoods[index]; // Fix: Use current editable food, not original
+    const currentFood = editableFoods[index];
     
-    // Find the original baseline food from data.detectedFoods by name (more reliable than index)
-    const originalFood = data.detectedFoods.find(f => f.name === currentFood.name) || currentFood;
-    const originalPortion = originalFood.portion;
+    // Guard against division by zero or invalid baseline
+    if (!currentFood.baselinePortionValue || currentFood.baselinePortionValue <= 0) {
+      console.warn('Invalid baseline portion value, skipping update');
+      return;
+    }
     
-    // Extract numeric value from portions (assuming format like "150g" or "1 cup")
-    const getPortionMultiplier = (original: string, updated: string): number => {
-      const originalMatch = original.match(/\d+(\.\d+)?/);
-      const updatedMatch = updated.match(/\d+(\.\d+)?/);
-      
-      if (originalMatch && updatedMatch) {
-        return parseFloat(updatedMatch[0]) / parseFloat(originalMatch[0]);
-      }
-      return 1; // Default to no change if we can't parse
-    };
+    // Calculate multiplier from baseline value
+    const multiplier = newValue / currentFood.baselinePortionValue;
     
-    // Always calculate multiplier from original baseline, not current values
-    const multiplier = getPortionMultiplier(originalPortion, newPortion);
+    // Clamp multiplier to reasonable range (0.01x to 100x)
+    const clampedMultiplier = Math.max(0.01, Math.min(100, multiplier));
     
-    // Update nutrition values based on the multiplier from original baseline
+    // Update display portion string with spacing
+    const newPortionString = `${newValue} ${currentFood.baselinePortionUnit}`;
+    
+    // Update nutrition values based on baseline
     updatedFoods[index] = {
       ...currentFood,
-      portion: newPortion,
-      calories: Math.round(originalFood.calories * multiplier),
-      protein: Math.round(originalFood.protein * multiplier * 10) / 10,
-      carbs: Math.round(originalFood.carbs * multiplier * 10) / 10,
-      fat: Math.round(originalFood.fat * multiplier * 10) / 10,
+      portion: newPortionString,
+      calories: Math.round(currentFood.baselineCalories * clampedMultiplier),
+      protein: Math.round(currentFood.baselineProtein * clampedMultiplier * 10) / 10,
+      carbs: Math.round(currentFood.baselineCarbs * clampedMultiplier * 10) / 10,
+      fat: Math.round(currentFood.baselineFat * clampedMultiplier * 10) / 10,
     };
     
     setEditableFoods(updatedFoods);
+    scheduleNutritionUpdate(updatedFoods);
+  };
+  
+  // Function to update portion unit
+  const updateFoodPortionUnit = (index: number, newUnit: string) => {
+    const updatedFoods = [...editableFoods];
+    const currentFood = editableFoods[index];
+    
+    // Extract current numeric value from portion
+    const currentValue = parsePortionString(currentFood.portion).value;
+    
+    // Update portion string with new unit (with spacing)
+    updatedFoods[index] = {
+      ...currentFood,
+      portion: `${currentValue} ${newUnit}`,
+      baselinePortionUnit: newUnit,
+    };
+    
+    setEditableFoods(updatedFoods);
+    // Trigger nutrition recalculation with new unit - server will update baseline
     scheduleNutritionUpdate(updatedFoods);
   };
 
@@ -236,18 +320,27 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       
       // Only update if this is still the latest request
       if (requestId === nutritionRequestId && nutritionData.foods) {
-        // Merge nutrition data while preserving current user edits
+        // Merge nutrition data while preserving current user edits and updating baseline
         setEditableFoods(currentFoods => {
           return currentFoods.map((currentFood, index) => {
             const updatedFood = nutritionData.foods[index];
             if (updatedFood) {
-              // Preserve user-edited name and portion, update only nutrition values
+              // Update both displayed and baseline nutrition values from server
+              const { value, unit } = parsePortionString(updatedFood.portion);
               return {
                 ...currentFood,
                 calories: updatedFood.calories || currentFood.calories,
                 protein: updatedFood.protein || currentFood.protein,
                 carbs: updatedFood.carbs || currentFood.carbs,
-                fat: updatedFood.fat || currentFood.fat
+                fat: updatedFood.fat || currentFood.fat,
+                // Update baseline to match new nutrition values
+                baselineCalories: updatedFood.calories || currentFood.baselineCalories,
+                baselineProtein: updatedFood.protein || currentFood.baselineProtein,
+                baselineCarbs: updatedFood.carbs || currentFood.baselineCarbs,
+                baselineFat: updatedFood.fat || currentFood.baselineFat,
+                // Update baseline portion if portion changed
+                baselinePortionValue: value,
+                baselinePortionUnit: unit,
               };
             }
             return currentFood;
@@ -368,14 +461,20 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   };
 
   const addNewFoodItem = () => {
-    const newFood = {
+    const newFood: EditableFood = {
       name: "New Food Item",
       portion: "1 serving",
       calories: 0,
       protein: 0,
       carbs: 0,
       fat: 0,
-      icon: "fas fa-utensils"
+      icon: "fas fa-utensils",
+      baselinePortionValue: 1,
+      baselinePortionUnit: "serving",
+      baselineCalories: 0,
+      baselineProtein: 0,
+      baselineCarbs: 0,
+      baselineFat: 0,
     };
     const updatedFoods = [...editableFoods, newFood];
     setEditableFoods(updatedFoods);
@@ -405,7 +504,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       data.totalFat = updatedAnalysis.totalFat;
       
       // Update local state to match server response
-      setEditableFoods([...updatedAnalysis.detectedFoods]);
+      setEditableFoods(updatedAnalysis.detectedFoods.map(initializeEditableFood));
       
       console.log("✅ Successfully saved changes to database. Server totals:", {
         calories: updatedAnalysis.totalCalories,
@@ -440,7 +539,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   };
 
   const resetChanges = () => {
-    setEditableFoods([...data.detectedFoods]);
+    setEditableFoods(data.detectedFoods.map(initializeEditableFood));
     setEditingIndex(null);
     toast({
       title: "Changes Reset",
@@ -481,7 +580,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       // Add the new food to the current analysis
       const newFood = analysis.detectedFoods[0]; // Take the first detected food
       if (newFood) {
-        const updatedFoods = [...editableFoods, newFood];
+        const updatedFoods = [...editableFoods, initializeEditableFood(newFood)];
         setEditableFoods(updatedFoods);
         
         // Save changes to the database
@@ -506,7 +605,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         data.totalProtein = updatedAnalysis.totalProtein;
         data.totalCarbs = updatedAnalysis.totalCarbs;
         data.totalFat = updatedAnalysis.totalFat;
-        setEditableFoods([...updatedAnalysis.detectedFoods]);
+        setEditableFoods(updatedAnalysis.detectedFoods.map(initializeEditableFood));
       }
       
       queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
@@ -832,7 +931,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                           if (e.key === 'Enter') {
                             setEditingIndex(null);
                           } else if (e.key === 'Escape') {
-                            setEditableFoods([...data.detectedFoods]);
+                            setEditableFoods(data.detectedFoods.map(initializeEditableFood));
                             setEditingIndex(null);
                           }
                         }}
@@ -864,15 +963,39 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         <label className="text-sm font-semibold text-orange-700 dark:text-orange-300 mb-2 block">
                           📏 Portion Size
                         </label>
-                        <input
-                          type="text"
-                          value={food.portion}
-                          onChange={(e) => updateFoodPortion(index, e.target.value)}
-                          className="w-full px-4 py-3 text-base font-medium border-3 border-orange-300 dark:border-orange-700 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-400 focus:border-orange-400 bg-white dark:bg-gray-800 transition-all shadow-sm"
-                          placeholder="e.g., 200g, 1 cup, 2 slices"
-                          data-testid={`input-food-portion-${index}`}
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">Change the amount to adjust calories</p>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            value={parsePortionString(food.portion).value}
+                            onChange={(e) => updateFoodPortionValue(index, parseFloat(e.target.value) || 0)}
+                            className="flex-1 px-4 py-3 text-base font-medium border-2 border-orange-300 dark:border-orange-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-white dark:bg-gray-800 transition-all shadow-sm"
+                            placeholder="100"
+                            min="0"
+                            step="any"
+                            data-testid={`input-food-portion-value-${index}`}
+                          />
+                          <select
+                            value={food.baselinePortionUnit}
+                            onChange={(e) => updateFoodPortionUnit(index, e.target.value)}
+                            className="px-3 py-3 text-base font-medium border-2 border-orange-300 dark:border-orange-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-white dark:bg-gray-800 transition-all shadow-sm"
+                            data-testid={`select-food-portion-unit-${index}`}
+                          >
+                            <option value="g">g</option>
+                            <option value="oz">oz</option>
+                            <option value="lb">lb</option>
+                            <option value="kg">kg</option>
+                            <option value="ml">ml</option>
+                            <option value="L">L</option>
+                            <option value="cup">cup</option>
+                            <option value="tbsp">tbsp</option>
+                            <option value="tsp">tsp</option>
+                            <option value="serving">serving</option>
+                            <option value="slice">slice</option>
+                            <option value="piece">piece</option>
+                            <option value="item">item</option>
+                          </select>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Enter amount and unit to adjust calories</p>
                       </div>
                       <button
                         onClick={() => removeFoodItem(index)}
