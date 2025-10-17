@@ -68,7 +68,7 @@ export function ProgressPhotosPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-4xl mx-auto p-4">
           {/* Header Skeleton */}
           <div className="mb-6">
@@ -94,14 +94,14 @@ export function ProgressPhotosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-24">
       <div className="max-w-4xl mx-auto p-4">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <Link href="/diary?tab=weight">
               <button
-                className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                 data-testid="button-back"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -120,8 +120,8 @@ export function ProgressPhotosPage() {
           </div>
 
           <div className="flex items-center space-x-3 mb-2">
-            <Camera className="h-8 w-8 text-teal-600 dark:text-teal-400" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+            <Camera className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">
               Progress Photos
             </h1>
           </div>
@@ -141,7 +141,7 @@ export function ProgressPhotosPage() {
               Start tracking your progress by adding photos when you log your weight
             </p>
             <Link href="/diary?tab=weight">
-              <Button className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white" data-testid="button-log-weight">
+              <Button className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white" data-testid="button-log-weight">
                 Log Weight with Photo
               </Button>
             </Link>
@@ -149,7 +149,7 @@ export function ProgressPhotosPage() {
         ) : (
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-4 md:left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-green-400 via-teal-400 to-cyan-400"></div>
+            <div className="absolute left-4 md:left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-400 via-violet-400 to-purple-500"></div>
 
             {/* Timeline entries */}
             <div className="space-y-8" data-testid="timeline-entries">
@@ -168,7 +168,7 @@ export function ProgressPhotosPage() {
                   >
                     {/* Timeline dot */}
                     <div className={`absolute left-2.5 md:left-4.5 w-4 h-4 rounded-full border-4 border-white dark:border-gray-900 ${
-                      isFirst ? 'bg-green-400' : isLast ? 'bg-teal-500' : 'bg-cyan-400'
+                      isFirst ? 'bg-purple-400' : isLast ? 'bg-violet-500' : 'bg-purple-500'
                     }`}></div>
 
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
@@ -195,7 +195,7 @@ export function ProgressPhotosPage() {
                             </div>
                           )}
                           {isLast && (
-                            <div className="absolute top-2 left-2 bg-teal-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            <div className="absolute top-2 left-2 bg-violet-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                               LATEST
                             </div>
                           )}
@@ -208,7 +208,7 @@ export function ProgressPhotosPage() {
                               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                                 {formatDate(entry.loggedAt)}
                               </p>
-                              <p className="text-3xl font-bold text-teal-600" data-testid={`text-weight-${entry.id}`}>
+                              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400" data-testid={`text-weight-${entry.id}`}>
                                 {formatWeight(entry.weightGrams)}
                               </p>
                             </div>
@@ -282,7 +282,7 @@ export function ProgressPhotosPage() {
                     <p className="font-semibold text-lg">
                       {formatDate(weightEntries[selectedPhotoIndex].loggedAt)}
                     </p>
-                    <p className="text-2xl font-bold text-teal-600">
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                       {formatWeight(weightEntries[selectedPhotoIndex].weightGrams)}
                     </p>
                   </div>

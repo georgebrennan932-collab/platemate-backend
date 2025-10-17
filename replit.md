@@ -134,11 +134,12 @@ Preferred communication style: Simple, everyday language.
   - System prompts emphasize never suggesting foods that violate user's dietary requirements or allergies
   - Profile persists across sessions in PostgreSQL database with automatic sync on updates
   - Purple/pink gradient design matching AI Coach theme for visual consistency
-- **Progress Photos & Weight Tracking UI Consistency**: Updated all weight tracking and progress photos sections to use consistent teal/cyan/green color scheme matching the app's primary brand colors:
-  - Progress Photos page: Teal-cyan gradient header, teal camera icon, teal-to-cyan title gradient, teal weight displays, teal-cyan-green timeline gradient
+- **Progress Photos & Weight Tracking UI Consistency**: Updated all weight tracking and progress photos sections to use consistent purple/violet color scheme matching the app's main branding:
+  - Progress Photos page: Purple-violet gradient header, purple camera icon, purple-to-violet title gradient, purple weight displays, purple-violet timeline gradient
+  - Background: Soft pastel gradient from-purple-50 via-white to-violet-50 for minimal, clean aesthetic matching other pages
   - Weight tracking page: Dynamic header showing "Weight Tracking" when on weight tab (instead of "Food Diary")
-  - Weight list entries: Teal icons for calendar and weight displays, teal weight values throughout
-  - Weight form: Teal target icon, teal-to-cyan gradient save button for visual appeal
-  - All sections now use teal (hsl(160 84% 39%)) and cyan (hsl(200 100% 50%)) as primary colors, matching app's --primary CSS variable
-  - Timeline dots use green (start), teal (latest), and cyan (middle) for progress visualization
-  - Green-to-cyan background gradients replace previous blue-only backgrounds for softer, brand-aligned aesthetic
+  - Weight list entries: Purple icons for calendar and weight displays, purple weight values throughout
+  - Weight form: Purple target icon, purple-to-violet gradient save button for visual appeal
+  - All sections now use purple/violet theme matching the app's main brand colors
+  - Timeline dots use purple (start/middle) and violet (latest) for cohesive progress visualization
+  - Light purple-to-violet backgrounds create elegant, cohesive design throughout weight tracking features

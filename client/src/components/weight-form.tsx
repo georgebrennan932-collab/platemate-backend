@@ -178,7 +178,7 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
     <div className={compact ? "space-y-3" : "bg-card border rounded-xl p-6"}>
       {!compact && (
         <div className="flex items-center space-x-2 mb-4">
-          <Target className="h-5 w-5 text-teal-600" />
+          <Target className="h-5 w-5 text-purple-600" />
           <h3 className="text-lg font-medium">Log Today's Weight</h3>
         </div>
       )}
@@ -326,7 +326,7 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
           <Button
             type="submit"
             disabled={createWeightMutation.isPending}
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 px-4 rounded-lg shadow-md transition-colors"
+            className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-medium py-3 px-4 rounded-lg shadow-md transition-colors"
             data-testid="button-save-weight"
           >
             {createWeightMutation.isPending ? (
