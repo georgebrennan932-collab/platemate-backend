@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
-import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils, ArrowLeft, RefreshCw, Heart, Bookmark, Trash2 } from "lucide-react";
+import { ShoppingListDialog } from "@/components/shopping-list-dialog";
+import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils, ArrowLeft, RefreshCw, Heart, Bookmark, Trash2, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -56,6 +58,8 @@ export function RecipesPage() {
   const [expandedIngredients, setExpandedIngredients] = useState<Set<string>>(new Set());
   const [expandedInstructions, setExpandedInstructions] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"all" | "saved">("all");
+  const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
+  const [showShoppingList, setShowShoppingList] = useState(false);
   const { toast } = useToast();
 
   // Get diet filter from URL parameters if provided
@@ -235,6 +239,27 @@ export function RecipesPage() {
     });
   };
 
+  const toggleRecipeSelection = (recipeId: string) => {
+    setSelectedRecipes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(recipeId)) {
+        newSet.delete(recipeId);
+      } else {
+        newSet.add(recipeId);
+      }
+      return newSet;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedRecipes(new Set());
+  };
+
+  const getSelectedRecipeObjects = (): Recipe[] => {
+    if (!savedRecipes) return [];
+    return savedRecipes.filter(recipe => selectedRecipes.has(recipe.id));
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -295,6 +320,28 @@ export function RecipesPage() {
               Saved
             </Button>
           </div>
+
+          {/* Shopping List Button - only show for Saved view */}
+          {viewMode === "saved" && selectedRecipes.size > 0 && (
+            <div className="flex gap-2 mb-4">
+              <Button
+                onClick={() => setShowShoppingList(true)}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                data-testid="button-create-shopping-list"
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Create Shopping List ({selectedRecipes.size})
+              </Button>
+              <Button
+                onClick={clearSelection}
+                variant="outline"
+                size="sm"
+                data-testid="button-clear-selection"
+              >
+                Clear
+              </Button>
+            </div>
+          )}
           
           {/* Filters - only show for All Recipes view */}
           {viewMode === "all" && (
@@ -397,6 +444,15 @@ export function RecipesPage() {
               <Card key={recipe.id || index} className="overflow-hidden" data-testid={`card-recipe-${index}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-3">
+                    {viewMode === "saved" && (
+                      <div className="pt-1">
+                        <Checkbox
+                          checked={selectedRecipes.has(recipe.id)}
+                          onCheckedChange={() => toggleRecipeSelection(recipe.id)}
+                          data-testid={`checkbox-recipe-${index}`}
+                        />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-lg mb-1" data-testid={`text-recipe-name-${index}`}>
                         {recipe.name}
@@ -560,6 +616,13 @@ export function RecipesPage() {
       
       {/* Bottom Help Section */}
       <BottomHelpSection />
+
+      {/* Shopping List Dialog */}
+      <ShoppingListDialog
+        isOpen={showShoppingList}
+        onClose={() => setShowShoppingList(false)}
+        recipes={getSelectedRecipeObjects()}
+      />
     </motion.div>
   );
 }
