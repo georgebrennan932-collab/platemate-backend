@@ -33,21 +33,149 @@
           ]
         },
         "timestamp": 1760693590780,
+        "accessCount": 2,
+        "lastAccessed": 1760693833060
+      }
+    ],
+    [
+      "be4185c173abac73d59fdf29f178b31d376f5974a9953c26afeddeb1c891479d",
+      {
+        "imageHash": "be4185c173abac73d59fdf29f178b31d376f5974a9953c26afeddeb1c891479d",
+        "analysis": {
+          "imageUrl": "/tmp/uploads/processed_cc6a4a968f406ce30b0213a0271b81f6.jpg",
+          "confidence": 85,
+          "totalCalories": 824,
+          "totalProtein": 37,
+          "totalCarbs": 55,
+          "totalFat": 51,
+          "detectedFoods": [
+            {
+              "name": "Egg, whole, fried no added fat",
+              "portion": "2 large eggs",
+              "calories": 143,
+              "protein": 12,
+              "carbs": 1,
+              "fat": 10,
+              "icon": "egg"
+            },
+            {
+              "name": "Sausage, smoked link sausage, pork",
+              "portion": "2 sausages",
+              "calories": 155,
+              "protein": 6,
+              "carbs": 0,
+              "fat": 14,
+              "icon": "bacon"
+            },
+            {
+              "name": "Blood sausage",
+              "portion": "1 slice",
+              "calories": 171,
+              "protein": 7,
+              "carbs": 1,
+              "fat": 16,
+              "icon": "bacon"
+            },
+            {
+              "name": "Baked beans",
+              "portion": "150g",
+              "calories": 158,
+              "protein": 7,
+              "carbs": 32,
+              "fat": 1,
+              "icon": "bread-slice"
+            },
+            {
+              "name": "Mushrooms, raw",
+              "portion": "100g",
+              "calories": 31,
+              "protein": 3,
+              "carbs": 4,
+              "fat": 0,
+              "icon": "apple-alt"
+            },
+            {
+              "name": "CHICK-FIL-A, hash browns",
+              "portion": "1 piece",
+              "calories": 166,
+              "protein": 2,
+              "carbs": 17,
+              "fat": 10,
+              "icon": "bread-slice"
+            }
+          ]
+        },
+        "timestamp": 1760694056023,
         "accessCount": 1,
-        "lastAccessed": 1760693590780
+        "lastAccessed": 1760694056023
+      }
+    ],
+    [
+      "013e83f697d594435b617e593861fdb5e6f74e042b62812fbebbafdf0bc88335",
+      {
+        "imageHash": "013e83f697d594435b617e593861fdb5e6f74e042b62812fbebbafdf0bc88335",
+        "analysis": {
+          "imageUrl": "/tmp/uploads/processed_78cb07f05c4df8bc61ea95da1be56ef7.jpg",
+          "confidence": 90,
+          "totalCalories": 927,
+          "totalProtein": 52,
+          "totalCarbs": 37,
+          "totalFat": 62,
+          "detectedFoods": [
+            {
+              "name": "Fish, salmon, fried",
+              "portion": "150g",
+              "calories": 461,
+              "protein": 26,
+              "carbs": 18,
+              "fat": 31,
+              "icon": "apple-alt"
+            },
+            {
+              "name": "Fish, salmon, fried",
+              "portion": "150g",
+              "calories": 461,
+              "protein": 26,
+              "carbs": 18,
+              "fat": 31,
+              "icon": "apple-alt"
+            },
+            {
+              "name": "Dill weed, fresh",
+              "portion": "3g",
+              "calories": 1,
+              "protein": 0,
+              "carbs": 0,
+              "fat": 0,
+              "icon": "apple-alt"
+            },
+            {
+              "name": "Lemon juice, raw",
+              "portion": "20g",
+              "calories": 4,
+              "protein": 0,
+              "carbs": 1,
+              "fat": 0,
+              "icon": "apple-alt"
+            }
+          ]
+        },
+        "timestamp": 1760694112533,
+        "accessCount": 1,
+        "lastAccessed": 1760694112533
       }
     ]
   ],
   "stats": {
-    "totalRequests": 1,
-    "cacheHits": 0,
-    "cacheMisses": 1,
-    "hitRate": 0,
-    "currentSize": 1,
+    "totalRequests": 3,
+    "cacheHits": 1,
+    "cacheMisses": 2,
+    "hitRate": 33,
+    "currentSize": 3,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1760693590780,
-    "newestEntry": 1760693590780
+    "newestEntry": 1760694112533
   },
-  "timestamp": 1760693590781
+  "timestamp": 1760694112533
 }

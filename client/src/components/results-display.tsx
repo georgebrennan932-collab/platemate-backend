@@ -1,6 +1,6 @@
 import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2, Mic, MicOff, ArrowLeft } from "lucide-react";
 import type { FoodAnalysis, DetectedFood } from "@shared/schema";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -103,6 +103,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [nutritionUpdateTimer, setNutritionUpdateTimer] = useState<NodeJS.Timeout | null>(null);
   const [nutritionUpdateController, setNutritionUpdateController] = useState<AbortController | null>(null);
   const [nutritionRequestId, setNutritionRequestId] = useState<number>(0);
+  const [lastRequestFoods, setLastRequestFoods] = useState<string>('');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -365,8 +366,15 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     }
   }, []);
 
-  // Debounced function to trigger nutrition updates with request versioning
+  // Debounced function to trigger nutrition updates with request versioning and deduplication
   const scheduleNutritionUpdate = useCallback((foods: DetectedFood[]) => {
+    // Create a stable key for the current foods to detect duplicates
+    const foodsKey = JSON.stringify(foods.map(f => ({ name: f.name, portion: f.portion })));
+    
+    // Skip if this exact request was just made (deduplication)
+    if (foodsKey === lastRequestFoods) {
+      return;
+    }
     
     // Clear existing timer
     if (nutritionUpdateTimer) {
@@ -377,13 +385,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     const newRequestId = nutritionRequestId + 1;
     setNutritionRequestId(newRequestId);
     
-    // Set new timer with 1 second delay
+    // Set new timer with 500ms delay (reduced from 1000ms for snappier feel)
     const timer = setTimeout(() => {
+      setLastRequestFoods(foodsKey);
       updateNutritionValues(foods, newRequestId);
-    }, 1000);
+    }, 500);
     
     setNutritionUpdateTimer(timer);
-  }, [updateNutritionValues]);
+  }, [updateNutritionValues, nutritionRequestId, nutritionUpdateTimer, lastRequestFoods]);
 
   const updateFoodName = (index: number, newName: string) => {
     const updatedFoods = [...editableFoods];
@@ -562,8 +571,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     setEditableFoods(updatedFoods);
   };
 
-  // Calculate total nutrition from editable foods
-  const calculateTotals = () => {
+  // Memoized calculation of total nutrition from editable foods - only recalculates when foods change
+  const totals = useMemo(() => {
     return editableFoods.reduce(
       (totals, food) => ({
         calories: totals.calories + (food.calories || 0),
@@ -573,9 +582,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       }),
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
-  };
-
-  const totals = calculateTotals();
+  }, [editableFoods]);
 
   const addVoiceMealMutation = useMutation({
     mutationFn: async ({ foodDescription }: { foodDescription: string }) => {
