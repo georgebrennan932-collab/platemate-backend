@@ -381,11 +381,10 @@ export function DiaryPage() {
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Link href="/">
+              <Link to="/">
                 <button 
                   className="p-2 hover:bg-muted rounded-lg transition-colors"
-                  data-testid="button-back-to-home"
-                  aria-label="Return to home page"
+                  data-testid="button-back"
                   onClick={() => {
                     // Force refresh homepage data when navigating back
                     queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
@@ -393,7 +392,7 @@ export function DiaryPage() {
                     queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
                   }}
                 >
-                  <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+                  <ArrowLeft className="h-5 w-5" />
                 </button>
               </Link>
               <h1 className="text-xl font-bold">Food Diary</h1>
