@@ -7,6 +7,8 @@ import { eq, and } from "drizzle-orm";
 import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema, savedRecipes } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { ObjectPermission } from "./objectAcl";
 import { promises as fs } from "fs";
 import path from "path";
 import express from "express";
@@ -1580,7 +1582,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Weight entry routes - bypass auth in deployment like diary routes
+  // Endpoint for serving private objects (progress photos)
+  // Referenced from blueprint: javascript_object_storage
+  app.get("/objects/:objectPath(*)", async (req: any, res) => {
+    const userId = req.user?.claims?.sub;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        req.path,
+      );
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        objectFile,
+        userId: userId,
+        requestedPermission: ObjectPermission.READ,
+      });
+      if (!canAccess) {
+        return res.sendStatus(401);
+      }
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error checking object access:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Weight entry routes - using object storage for progress photos
   app.post("/api/weights", upload.single('progressPhoto'), async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
@@ -1591,29 +1620,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let imageUrl: string | null = null;
 
-      // Process progress photo if uploaded
+      // Process progress photo if uploaded and save to object storage
       if (req.file) {
-        const processedImagePath = path.join(uploadDir, `progress_${req.file.filename}.jpg`);
-        
         try {
           // Process image: auto-rotate and optimize
-          await sharp(req.file.path)
+          const processedImageBuffer = await sharp(req.file.path)
             .rotate() // Auto-rotate based on EXIF data
             .jpeg({ quality: 85, mozjpeg: true })
-            .toFile(processedImagePath);
+            .toBuffer();
           
-          // Set image URL for database
-          imageUrl = `/uploads/progress_${req.file.filename}.jpg`;
+          // Upload to object storage
+          const objectStorageService = new ObjectStorageService();
+          imageUrl = await objectStorageService.uploadProgressPhoto(processedImageBuffer, userId);
+          
+          console.log(`Progress photo uploaded to object storage: ${imageUrl}`);
         } catch (sharpError) {
-          console.error("Image processing error:", sharpError);
-          // If processing fails, use original file
-          try {
-            await fs.copyFile(req.file.path, processedImagePath);
-            imageUrl = `/uploads/progress_${req.file.filename}.jpg`;
-          } catch (copyError) {
-            console.error("Image copy error:", copyError);
-            // Continue without image if all fails
-          }
+          console.error("Image processing/upload error:", sharpError);
+          // Continue without image if processing/upload fails
         }
 
         // Clean up original file
