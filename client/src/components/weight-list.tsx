@@ -150,9 +150,9 @@ export function WeightList({ onEdit, displayUnit = "kg", compact = false }: Weig
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Target className="h-4 w-4 text-green-600" />
+                      <Target className="h-4 w-4 text-blue-600" />
                       <span 
-                        className="text-lg font-bold text-green-600"
+                        className="text-lg font-bold text-blue-600"
                         data-testid={`weight-entry-weight-${entry.id}`}
                       >
                         {formatWeight(entry.weightGrams)}
@@ -267,8 +267,8 @@ export function WeightList({ onEdit, displayUnit = "kg", compact = false }: Weig
             {viewPhotoEntry && (
               <div className="mt-4 space-y-2">
                 <div className="flex items-center space-x-2">
-                  <Target className="h-5 w-5 text-green-600" />
-                  <span className="text-lg font-bold text-green-600">
+                  <Target className="h-5 w-5 text-blue-600" />
+                  <span className="text-lg font-bold text-blue-600">
                     {formatWeight(viewPhotoEntry.weightGrams)}
                   </span>
                 </div>

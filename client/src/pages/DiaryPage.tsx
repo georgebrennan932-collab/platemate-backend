@@ -395,7 +395,9 @@ export function DiaryPage() {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
               </Link>
-              <h1 className="text-xl font-bold">Food Diary</h1>
+              <h1 className="text-xl font-bold">
+                {activeTab === 'weight' ? 'Weight Tracking' : 'Food Diary'}
+              </h1>
               
               {/* View Mode Toggle */}
               <div className="flex bg-muted rounded-lg p-1 ml-2">
