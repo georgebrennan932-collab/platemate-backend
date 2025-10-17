@@ -247,6 +247,7 @@ export class ChallengeService {
     
     if (diaryEntries.length === 0) return 0;
     
+    // Get unique days when user logged meals
     const uniqueDays = new Set<string>();
     for (const entry of diaryEntries) {
       const dateStr = new Date(entry.mealDate).toISOString().split('T')[0];
@@ -255,15 +256,30 @@ export class ChallengeService {
     
     const sortedDays = Array.from(uniqueDays).sort((a, b) => b.localeCompare(a));
     
-    let streak = 0;
     const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    // Check if user has logged today or yesterday (grace period)
+    // Streak is alive if last log was today or yesterday
+    const lastLogDate = sortedDays[0];
+    
+    if (lastLogDate !== today && lastLogDate !== yesterdayStr) {
+      // Last log was before yesterday - streak is broken
+      return 0;
+    }
+    
+    // Calculate streak by counting consecutive days backwards
+    let streak = 0;
+    const startDate = lastLogDate === today ? today : yesterdayStr;
     
     for (let i = 0; i < sortedDays.length; i++) {
-      const expectedDate = new Date(today);
+      const expectedDate = new Date(startDate);
       expectedDate.setDate(expectedDate.getDate() - i);
       const expectedDateStr = expectedDate.toISOString().split('T')[0];
       
-      if (sortedDays[i] === expectedDateStr) {
+      if (sortedDays.find(d => d === expectedDateStr)) {
         streak++;
       } else {
         break;
