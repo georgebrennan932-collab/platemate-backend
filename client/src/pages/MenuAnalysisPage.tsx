@@ -376,8 +376,8 @@ export function MenuAnalysisPage() {
           </div>
         )}
 
-        {/* No Recommendations */}
-        {!isLoading && !error && recommendations.length === 0 && (
+        {/* No Recommendations - only show after an analysis has been attempted */}
+        {!isLoading && !error && recommendations.length === 0 && menuAnalysis && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -387,7 +387,7 @@ export function MenuAnalysisPage() {
               No Recommendations Available
             </p>
             <p className="text-yellow-600 dark:text-yellow-300 text-sm">
-              We couldn't find any menu items to recommend. The webpage might not contain a menu.
+              We couldn't find any menu items to recommend. Please try pasting different menu content.
             </p>
           </motion.div>
         )}
