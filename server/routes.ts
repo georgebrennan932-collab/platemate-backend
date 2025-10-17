@@ -2001,7 +2001,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User profile routes
   app.get("/api/user-profile",  async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const profile = await storage.getUserProfile(userId);
       res.json(profile);
     } catch (error) {
@@ -2012,7 +2017,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user-profile",  async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const validatedProfile = insertUserProfileSchema.parse({
         ...req.body,
         userId

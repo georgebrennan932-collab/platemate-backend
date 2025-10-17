@@ -922,9 +922,31 @@ Respond with JSON object containing 'tips' array.`;
     }
   }
 
-  async generateRecipes(dietaryFilter: string = ""): Promise<any[]> {
+  async generateRecipes(dietaryFilter: string = "", userProfile: any = null): Promise<any[]> {
     try {
       const filterText = dietaryFilter ? ` that are suitable for ${dietaryFilter} dietary requirements` : "";
+      
+      // Build user-specific constraints
+      let userConstraints = "";
+      if (userProfile) {
+        const constraints: string[] = [];
+        
+        if (userProfile.allergies && userProfile.allergies.length > 0) {
+          constraints.push(`CRITICAL: Avoid ALL recipes containing these allergens: ${userProfile.allergies.join(', ')}. Do not include any recipe with these ingredients.`);
+        }
+        
+        if (userProfile.foodDislikes) {
+          constraints.push(`Avoid using these foods if possible: ${userProfile.foodDislikes}`);
+        }
+        
+        if (userProfile.healthConditions) {
+          constraints.push(`Consider these health conditions: ${userProfile.healthConditions}`);
+        }
+        
+        if (constraints.length > 0) {
+          userConstraints = "\n\nUSER-SPECIFIC REQUIREMENTS:\n" + constraints.join('\n');
+        }
+      }
       
       const systemPrompt = `You are a professional chef and nutritionist. Generate 8-10 healthy and delicious recipes${filterText}.
 
@@ -941,7 +963,7 @@ Focus on:
 - Easy-to-find ingredients
 - Clear, actionable instructions
 - Variety in meal types (breakfast, lunch, dinner, snacks)
-- Different cooking methods and cuisines
+- Different cooking methods and cuisines${userConstraints}
 
 Respond with JSON in this exact format:
 {
