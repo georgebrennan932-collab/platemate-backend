@@ -101,7 +101,7 @@ export function ProgressPhotosPage() {
           <div className="flex items-center justify-between mb-4">
             <Link href="/diary?tab=weight">
               <button
-                className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                className="flex items-center space-x-2 text-white hover:text-purple-200 transition-colors"
                 data-testid="button-back"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -120,12 +120,12 @@ export function ProgressPhotosPage() {
           </div>
 
           <div className="flex items-center space-x-3 mb-2">
-            <Camera className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">
+            <Camera className="h-8 w-8 text-white" />
+            <h1 className="text-3xl font-bold text-white">
               Progress Photos
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-white/90">
             Your visual transformation journey
           </p>
         </div>
