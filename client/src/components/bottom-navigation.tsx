@@ -74,8 +74,10 @@ export function BottomNavigation() {
                       : "text-black dark:text-white hover:text-foreground"
                   )}
                   data-testid={`nav-${item.label.toLowerCase()}`}
+                  aria-label={`Navigate to ${item.label}`}
+                  aria-current={item.isActive ? 'page' : undefined}
                 >
-                  <Icon className="h-5 w-5 mb-1" />
+                  <Icon className="h-5 w-5 mb-1" aria-hidden="true" />
                   <span className="text-[10px] font-medium whitespace-nowrap leading-tight">{item.label}</span>
                 </button>
               </Link>

@@ -317,13 +317,22 @@ export function CameraInterface({
         style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}
         onClick={handleCameraCapture}
         data-testid="camera-panel-clickable"
+        role="button"
+        aria-label={previewUrl ? "Analyze selected food image" : "Take or select a photo of your food"}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCameraCapture();
+          }
+        }}
       >
         
         {/* Static Image Preview */}
         {previewUrl && (
           <img 
             src={previewUrl} 
-            alt="Selected food image" 
+            alt="Selected food image for analysis" 
             className="w-full h-full object-cover rounded-3xl"
             data-testid="img-preview"
           />
@@ -332,7 +341,7 @@ export function CameraInterface({
         
         {/* Plate detection circle - only show when has preview */}
         {previewUrl && (
-          <div className="absolute inset-16 border border-white/30 rounded-full border-dashed"></div>
+          <div className="absolute inset-16 border border-white/30 rounded-full border-dashed" aria-hidden="true"></div>
         )}
         
       </div>
@@ -347,6 +356,7 @@ export function CameraInterface({
         onChange={handleFileSelect}
         className="hidden"
         data-testid="input-file"
+        aria-label="Select food image from gallery"
       />
       <input
         ref={cameraInputRef}
@@ -356,6 +366,7 @@ export function CameraInterface({
         onChange={handleFileSelect}
         className="hidden"
         data-testid="input-camera"
+        aria-label="Take photo of food with camera"
       />
 
       {/* Camera Barcode Scanner Modal */}

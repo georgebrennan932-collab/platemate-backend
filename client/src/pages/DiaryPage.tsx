@@ -385,6 +385,7 @@ export function DiaryPage() {
                 <button 
                   className="p-2 hover:bg-muted rounded-lg transition-colors"
                   data-testid="button-back-to-home"
+                  aria-label="Return to home page"
                   onClick={() => {
                     // Force refresh homepage data when navigating back
                     queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
@@ -392,7 +393,7 @@ export function DiaryPage() {
                     queryClient.invalidateQueries({ queryKey: ['/api/drinks'] });
                   }}
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-5 w-5" aria-hidden="true" />
                 </button>
               </Link>
               <h1 className="text-xl font-bold">Food Diary</h1>
@@ -407,6 +408,8 @@ export function DiaryPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                   data-testid="view-today"
+                  aria-label="View today's meals"
+                  aria-pressed={viewMode === 'today'}
                 >
                   Today
                 </button>
@@ -418,6 +421,8 @@ export function DiaryPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                   data-testid="view-history"
+                  aria-label="View meal history"
+                  aria-pressed={viewMode === 'history'}
                 >
                   History
                 </button>
@@ -434,11 +439,12 @@ export function DiaryPage() {
                       : 'bg-primary text-primary-foreground hover:bg-primary/90'
                   }`}
                   data-testid="button-voice-meal"
+                  aria-label={isListening ? 'Stop listening for voice meal input' : 'Add meal using voice input'}
                 >
                   {isListening ? (
-                    <MicOff className="h-5 w-5" />
+                    <MicOff className="h-5 w-5" aria-hidden="true" />
                   ) : (
-                    <Mic className="h-5 w-5" />
+                    <Mic className="h-5 w-5" aria-hidden="true" />
                   )}
                 </button>
               )}
@@ -455,8 +461,11 @@ export function DiaryPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                   data-testid="tab-dashboard"
+                  aria-label="View dashboard tab"
+                  aria-pressed={activeTab === 'dashboard'}
+                  role="tab"
                 >
-                  <Target className="h-4 w-4" />
+                  <Target className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => setActiveTab('diary')}
@@ -466,8 +475,11 @@ export function DiaryPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                   data-testid="tab-diary"
+                  aria-label="View diary tab"
+                  aria-pressed={activeTab === 'diary'}
+                  role="tab"
                 >
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => setActiveTab('analytics')}
@@ -477,8 +489,11 @@ export function DiaryPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                   data-testid="tab-analytics"
+                  aria-label="View analytics tab"
+                  aria-pressed={activeTab === 'analytics'}
+                  role="tab"
                 >
-                  <TrendingUp className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => setActiveTab('weight')}
@@ -488,8 +503,11 @@ export function DiaryPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                   data-testid="tab-weight"
+                  aria-label="View weight tracking tab"
+                  aria-pressed={activeTab === 'weight'}
+                  role="tab"
                 >
-                  <TrendingUp className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
               <Link href="/help">
@@ -673,18 +691,20 @@ export function DiaryPage() {
                                   setIsDiaryEditDialogOpen(true);
                                 }}
                                 className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                                aria-label={`Edit ${entry.mealType} meal entry`}
                                 title="Edit entry"
                                 data-testid={`button-edit-${entry.id}`}
                               >
-                                <Utensils className="h-4 w-4" />
+                                <Utensils className="h-4 w-4" aria-hidden="true" />
                               </button>
                               <button
                                 onClick={() => deleteMutation.mutate(entry.id)}
                                 className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                aria-label={`Delete ${entry.mealType} meal entry`}
                                 title="Delete entry"
                                 data-testid={`button-delete-${entry.id}`}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
                               </button>
                             </div>
                           </div>
@@ -783,10 +803,11 @@ export function DiaryPage() {
                             <button
                               onClick={() => deleteDrinkMutation.mutate(drink.id)}
                               className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              aria-label={`Delete ${drink.drinkName} drink entry`}
                               title="Delete drink"
                               data-testid={`button-delete-drink-${drink.id}`}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
                             </button>
                           </div>
                         </div>

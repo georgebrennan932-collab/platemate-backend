@@ -143,7 +143,10 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
             {/* Header with icon and label */}
             <div className="flex items-center justify-between mb-4 relative z-10">
               <div className="flex items-center space-x-3">
-                <div className={`w-12 h-12 ${colors.icon} rounded-xl flex items-center justify-center shadow-md`}>
+                <div 
+                  className={`w-12 h-12 ${colors.icon} rounded-xl flex items-center justify-center shadow-md`}
+                  aria-hidden="true"
+                >
                   <Icon className="h-6 w-6" />
                 </div>
                 <div>
@@ -153,8 +156,12 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
               </div>
               
               {isAchieved && (
-                <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
-                  <span>🎯</span>
+                <div 
+                  className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1"
+                  role="status"
+                  aria-label={`${label} goal achieved`}
+                >
+                  <span aria-hidden="true">🎯</span>
                   <span>Goal achieved!</span>
                 </div>
               )}
@@ -173,7 +180,15 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
             
             {/* Enhanced progress bar */}
             <div className="relative z-10 space-y-2">
-              <div className="w-full bg-white/30 dark:bg-black/20 rounded-full h-4 shadow-inner">
+              <div 
+                className="w-full bg-white/30 dark:bg-black/20 rounded-full h-4 shadow-inner"
+                role="progressbar"
+                aria-label={`${label} progress`}
+                aria-valuenow={Math.round(consumed)}
+                aria-valuemin={0}
+                aria-valuemax={target}
+                aria-valuetext={`${Math.round(consumed)} of ${target} ${unit}`}
+              >
                 <div 
                   className={`h-4 rounded-full transition-all duration-1000 ease-out ${
                     isAchieved 
@@ -181,18 +196,19 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
                       : `${progressColor.replace('bg-', 'bg-gradient-to-r from-')} to-opacity-80`
                   } shadow-lg`}
                   style={{width: `${Math.min(progress, 100)}%`}}
+                  aria-hidden="true"
                 />
               </div>
               
               {/* Progress indicator */}
               <div className="flex justify-between items-center">
-                <div className={`text-sm font-medium ${colors.text}`}>
+                <div className={`text-sm font-medium ${colors.text}`} aria-live="polite">
                   {progress < 50 ? 'Keep going! 💪' : 
                    progress < 90 ? 'Almost there! 🚀' : 
                    isAchieved ? 'Excellent! ✨' : 'So close! 🎯'}
                 </div>
                 {!isAchieved && (
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-muted-foreground" aria-live="polite">
                     {Math.round(target - consumed)}{unit} remaining
                   </div>
                 )}

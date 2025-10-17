@@ -809,8 +809,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           onClick={onScanAnother}
           className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted/30 rounded-xl"
           data-testid="button-back"
+          aria-label="Return to camera to scan another meal"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           <span className="font-medium">Back to Camera</span>
         </button>
       </motion.div>
@@ -889,14 +890,16 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             <button 
               className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               data-testid="button-share"
+              aria-label="Share meal analysis"
             >
-              <Share2 className="h-5 w-5" />
+              <Share2 className="h-5 w-5" aria-hidden="true" />
             </button>
             <button 
               className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               data-testid="button-bookmark"
+              aria-label="Bookmark this meal"
             >
-              <Bookmark className="h-5 w-5" />
+              <Bookmark className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -970,10 +973,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                             setEditingIndex(index);
                           }}
                           className="inline-flex items-center justify-center rounded-md h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                          aria-label={`Edit ${food.name} name`}
                           title="Edit food name"
                           data-testid={`button-edit-name-${index}`}
                         >
-                          <Edit3 className="h-3 w-3" />
+                          <Edit3 className="h-3 w-3" aria-hidden="true" />
                         </button>
                       </div>
                     )}
@@ -1019,10 +1023,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                       <button
                         onClick={() => removeFoodItem(index)}
                         className="mt-8 p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                        aria-label={`Remove ${food.name} from list`}
                         title="Remove this food item"
                         data-testid={`button-remove-food-${index}`}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                   </div>

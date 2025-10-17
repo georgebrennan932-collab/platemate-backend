@@ -866,11 +866,13 @@ export default function Home() {
                   : 'bg-gray-400 text-gray-600 cursor-not-allowed'
               }`}
               data-testid="button-add-voice"
+              aria-label={isListening ? 'Stop listening for voice input' : 'Add meal using voice input'}
+              aria-disabled={!speechSupported}
             >
               {isListening ? (
-                <MicOff className="h-4 w-4" />
+                <MicOff className="h-4 w-4" aria-hidden="true" />
               ) : (
-                <Mic className="h-4 w-4" />
+                <Mic className="h-4 w-4" aria-hidden="true" />
               )}
               <span className="text-sm">
                 {isListening ? 'Listening...' : 'Voice Add'}
@@ -881,8 +883,9 @@ export default function Home() {
               onClick={() => setShowTextMealDialog(true)}
               className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-blue-600 text-white hover:bg-blue-500"
               data-testid="button-add-type"
+              aria-label="Add meal by typing description"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4" aria-hidden="true" />
               <span className="text-sm">Type</span>
             </button>
           </div>
@@ -892,10 +895,11 @@ export default function Home() {
               onClick={handleCameraCapture}
               className="py-4 px-6 rounded-full font-bold flex items-center justify-center space-x-3 transition-all duration-300 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl hover:scale-105 transform"
               data-testid="button-add-camera"
+              aria-label="Take photo of meal with camera"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Camera className="h-5 w-5" />
+              <Camera className="h-5 w-5" aria-hidden="true" />
               <span className="text-sm">Camera</span>
             </motion.button>
             
@@ -903,10 +907,11 @@ export default function Home() {
               onClick={handleGallerySelect}
               className="py-4 px-6 rounded-full font-bold flex items-center justify-center space-x-3 transition-all duration-300 bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl hover:scale-105 transform"
               data-testid="button-add-gallery"
+              aria-label="Select meal photo from gallery"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Images className="h-5 w-5" />
+              <Images className="h-5 w-5" aria-hidden="true" />
               <span className="text-sm">Gallery</span>
             </motion.button>
             
@@ -917,10 +922,11 @@ export default function Home() {
               }}
               className="py-4 px-6 rounded-full font-bold flex items-center justify-center space-x-3 transition-all duration-300 bg-gradient-to-r from-orange-500 to-pink-600 text-white hover:from-orange-600 hover:to-pink-700 shadow-lg hover:shadow-xl hover:scale-105 transform"
               data-testid="button-add-barcode"
+              aria-label="Scan product barcode to add food"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <QrCode className="h-5 w-5" />
+              <QrCode className="h-5 w-5" aria-hidden="true" />
               <span className="text-sm">Barcode</span>
             </motion.button>
           </div>

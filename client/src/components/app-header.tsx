@@ -50,6 +50,7 @@ export function AppHeader() {
               <button 
                 className="p-2 px-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-blue-400/30 shadow-md"
                 data-testid="button-login"
+                aria-label="Sign in with Replit"
                 title="Sign in with Replit"
                 onClick={launchLogin}
               >
@@ -58,6 +59,7 @@ export function AppHeader() {
               <button 
                 className="p-2 px-4 rounded-xl bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium text-sm backdrop-blur-sm hover:scale-105 smooth-transition border border-green-400/30 shadow-md"
                 data-testid="button-signup"
+                aria-label="Create a Replit account"
                 title="Create a Replit account"
                 onClick={launchSignup}
               >
@@ -71,20 +73,27 @@ export function AppHeader() {
                 onClick={() => setShowProfile(!showProfile)}
                 className="flex items-center space-x-1 p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 dark:from-gray-800/50 dark:to-gray-700/30 backdrop-blur-sm hover:scale-110 smooth-transition border border-white/10 dark:border-gray-700/30"
                 data-testid="button-profile"
+                aria-label={showProfile ? "Close profile menu" : "Open profile menu"}
+                aria-expanded={showProfile}
+                aria-haspopup="true"
                 title="Profile"
               >
-                <User className="h-5 w-5 text-foreground/80" />
+                <User className="h-5 w-5 text-foreground/80" aria-hidden="true" />
                 {showProfile ? (
-                  <ChevronUp className="h-3 w-3 text-foreground/60" />
+                  <ChevronUp className="h-3 w-3 text-foreground/60" aria-hidden="true" />
                 ) : (
-                  <ChevronDown className="h-3 w-3 text-foreground/60" />
+                  <ChevronDown className="h-3 w-3 text-foreground/60" aria-hidden="true" />
                 )}
               </button>
               
               {showProfile && (
-                <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[200px] backdrop-blur-md z-50">
+                <div 
+                  className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[200px] backdrop-blur-md z-50"
+                  role="menu"
+                  aria-label="User profile information"
+                >
                   <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-foreground/80" />
+                    <User className="h-4 w-4 text-foreground/80" aria-hidden="true" />
                     <span className="text-sm font-medium text-foreground/90">
                       {(user as UserType)?.firstName || (user as UserType)?.email || 'User'}
                     </span>
@@ -101,14 +110,16 @@ export function AppHeader() {
           <button 
             className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 dark:from-gray-800/50 dark:to-gray-700/30 backdrop-blur-sm hover:scale-110 smooth-transition border border-white/10 dark:border-gray-700/30"
             data-testid="button-history"
+            aria-label="View history"
             title="View History"
           >
-            <History className="h-5 w-5 text-foreground/80" />
+            <History className="h-5 w-5 text-foreground/80" aria-hidden="true" />
           </button>
           {isAuthenticated && (
             <button 
               className="p-3 rounded-xl bg-gradient-to-br from-red-100/50 to-red-200/30 dark:from-red-900/20 dark:to-red-800/10 backdrop-blur-sm hover:scale-110 smooth-transition border border-red-200/30 dark:border-red-700/20 hover:from-red-200/70 hover:to-red-300/50"
               data-testid="button-logout"
+              aria-label="Logout from PlateMate"
               title="Logout"
               onClick={() => {
                 localStorage.removeItem('auth_token');
@@ -116,7 +127,7 @@ export function AppHeader() {
                 window.location.href = '/landing';
               }}
             >
-              <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" aria-hidden="true" />
             </button>
           )}
         </div>
