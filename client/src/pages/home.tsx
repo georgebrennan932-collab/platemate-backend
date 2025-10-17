@@ -11,7 +11,7 @@ import { ProcessingState } from "@/components/processing-state";
 import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { DrinksBar } from "@/components/drinks-bar";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Flame, Camera, QrCode, Images } from "lucide-react";
 // Confetti disabled: import { ConfettiCelebration } from "@/components/confetti-celebration";
 import { ScannerModal } from "@/components/scanner-modal";
@@ -32,6 +32,7 @@ export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   const [currentState, setCurrentState] = useState<AppState>('camera');
   const [analysisData, setAnalysisData] = useState<FoodAnalysis | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -699,6 +700,24 @@ export default function Home() {
   });
 
   const handleBarcodeScanned = (barcode: string) => {
+    // Check if the scanned code is a URL (QR code for restaurant menu)
+    try {
+      const url = new URL(barcode);
+      // If it's a valid URL, navigate to menu analysis page using wouter
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        setShowBarcodeScanner(false);
+        setLocation(`/menu-analysis?url=${encodeURIComponent(barcode)}`);
+        toast({
+          title: "🍽️ Restaurant Menu Detected!",
+          description: "Opening menu scanner...",
+          duration: 2000,
+        });
+        return;
+      }
+    } catch {
+      // Not a URL, continue with barcode lookup
+    }
+    
     console.log("📷 Barcode scanned on homepage:", {
       barcode,
       length: barcode.length,
