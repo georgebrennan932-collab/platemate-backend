@@ -123,13 +123,14 @@ Preferred communication style: Simple, everyday language.
   - Mobile-optimized UI with gradient backgrounds and Framer Motion animations
   - Security note: Server-side URL fetching disabled to prevent SSRF attacks; future enhancement will include DNS resolution and IP validation for secure automated fetching
 - **User Profile System for AI Coach Personalization**: Comprehensive user profile feature enabling AI Coach to provide tailored dietary advice:
-  - Extended userProfiles table with new fields: dietaryRequirements (array), allergies (array), foodDislikes (text), healthConditions (text)
-  - ProfilePage with intuitive tag-based selection for dietary requirements (Vegetarian, Vegan, Keto, etc.) and allergies (Nuts, Dairy, Gluten, etc.)
+  - Extended userProfiles table with new fields: name (text), nickname (text), dietaryRequirements (array), allergies (array), foodDislikes (text), healthConditions (text)
+  - ProfilePage with Personal Information section (name and nickname fields) at the top, followed by intuitive tag-based selection for dietary requirements (Vegetarian, Vegan, Keto, etc.) and allergies (Nuts, Dairy, Gluten, etc.)
   - Text fields for food dislikes and health conditions with optional input
   - Profile accessible via User icon in dropdown navigation menu
   - Backend API at /api/user-profile (GET/POST) for retrieving and updating profile data
   - AI Coach integration: profile data automatically included in AI context for all nutrition questions
   - AI providers (OpenAI GPT-5 and Gemini Flash) updated to respect dietary restrictions and allergies in recommendations
+  - AI Coach addresses users by their preferred nickname (or name as fallback) for personalized, friendly interactions
   - System prompts emphasize never suggesting foods that violate user's dietary requirements or allergies
   - Profile persists across sessions in PostgreSQL database with automatic sync on updates
   - Purple/pink gradient design matching AI Coach theme for visual consistency
