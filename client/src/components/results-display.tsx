@@ -1,6 +1,6 @@
 import { Share2, Bookmark, Plus, Camera, Utensils, PieChart, Calendar, Clock, AlertTriangle, Info, Zap, Edit3, Check, X, Minus, Trash2, Mic, MicOff, ArrowLeft } from "lucide-react";
 import type { FoodAnalysis, DetectedFood } from "@shared/schema";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -101,9 +101,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
   const [showLowConfidenceDialog, setShowLowConfidenceDialog] = useState(false);
   const [nutritionUpdateTimer, setNutritionUpdateTimer] = useState<NodeJS.Timeout | null>(null);
-  const [nutritionUpdateController, setNutritionUpdateController] = useState<AbortController | null>(null);
-  const [nutritionRequestId, setNutritionRequestId] = useState<number>(0);
   const [lastRequestFoods, setLastRequestFoods] = useState<string>('');
+  
+  // Use refs for values that don't need to trigger re-renders
+  const nutritionUpdateControllerRef = useRef<AbortController | null>(null);
+  const nutritionRequestIdRef = useRef<number>(0);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -121,8 +123,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       if (nutritionUpdateTimer) {
         clearTimeout(nutritionUpdateTimer);
       }
-      if (nutritionUpdateController) {
-        nutritionUpdateController.abort();
+      if (nutritionUpdateControllerRef.current) {
+        nutritionUpdateControllerRef.current.abort();
       }
     };
   }, []);
@@ -303,13 +305,13 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const updateNutritionValues = useCallback(async (foodsToUpdate: DetectedFood[], requestId: number) => {
     try {
       // Cancel previous request if it exists
-      if (nutritionUpdateController) {
-        nutritionUpdateController.abort();
+      if (nutritionUpdateControllerRef.current) {
+        nutritionUpdateControllerRef.current.abort();
       }
       
       // Create new AbortController for this request
       const controller = new AbortController();
-      setNutritionUpdateController(controller);
+      nutritionUpdateControllerRef.current = controller;
       
       const response = await fetch('/api/calculate-nutrition', {
         method: 'POST',
@@ -325,8 +327,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       
       const nutritionData = await response.json();
       
-      // Only update if this is still the latest request
-      if (requestId === nutritionRequestId && nutritionData.foods) {
+      // Only update if this is still the latest request (using ref for fresh comparison)
+      if (requestId === nutritionRequestIdRef.current && nutritionData.foods) {
         // Merge nutrition data while preserving current user edits and updating baseline
         setEditableFoods(currentFoods => {
           return currentFoods.map((currentFood, index) => {
@@ -356,12 +358,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       }
       
       // Clear the controller reference
-      setNutritionUpdateController(null);
+      nutritionUpdateControllerRef.current = null;
     } catch (error: any) {
       if (error.name === 'AbortError') {
         return;
       }
-      setNutritionUpdateController(null);
+      nutritionUpdateControllerRef.current = null;
       
     }
   }, []);
@@ -381,9 +383,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       clearTimeout(nutritionUpdateTimer);
     }
     
-    // Increment request ID for race condition protection
-    const newRequestId = nutritionRequestId + 1;
-    setNutritionRequestId(newRequestId);
+    // Increment request ID for race condition protection (using ref)
+    nutritionRequestIdRef.current = nutritionRequestIdRef.current + 1;
+    const newRequestId = nutritionRequestIdRef.current;
     
     // Set new timer with 500ms delay (reduced from 1000ms for snappier feel)
     const timer = setTimeout(() => {
@@ -392,7 +394,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     }, 500);
     
     setNutritionUpdateTimer(timer);
-  }, [updateNutritionValues, nutritionRequestId, nutritionUpdateTimer, lastRequestFoods]);
+  }, [updateNutritionValues, nutritionUpdateTimer, lastRequestFoods]);
 
   const updateFoodName = (index: number, newName: string) => {
     const updatedFoods = [...editableFoods];
