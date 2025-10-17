@@ -1001,8 +1001,11 @@ export default function Home() {
             whileTap={{ scale: 0.95 }}
           >
             <QrCode className="h-6 w-6" />
-            <span className="text-lg">Scan Restaurant Menu</span>
+            <span className="text-lg">Scan Restaurant Menu QR Code</span>
           </motion.button>
+          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">
+            Scan QR codes that link to restaurant menus
+          </p>
         </div>
       )}
 
