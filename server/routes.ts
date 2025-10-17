@@ -1581,16 +1581,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Weight entry routes - bypass auth in deployment like diary routes
-  app.post("/api/weights", async (req: any, res) => {
+  app.post("/api/weights", upload.single('progressPhoto'), async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       
       if (!userId) {
         return res.status(401).json({ error: "Authentication required" });
       }
+
+      let imageUrl: string | null = null;
+
+      // Process progress photo if uploaded
+      if (req.file) {
+        const processedImagePath = path.join(uploadDir, `progress_${req.file.filename}.jpg`);
+        
+        try {
+          // Process image: auto-rotate and optimize
+          await sharp(req.file.path)
+            .rotate() // Auto-rotate based on EXIF data
+            .jpeg({ quality: 85, mozjpeg: true })
+            .toFile(processedImagePath);
+          
+          // Set image URL for database
+          imageUrl = `/uploads/progress_${req.file.filename}.jpg`;
+        } catch (sharpError) {
+          console.error("Image processing error:", sharpError);
+          // If processing fails, use original file
+          try {
+            await fs.copyFile(req.file.path, processedImagePath);
+            imageUrl = `/uploads/progress_${req.file.filename}.jpg`;
+          } catch (copyError) {
+            console.error("Image copy error:", copyError);
+            // Continue without image if all fails
+          }
+        }
+
+        // Clean up original file
+        try {
+          await fs.unlink(req.file.path);
+        } catch (unlinkError) {
+          console.error("Error cleaning up original file:", unlinkError);
+        }
+      }
+
       const validatedEntry = insertWeightEntrySchema.parse({
         ...req.body,
-        userId
+        userId,
+        imageUrl
       });
       const weightEntry = await storage.createWeightEntry(validatedEntry);
       

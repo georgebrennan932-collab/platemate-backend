@@ -302,6 +302,7 @@ export const insertWeightEntrySchema = createInsertSchema(weightEntries).omit({
 }).extend({
   loggedAt: z.string().or(z.date()), // Accept string or Date
   notes: z.string().optional(),
+  imageUrl: z.string().nullable().optional(),
 });
 
 export const updateWeightEntrySchema = insertWeightEntrySchema.partial().omit({
