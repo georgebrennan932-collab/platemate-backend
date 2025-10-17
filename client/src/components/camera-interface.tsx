@@ -7,6 +7,7 @@ import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capa
 import { Capacitor } from '@capacitor/core';
 import { mediaService } from '@/lib/media-service';
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { scanBarcodeFromImage } from "@/services/scanner-service";
@@ -111,20 +112,7 @@ export function CameraInterface({
 
   const barcodeMutation = useMutation({
     mutationFn: async (barcode: string) => {
-      const response = await fetch('/api/barcode', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ barcode }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Barcode lookup failed:", errorData);
-        throw new Error(errorData.error || 'Barcode lookup failed');
-      }
-
+      const response = await apiRequest('POST', '/api/barcode', { barcode });
       const result = await response.json();
       return result;
     },
