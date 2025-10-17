@@ -38,10 +38,10 @@ export function DropdownNavigation() {
       isActive: location === "/calculator"
     },
     {
-      href: "/coaching",
-      icon: Brain,
-      label: "Coach",
-      isActive: location === "/coaching"
+      href: "/ai-coach",
+      icon: Lightbulb,
+      label: "AI Coach",
+      isActive: location === "/ai-coach"
     },
     {
       href: "/goals",

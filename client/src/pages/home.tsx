@@ -1075,60 +1075,22 @@ export default function Home() {
         </div>
       )}
       
-      {/* 2x2 Action Buttons Grid - Removed Voice and Text Input */}
+      {/* Weigh In Button */}
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
-          <div className="grid grid-cols-2 gap-4">
-            {/* Weigh In Button */}
-            <Link 
-              href="/diary?tab=weight"
-              className="py-4 px-6 rounded-2xl font-semibold flex items-center justify-center space-x-3 transition-all duration-200 text-white hover:opacity-90 transform hover:scale-105 no-underline"
-              style={{backgroundColor: '#F97316'}}
-              data-testid="button-weigh-in"
-            >
-              <Scale className="h-5 w-5" />
-              <span className="text-base font-bold">Weigh In</span>
-            </Link>
-
-            {/* AI Advice Button */}
-            <Link href="/advice">
-              <button 
-                className="w-full py-4 px-6 rounded-2xl font-semibold flex items-center justify-center space-x-3 transition-all duration-200 text-white hover:opacity-90 transform hover:scale-105"
-                style={{backgroundColor: '#14B8A6'}}
-                data-testid="button-diet-advice"
-              >
-                <Lightbulb className="h-5 w-5 animate-pulse" style={{
-                  animation: 'bulbFlicker 3s ease-in-out infinite'
-                }} />
-                <span className="text-base font-bold">AI Advice</span>
-              </button>
-            </Link>
-          </div>
+          <Link 
+            href="/diary?tab=weight"
+            className="w-full py-4 px-6 rounded-2xl font-semibold flex items-center justify-center space-x-3 transition-all duration-200 text-white hover:opacity-90 transform hover:scale-105 no-underline"
+            style={{backgroundColor: '#F97316'}}
+            data-testid="button-weigh-in"
+          >
+            <Scale className="h-5 w-5" />
+            <span className="text-base font-bold">Weigh In</span>
+          </Link>
         </div>
       )}
 
 
-      {/* Persistent Quick Actions Bar */}
-      {(currentState === 'processing' || currentState === 'results' || currentState === 'error') && (
-        <div className="max-w-md mx-auto px-4 py-2 mb-4">
-          <div className="flex justify-center space-x-4">
-            <Link href="/diary">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors" data-testid="quick-diary">
-                <Book className="h-4 w-4" />
-                <span className="text-sm font-medium">Diary</span>
-              </button>
-            </Link>
-            <Link href="/advice">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors" data-testid="quick-advice">
-                <Lightbulb className="h-4 w-4" style={{
-                  animation: 'bulbFlicker 3s ease-in-out infinite'
-                }} />
-                <span className="text-sm font-medium">Advice</span>
-              </button>
-            </Link>
-          </div>
-        </div>
-      )}
 
       <div className="max-w-md mx-auto" id="camera-section">
         {currentState === 'camera' && (

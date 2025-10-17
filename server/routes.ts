@@ -1443,6 +1443,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Coach conversational endpoint with conversation history
+  app.post("/api/ai-coach",  async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { prompt, conversationHistory } = req.body;
+      
+      if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      // Get user's recent diary entries for personalized context
+      const entries = await storage.getDiaryEntries(userId, 30); // Last 30 entries for better context
+      
+      // Get user's nutrition goals for more personalized advice
+      const nutritionGoals = await storage.getNutritionGoals(userId);
+      
+      // Build full context including conversation history for continuity
+      let contextualPrompt = prompt.trim();
+      if (conversationHistory && Array.isArray(conversationHistory) && conversationHistory.length > 0) {
+        // Include recent conversation turns for context (last 5 exchanges to keep prompt manageable)
+        const recentHistory = conversationHistory.slice(-10); // Last 10 messages (5 exchanges)
+        const historyText = recentHistory
+          .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+          .join('\n');
+        contextualPrompt = `Previous conversation:\n${historyText}\n\nCurrent question: ${prompt.trim()}`;
+      }
+      
+      // Generate conversational response with full context
+      const response = await aiManager.answerNutritionQuestion(contextualPrompt, entries);
+      
+      res.json({ 
+        response,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("AI Coach error:", error);
+      res.status(500).json({ error: "Failed to get AI Coach response" });
+    }
+  });
+
   // Drink routes - require authentication
   app.post("/api/drinks", async (req: any, res) => {
     try {

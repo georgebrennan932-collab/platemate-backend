@@ -1,0 +1,271 @@
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { AppHeader } from "@/components/app-header";
+import { Link } from "wouter";
+import { ArrowLeft, Lightbulb, Send, Sparkles, Target, ChefHat, TrendingUp, Heart, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+interface QuickAction {
+  id: string;
+  label: string;
+  icon: any;
+  prompt: string;
+  color: string;
+}
+
+const quickActions: QuickAction[] = [
+  {
+    id: 'low-cal',
+    label: 'Low-Calorie Recipes',
+    icon: Target,
+    prompt: 'Show me healthy recipes under 500 calories',
+    color: 'from-blue-500 to-cyan-500'
+  },
+  {
+    id: 'high-protein',
+    label: 'High-Protein Meals',
+    icon: TrendingUp,
+    prompt: 'Suggest high-protein meal ideas (30g+ protein)',
+    color: 'from-purple-500 to-pink-500'
+  },
+  {
+    id: 'meal-planning',
+    label: 'Meal Planning Tips',
+    icon: ChefHat,
+    prompt: 'Give me tips for meal planning and prep',
+    color: 'from-green-500 to-emerald-500'
+  },
+  {
+    id: 'nutrition-advice',
+    label: 'Nutrition Advice',
+    icon: Heart,
+    prompt: 'What are some general nutrition tips for healthy eating?',
+    color: 'from-orange-500 to-red-500'
+  }
+];
+
+export default function AICoachPage() {
+  const { toast } = useToast();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const chatMutation = useMutation({
+    mutationFn: async ({ prompt, history }: { prompt: string; history: Message[] }) => {
+      const response = await apiRequest('POST', '/api/ai-coach', { 
+        prompt,
+        conversationHistory: history.map(m => ({ role: m.role, content: m.content }))
+      });
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date()
+      }]);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to get AI response. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSend = () => {
+    if (!input.trim() || chatMutation.isPending) return;
+
+    const userMessage = input.trim();
+    const newMessages = [...messages, {
+      role: 'user' as const,
+      content: userMessage,
+      timestamp: new Date()
+    }];
+    setMessages(newMessages);
+    setInput('');
+    chatMutation.mutate({ prompt: userMessage, history: newMessages });
+  };
+
+  const handleQuickAction = (action: QuickAction) => {
+    const newMessages = [...messages, {
+      role: 'user' as const,
+      content: action.prompt,
+      timestamp: new Date()
+    }];
+    setMessages(newMessages);
+    chatMutation.mutate({ prompt: action.prompt, history: newMessages });
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-pink-50 to-white dark:from-gray-900 dark:via-purple-950/20 dark:to-gray-900">
+      <AppHeader />
+      
+      <div className="pt-16 pb-32 px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-6"
+          >
+            <Link href="/">
+              <Button 
+                variant="ghost" 
+                className="mb-4 -ml-2 hover:bg-purple-100 dark:hover:bg-purple-900/30"
+                data-testid="button-back"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </Link>
+            
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl">
+                <Lightbulb className="h-8 w-8 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                AI Coach
+              </h1>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">
+              Your personal nutrition and recipe assistant
+            </p>
+          </motion.div>
+
+          {/* Quick Actions - Always visible */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-8"
+          >
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-600" />
+              Quick Actions
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <motion.button
+                    key={action.id}
+                    onClick={() => handleQuickAction(action)}
+                    disabled={chatMutation.isPending}
+                    className={`p-6 rounded-2xl bg-gradient-to-r ${action.color} text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-left disabled:opacity-50 disabled:cursor-not-allowed`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    data-testid={`button-quick-${action.id}`}
+                  >
+                    <Icon className="h-6 w-6 mb-2" />
+                    <div className="font-semibold text-lg">{action.label}</div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Chat Messages */}
+          {messages.length > 0 && (
+            <div className="mb-6 space-y-4">
+              {messages.map((message, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] p-4 rounded-2xl ${
+                      message.role === 'user'
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                    <div className={`text-xs mt-2 ${message.role === 'user' ? 'text-white/70' : 'text-gray-500'}`}>
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+              {chatMutation.isPending && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-2xl">
+                    <Loader2 className="h-5 w-5 animate-spin text-purple-600" />
+                  </div>
+                </motion.div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+
+          {/* Input Area - Fixed at bottom */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 p-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex gap-2 items-end">
+                <Textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Ask me about recipes, nutrition advice, meal planning..."
+                  className="flex-1 min-h-[60px] max-h-[120px] resize-none rounded-2xl border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-purple-500"
+                  disabled={chatMutation.isPending}
+                  data-testid="input-chat"
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={!input.trim() || chatMutation.isPending}
+                  className="h-[60px] px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl"
+                  data-testid="button-send"
+                >
+                  <Send className="h-5 w-5" />
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                Press Enter to send, Shift+Enter for new line
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
