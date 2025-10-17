@@ -1,8 +1,6 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Copy, Printer, Check } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
 interface Recipe {
   id: string;
@@ -168,48 +166,94 @@ function aggregateIngredients(recipes: Recipe[]): Map<string, ParsedIngredient[]
   return ingredientMap;
 }
 
+function convertToShoppingQuantity(quantity: number, unit: string, ingredient: string): string {
+  // Convert recipe measurements to realistic shopping amounts
+  const normalizedUnit = normalizeUnit(unit);
+  
+  // Produce items - always use containers/bunches
+  if (ingredient.includes('berries') || ingredient.includes('strawberries') || ingredient.includes('blueberries') || ingredient.includes('raspberries')) {
+    return '1 container mixed berries';
+  }
+  if (ingredient.includes('lettuce') || ingredient.includes('spinach') || ingredient.includes('kale') || ingredient.includes('arugula')) {
+    return '1 bag/bunch ' + ingredient;
+  }
+  if (ingredient.includes('onion') || ingredient.includes('garlic') || ingredient.includes('tomato')) {
+    const roundedQty = Math.ceil(quantity);
+    return `${roundedQty} ${ingredient}`;
+  }
+  
+  // Liquid items - convert to common purchase sizes
+  if (normalizedUnit === 'cup' || normalizedUnit === 'ml') {
+    if (ingredient.includes('milk') || ingredient.includes('cream') || ingredient.includes('yogurt')) {
+      if (quantity <= 1) return '1 small carton ' + ingredient;
+      if (quantity <= 4) return '1 quart ' + ingredient;
+      return '1 half gallon ' + ingredient;
+    }
+  }
+  
+  // Dry goods - use packages
+  if (ingredient.includes('oats') || ingredient.includes('flour') || ingredient.includes('sugar') || ingredient.includes('rice')) {
+    return '1 package ' + ingredient;
+  }
+  
+  // Nuts and seeds - use bags
+  if (ingredient.includes('almond') || ingredient.includes('nut') || ingredient.includes('seed')) {
+    return '1 bag/container ' + ingredient;
+  }
+  
+  // Eggs - round up
+  if (ingredient.includes('egg')) {
+    const eggCount = Math.ceil(quantity);
+    if (eggCount <= 6) return '1 half dozen eggs';
+    return '1 dozen eggs';
+  }
+  
+  // Spices and seasonings - use original or "to taste"
+  if (ingredient.includes('salt') || ingredient.includes('pepper') || ingredient.includes('spice') || 
+      ingredient.includes('cinnamon') || ingredient.includes('vanilla')) {
+    return ingredient + ' (to taste)';
+  }
+  
+  // Default: round up small quantities and use package/container
+  if (quantity > 0) {
+    const roundedQty = Math.ceil(quantity);
+    if (unit) {
+      return `${roundedQty} ${normalizedUnit} ${ingredient} (or 1 package)`;
+    } else {
+      return `${roundedQty} ${ingredient}`;
+    }
+  }
+  
+  return ingredient;
+}
+
 function formatShoppingList(aggregated: Map<string, ParsedIngredient[]>): string[] {
   const items: string[] = [];
   
   aggregated.forEach((ingredients, key) => {
-    // Group by unit
-    const byUnit = new Map<string, number>();
-    const noQuantity: string[] = [];
+    // For shopping, we want to convert to realistic purchase amounts
+    const firstIng = ingredients[0];
+    
+    // Sum up total quantity
+    let totalQty = 0;
+    let primaryUnit = '';
     
     ingredients.forEach(ing => {
-      if (ing.quantity > 0 && ing.unit) {
-        const normalizedUnit = normalizeUnit(ing.unit);
-        const current = byUnit.get(normalizedUnit) || 0;
-        byUnit.set(normalizedUnit, current + ing.quantity);
-      } else if (ing.quantity > 0 && !ing.unit) {
-        const current = byUnit.get('') || 0;
-        byUnit.set('', current + ing.quantity);
-      } else {
-        // No quantity found - use original text
-        noQuantity.push(ing.original);
+      if (ing.quantity > 0) {
+        totalQty += ing.quantity;
+        if (!primaryUnit && ing.unit) {
+          primaryUnit = ing.unit;
+        }
       }
     });
     
-    // Format the aggregated quantities
-    if (byUnit.size > 0) {
-      const parts: string[] = [];
-      byUnit.forEach((qty, unit) => {
-        if (unit) {
-          // Format quantity nicely (remove unnecessary decimals)
-          const formattedQty = qty % 1 === 0 ? qty : qty.toFixed(2);
-          parts.push(`${formattedQty} ${unit}`);
-        } else {
-          // For unitless items, always show the quantity (even if it's 1)
-          const formattedQty = qty % 1 === 0 ? qty : qty.toFixed(2);
-          parts.push(`${formattedQty}`);
-        }
-      });
-      
-      const quantityStr = parts.filter(p => p).join(' + ');
-      items.push(`${quantityStr} ${ingredients[0].ingredient}`.trim());
-    } else if (noQuantity.length > 0) {
-      // Use the original text as-is for descriptive ingredients
-      items.push(noQuantity[0]);
+    if (totalQty > 0) {
+      // Convert to shopping quantity
+      const shoppingItem = convertToShoppingQuantity(totalQty, primaryUnit, firstIng.ingredient);
+      items.push(shoppingItem);
+    } else {
+      // No quantity - use as is
+      items.push(firstIng.ingredient);
     }
   });
   
@@ -217,63 +261,21 @@ function formatShoppingList(aggregated: Map<string, ParsedIngredient[]>): string
 }
 
 export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDialogProps) {
-  const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
+  const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
   
   const aggregated = aggregateIngredients(recipes);
   const shoppingList = formatShoppingList(aggregated);
   
-  const handleCopy = async () => {
-    const text = `Shopping List\n\n${shoppingList.map((item, i) => `${i + 1}. ${item}`).join('\n')}\n\nFrom recipes: ${recipes.map(r => r.name).join(', ')}`;
-    
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      toast({
-        title: "Copied!",
-        description: "Shopping list copied to clipboard.",
-      });
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy to clipboard.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handlePrint = () => {
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Shopping List</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { color: #333; }
-            ul { line-height: 1.8; }
-            .recipes { margin-top: 20px; color: #666; font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <h1>Shopping List</h1>
-          <ul>
-            ${shoppingList.map(item => `<li>${item}</li>`).join('')}
-          </ul>
-          <div class="recipes">
-            <strong>From recipes:</strong> ${recipes.map(r => r.name).join(', ')}
-          </div>
-        </body>
-      </html>
-    `;
-    
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.print();
-    }
+  const toggleItem = (index: number) => {
+    setCheckedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
   };
   
   return (
@@ -282,7 +284,9 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Shopping List
-            <span className="text-sm font-normal text-muted-foreground">({shoppingList.length} items)</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              ({shoppingList.length - checkedItems.size} of {shoppingList.length} remaining)
+            </span>
           </DialogTitle>
         </DialogHeader>
         
@@ -291,11 +295,21 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
             {shoppingList.map((item, index) => (
               <div 
                 key={index} 
-                className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg"
+                className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors cursor-pointer"
+                onClick={() => toggleItem(index)}
                 data-testid={`shopping-item-${index}`}
               >
-                <span className="text-muted-foreground font-medium min-w-[24px]">{index + 1}.</span>
-                <span className="flex-1">{item}</span>
+                <Checkbox
+                  checked={checkedItems.has(index)}
+                  onCheckedChange={() => toggleItem(index)}
+                  className="mt-0.5"
+                  data-testid={`checkbox-item-${index}`}
+                />
+                <span 
+                  className={`flex-1 ${checkedItems.has(index) ? 'line-through text-muted-foreground' : ''}`}
+                >
+                  {item}
+                </span>
               </div>
             ))}
           </div>
@@ -309,27 +323,6 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
             </p>
           </div>
         </div>
-        
-        <DialogFooter className="gap-2 mt-4">
-          <Button 
-            onClick={handleCopy} 
-            variant="outline"
-            className="flex-1"
-            data-testid="button-copy-shopping-list"
-          >
-            {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-            {copied ? 'Copied!' : 'Copy'}
-          </Button>
-          <Button 
-            onClick={handlePrint}
-            variant="outline"
-            className="flex-1"
-            data-testid="button-print-shopping-list"
-          >
-            <Printer className="h-4 w-4 mr-2" />
-            Print
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
