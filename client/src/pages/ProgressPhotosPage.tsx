@@ -295,13 +295,34 @@ export function ProgressPhotosPage() {
                   </button>
                 </div>
 
-                {/* Photo */}
-                <div className="flex-1 relative bg-black flex items-center justify-center">
-                  <img
+                {/* Photo with swipe support */}
+                <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
+                  <motion.img
+                    key={selectedPhotoIndex}
                     src={weightEntries[selectedPhotoIndex].imageUrl!}
                     alt="Progress photo"
-                    className="max-w-full max-h-full object-contain"
+                    className="max-w-full max-h-full object-contain cursor-grab active:cursor-grabbing"
                     data-testid="img-fullscreen"
+                    drag="x"
+                    dragElastic={0.7}
+                    dragMomentum={false}
+                    onDragEnd={(e, { offset, velocity }) => {
+                      const swipeThreshold = 50;
+                      const swipeVelocityThreshold = 500;
+                      
+                      // Swipe left (next photo)
+                      if (offset.x < -swipeThreshold || velocity.x < -swipeVelocityThreshold) {
+                        handleNextPhoto();
+                      }
+                      // Swipe right (previous photo)
+                      else if (offset.x > swipeThreshold || velocity.x > swipeVelocityThreshold) {
+                        handlePreviousPhoto();
+                      }
+                    }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
 
                   {/* Navigation arrows */}
