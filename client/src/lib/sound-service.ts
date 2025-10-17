@@ -28,10 +28,8 @@ class SoundService {
       
       // Generate sounds programmatically
       await this.generateSounds();
-      
-      console.log('✓ Sound service initialized');
     } catch (error) {
-      console.warn('Sound initialization failed:', error);
+      console.error('Sound initialization failed:', error);
     }
   }
 

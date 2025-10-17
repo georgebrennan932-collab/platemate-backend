@@ -110,9 +110,6 @@ export const CHALLENGE_DEFINITIONS = [
 export class ChallengeService {
   
   async initializeChallenges(): Promise<void> {
-    console.log("🎯 Initializing gamification challenges...");
-    let added = 0;
-    
     for (const challengeDef of CHALLENGE_DEFINITIONS) {
       const existing = await storage.getChallengeByKey(challengeDef.challengeKey);
       if (!existing) {
@@ -127,15 +124,7 @@ export class ChallengeService {
           difficulty: challengeDef.difficulty,
           isActive: 1,
         } as any);
-        added++;
-        console.log(`  ✅ Added challenge: ${challengeDef.name}`);
       }
-    }
-    
-    if (added > 0) {
-      console.log(`🎉 Added ${added} new challenges!`);
-    } else {
-      console.log(`✓ All challenges already initialized`);
     }
   }
 

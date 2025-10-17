@@ -27,8 +27,6 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
     if (!isOpen) return;
 
     const handleScanResult = (result: ScannerResult) => {
-      console.log('🔍 Barcode detected:', result.barcode);
-      
       // Vibrate on successful scan (if supported)
       if ('vibrate' in navigator) {
         navigator.vibrate(100);
@@ -40,7 +38,7 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
         audio.volume = 0.3;
         audio.play().catch(() => {});
       } catch (error) {
-        console.log('Could not play success sound:', error);
+        // Sound playback failed, continue silently
       }
       
       // Stop scanning and notify parent
@@ -55,9 +53,6 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
       setScannerReady(false);
       
       // Keep error visible for user to see and manually choose manual entry if needed
-      if (scanError.type === 'permission') {
-        console.log('🔄 Scanner permission error - user can click manual entry button');
-      }
     };
 
     scannerRef.current = createBarcodeScanner(handleScanResult, handleScanError);
@@ -74,15 +69,12 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
     if (!videoRef.current || !scannerRef.current) return;
     
     try {
-      console.log('🚀 Starting camera scanner - requesting permission IMMEDIATELY...');
-      
       // CRITICAL: Request camera access SYNCHRONOUSLY before any state updates
       // This ensures the browser considers it part of the user gesture
       // Use back camera (environment) for scanning barcodes
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment' } 
       });
-      console.log('✅ Camera permission granted! Stream obtained.');
       
       // Now update state after we have the stream
       setError(null);
@@ -91,25 +83,16 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
       // Pass the stream to the scanner
       await scannerRef.current.startScanning(videoRef.current, stream);
       setScannerReady(true);
-      console.log('✅ Camera scanner started successfully');
       
       // Check torch support
       const supported = await scannerRef.current.isTorchSupported();
       setTorchSupported(supported);
     } catch (error) {
-      console.error('❌ Failed to start scanning:', error);
+      console.error('Failed to start scanning:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setError(`Camera error: ${errorMessage}`);
       setIsScanning(false);
       setScannerReady(false);
-      
-      // Show error to user - they can manually choose manual entry if needed
-      if (error instanceof Error && 
-          (error.name === 'NotAllowedError' || 
-           error.message.includes('Permission denied') ||
-           error.message.includes('Camera access'))) {
-        console.log('🔄 Camera permission denied - user can click manual entry button');
-      }
     }
   };
 
@@ -129,7 +112,7 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
       const enabled = await scannerRef.current.toggleTorch();
       setTorchEnabled(enabled);
     } catch (error) {
-      console.log('Failed to toggle torch:', error);
+      // Torch toggle failed, continue silently
     }
   };
 

@@ -16,7 +16,6 @@ interface BarcodeScannerProps {
 }
 
 export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScannerProps) {
-  console.log("🔍 Manual Barcode Entry component loaded - no camera permissions needed!");
   const { toast } = useToast();
   const [scanError, setScanError] = useState<string | null>(null);
   const [manualBarcode, setManualBarcode] = useState('');
@@ -29,7 +28,6 @@ export function BarcodeScanner({ onScanSuccess, onClose, isOpen }: BarcodeScanne
     }
     
     const barcodeValue = manualBarcode.trim();
-    console.log('📝 Manual barcode entered:', barcodeValue);
     
     // Basic barcode validation (typically 12-14 digits)
     if (!/^\d{8,14}$/.test(barcodeValue)) {

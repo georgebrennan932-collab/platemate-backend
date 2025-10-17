@@ -57,12 +57,6 @@ export function CameraInterface({
 
   const analysisMutation = useMutation({
     mutationFn: async (file: File) => {
-      console.log("📸 Starting image analysis:", {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type
-      });
-      
       // Preprocess and compress image for optimal AI analysis
       let imageToUpload = file;
       try {
@@ -81,47 +75,35 @@ export function CameraInterface({
             maxSizeKB: 400
           }
         );
-        console.log("✅ Image preprocessed and compressed successfully");
       } catch (processingError) {
-        console.warn("⚠️ Image processing failed, using original:", processingError);
         // Fallback to original if processing fails
       }
       
       const formData = new FormData();
       formData.append('image', imageToUpload);
       
-      console.log("🚀 Sending request to /api/analyze...");
       const response = await fetch('/api/analyze', {
         method: 'POST',
         body: formData,
       });
 
-      console.log("📡 Response received:", {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("❌ API Error:", errorData);
+        console.error("API Error:", errorData);
         throw new Error(errorData.error || 'Analysis failed');
       }
 
       const result = await response.json();
-      console.log("✅ Analysis successful:", result);
       return result;
     },
     onMutate: () => {
-      console.log("🔄 Analysis mutation starting...");
       onAnalysisStart();
     },
     onSuccess: (data: FoodAnalysis) => {
-      console.log("🎉 Analysis success callback triggered:", data);
       onAnalysisSuccess(data);
     },
     onError: (error: Error) => {
-      console.error("💥 Analysis error callback triggered:", error);
+      console.error("Analysis error:", error);
       onAnalysisError(error.message, 'food');
     },
   });
@@ -129,8 +111,6 @@ export function CameraInterface({
 
   const barcodeMutation = useMutation({
     mutationFn: async (barcode: string) => {
-      console.log("🔍 Looking up barcode:", barcode);
-      
       const response = await fetch('/api/barcode', {
         method: 'POST',
         headers: {
@@ -141,36 +121,25 @@ export function CameraInterface({
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("❌ Barcode lookup failed:", errorData);
+        console.error("Barcode lookup failed:", errorData);
         throw new Error(errorData.error || 'Barcode lookup failed');
       }
 
       const result = await response.json();
-      console.log("✅ Barcode lookup successful:", result);
-      console.log("  Result ID:", result.id);
-      console.log("  Result has all fields:", {
-        hasId: !!result.id,
-        hasImageUrl: !!result.imageUrl,
-        hasDetectedFoods: !!result.detectedFoods,
-        hasTotalCalories: typeof result.totalCalories === 'number'
-      });
       return result;
     },
     onMutate: () => {
-      console.log("🔄 Barcode lookup starting...");
       onAnalysisStart();
     },
     onSuccess: (data: FoodAnalysis) => {
-      console.log("🎉 Barcode lookup success:", data);
       setShowBarcodeScanner(false);
       onAnalysisSuccess(data);
     },
     onError: (error: Error) => {
-      console.error("💥 Barcode lookup error:", error);
+      console.error("Barcode lookup error:", error);
       
       // If product not found, fallback to manual entry
       if (error.message.includes("Product not found") || error.message.includes("not found")) {
-        console.log("🔄 Product not found, opening manual entry fallback");
         setShowBarcodeScanner(false);
         setBarcodeScanningMode(false);
         setShowManualEntry(true);
@@ -194,11 +163,6 @@ export function CameraInterface({
   });
 
   const handleBarcodeScanned = (barcode: string) => {
-    console.log("📷 Barcode scanned in camera interface:", {
-      barcode,
-      length: barcode.length,
-      type: barcode.length === 12 ? 'UPC-A' : barcode.length === 13 ? 'EAN-13' : 'Other'
-    });
     barcodeMutation.mutate(barcode);
   };
 
@@ -216,56 +180,28 @@ export function CameraInterface({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    const inputType = event.target.getAttribute('capture') ? 'camera' : 'gallery';
-    
-    console.log("📁 File selected:", {
-      hasFile: !!file,
-      fileName: file?.name,
-      fileSize: file?.size,
-      fileType: file?.type,
-      inputType: inputType
-    });
     
     if (file) {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       
-      console.log(`✅ ${inputType} file processed successfully`);
-      
       // Don't auto-analyze - user needs to press capture button
       // This makes gallery selection work like camera capture
-    } else {
-      console.warn(`⚠️ No file was selected from ${inputType}`);
     }
   };
 
 
   const handleCameraCapture = async () => {
-    console.log("📷 Camera capture requested");
-    console.log("🔍 Platform check:", {
-      isNative: Capacitor.isNativePlatform(),
-      platform: Capacitor.getPlatform(),
-      barcodeScanningMode
-    });
-    
     // If user has already selected a file from gallery
     if (selectedFile) {
       if (barcodeScanningMode) {
-        console.log("🔍 Barcode scanning mode: Scanning image for barcode...");
-        console.log("📁 Selected file details:", {
-          name: selectedFile.name,
-          size: selectedFile.size,
-          type: selectedFile.type
-        });
         try {
           const result = await scanBarcodeFromImage(selectedFile);
-          console.log("✅ Barcode found in image:", result.barcode);
           handleBarcodeScanned(result.barcode);
           return;
         } catch (error) {
-          console.error("❌ Barcode detection failed:", error);
-          console.log("❌ No barcode found in image, falling back to manual entry");
+          console.error("Barcode detection failed:", error);
           setBarcodeScanningMode(false);
           setShowManualEntry(true);
           toast({
@@ -276,7 +212,6 @@ export function CameraInterface({
           return;
         }
       } else {
-        console.log("🖼️ Gallery image selected, starting food analysis...");
         analysisMutation.mutate(selectedFile);
         return;
       }
@@ -285,7 +220,6 @@ export function CameraInterface({
     // Use Capacitor Camera API if available (native app)
     if (Capacitor.isNativePlatform()) {
       try {
-        console.log("📱 Using Capacitor camera...");
         const image = await CapacitorCamera.getPhoto({
           quality: 90,
           allowEditing: false,
@@ -293,41 +227,22 @@ export function CameraInterface({
           source: CameraSource.Camera,
         });
         
-        console.log("📸 Photo captured successfully:", {
-          hasBase64: !!image.base64String,
-          base64Length: image.base64String?.length || 0
-        });
-        
         // Convert base64 to File object
         const response = await fetch(`data:image/jpeg;base64,${image.base64String}`);
         const blob = await response.blob();
         const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-        
-        console.log("📄 File created:", {
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: file.type
-        });
         
         setSelectedFile(file);
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
         
         if (barcodeScanningMode) {
-          console.log("🔍 Barcode scanning mode: Scanning captured photo for barcode...");
-          console.log("📷 File details:", {
-            name: file.name,
-            size: file.size,
-            type: file.type
-          });
           try {
             const result = await scanBarcodeFromImage(file);
-            console.log("✅ Barcode found in captured photo:", result.barcode);
             handleBarcodeScanned(result.barcode);
             return;
           } catch (error) {
-            console.error("❌ Barcode detection failed:", error);
-            console.log("❌ No barcode found in captured photo, falling back to manual entry");
+            console.error("Barcode detection failed:", error);
             setBarcodeScanningMode(false);
             setShowManualEntry(true);
             toast({
@@ -338,16 +253,14 @@ export function CameraInterface({
             return;
           }
         } else {
-          console.log("🎯 Starting food analysis...");
           // Auto-analyze the captured photo for food
           analysisMutation.mutate(file);
         }
       } catch (error: any) {
-        console.error('❌ Error taking photo:', error);
+        console.error('Error taking photo:', error);
         
         // Handle user cancellation gracefully
         if (error?.message?.includes('User cancelled') || error?.message?.includes('cancel')) {
-          console.log("ℹ️ User cancelled camera");
           return;
         }
         
@@ -359,11 +272,8 @@ export function CameraInterface({
       }
     } else {
       // For web browsers, use camera input
-      console.log("🌐 Using web camera input...");
-      
-      // Check if the camera input element exists
       if (!cameraInputRef.current) {
-        console.error("❌ Camera input ref is null");
+        console.error("Camera input ref is null");
         toast({
           title: "Camera Error",
           description: "Camera input not available. Please refresh the page.",
@@ -372,20 +282,10 @@ export function CameraInterface({
         return;
       }
       
-      console.log("📱 Camera input element found, triggering click...");
-      
       try {
-        // Add click event listener to detect if camera dialog opens
-        const handleCameraDialogOpen = () => {
-          console.log("📸 Camera dialog opened successfully");
-        };
-        
-        cameraInputRef.current.addEventListener('click', handleCameraDialogOpen, { once: true });
         cameraInputRef.current?.click();
-        
-        console.log("✅ Camera input click triggered");
       } catch (error) {
-        console.error("❌ Error triggering camera input:", error);
+        console.error("Error triggering camera input:", error);
         toast({
           title: "Camera Error", 
           description: "Failed to open camera. Your browser may not support camera access.",

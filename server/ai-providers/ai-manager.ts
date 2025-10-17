@@ -176,16 +176,12 @@ export class AIManager {
     
     try {
       // Step 1: Check cache first to avoid duplicate analysis
-      console.log(`🔍 Checking cache for image: ${imagePath}`);
       const cachedResult = await imageAnalysisCache.get(imagePath);
       
       if (cachedResult) {
-        const cacheTime = Date.now() - startTime;
-        console.log(`✅ Cache HIT! Returning cached analysis in ${cacheTime}ms`);
         return cachedResult;
       }
       
-      console.log(`📝 Cache MISS. Proceeding with AI analysis...`);
       const analysisStartTime = Date.now();
       
       // Step 2: Get full AI analysis with portions using legacy providers  
@@ -201,18 +197,12 @@ export class AIManager {
       const finalResult = await this.combineAIPortionsWithUSDANutrition(imagePath, fullAnalysis, nutritionData);
       
       // Step 6: Store result in cache for future use
-      const analysisTime = Date.now() - analysisStartTime;
-      console.log(`💾 Storing analysis result in cache (analysis took ${analysisTime}ms)`);
-      
       try {
         await imageAnalysisCache.set(imagePath, finalResult);
       } catch (cacheError: any) {
         console.warn('Failed to store result in cache (non-critical):', cacheError.message);
         // Don't fail the analysis if cache storage fails
       }
-      
-      const totalTime = Date.now() - startTime;
-      console.log(`✅ Food analysis completed in ${totalTime}ms (${cachedResult ? 'cached' : 'fresh'})`);
       
       return finalResult;
       
@@ -223,7 +213,6 @@ export class AIManager {
       try {
         const cachedLegacyResult = await imageAnalysisCache.get(imagePath);
         if (cachedLegacyResult) {
-          console.log('🔄 Using cached result for legacy fallback');
           return cachedLegacyResult;
         }
       } catch (legacyCacheError) {
@@ -254,25 +243,17 @@ export class AIManager {
     for (const provider of availableProviders) {
       for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
         try {
-          console.log(`🔍 Detecting food names with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
-          
           const result = await provider.detectFoodNames(imagePath);
-          
-          console.log(`✅ Food detection successful with ${provider.name}: ${result.detectedFoodNames.join(', ')}`);
           return result;
           
         } catch (error: any) {
-          console.log(`❌ Food detection failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
-          
           // If it's a rate limit error, move to next provider immediately
           if (error.isRateLimit) {
-            console.log(`${provider.name} hit rate limit, trying next provider`);
             break;
           }
           
           // If it's the last attempt with this provider, continue to next provider
           if (attempt === provider.maxRetries) {
-            console.log(`${provider.name} exhausted all retries, trying next provider`);
             break;
           }
           
@@ -284,7 +265,7 @@ export class AIManager {
     }
 
     // All providers failed, return fallback
-    console.log('All AI providers failed for food detection, using fallback');
+    console.warn('All AI providers failed for food detection, using fallback');
     return {
       confidence: 0,
       detectedFoodNames: ['Mixed Food'], // Generic fallback
@@ -297,11 +278,7 @@ export class AIManager {
    */
   async getNutritionFromUSDA(foodNames: string[]): Promise<Map<string, any>> {
     try {
-      console.log(`🔍 Looking up nutrition data for: ${foodNames.join(', ')}`);
-      
       const nutritionMap = await usdaService.findMultipleMatches(foodNames);
-      
-      console.log(`✅ Found USDA nutrition data for ${nutritionMap.size}/${foodNames.length} foods`);
       return nutritionMap;
       
     } catch (error: any) {
@@ -315,13 +292,10 @@ export class AIManager {
    */
   async tryOpenFoodFactsFallback(foodName: string): Promise<{ name: string; nutrition: any } | null> {
     try {
-      console.log(`🔄 Trying OpenFoodFacts fallback for: ${foodName}`);
-      
       const results = await openFoodFactsService.getNutritionData([foodName]);
       
       if (results && results.length > 0 && results[0].nutrition_per_100g !== "not found") {
         const nutrition = results[0].nutrition_per_100g as any;
-        console.log(`✅ OpenFoodFacts found data for ${foodName}:`, nutrition);
         
         return {
           name: foodName,
@@ -334,7 +308,6 @@ export class AIManager {
         };
       }
       
-      console.log(`❌ OpenFoodFacts also has no data for: ${foodName}`);
       return null;
       
     } catch (error: any) {
@@ -379,7 +352,6 @@ export class AIManager {
         totalCarbs += food.carbs;
         totalFat += food.fat;
         
-        console.log(`✅ Enhanced: ${foodName} → ${food.name} (${food.calories} cal)`);
       } else {
         // Try OpenFoodFacts as fallback
         const offData = await this.tryOpenFoodFactsFallback(foodName);
@@ -401,7 +373,6 @@ export class AIManager {
           totalCarbs += food.carbs;
           totalFat += food.fat;
           
-          console.log(`✅ OpenFoodFacts fallback: ${foodName} (${food.calories} cal)`);
         } else {
           // Final hardcoded fallback
           const fallbackFood = {
@@ -420,7 +391,7 @@ export class AIManager {
           totalCarbs += fallbackFood.carbs;
           totalFat += fallbackFood.fat;
           
-          console.log(`⚠️ Hardcoded fallback: ${foodName} (no data in USDA or OpenFoodFacts)`);
+
         }
       }
     }
@@ -460,7 +431,6 @@ export class AIManager {
         const portionGrams = this.convertPortionToGrams(aiFood.portion, aiFood.name);
         const scaleFactor = portionGrams / 100; // USDA data is per 100g
         
-        console.log(`🔧 DEBUG: "${aiFood.portion}" for "${aiFood.name}" → ${portionGrams}g → scaleFactor: ${scaleFactor}`);
         
         // Scale USDA nutrition to AI-estimated portion
         const food = {
@@ -479,7 +449,6 @@ export class AIManager {
         totalCarbs += food.carbs;
         totalFat += food.fat;
         
-        console.log(`✅ Enhanced: ${aiFood.name} (${aiFood.portion}) → ${food.name} (${food.calories} cal)`);
       } else {
         // Try OpenFoodFacts as fallback
         const offData = await this.tryOpenFoodFactsFallback(aiFood.name);
@@ -505,7 +474,6 @@ export class AIManager {
           totalCarbs += food.carbs;
           totalFat += food.fat;
           
-          console.log(`✅ OpenFoodFacts fallback: ${aiFood.name} (${aiFood.portion}) = ${food.calories} cal`);
         } else {
           // Final fallback: Use AI nutrition data if no USDA or OpenFoodFacts match found
           detectedFoods.push(aiFood);
@@ -514,7 +482,6 @@ export class AIManager {
           totalCarbs += aiFood.carbs;
           totalFat += aiFood.fat;
           
-          console.log(`⚠️ AI fallback: ${aiFood.name} (${aiFood.portion}) - ${aiFood.calories} cal`);
         }
       }
     }
@@ -542,28 +509,26 @@ export class AIManager {
     const kgMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?kg\b/);
     if (kgMatch) {
       const result = parseFloat(kgMatch[1]) * 1000;
-      console.log(`⚖️  Direct weight conversion: ${portion} = ${result}g`);
+
       return result;
     }
     
     const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?(?:g\b|grams?\b)/);
     if (gramsMatch) {
       const result = parseFloat(gramsMatch[1]);
-      console.log(`⚖️  Direct weight conversion: ${portion} = ${result}g`);
+
       return result;
     }
     
     const ozMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?oz\b/);
     if (ozMatch) {
       const result = parseFloat(ozMatch[1]) * 28.35; // 1 oz = 28.35g
-      console.log(`⚖️  Ounce conversion: ${portion} = ${result}g`);
       return result;
     }
     
     const mlMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?ml\b/);
     if (mlMatch) {
       const result = parseFloat(mlMatch[1]); // Assume 1ml ≈ 1g for most foods
-      console.log(`⚖️  Volume conversion: ${portion} = ${result}g`);
       return result;
     }
     
@@ -614,19 +579,16 @@ export class AIManager {
       // Handle specific UK crisp portion terms
       if (portionLower.includes('packet') || portionLower.includes('bag') || 
           portionLower.includes('single serve') || portionLower.includes('individual')) {
-        console.log(`⚖️  UK crisp packet: ${portion} (${foodName}) = ${num * 25}g (standard UK single-serve)`);
         return num * 25; // UK single-serve crisp packet ≈ 25g
       }
       
       // Handle sharing/multi-serve bags
       if (portionLower.includes('sharing') || portionLower.includes('family') || 
           portionLower.includes('multi') || portionLower.includes('large bag')) {
-        console.log(`⚖️  UK crisp sharing bag: ${portion} (${foodName}) = ${num * 150}g (sharing size)`);
         return num * 150; // UK sharing bag ≈ 150g
       }
       
       // Default UK crisp portion (assume standard single-serve if no specific size mentioned)
-      console.log(`⚖️  UK crisp default: ${portion} (${foodName}) = ${num * 25}g (standard UK portion)`);
       return num * 25; // Default UK crisp portion ≈ 25g
     }
     
@@ -716,14 +678,12 @@ export class AIManager {
     
     for (const standard of standardPortions) {
       if (standard.keywords.some(keyword => portionLower.includes(keyword) || foodLower.includes(keyword))) {
-        console.log(`⚖️  Standardized portion: ${portion} (${foodName}) = ${standard.portion}g (${standard.label})`);
         return standard.portion;
       }
     }
 
     // Default fallback with improved logging
     const fallbackGrams = Math.max(50, num * 25); // Conservative default minimum 50g
-    console.log(`⚖️  Fallback portion: ${portion} (${foodName}) = ${fallbackGrams}g (default estimate)`);
     return fallbackGrams;
   }
 
@@ -757,28 +717,25 @@ export class AIManager {
     for (const provider of availableProviders) {
       for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
         try {
-          console.log(`Attempting food analysis with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
           
           const result = await provider.analyzeFoodImage(imagePath);
           
-          console.log(`✓ Food analysis successful with ${provider.name}`);
           return {
             ...result,
             imageUrl: imagePath // Ensure imageUrl is set
           };
           
         } catch (error: any) {
-          console.log(`✗ Food analysis failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
           
           // If it's a rate limit error, mark provider as temporarily unavailable
           if (error.isRateLimit) {
-            console.log(`${provider.name} hit rate limit, trying next provider`);
+
             break; // Move to next provider immediately
           }
           
           // If it's the last attempt with this provider, continue to next provider
           if (attempt === provider.maxRetries) {
-            console.log(`${provider.name} exhausted all retries, trying next provider`);
+
             break;
           }
           
@@ -790,7 +747,7 @@ export class AIManager {
     }
 
     // All providers failed, return helpful fallback data
-    console.log("All AI providers failed, returning user-friendly fallback data");
+    console.warn("All AI providers failed, returning user-friendly fallback data");
     return {
       ...this.fallbackData.foodAnalysis,
       imageUrl: imagePath,
@@ -872,7 +829,6 @@ export class AIManager {
       foodKeywords.push(foodDescription.trim());
     }
     
-    console.log(`📝 Parsed food names from "${foodDescription}": ${foodKeywords.join(', ')}`);
     return foodKeywords;
   }
 
@@ -899,7 +855,6 @@ export class AIManager {
         const portionGrams = this.convertPortionToGrams(originalText, foodName);
         const scaleFactor = portionGrams / 100; // USDA data is per 100g
         
-        console.log(`🔧 Scaling nutrition for "${originalText}" → ${portionGrams}g (factor: ${scaleFactor})`);
         
         // Use accurate USDA nutrition data scaled by the portion
         const food = {
@@ -918,7 +873,6 @@ export class AIManager {
         totalCarbs += food.carbs;
         totalFat += food.fat;
         
-        console.log(`✅ Enhanced: ${foodName} → ${food.name} (${food.portion}) = ${food.calories} cal`);
       } else {
         // Try OpenFoodFacts as fallback
         const offData = await this.tryOpenFoodFactsFallback(foodName);
@@ -944,7 +898,6 @@ export class AIManager {
           totalCarbs += food.carbs;
           totalFat += food.fat;
           
-          console.log(`✅ OpenFoodFacts fallback: ${foodName} (${originalText}) = ${food.calories} cal`);
         } else {
           // Final hardcoded fallback
           const fallbackFood = {
@@ -963,7 +916,7 @@ export class AIManager {
           totalCarbs += fallbackFood.carbs;
           totalFat += fallbackFood.fat;
           
-          console.log(`⚠️ Hardcoded fallback: ${foodName} (no data in USDA or OpenFoodFacts)`);
+
         }
       }
     }
@@ -989,28 +942,25 @@ export class AIManager {
     for (const provider of availableProviders) {
       for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
         try {
-          console.log(`Attempting text analysis with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
           
           const result = await provider.analyzeFoodText(foodDescription);
           
-          console.log(`✓ Text analysis successful with ${provider.name}`);
           return {
             ...result,
             imageUrl: `voice-input-${Date.now()}.txt` // Placeholder for text input
           };
           
         } catch (error: any) {
-          console.log(`✗ Text analysis failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
           
           // If it's a rate limit error, mark provider as temporarily unavailable
           if (error.isRateLimit) {
-            console.log(`${provider.name} hit rate limit, trying next provider`);
+
             break; // Move to next provider immediately
           }
           
           // If it's the last attempt with this provider, continue to next provider
           if (attempt === provider.maxRetries) {
-            console.log(`${provider.name} exhausted all retries, trying next provider`);
+
             break;
           }
           
@@ -1022,7 +972,7 @@ export class AIManager {
     }
 
     // All providers failed, return helpful fallback data based on the food description
-    console.log("All AI providers failed for text analysis, returning fallback data");
+    console.warn("All AI providers failed for text analysis, returning fallback data");
     
     // Try to extract basic info from the input for a more helpful fallback
     const lowerDesc = foodDescription.toLowerCase();
@@ -1103,25 +1053,22 @@ export class AIManager {
     for (const provider of availableProviders) {
       for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
         try {
-          console.log(`Attempting diet advice with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
           
           const result = await provider.generateDietAdvice(entries, userProfile);
           
-          console.log(`✓ Diet advice successful with ${provider.name}`);
           return result;
           
         } catch (error: any) {
-          console.log(`✗ Diet advice failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
           
           // If it's a rate limit error, mark provider as temporarily unavailable
           if (error.isRateLimit) {
-            console.log(`${provider.name} hit rate limit, trying next provider`);
+
             break; // Move to next provider immediately
           }
           
           // If it's the last attempt with this provider, continue to next provider
           if (attempt === provider.maxRetries) {
-            console.log(`${provider.name} exhausted all retries, trying next provider`);
+
             break;
           }
           
@@ -1133,7 +1080,7 @@ export class AIManager {
     }
 
     // All providers failed, return fallback advice
-    console.log("All AI providers failed for diet advice, returning fallback data");
+    console.warn("All AI providers failed for diet advice, returning fallback data");
     return this.fallbackData.dietAdvice;
   }
 
@@ -1147,25 +1094,22 @@ export class AIManager {
     for (const provider of availableProviders) {
       for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
         try {
-          console.log(`🤖 Attempting custom question with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
           
           const response = await provider.answerNutritionQuestion(question, userEntries);
           
-          console.log(`✓ Custom question successful with ${provider.name}`);
           return response;
           
         } catch (error: any) {
-          console.log(`✗ Custom question failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
           
           // If it's a rate limit error, try next provider immediately
           if (error.isRateLimit) {
-            console.log(`${provider.name} hit rate limit, trying next provider`);
+
             break;
           }
           
           // If it's the last attempt with this provider, continue to next provider
           if (attempt === provider.maxRetries) {
-            console.log(`${provider.name} exhausted all retries, trying next provider`);
+
             break;
           }
           
@@ -1177,7 +1121,7 @@ export class AIManager {
     }
 
     // All providers failed, return a helpful fallback response
-    console.log("⚠️ All AI providers failed for custom question, returning fallback response");
+    console.warn("All AI providers failed for custom question, returning fallback response");
     return "I'm sorry, I'm having trouble accessing my AI services right now. Please try asking your question again in a moment, or consult with a healthcare professional for personalized nutrition advice.";
   }
 
@@ -1191,22 +1135,19 @@ export class AIManager {
     for (const provider of availableProviders) {
       for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
         try {
-          console.log(`Attempting daily coaching with ${provider.name} (attempt ${attempt}/${provider.maxRetries})`);
           
           const result = await provider.generateDailyCoaching(entries, userProfile);
           
-          console.log(`✓ Daily coaching successful with ${provider.name}`);
           return result;
 
         } catch (error: any) {
           const isLastAttempt = attempt === provider.maxRetries;
           const isLastProvider = provider === availableProviders[availableProviders.length - 1];
           
-          console.log(`✗ Daily coaching failed with ${provider.name} (attempt ${attempt}): ${error.message}`);
           
           // If it's a rate limit error, try next provider immediately
           if (error.isRateLimit) {
-            console.log(`${provider.name} hit rate limit, trying next provider`);
+
             break;
           }
           
@@ -1251,7 +1192,6 @@ export class AIManager {
           
           const result = await provider.generateEducationalTips(category);
           
-          console.log(`✓ Educational tips successful with ${provider.name}`);
           return result;
 
         } catch (error: any) {
@@ -1262,7 +1202,7 @@ export class AIManager {
           
           // If it's a rate limit error, try next provider immediately
           if (error.isRateLimit) {
-            console.log(`${provider.name} hit rate limit, trying next provider`);
+
             break;
           }
           
@@ -1324,7 +1264,6 @@ export class AIManager {
           // Check if provider has generateRecipes method
           if ('generateRecipes' in provider && typeof (provider as any).generateRecipes === 'function') {
             const result = await (provider as any).generateRecipes(dietaryFilter);
-            console.log(`✓ Recipe generation successful with ${provider.name}`);
             return result;
           } else {
             console.log(`${provider.name} does not support recipe generation, trying next provider`);
@@ -1335,13 +1274,13 @@ export class AIManager {
           
           // Check if it's a rate limit error
           if (error.message?.includes('rate limit') || error.message?.includes('quota') || error.status === 429) {
-            console.log(`${provider.name} hit rate limit, trying next provider`);
+
             break;
           }
           
           // If this was the last attempt for this provider, move to next
           if (attempt === provider.maxRetries) {
-            console.log(`${provider.name} exhausted all retries, trying next provider`);
+
             break;
           }
           

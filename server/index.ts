@@ -5,18 +5,6 @@ import emailAuthRoutes from "./email-auth";
 
 const app = express();
 
-// Log deployment environment details for debugging
-console.log("🚀 ===== SERVER STARTUP DEBUG ======");
-console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-console.log(`🔧 REPLIT_DEPLOYMENT: ${process.env.REPLIT_DEPLOYMENT}`);
-console.log(`🔑 API Keys Status:`);
-console.log(`  - OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? '✅ Set (' + process.env.OPENAI_API_KEY.substring(0, 8) + '...)' : '❌ Missing'}`);
-console.log(`  - GOOGLE_API_KEY: ${process.env.GOOGLE_API_KEY ? '✅ Set (' + process.env.GOOGLE_API_KEY.substring(0, 8) + '...)' : '❌ Missing'}`);
-console.log(`  - GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? '✅ Set (' + process.env.GEMINI_API_KEY.substring(0, 8) + '...)' : '❌ Missing'}`);
-console.log(`  - USDA_API_KEY: ${process.env.USDA_API_KEY ? '✅ Set (' + process.env.USDA_API_KEY.substring(0, 8) + '...)' : '❌ Missing'}`);
-console.log(`🌐 REPLIT_DOMAINS: ${process.env.REPLIT_DOMAINS || 'Not set'}`);
-console.log(`💾 DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set (PostgreSQL)' : '❌ Missing'}`);
-console.log("🚀 ===================================\n");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -62,7 +50,7 @@ app.use("/api", emailAuthRoutes);
     const { challengeService } = await import("./services/challenge-service");
     await challengeService.initializeChallenges();
   } catch (error) {
-    console.error("❌ Failed to initialize challenges:", error);
+    console.error("Failed to initialize challenges:", error);
   }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -80,13 +68,10 @@ app.use("/api", emailAuthRoutes);
   // Force development mode for now to show live changes
   // Only use deployment mode when NODE_ENV is production
   const isDeployment = process.env.NODE_ENV === "production";
-  console.log(`🔧 Development mode forced: NODE_ENV=${process.env.NODE_ENV}, isDeployment=${isDeployment}`);
   
   if (!isDeployment) {
-    console.log("🔧 Setting up Vite for development mode");
     await setupVite(app, server);
   } else {
-    console.log("🔧 Serving static files for deployment mode");
     serveStatic(app);
   }
 
@@ -101,6 +86,5 @@ app.use("/api", emailAuthRoutes);
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
-    console.log(`\n🌍 Server ready! Environment: ${(process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true') ? 'DEPLOYMENT' : 'DEVELOPMENT'}\n`);
   });
 })();

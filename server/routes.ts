@@ -145,9 +145,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ensure upload directory exists
   try {
     await fs.mkdir(uploadDir, { recursive: true });
-    console.log(`📁 Upload directory created/verified: ${uploadDir}`);
   } catch (error) {
-    console.error(`❌ Failed to create upload directory ${uploadDir}:`, error);
+    console.error(`Failed to create upload directory ${uploadDir}:`, error);
   }
 
   // Serve uploaded images as static files from the correct upload directory
@@ -274,14 +273,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // saveFood endpoint for mobile app compatibility - accepts simple food entries
   app.post("/saveFood", async (req, res) => {
     try {
-      // Log the incoming request body for debugging
-      console.log("📱 /saveFood endpoint received request:", JSON.stringify(req.body, null, 2));
-      
       const { food, amount, userId } = req.body;
       
       // Validate required fields
       if (!food || !amount || !userId) {
-        console.log("❌ Missing required fields:", { food: !!food, amount: !!amount, userId: !!userId });
         return res.status(400).json({
           status: "error",
           message: "Missing required fields: food, amount, and userId are all required"
@@ -290,11 +285,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate data types
       if (typeof food !== 'string' || typeof amount !== 'string' || typeof userId !== 'string') {
-        console.log("❌ Invalid field types:", { 
-          food: typeof food, 
-          amount: typeof amount, 
-          userId: typeof userId 
-        });
         return res.status(400).json({
           status: "error",
           message: "Invalid data types: food, amount, and userId must be strings"
@@ -308,28 +298,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: userId.trim()
       });
       
-      console.log("✅ Validated entry data:", validatedEntry);
-      
       // Save to database
       const savedEntry = await storage.createSimpleFoodEntry(validatedEntry);
-      
-      console.log("💾 Successfully saved food entry to database:", {
-        id: savedEntry.id,
-        food: savedEntry.food,
-        amount: savedEntry.amount,
-        userId: savedEntry.userId,
-        createdAt: savedEntry.createdAt
-      });
       
       // Return success response in the exact format requested
       res.json({ status: "ok" });
       
     } catch (error: any) {
-      console.error("❌ /saveFood error:", error);
+      console.error("/saveFood error:", error);
       
       // Handle validation errors specifically
       if (error.name === 'ZodError') {
-        console.error("Validation error details:", error.errors);
         return res.status(400).json({
           status: "error",
           message: `Validation failed: ${error.errors.map((e: any) => e.message).join(', ')}`
@@ -338,7 +317,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle database errors
       if (error.code === '23503') { // Foreign key constraint
-        console.error("Database foreign key error - invalid userId");
         return res.status(400).json({
           status: "error",
           message: "Invalid userId: user not found in database"
@@ -362,32 +340,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const requestStartTime = Date.now();
     
     try {
-      // Enhanced deployment debugging
-      console.log(`\n🔄 [${requestId}] ===== IMAGE ANALYSIS START =====`);
-      console.log(`🌍 Environment: ${process.env.REPLIT_DEPLOYMENT ? 'DEPLOYMENT' : 'DEVELOPMENT'}`);
-      console.log(`👤 User: ${req.user?.claims?.sub || 'Unknown'}`);
-      console.log(`📱 Request Headers:`, {
-        'content-type': req.headers['content-type'],
-        'user-agent': req.headers['user-agent'],
-        origin: req.headers.origin,
-        referer: req.headers.referer
-      });
-      
       if (!req.file) {
-        console.log(`❌ [${requestId}] No image file provided in request`);
         return res.status(400).json({ error: "No image file provided" });
       }
-
-      // Log detailed file information
-      console.log(`📸 [${requestId}] File details:`, {
-        originalName: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size,
-        filename: req.file.filename,
-        path: req.file.path
-      });
-      
-      console.log(`🔄 [${requestId}] Starting image analysis request`);
       
       // Add cache and queue statistics to response headers for monitoring
       const cacheStats = imageAnalysisCache.getStats();
@@ -412,17 +367,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .rotate() // Auto-rotate based on EXIF data (important for mobile)
           .jpeg({ quality: 85, mozjpeg: true }) // Higher quality since already compressed
           .toFile(processedImagePath);
-          
-        console.log("✅ Image processed successfully with Sharp");
       } catch (sharpError: any) {
-        console.warn("⚠️ Sharp processing failed, falling back to original file:", sharpError.message);
-        
         // Fallback: copy original file as processed image
         try {
           await fs.copyFile(req.file.path, processedImagePath);
-          console.log("✅ Using original file as fallback");
         } catch (copyError) {
-          console.error("❌ Fallback copy failed:", copyError);
+          console.error("Image processing failed:", copyError);
           
           // Clean up the original file before returning error
           try {
@@ -446,7 +396,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Acquire queue slot for concurrent request management
-      console.log(`⏳ [${requestId}] Waiting for queue slot (active: ${queueStats.active}, waiting: ${queueStats.waiting})`);
       await analysisQueue.acquire();
       
       // Variables to store response data and status - prevents early returns from bypassing finally
@@ -456,13 +405,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         // Real food recognition and nutrition analysis using multi-AI provider system with timeout
-        console.log(`🧠 [${requestId}] Starting AI analysis (includes cache check)...`);
-        console.log(`🔑 [${requestId}] API Keys available:`, {
-          openai: !!process.env.OPENAI_API_KEY,
-          google: !!process.env.GOOGLE_API_KEY,
-          gemini: !!process.env.GEMINI_API_KEY,
-          usda: !!process.env.USDA_API_KEY
-        });
         const analysisStartTime = Date.now();
         
         const foodAnalysisData = await Promise.race([
@@ -473,19 +415,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ]);
         
         const analysisTime = Date.now() - analysisStartTime;
-        console.log(`✅ [${requestId}] Analysis completed in ${analysisTime}ms`);
         
         // Add analysis timing to response headers
         res.setHeader('X-Analysis-Time', analysisTime.toString());
 
         // CONFIDENCE THRESHOLD CHECK: Apply to ALL analysis results (cached and fresh)
-        console.log(`🔍 [${requestId}] Checking confidence threshold: ${foodAnalysisData.confidence}% (threshold: 90%)`);
         if (foodAnalysisData.confidence < 90) {
-          console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for image analysis`);
-          
           // In deployment without auth, skip confirmation and proceed with analysis
           if (!req.user) {
-            console.log(`📝 [${requestId}] No user context in deployment - proceeding with low-confidence analysis`);
             const analysis = await storage.createFoodAnalysis(foodAnalysisData);
             responseData = analysis;
           } else {
@@ -514,8 +451,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               suggestedFoods: foodAnalysisData.detectedFoods,
               imageUrl: confirmationData.imageUrl
             };
-            
-            console.log(`🔄 [${requestId}] Created confirmation ${confirmation.id} - returning 200 confirmation_required`);
           } catch (validationError: any) {
             if (validationError.name === 'ZodError') {
               console.error('Image analysis confirmation validation error:', validationError.errors);
@@ -531,17 +466,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } else {
           // High confidence (≥90%) - proceed with immediate analysis
-          console.log(`✅ [${requestId}] High confidence (${foodAnalysisData.confidence}%) - returning analysis`);
-          
           // For authenticated users, save to database; for guests, return without saving
           let analysis;
           if (req.user) {
             analysis = await storage.createFoodAnalysis(foodAnalysisData);
-            console.log(`✅ [${requestId}] Analysis saved to database for authenticated user`);
           } else {
             // Guest mode: return analysis without saving to database
             analysis = { id: `guest_${Date.now()}`, ...foodAnalysisData };
-            console.log(`✅ [${requestId}] Guest mode: returning analysis without database save`);
           }
 
           // Optional: Auto-add to diary if user is authenticated and requests it
@@ -559,8 +490,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               const validatedDiaryEntry = insertDiaryEntrySchema.parse(diaryData);
               const diaryEntry = await storage.createDiaryEntry(validatedDiaryEntry);
-              
-              console.log(`✅ Auto-added analysis ${analysis.id} to diary for user ${userId}`);
               
               // Return both analysis and diary entry info
               responseData = {
@@ -596,13 +525,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(responseStatus).json(responseData);
       }
       
-      // Log total request time
-      const totalTime = Date.now() - requestStartTime;
-      console.log(`🏁 [${requestId}] Request completed in ${totalTime}ms`);
-      
     } catch (error) {
-      const totalTime = Date.now() - requestStartTime;
-      console.error(`❌ [${requestId}] Request failed after ${totalTime}ms:`, error);
+      console.error("Image analysis error:", error);
       res.status(500).json({ error: "Failed to analyze image" });
     }
   });
@@ -611,8 +535,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/test-barcode/:barcode", async (req, res) => {
     try {
       const barcode = req.params.barcode;
-      console.log(`🧪 Testing barcode lookup for: ${barcode}`);
-      
       const productData = await openFoodFactsService.lookupByBarcode(barcode);
       res.json({
         barcode,
@@ -638,8 +560,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Barcode is required" });
       }
 
-      console.log(`🔍 Barcode lookup request: ${barcode}`);
-      
       // Look up product using OpenFoodFacts
       const productData = await openFoodFactsService.lookupByBarcode(barcode);
       
@@ -674,7 +594,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create food analysis entry
       const analysis = await storage.createFoodAnalysis(analysisData);
       
-      console.log(`✅ Barcode analysis created: ${analysis.id} for ${productData.food}`);
       res.json(analysis);
       
     } catch (error) {
@@ -697,11 +616,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // CONFIDENCE THRESHOLD CHECK: If confidence < 90%, create confirmation workflow
       if (foodAnalysisData.confidence < 90) {
-        console.log(`⚠️ Low confidence (${foodAnalysisData.confidence}%) for text analysis - creating food confirmation`);
         
         // In deployment without auth, skip confirmation and proceed with analysis
         if (!req.user) {
-          console.log(`📝 No user context in deployment - proceeding with low-confidence text analysis`);
           const analysis = await storage.createFoodAnalysis(foodAnalysisData);
           return res.json(analysis);
         } else {
@@ -742,7 +659,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // High confidence (≥90%) - proceed with immediate analysis
-      console.log(`✅ High confidence (${foodAnalysisData.confidence}%) for text analysis - creating food analysis`);
       const analysis = await storage.createFoodAnalysis(foodAnalysisData);
 
       res.json(analysis);
@@ -787,7 +703,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Only repair foods from legacy entries that still have placeholder data
         processedFoods = validatedData.detectedFoods.map((food) => {
           if (food.name === "Rate Limit Reached" || food.portion === "OpenAI API limit exceeded") {
-            console.log(`🔧 Auto-repairing legacy food entry: ${food.name}`);
             return {
               name: "Mixed Food",
               portion: "1 serving",
@@ -842,7 +757,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to update food analysis" });
       }
 
-      console.log(`✅ User ${userId} updated food analysis ${id} with ${processedFoods.length} foods. Totals: ${serverTotals.calories}cal, ${serverTotals.protein}g protein`);
       res.json(updatedAnalysis);
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -991,10 +905,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           detectedFoods: validatedData.finalFoods
         });
 
-        console.log(`✅ User ${userId} confirmed food analysis. Created final analysis ${finalAnalysis.id}`);
         res.json({ confirmation, finalAnalysis });
       } else {
-        console.log(`❌ User ${userId} rejected food analysis ${id}`);
         res.json(confirmation);
       }
       
@@ -1092,7 +1004,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to refresh food analysis" });
       }
 
-      console.log(`✅ User ${userId} refreshed food analysis ${id}. New totals: ${freshAnalysisData.totalCalories}cal, ${freshAnalysisData.totalProtein}g protein`);
       res.json(updatedAnalysis);
     } catch (error: any) {
       console.error("Refresh analysis error:", error);
@@ -1225,12 +1136,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If new analysis provided, swap it in
       if (analysisId) {
-        console.log(`🔄 Swapping analysis: ${entry.analysisId} → ${analysisId}`);
         updateFields.analysisId = analysisId;
         // Note: Old analysis will remain in database but won't be linked to any diary entry
-        if (deleteOldAnalysisId) {
-          console.log(`📝 Old analysis ${deleteOldAnalysisId} replaced (cleanup not implemented yet)`);
-        }
       }
       
       const validatedUpdate = updateDiaryEntrySchema.parse(updateFields);
@@ -1249,37 +1156,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/diary/:id", async (req: any, res) => {
     try {
-      console.log(`🗑️ DELETE /api/diary/${req.params.id} - Request received`);
       const userId = req.user?.claims?.sub;
-      console.log(`  User ID: ${userId}`);
-      console.log(`  User object:`, req.user);
       
       if (!userId) {
-        console.log(`❌ No user ID found - authentication required`);
         return res.status(401).json({ error: "Authentication required" });
       }
       const entry = await storage.getDiaryEntry(req.params.id);
-      console.log(`  Entry found:`, !!entry);
       
       if (!entry) {
-        console.log(`❌ Entry not found`);
         return res.status(404).json({ error: "Diary entry not found" });
       }
       
       // Verify the entry belongs to the user
-      console.log(`  Entry userId: ${entry.userId}, Current userId: ${userId}`);
       if (entry.userId !== userId) {
-        console.log(`❌ Access denied - entry belongs to different user`);
         return res.status(403).json({ error: "Access denied" });
       }
       
       const deleted = await storage.deleteDiaryEntry(req.params.id);
-      console.log(`  Deleted successfully: ${deleted}`);
       if (!deleted) {
-        console.log(`❌ Failed to delete entry`);
         return res.status(404).json({ error: "Diary entry not found" });
       }
-      console.log(`✅ Diary entry deleted successfully`);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete diary entry error:", error);
@@ -1307,12 +1203,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (match) {
             // Parse portion to extract grams for accurate calculation
             const portionGrams = parsePortionToGrams(food.portion);
-            console.log(`📊 Portion calculation: "${food.portion}" → ${portionGrams}g`);
             
             // Scale the pre-calculated nutrition values (which are for 100g) to the requested portion
             const scaleFactor = portionGrams / 100;
-            console.log(`📏 Scale factor: ${portionGrams}g / 100g = ${scaleFactor}`);
-            console.log(`📦 Base nutrition (100g):`, match.nutrition);
             
             const scaledNutrition = {
               calories: Math.round(match.nutrition.calories * scaleFactor),
@@ -1320,7 +1213,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               carbs: Math.round(match.nutrition.carbs * scaleFactor * 10) / 10,
               fat: Math.round(match.nutrition.fat * scaleFactor * 10) / 10
             };
-            console.log(`🔢 Scaled nutrition (${portionGrams}g):`, scaledNutrition);
             
             calculatedFoods.push({
               ...food,

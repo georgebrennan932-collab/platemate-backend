@@ -60,12 +60,6 @@ router.post("/register", async (req, res) => {
     };
 
     await db.set(userKey, userData);
-    
-    if (existingUserData) {
-      console.log(`✅ Upgraded legacy user to email/password auth: ${email}`);
-    } else {
-      console.log(`✅ Created new user: ${email}`);
-    }
 
     // Create user in PostgreSQL database (using email as id for consistency)
     await storage.upsertUser({
@@ -103,23 +97,15 @@ router.post("/login", async (req, res) => {
     // Find user by email
     const userKey = getUserKey(email);
     const userResult: any = await db.get(userKey);
-
-    console.log(`🔐 Login attempt for: ${email}`);
-    console.log(`📝 User key: ${userKey}`);
-    console.log(`📦 User found:`, !!userResult?.value);
     
     if (!userResult || userResult.ok !== true || !userResult.value) {
-      console.log(`❌ User not found or invalid structure`);
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
     const user = userResult.value;
-    console.log(`🔑 Has passwordHash:`, !!user.passwordHash);
-    console.log(`🔒 Password length:`, password?.length);
 
     // Check if user has a password hash (old users from OIDC system might not)
     if (!user.passwordHash) {
-      console.log(`❌ No password hash found for ${email} - likely old user from previous system`);
       return res.status(401).json({ 
         error: "Account needs password setup. Please use 'Forgot Password' to set a new password or register again." 
       });
@@ -127,10 +113,8 @@ router.post("/login", async (req, res) => {
 
     // Verify password
     const isValid = await bcrypt.compare(password, user.passwordHash);
-    console.log(`✅ Password valid:`, isValid);
     
     if (!isValid) {
-      console.log(`❌ Password verification failed for ${email}`);
       return res.status(401).json({ error: "Invalid email or password" });
     }
 

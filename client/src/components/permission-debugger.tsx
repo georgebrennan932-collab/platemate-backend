@@ -57,7 +57,6 @@ export function PermissionDebugger({ onClose }: PermissionDebuggerProps) {
     for (let i = 0; i < constraints.length; i++) {
       const constraint = constraints[i];
       try {
-        console.log(`🧪 Testing constraint ${i + 1}:`, constraint);
         const stream = await navigator.mediaDevices.getUserMedia(constraint);
         
         info.mediaConstraints[`test_${i + 1}`] = {
