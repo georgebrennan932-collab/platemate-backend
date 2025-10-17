@@ -64,6 +64,7 @@ export default function Home() {
   // Barcode scanner state
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [scannerMode, setScannerMode] = useState<'barcode' | 'menu'>('barcode');
   
   
   // Confetti disabled per user request
@@ -937,6 +938,7 @@ export default function Home() {
             <motion.button
               onClick={() => {
                 console.log("🔍 BARCODE BUTTON CLICKED - Opening barcode scanner");
+                setScannerMode('barcode');
                 setShowBarcodeScanner(true);
               }}
               className="py-4 px-6 rounded-full font-bold flex items-center justify-center space-x-3 transition-all duration-300 bg-gradient-to-r from-orange-500 to-pink-600 text-white hover:from-orange-600 hover:to-pink-700 shadow-lg hover:shadow-xl hover:scale-105 transform"
@@ -958,6 +960,7 @@ export default function Home() {
           <motion.button
             onClick={() => {
               console.log("🍽️ MENU SCANNER BUTTON CLICKED - Opening QR scanner");
+              setScannerMode('menu');
               setShowBarcodeScanner(true);
             }}
             className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:to-red-700 text-white py-4 px-6 rounded-2xl font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-3 border-2 border-purple-300/50"
@@ -1481,6 +1484,7 @@ export default function Home() {
       {/* Camera Barcode Scanner Modal */}
       <ScannerModal
         isOpen={showBarcodeScanner}
+        mode={scannerMode}
         onScanSuccess={(barcode: string) => {
           handleBarcodeScanned(barcode);
         }}

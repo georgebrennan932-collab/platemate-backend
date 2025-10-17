@@ -9,9 +9,10 @@ interface ScannerModalProps {
   isOpen: boolean;
   onScanSuccess: (barcode: string) => void;
   onClose: () => void;
+  mode?: 'barcode' | 'menu'; // 'barcode' for product scanning, 'menu' for restaurant QR codes
 }
 
-export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalProps) {
+export function ScannerModal({ isOpen, onScanSuccess, onClose, mode = 'barcode' }: ScannerModalProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
@@ -129,21 +130,33 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
     }
   }, [isOpen]);
 
+  const isMenuMode = mode === 'menu';
+  const headerGradient = isMenuMode 
+    ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600' 
+    : 'bg-black/80';
+  const accentColor = isMenuMode ? 'purple' : 'blue';
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-full w-screen h-screen p-0 bg-black flex flex-col" data-testid="modal-barcode-scanner">
-        <DialogTitle className="sr-only">Barcode Scanner</DialogTitle>
+        <DialogTitle className="sr-only">{isMenuMode ? 'Menu QR Scanner' : 'Barcode Scanner'}</DialogTitle>
         <DialogDescription className="sr-only">
-          Use your camera to scan product barcodes for nutrition information
+          {isMenuMode 
+            ? 'Use your camera to scan restaurant menu QR codes' 
+            : 'Use your camera to scan product barcodes for nutrition information'}
         </DialogDescription>
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-black/80 backdrop-blur-sm border-b border-white/10">
+        <div className={`flex items-center justify-between p-4 backdrop-blur-sm border-b ${isMenuMode ? 'border-purple-300/20' : 'border-white/10'} ${headerGradient}`}>
           <div>
             <h2 className="text-white text-lg font-semibold" data-testid="text-scanner-title">
-              Scan Barcode
+              {isMenuMode ? '🍽️ Scan Menu QR Code' : '📦 Scan Barcode'}
             </h2>
-            <p className="text-white/60 text-xs">Allow camera access when prompted</p>
+            <p className="text-white/60 text-xs">
+              {isMenuMode 
+                ? 'Point camera at restaurant menu QR code' 
+                : 'Allow camera access when prompted'}
+            </p>
           </div>
           <Button
             variant="ghost"
@@ -169,38 +182,58 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
           
           {/* Initial State - Show Start Button */}
           {!isScanning && !error && (
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-purple-600/90 flex items-center justify-center">
+            <div className={`absolute inset-0 flex items-center justify-center ${
+              isMenuMode 
+                ? 'bg-gradient-to-br from-purple-600/90 via-pink-600/90 to-red-600/90' 
+                : 'bg-gradient-to-br from-blue-600/90 to-purple-600/90'
+            }`}>
               <div className="text-center max-w-sm mx-4">
                 <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                  </svg>
+                  {isMenuMode ? (
+                    <span className="text-5xl">🍽️</span>
+                  ) : (
+                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                  )}
                 </div>
-                <h3 className="text-white text-2xl font-bold mb-2">Ready to Scan</h3>
-                <p className="text-white/80 text-sm mb-8">Tap the button below to start scanning barcodes</p>
+                <h3 className="text-white text-2xl font-bold mb-2">
+                  {isMenuMode ? 'Ready to Scan Menu' : 'Ready to Scan'}
+                </h3>
+                <p className="text-white/80 text-sm mb-8">
+                  {isMenuMode 
+                    ? 'Scan restaurant QR codes to get meal recommendations' 
+                    : 'Tap the button below to start scanning barcodes'}
+                </p>
                 <div className="space-y-3">
                   <Button 
                     onClick={startScanning}
                     size="lg"
-                    className="bg-white text-blue-600 hover:bg-blue-50 w-full text-lg font-bold py-6"
+                    className={`w-full text-lg font-bold py-6 ${
+                      isMenuMode 
+                        ? 'bg-white text-purple-600 hover:bg-purple-50' 
+                        : 'bg-white text-blue-600 hover:bg-blue-50'
+                    }`}
                     data-testid="button-start-scan"
                   >
                     📷 Start Scan
                   </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      handleClose();
-                      setTimeout(() => {
-                        const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
-                        window.dispatchEvent(event);
-                      }, 100);
-                    }}
-                    className="border-white/40 bg-white/10 hover:bg-white/20 text-white w-full"
-                    data-testid="button-manual-entry-initial"
-                  >
-                    ⌨️ Enter Manually Instead
-                  </Button>
+                  {!isMenuMode && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        handleClose();
+                        setTimeout(() => {
+                          const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
+                          window.dispatchEvent(event);
+                        }, 100);
+                      }}
+                      className="border-white/40 bg-white/10 hover:bg-white/20 text-white w-full"
+                      data-testid="button-manual-entry-initial"
+                    >
+                      ⌨️ Enter Manually Instead
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -210,19 +243,29 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose }: ScannerModalPro
           {scannerReady && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="relative">
-                {/* Scan Frame */}
-                <div className="w-64 h-32 border-2 border-white rounded-lg border-dashed opacity-80"></div>
+                {/* Scan Frame - Larger for QR codes */}
+                <div className={`border-2 border-white rounded-lg border-dashed opacity-80 ${
+                  isMenuMode ? 'w-64 h-64' : 'w-64 h-32'
+                }`}></div>
                 
                 {/* Corner markers */}
-                <div className="absolute -top-1 -left-1 w-6 h-6 border-l-4 border-t-4 border-blue-500 rounded-tl"></div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 border-r-4 border-t-4 border-blue-500 rounded-tr"></div>
-                <div className="absolute -bottom-1 -left-1 w-6 h-6 border-l-4 border-b-4 border-blue-500 rounded-bl"></div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 border-r-4 border-b-4 border-blue-500 rounded-br"></div>
+                <div className={`absolute -top-1 -left-1 w-6 h-6 border-l-4 border-t-4 rounded-tl ${
+                  isMenuMode ? 'border-purple-500' : 'border-blue-500'
+                }`}></div>
+                <div className={`absolute -top-1 -right-1 w-6 h-6 border-r-4 border-t-4 rounded-tr ${
+                  isMenuMode ? 'border-purple-500' : 'border-blue-500'
+                }`}></div>
+                <div className={`absolute -bottom-1 -left-1 w-6 h-6 border-l-4 border-b-4 rounded-bl ${
+                  isMenuMode ? 'border-purple-500' : 'border-blue-500'
+                }`}></div>
+                <div className={`absolute -bottom-1 -right-1 w-6 h-6 border-r-4 border-b-4 rounded-br ${
+                  isMenuMode ? 'border-purple-500' : 'border-blue-500'
+                }`}></div>
                 
                 {/* Status Text */}
                 <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-center">
-                  <p className="text-white text-sm font-medium bg-black/60 px-3 py-1 rounded-full" data-testid="text-scan-status">
-                    Position barcode within frame
+                  <p className="text-white text-sm font-medium bg-black/60 px-3 py-1 rounded-full whitespace-nowrap" data-testid="text-scan-status">
+                    {isMenuMode ? 'Position QR code within frame' : 'Position barcode within frame'}
                   </p>
                 </div>
               </div>
