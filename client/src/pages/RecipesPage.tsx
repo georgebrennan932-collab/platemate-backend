@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
-import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils, ArrowLeft, RefreshCw, Heart, Bookmark } from "lucide-react";
+import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils, ArrowLeft, RefreshCw, Heart, Bookmark, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -420,18 +420,29 @@ export function RecipesPage() {
                     </div>
                     
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => handleSaveToggle(recipe)}
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
-                        disabled={saveMutation.isPending || unsaveMutation.isPending}
-                        data-testid={`button-save-recipe-${index}`}
-                      >
-                        {isSaved(recipe.id) ? (
-                          <Heart className="h-5 w-5 fill-red-500 text-red-500" />
-                        ) : (
-                          <Heart className="h-5 w-5 text-muted-foreground hover:text-red-500" />
-                        )}
-                      </button>
+                      {viewMode === "saved" ? (
+                        <button
+                          onClick={() => unsaveMutation.mutate(recipe.id)}
+                          className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
+                          disabled={unsaveMutation.isPending}
+                          data-testid={`button-remove-recipe-${index}`}
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleSaveToggle(recipe)}
+                          className="p-2 hover:bg-muted rounded-lg transition-colors"
+                          disabled={saveMutation.isPending || unsaveMutation.isPending}
+                          data-testid={`button-save-recipe-${index}`}
+                        >
+                          {isSaved(recipe.id) ? (
+                            <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+                          ) : (
+                            <Heart className="h-5 w-5 text-muted-foreground hover:text-red-500" />
+                          )}
+                        </button>
+                      )}
                       <div className="text-right">
                         <div className="text-lg font-semibold text-primary">
                           {recipe.calories}
