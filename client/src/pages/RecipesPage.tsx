@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
-import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils, ArrowLeft } from "lucide-react";
+import { ChefHat, Clock, Users, ExternalLink, Filter, Utensils, ArrowLeft, RefreshCw, Heart, Bookmark } from "lucide-react";
 import { motion } from "framer-motion";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { soundService } from "@/lib/sound-service";
 
 const DIETARY_REQUIREMENTS = [
   { value: "all", label: "All Recipes" },
@@ -52,6 +55,8 @@ export function RecipesPage() {
   const [, navigate] = useLocation();
   const [expandedIngredients, setExpandedIngredients] = useState<Set<string>>(new Set());
   const [expandedInstructions, setExpandedInstructions] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<"all" | "saved">("all");
+  const { toast } = useToast();
 
   // Get diet filter from URL parameters if provided
   useEffect(() => {
@@ -97,10 +102,112 @@ export function RecipesPage() {
     },
     retry: 3,
     retryDelay: 1000,
-    staleTime: 30000 // Cache for 30 seconds
+    staleTime: 30000, // Cache for 30 seconds
+    enabled: viewMode === "all"
   });
 
-  const filteredRecipes = recipes || [];
+  // Fetch saved recipes (always enabled to check save status)
+  const { data: savedRecipes, isLoading: savedLoading } = useQuery<Recipe[]>({
+    queryKey: ["/api/recipes/saved"]
+  });
+
+  // Refresh recipes mutation
+  const refreshMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(
+        "POST",
+        "/api/recipes/refresh",
+        { dietary: selectedDiet === 'all' ? '' : selectedDiet }
+      );
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
+      soundService.playSuccess();
+      toast({
+        title: "Recipes refreshed!",
+        description: "New recipes have been generated for you.",
+      });
+    },
+    onError: () => {
+      soundService.playError();
+      toast({
+        title: "Refresh failed",
+        description: "Unable to refresh recipes. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Save recipe mutation
+  const saveMutation = useMutation({
+    mutationFn: async (recipe: Recipe) => {
+      return apiRequest(
+        "POST",
+        "/api/recipes/save",
+        {
+          recipeId: recipe.id,
+          recipeName: recipe.name,
+          recipeData: recipe
+        }
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recipes/saved"] });
+      soundService.playSuccess();
+      toast({
+        title: "Recipe saved!",
+        description: "Added to your saved recipes.",
+      });
+    },
+    onError: (error: any) => {
+      soundService.playError();
+      toast({
+        title: "Save failed",
+        description: error.message || "Unable to save recipe.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Unsave recipe mutation
+  const unsaveMutation = useMutation({
+    mutationFn: async (recipeId: string) => {
+      return apiRequest("DELETE", `/api/recipes/save/${recipeId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recipes/saved"] });
+      soundService.playClick();
+      toast({
+        title: "Recipe removed",
+        description: "Removed from your saved recipes.",
+      });
+    },
+    onError: () => {
+      soundService.playError();
+      toast({
+        title: "Remove failed",
+        description: "Unable to remove recipe.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const filteredRecipes = viewMode === "all" ? (recipes || []) : (savedRecipes || []);
+  const currentLoading = viewMode === "all" ? isLoading : savedLoading;
+
+  // Check if a recipe is saved
+  const isSaved = (recipeId: string) => {
+    return savedRecipes?.some(r => r.id === recipeId) || false;
+  };
+
+  const handleSaveToggle = (recipe: Recipe) => {
+    if (isSaved(recipe.id)) {
+      unsaveMutation.mutate(recipe.id);
+    } else {
+      saveMutation.mutate(recipe);
+    }
+  };
 
   const toggleIngredients = (recipeId: string) => {
     setExpandedIngredients(prev => {
@@ -149,49 +256,89 @@ export function RecipesPage() {
               </Link>
               <h1 className="text-xl font-bold">Recipe Collection</h1>
             </div>
+            {viewMode === "all" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshMutation.mutate()}
+                disabled={refreshMutation.isPending}
+                data-testid="button-refresh-recipes"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            )}
           </div>
           
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Select value={selectedDiet} onValueChange={handleDietChange}>
-              <SelectTrigger className="pl-10" data-testid="select-dietary-filter">
-                <SelectValue placeholder="Filter by dietary requirements" />
-              </SelectTrigger>
-              <SelectContent>
-                {DIETARY_REQUIREMENTS.map((diet) => (
-                  <SelectItem key={diet.value} value={diet.value} data-testid={`option-diet-${diet.value || 'all'}`}>
-                    {diet.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            </div>
+          {/* View Mode Toggle */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant={viewMode === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("all")}
+              className="flex-1"
+              data-testid="button-view-all"
+            >
+              <Utensils className="h-4 w-4 mr-2" />
+              All Recipes
+            </Button>
+            <Button
+              variant={viewMode === "saved" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("saved")}
+              className="flex-1"
+              data-testid="button-view-saved"
+            >
+              <Bookmark className="h-4 w-4 mr-2" />
+              Saved
+            </Button>
           </div>
+          
+          {/* Filters - only show for All Recipes view */}
+          {viewMode === "all" && (
+            <>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Select value={selectedDiet} onValueChange={handleDietChange}>
+                    <SelectTrigger className="pl-10" data-testid="select-dietary-filter">
+                      <SelectValue placeholder="Filter by dietary requirements" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DIETARY_REQUIREMENTS.map((diet) => (
+                        <SelectItem key={diet.value} value={diet.value} data-testid={`option-diet-${diet.value || 'all'}`}>
+                          {diet.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-          {/* Selected Filter Display */}
-          {selectedDiet && selectedDiet !== 'all' && (
-            <div className="mt-3 flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Filtering by:</span>
-              <Badge variant="secondary" className="flex items-center gap-1">
-                {DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label}
-                <button 
-                  onClick={() => setSelectedDiet("all")}
-                  className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
-                  data-testid="button-clear-filter"
-                >
-                  ×
-                </button>
-              </Badge>
-            </div>
+              {/* Selected Filter Display */}
+              {selectedDiet && selectedDiet !== 'all' && (
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Filtering by:</span>
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    {DIETARY_REQUIREMENTS.find(d => d.value === selectedDiet)?.label}
+                    <button 
+                      onClick={() => setSelectedDiet("all")}
+                      className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                      data-testid="button-clear-filter"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
 
       {/* Content */}
       <div className="p-4 pb-24">
-        {isLoading ? (
+        {currentLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <Card key={i}>
@@ -249,9 +396,23 @@ export function RecipesPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg mb-1" data-testid={`text-recipe-name-${index}`}>
-                        {recipe.name}
-                      </CardTitle>
+                      <div className="flex items-start justify-between mb-1">
+                        <CardTitle className="text-lg" data-testid={`text-recipe-name-${index}`}>
+                          {recipe.name}
+                        </CardTitle>
+                        <button
+                          onClick={() => handleSaveToggle(recipe)}
+                          className="p-2 hover:bg-muted rounded-lg transition-colors ml-2 flex-shrink-0"
+                          disabled={saveMutation.isPending || unsaveMutation.isPending}
+                          data-testid={`button-save-recipe-${index}`}
+                        >
+                          {isSaved(recipe.id) ? (
+                            <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+                          ) : (
+                            <Heart className="h-5 w-5 text-muted-foreground hover:text-red-500" />
+                          )}
+                        </button>
+                      </div>
                       <p className="text-sm text-muted-foreground mb-2">
                         {recipe.description}
                       </p>
