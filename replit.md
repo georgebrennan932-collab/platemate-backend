@@ -103,3 +103,9 @@ Preferred communication style: Simple, everyday language.
   - Updated Insights page color scheme to green/emerald gradients (from indigo/purple) for better differentiation
   - Maintained dark mode support across all color changes
   - Ensured all interactive elements have proper data-testid attributes for accessibility
+- **Recipe Performance & UX Improvements**: Enhanced recipe collection page with major performance boost and expanded viewing:
+  - Server-side caching with 24-hour TTL for AI-generated recipes (recipes now load instantly instead of regenerating on every page visit)
+  - Expand/collapse functionality for ingredients - tap "+X more" to view all ingredients, "Show less" to collapse
+  - Expand/collapse functionality for cooking instructions - tap "Show all X steps" to view complete recipe, "Show less" to collapse
+  - State management using Set to track which recipe cards are expanded
+  - Improved mobile UX with clickable buttons replacing static truncation text
