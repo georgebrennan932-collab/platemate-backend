@@ -62,16 +62,31 @@ export function RecipesPage() {
   const [showShoppingList, setShowShoppingList] = useState(false);
   const { toast } = useToast();
 
-  // Get diet filter from URL parameters if provided
+  // Fetch user profile for auto-filtering
+  const { data: userProfile } = useQuery<any>({
+    queryKey: ['/api/user-profile'],
+  });
+
+  // Get diet filter from URL parameters or user profile
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const dietParam = urlParams.get('diet');
+    
     if (dietParam) {
+      // URL parameter takes precedence (manual override)
       setSelectedDiet(dietParam);
+    } else if (userProfile && userProfile.dietaryRequirements && userProfile.dietaryRequirements.length > 0) {
+      // Auto-set based on user's first dietary requirement
+      const userDiet = userProfile.dietaryRequirements[0].toLowerCase();
+      // Check if it matches one of our filter options
+      const matchingDiet = DIETARY_REQUIREMENTS.find(d => d.value === userDiet);
+      if (matchingDiet) {
+        setSelectedDiet(userDiet);
+      }
     } else {
       setSelectedDiet('all');
     }
-  }, []);
+  }, [userProfile]);
 
   // Update URL when diet filter changes
   const handleDietChange = (newDiet: string) => {
