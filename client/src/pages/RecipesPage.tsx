@@ -394,25 +394,11 @@ export function RecipesPage() {
             {filteredRecipes.map((recipe: Recipe, index: number) => (
               <Card key={recipe.id || index} className="overflow-hidden" data-testid={`card-recipe-${index}`}>
                 <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-1">
-                        <CardTitle className="text-lg" data-testid={`text-recipe-name-${index}`}>
-                          {recipe.name}
-                        </CardTitle>
-                        <button
-                          onClick={() => handleSaveToggle(recipe)}
-                          className="p-2 hover:bg-muted rounded-lg transition-colors ml-2 flex-shrink-0"
-                          disabled={saveMutation.isPending || unsaveMutation.isPending}
-                          data-testid={`button-save-recipe-${index}`}
-                        >
-                          {isSaved(recipe.id) ? (
-                            <Heart className="h-5 w-5 fill-red-500 text-red-500" />
-                          ) : (
-                            <Heart className="h-5 w-5 text-muted-foreground hover:text-red-500" />
-                          )}
-                        </button>
-                      </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-lg mb-1" data-testid={`text-recipe-name-${index}`}>
+                        {recipe.name}
+                      </CardTitle>
                       <p className="text-sm text-muted-foreground mb-2">
                         {recipe.description}
                       </p>
@@ -433,11 +419,25 @@ export function RecipesPage() {
                       </div>
                     </div>
                     
-                    <div className="text-right ml-4">
-                      <div className="text-lg font-semibold text-primary">
-                        {recipe.calories}
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleSaveToggle(recipe)}
+                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                        disabled={saveMutation.isPending || unsaveMutation.isPending}
+                        data-testid={`button-save-recipe-${index}`}
+                      >
+                        {isSaved(recipe.id) ? (
+                          <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+                        ) : (
+                          <Heart className="h-5 w-5 text-muted-foreground hover:text-red-500" />
+                        )}
+                      </button>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-primary">
+                          {recipe.calories}
+                        </div>
+                        <div className="text-xs text-muted-foreground">calories</div>
                       </div>
-                      <div className="text-xs text-muted-foreground">calories</div>
                     </div>
                   </div>
                 </CardHeader>
