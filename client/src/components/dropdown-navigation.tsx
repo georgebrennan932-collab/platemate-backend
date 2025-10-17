@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu } from "lucide-react";
+import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,6 +48,12 @@ export function DropdownNavigation() {
       icon: Target,
       label: "Goals",
       isActive: location === "/goals"
+    },
+    {
+      href: "/profile",
+      icon: User,
+      label: "Profile",
+      isActive: location === "/profile"
     },
     {
       href: "/recipes",

@@ -62,10 +62,7 @@ export function ProfilePage() {
   // Save profile mutation
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/user-profile", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest('POST', '/api/user-profile', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user-profile"] });
