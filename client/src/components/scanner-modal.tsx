@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { X, Zap, ZapOff, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ interface ScannerModalProps {
 }
 
 export function ScannerModal({ isOpen, onScanSuccess, onClose, mode = 'barcode' }: ScannerModalProps) {
+  const [, setLocation] = useLocation();
   const [isScanning, setIsScanning] = useState(false);
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
@@ -218,22 +220,28 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose, mode = 'barcode' 
                   >
                     📷 Start Scan
                   </Button>
-                  {!isMenuMode && (
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        handleClose();
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      handleClose();
+                      if (isMenuMode) {
+                        // Navigate to menu analysis page for manual menu text entry
+                        setTimeout(() => {
+                          setLocation('/menu-analysis');
+                        }, 100);
+                      } else {
+                        // Open barcode manual entry dialog
                         setTimeout(() => {
                           const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
                           window.dispatchEvent(event);
                         }, 100);
-                      }}
-                      className="border-white/40 bg-white/10 hover:bg-white/20 text-white w-full"
-                      data-testid="button-manual-entry-initial"
-                    >
-                      ⌨️ Enter Manually Instead
-                    </Button>
-                  )}
+                      }
+                    }}
+                    className="border-white/40 bg-white/10 hover:bg-white/20 text-white w-full"
+                    data-testid="button-manual-entry-initial"
+                  >
+                    ⌨️ Enter Manually Instead
+                  </Button>
                 </div>
               </div>
             </div>
@@ -303,7 +311,7 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose, mode = 'barcode' 
                 
                 <div className="bg-orange-900/30 border border-orange-600/30 rounded-lg p-3 mb-6">
                   <h4 className="text-orange-300 font-semibold text-xs mb-1">⚠️ Replit App Limitation</h4>
-                  <p className="text-white/70 text-xs">Camera may be blocked in mobile app. Manual entry will open automatically in 2 seconds...</p>
+                  <p className="text-white/70 text-xs">Camera may be blocked in mobile app. Click "Enter Manually" below to continue.</p>
                 </div>
                 <div className="space-y-3">
                   <Button 
@@ -325,11 +333,18 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose, mode = 'barcode' 
                       variant="outline"
                       onClick={() => {
                         handleClose();
-                        // Trigger manual entry immediately when user clicks
-                        setTimeout(() => {
-                          const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
-                          window.dispatchEvent(event);
-                        }, 100);
+                        if (isMenuMode) {
+                          // Navigate to menu analysis page for manual menu text entry
+                          setTimeout(() => {
+                            setLocation('/menu-analysis');
+                          }, 100);
+                        } else {
+                          // Trigger manual barcode entry
+                          setTimeout(() => {
+                            const event = new CustomEvent('open-manual-barcode', { detail: { manual: true } });
+                            window.dispatchEvent(event);
+                          }, 100);
+                        }
                       }}
                       className="border-white/20 bg-orange-600 hover:bg-orange-700 text-white flex-1 font-medium"
                       data-testid="button-enter-manually"

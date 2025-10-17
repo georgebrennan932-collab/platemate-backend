@@ -701,7 +701,39 @@ export default function Home() {
   });
 
   const handleBarcodeScanned = (barcode: string) => {
-    // Check if the scanned code is a URL (QR code for restaurant menu)
+    // Guard: Ignore empty or invalid barcodes
+    if (!barcode || barcode.trim().length === 0) {
+      console.warn("⚠️ Empty barcode detected, ignoring");
+      return;
+    }
+    
+    // If we're in menu mode, only accept URL QR codes
+    if (scannerMode === 'menu') {
+      try {
+        const url = new URL(barcode);
+        // If it's a valid URL, navigate to menu analysis page using wouter
+        if (url.protocol === 'http:' || url.protocol === 'https:') {
+          setShowBarcodeScanner(false);
+          setLocation(`/menu-analysis?url=${encodeURIComponent(barcode)}`);
+          toast({
+            title: "🍽️ Restaurant Menu Detected!",
+            description: "Opening menu scanner...",
+            duration: 2000,
+          });
+          return;
+        }
+      } catch {
+        // Not a valid URL in menu mode - show error
+        toast({
+          title: "Invalid QR Code",
+          description: "Please scan a restaurant menu QR code with a URL.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    // Barcode mode - check if it's a URL (for backward compatibility)
     try {
       const url = new URL(barcode);
       // If it's a valid URL, navigate to menu analysis page using wouter
