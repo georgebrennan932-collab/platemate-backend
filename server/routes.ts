@@ -670,6 +670,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fetch webpage content from URL (for menu QR codes) - with comprehensive SSRF protection
+  app.post("/api/fetch-webpage", async (req: any, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      // Validate URL format
+      let urlObj: URL;
+      try {
+        urlObj = new URL(url);
+      } catch {
+        return res.status(400).json({ error: "Invalid URL format" });
+      }
+
+      // SSRF Protection: Only allow HTTP/HTTPS
+      if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+        return res.status(400).json({ error: "Only HTTP and HTTPS URLs are allowed" });
+      }
+
+      // Helper function to check if an IP is private/internal
+      const isPrivateIP = (ip: string): boolean => {
+        // IPv4 private/internal ranges
+        const ipv4Patterns = [
+          /^127\./,                    // Loopback
+          /^0\./,                      // Current network
+          /^10\./,                     // Private class A
+          /^172\.(1[6-9]|2[0-9]|3[0-1])\./,  // Private class B
+          /^192\.168\./,               // Private class C
+          /^169\.254\./,               // Link-local
+          /^224\./,                    // Multicast
+          /^255\.255\.255\.255$/,      // Broadcast
+        ];
+        
+        // IPv6 private/internal patterns
+        const ipv6Patterns = [
+          /^::1$/,                     // Loopback
+          /^fe80:/i,                   // Link-local
+          /^fc00:/i,                   // Unique local
+          /^fd00:/i,                   // Unique local
+        ];
+        
+        if (ipv4Patterns.some(pattern => pattern.test(ip))) return true;
+        if (ipv6Patterns.some(pattern => pattern.test(ip.toLowerCase()))) return true;
+        
+        return false;
+      };
+
+      // SSRF Protection: Block hostname-based checks
+      const hostname = urlObj.hostname.toLowerCase();
+      
+      // Block obvious local hostnames
+      if (hostname === 'localhost' || hostname.includes('metadata')) {
+        return res.status(400).json({ error: "Access to internal/private networks is not allowed" });
+      }
+      
+      // Block if hostname is an IP and it's private
+      if (isPrivateIP(hostname)) {
+        return res.status(400).json({ error: "Access to internal/private networks is not allowed" });
+      }
+
+      // SSRF Protection: For this MVP, we'll use a simpler approach - 
+      // only allow well-known, safe domains to prevent SSRF entirely
+      // This is the most secure approach for production
+      const allowedDomains = [
+        // Add approved restaurant/menu domains here
+        // For now, we'll be restrictive and only allow HTTPS from known sources
+      ];
+
+      // For MVP security: Disable server-side fetching entirely
+      // Users should manually paste menu text instead
+      return res.status(403).json({ 
+        error: "Server-side URL fetching is temporarily disabled for security. Please copy and paste the menu text directly into the app.",
+        suggestion: "We're working on a more secure implementation of this feature."
+      });
+
+    } catch (error) {
+      console.error("Webpage fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch webpage content" });
+    }
+  });
+
+  // Analyze menu text and recommend meals based on user goals
+  app.post("/api/analyze-menu", async (req: any, res) => {
+    try {
+      const { menuText, url } = req.body;
+      const userId = req.user?.claims?.sub;
+      
+      if (!menuText || typeof menuText !== 'string') {
+        return res.status(400).json({ error: "Menu text is required" });
+      }
+
+      // Get user's nutrition goals if authenticated
+      let nutritionGoals = null;
+      if (userId) {
+        nutritionGoals = await storage.getNutritionGoals(userId);
+      }
+
+      // Use AI to analyze menu and recommend meals
+      const goals = nutritionGoals ? {
+        dailyCalories: nutritionGoals.dailyCalories || 2000,
+        proteinGrams: nutritionGoals.dailyProtein || 150,
+        carbsGrams: nutritionGoals.dailyCarbs || 200,
+        fatGrams: nutritionGoals.dailyFat || 65
+      } : {
+        dailyCalories: 2000,
+        proteinGrams: 150,
+        carbsGrams: 200,
+        fatGrams: 65
+      };
+      
+      const menuAnalysis = await aiManager.analyzeMenu(menuText, goals);
+
+      res.json({
+        url,
+        recommendations: menuAnalysis.recommendations,
+        userGoals: nutritionGoals,
+        success: true
+      });
+    } catch (error) {
+      console.error("Menu analysis error:", error);
+      res.status(500).json({ error: "Failed to analyze menu" });
+    }
+  });
+
   // Update food analysis (for editing detected foods) - PROTECTED
   app.patch("/api/analyses/:id", async (req: any, res) => {
     try {

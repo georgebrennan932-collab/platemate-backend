@@ -27,6 +27,7 @@ import InjectionAdvicePage from "./pages/InjectionAdvicePage";
 import HelpPage from "./pages/HelpPage";
 import { InsightsPage } from "./pages/InsightsPage";
 import { ChallengesPage } from "./pages/ChallengesPage";
+import { MenuAnalysisPage } from "./pages/MenuAnalysisPage";
 import NotFound from "./pages/not-found";
 
 // Root route component that checks authentication
@@ -158,6 +159,7 @@ function App() {
       <Route path="/help" component={HelpPage} />
       <Route path="/insights" component={InsightsPage} />
       <Route path="/challenges" component={ChallengesPage} />
+      <Route path="/menu-analysis" component={MenuAnalysisPage} />
       <Route path="/camera" component={CameraTestPage} />
       <Route path="/food-camera" component={CameraPage} />
       <Route path="/voice" component={VoicePage} />

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Images, Zap, Camera, CloudUpload, Syringe, QrCode, Flame } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -30,6 +30,7 @@ export function CameraInterface({
   caloriesGoal = 2000,
 }: CameraInterfaceProps) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [flashEnabled, setFlashEnabled] = useState(false);
@@ -151,6 +152,20 @@ export function CameraInterface({
   });
 
   const handleBarcodeScanned = (barcode: string) => {
+    // Check if the scanned code is a URL (QR code for restaurant menu)
+    try {
+      const url = new URL(barcode);
+      // If it's a valid URL, navigate to menu analysis page using wouter
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        setShowBarcodeScanner(false);
+        setLocation(`/menu-analysis?url=${encodeURIComponent(barcode)}`);
+        return;
+      }
+    } catch {
+      // Not a URL, continue with barcode lookup
+    }
+    
+    // Regular barcode lookup
     barcodeMutation.mutate(barcode);
   };
 

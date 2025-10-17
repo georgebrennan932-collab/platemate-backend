@@ -246,6 +246,52 @@
         "accessCount": 1,
         "lastAccessed": 1760701628408
       }
+    ],
+    [
+      "8b3c4b2c4ca25c37b30cf1588e505f63d8b71f97b5c0fb8a5ef2b5c4574a08f8",
+      {
+        "imageHash": "8b3c4b2c4ca25c37b30cf1588e505f63d8b71f97b5c0fb8a5ef2b5c4574a08f8",
+        "analysis": {
+          "imageUrl": "/tmp/uploads/processed_54e1db180cc7ec3dc6a316017b54a8d3.jpg",
+          "confidence": 95,
+          "totalCalories": 1024,
+          "totalProtein": 48,
+          "totalCarbs": 103,
+          "totalFat": 45,
+          "detectedFoods": [
+            {
+              "name": "Chicken, NS as to part, grilled with sauce, skin eaten",
+              "portion": "180g",
+              "calories": 380,
+              "protein": 36,
+              "carbs": 13,
+              "fat": 19,
+              "icon": "🍗"
+            },
+            {
+              "name": "DENNY'S, french fries",
+              "portion": "150g",
+              "calories": 423,
+              "protein": 5,
+              "carbs": 53,
+              "fat": 21,
+              "icon": "🍽️"
+            },
+            {
+              "name": "Bread, egg, toasted",
+              "portion": "2 medium slices (70g)",
+              "calories": 221,
+              "protein": 7,
+              "carbs": 37,
+              "fat": 5,
+              "icon": "bread-slice"
+            }
+          ]
+        },
+        "timestamp": 1760709555551,
+        "accessCount": 1,
+        "lastAccessed": 1760709555551
+      }
     ]
   ],
   "stats": {
@@ -253,11 +299,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 4,
+    "currentSize": 5,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1760693590780,
-    "newestEntry": 1760701628408
+    "newestEntry": 1760709555551
   },
-  "timestamp": 1760701628409
+  "timestamp": 1760709555552
 }

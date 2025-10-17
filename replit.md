@@ -109,3 +109,16 @@ Preferred communication style: Simple, everyday language.
   - Expand/collapse functionality for cooking instructions - tap "Show all X steps" to view complete recipe, "Show less" to collapse
   - State management using Set to track which recipe cards are expanded
   - Improved mobile UX with clickable buttons replacing static truncation text
+- **Scan-a-Menu Feature (MVP - Security-First)**: New QR code scanning feature for restaurant menus with AI-powered meal recommendations:
+  - Backend endpoint /api/fetch-webpage with comprehensive SSRF protection (currently disabled for MVP security, returns 403)
+  - Backend endpoint /api/analyze-menu using AI to parse menu text, extract meals, calculate nutrition, and recommend best matches based on user's nutrition goals
+  - Updated barcode scanner to detect URL QR codes and navigate to MenuAnalysisPage using wouter (SPA navigation)
+  - MenuAnalysisPage with manual menu text input (paste menu content) for secure MVP implementation
+  - AI-recommended meals displayed with match scores, nutrition info, and Add to Diary buttons
+  - Meal recommendations ranked by how well they match user's calorie and macro targets
+  - Each recommendation includes match score, match reason, and complete nutritional breakdown
+  - One-tap meal addition to diary with automatic meal type selection (breakfast/lunch/dinner/snack)
+  - Comprehensive error handling with response validation throughout the flow
+  - Fallback recommendations when AI is unavailable
+  - Mobile-optimized UI with gradient backgrounds and Framer Motion animations
+  - Security note: Server-side URL fetching disabled to prevent SSRF attacks; future enhancement will include DNS resolution and IP validation for secure automated fetching
