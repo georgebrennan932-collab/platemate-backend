@@ -536,6 +536,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   const addToDiaryMutation = useMutation({
     mutationFn: async () => {
+      console.log("🍽️ Adding to diary - Starting...");
+      console.log("  Analysis data:", {
+        id: data.id,
+        hasImageUrl: !!data.imageUrl,
+        confidence: data.confidence,
+        foodsCount: editableFoods.length
+      });
+      
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
       
       // Create a modified analysis with updated food data
@@ -548,14 +556,29 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         totalFat: totals.fat
       };
       
-      const response = await apiRequest('POST', '/api/diary', {
+      const requestBody = {
         analysisId: data.id,
         mealType: selectedMealType,
         mealDate: mealDateTime.toISOString(),
         notes: "",
         modifiedAnalysis // Send the modified data
-      });
-      return await response.json();
+      };
+      
+      console.log("  Request body:", requestBody);
+      
+      const response = await apiRequest('POST', '/api/diary', requestBody);
+      
+      console.log("  Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("  Response error:", errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to save to diary`);
+      }
+      
+      const result = await response.json();
+      console.log("✅ Successfully added to diary:", result);
+      return result;
     },
     onSuccess: () => {
       soundService.playSuccess();
@@ -576,12 +599,15 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       window.dispatchEvent(new Event('streakUpdated'));
     },
     onError: (error: Error) => {
+      console.error("❌ Error adding to diary - Full error:", error);
+      console.error("  Error message:", error.message);
+      console.error("  Error stack:", error.stack);
+      
       toast({
-        title: "Error",
-        description: "Failed to save meal to diary. Please try again.",
+        title: "Error Adding to Diary",
+        description: error.message || "Failed to save meal to diary. Please try again.",
         variant: "destructive",
       });
-      console.error("Error adding to diary:", error);
     },
   });
   const formatTime = (date: Date | string | null | undefined) => {

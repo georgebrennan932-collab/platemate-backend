@@ -141,11 +141,19 @@ export function CameraInterface({
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("❌ Barcode lookup failed:", errorData);
         throw new Error(errorData.error || 'Barcode lookup failed');
       }
 
       const result = await response.json();
       console.log("✅ Barcode lookup successful:", result);
+      console.log("  Result ID:", result.id);
+      console.log("  Result has all fields:", {
+        hasId: !!result.id,
+        hasImageUrl: !!result.imageUrl,
+        hasDetectedFoods: !!result.detectedFoods,
+        hasTotalCalories: typeof result.totalCalories === 'number'
+      });
       return result;
     },
     onMutate: () => {
