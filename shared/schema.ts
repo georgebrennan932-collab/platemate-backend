@@ -41,6 +41,8 @@ export const userProfiles = pgTable("user_profiles", {
   weeklyWeightChangeKg: integer("weekly_weight_change_kg"), // target kg per week (can be negative for loss)
   medication: varchar("medication"), // weight loss medication if any
   // AI Coach personalization fields
+  name: text("name"), // user's full name
+  nickname: text("nickname"), // preferred name for AI Coach to use
   dietaryRequirements: text("dietary_requirements").array(), // vegetarian, vegan, keto, paleo, etc.
   allergies: text("allergies").array(), // nuts, dairy, gluten, shellfish, etc.
   foodDislikes: text("food_dislikes"), // foods user doesn't like
