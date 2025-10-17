@@ -153,7 +153,7 @@ export function MenuAnalysisPage() {
   const recommendations = menuAnalysis?.recommendations || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-violet-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-violet-600 text-white p-6 shadow-lg">
         <div className="flex items-center space-x-4 mb-2">
