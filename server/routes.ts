@@ -1624,11 +1624,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const validatedEntry = insertWeightEntrySchema.parse({
+      // Parse weightGrams from string to number (FormData sends everything as strings)
+      const weightData = {
         ...req.body,
+        weightGrams: parseInt(req.body.weightGrams, 10),
         userId,
         imageUrl
-      });
+      };
+      
+      const validatedEntry = insertWeightEntrySchema.parse(weightData);
       const weightEntry = await storage.createWeightEntry(validatedEntry);
       
       // Track weight logged challenges
