@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { AppHeader } from "@/components/app-header";
 import { Link } from "wouter";
 import { ArrowLeft, Lightbulb, Send, Sparkles, Target, ChefHat, TrendingUp, Heart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -129,9 +128,7 @@ export default function AICoachPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-pink-50 to-white dark:from-gray-900 dark:via-purple-950/20 dark:to-gray-900">
-      <AppHeader />
-      
-      <div className="pt-16 pb-32 px-4">
+      <div className="pt-6 pb-32 px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <motion.div
