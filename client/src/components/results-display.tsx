@@ -149,26 +149,17 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
     // If already listening, stop the recording
     if (isListening && recognitionInstance) {
-      console.log('🛑 User clicked stop - current state:', {
-        isListening,
-        hasRecognitionInstance: !!recognitionInstance,
-        recognitionState: recognitionInstance
-      });
-      
       try {
         // Force immediate stop with state cleanup
         setIsListening(false);
         setRecognitionInstance(null);
         
         recognitionInstance.abort(); // Use abort() for immediate termination
-        console.log('🛑 Recognition.abort() called and state cleared');
       } catch (error) {
-        console.warn('Error aborting recognition:', error);
         try {
           recognitionInstance.stop();
-          console.log('🛑 Recognition.stop() called as fallback');
         } catch (stopError) {
-          console.warn('Error with stop() fallback:', stopError);
+          // Ignore errors, we're stopping anyway
         }
         // Ensure state is cleared even if abort/stop fails
         setIsListening(false);
@@ -189,7 +180,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       recognition.lang = 'en-US';
 
       recognition.onstart = () => {
-        console.log('🎤 Voice recording started');
         setIsListening(true);
         toast({
           title: "Listening...",
@@ -199,7 +189,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
-        console.log('🎤 Voice captured:', transcript);
         setVoiceInput(transcript);
         setShowVoiceMealDialog(true);
         toast({
@@ -214,9 +203,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         console.error('Speech recognition error:', event.error);
         
         // Don't show error for aborted (user stopped)
-        if (event.error === 'aborted') {
-          console.log('🎤 Voice recording stopped by user');
-        } else {
+        if (event.error !== 'aborted') {
           toast({
             title: "Speech Error",
             description: "Could not recognize speech. Please try again.",
@@ -228,7 +215,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       };
 
       recognition.onend = () => {
-        console.log('🎤 Voice recording ended');
         setIsListening(false);
         setRecognitionInstance(null);
       };
@@ -523,11 +509,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       // Update local state to match server response
       setEditableFoods(updatedAnalysis.detectedFoods.map(initializeEditableFood));
       
-      console.log("✅ Successfully saved changes to database. Server totals:", {
-        calories: updatedAnalysis.totalCalories,
-        protein: updatedAnalysis.totalProtein
-      });
-      
       toast({
         title: "Changes Saved",
         description: "Your food corrections have been saved to the database.",
@@ -650,14 +631,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   const addToDiaryMutation = useMutation({
     mutationFn: async () => {
-      console.log("🍽️ Adding to diary - Starting...");
-      console.log("  Analysis data:", {
-        id: data.id,
-        hasImageUrl: !!data.imageUrl,
-        confidence: data.confidence,
-        foodsCount: editableFoods.length
-      });
-      
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
       
       // Create a modified analysis with updated food data (strip baseline data)
@@ -678,11 +651,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         modifiedAnalysis // Send the modified data
       };
       
-      console.log("  Request body:", requestBody);
-      
       const response = await apiRequest('POST', '/api/diary', requestBody);
-      
-      console.log("  Response status:", response.status);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -691,7 +660,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       }
       
       const result = await response.json();
-      console.log("✅ Successfully added to diary:", result);
       return result;
     },
     onSuccess: () => {
@@ -713,9 +681,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       window.dispatchEvent(new Event('streakUpdated'));
     },
     onError: (error: Error) => {
-      console.error("❌ Error adding to diary - Full error:", error);
-      console.error("  Error message:", error.message);
-      console.error("  Error stack:", error.stack);
+      console.error("Error adding to diary:", error);
       
       toast({
         title: "Error Adding to Diary",
@@ -867,7 +833,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                   className="w-full h-full object-cover"
                   data-testid="img-thumbnail"
                   onError={(e) => {
-                    console.log('Image failed to load:', data.imageUrl);
                     e.currentTarget.style.display = 'none';
                   }}
                 />
