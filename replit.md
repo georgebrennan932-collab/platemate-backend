@@ -134,3 +134,11 @@ Preferred communication style: Simple, everyday language.
   - System prompts emphasize never suggesting foods that violate user's dietary requirements or allergies
   - Profile persists across sessions in PostgreSQL database with automatic sync on updates
   - Purple/pink gradient design matching AI Coach theme for visual consistency
+- **Progress Photos & Weight Tracking UI Consistency**: Updated all weight tracking and progress photos sections to use consistent teal/cyan/green color scheme matching the app's primary brand colors:
+  - Progress Photos page: Teal-cyan gradient header, teal camera icon, teal-to-cyan title gradient, teal weight displays, teal-cyan-green timeline gradient
+  - Weight tracking page: Dynamic header showing "Weight Tracking" when on weight tab (instead of "Food Diary")
+  - Weight list entries: Teal icons for calendar and weight displays, teal weight values throughout
+  - Weight form: Teal target icon, teal-to-cyan gradient save button for visual appeal
+  - All sections now use teal (hsl(160 84% 39%)) and cyan (hsl(200 100% 50%)) as primary colors, matching app's --primary CSS variable
+  - Timeline dots use green (start), teal (latest), and cyan (middle) for progress visualization
+  - Green-to-cyan background gradients replace previous blue-only backgrounds for softer, brand-aligned aesthetic

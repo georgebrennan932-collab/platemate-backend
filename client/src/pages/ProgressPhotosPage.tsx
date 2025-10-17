@@ -68,7 +68,7 @@ export function ProgressPhotosPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
         <div className="max-w-4xl mx-auto p-4">
           {/* Header Skeleton */}
           <div className="mb-6">
@@ -94,14 +94,14 @@ export function ProgressPhotosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 pb-24">
       <div className="max-w-4xl mx-auto p-4">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <Link href="/diary?tab=weight">
               <button
-                className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                 data-testid="button-back"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -120,8 +120,8 @@ export function ProgressPhotosPage() {
           </div>
 
           <div className="flex items-center space-x-3 mb-2">
-            <Camera className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <Camera className="h-8 w-8 text-teal-600" />
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent">
               Progress Photos
             </h1>
           </div>
@@ -141,7 +141,7 @@ export function ProgressPhotosPage() {
               Start tracking your progress by adding photos when you log your weight
             </p>
             <Link href="/diary?tab=weight">
-              <Button className="bg-blue-600 hover:bg-blue-700" data-testid="button-log-weight">
+              <Button className="bg-teal-600 hover:bg-teal-700" data-testid="button-log-weight">
                 Log Weight with Photo
               </Button>
             </Link>
@@ -149,7 +149,7 @@ export function ProgressPhotosPage() {
         ) : (
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-4 md:left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-600 via-purple-600 to-pink-600"></div>
+            <div className="absolute left-4 md:left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-teal-600 via-cyan-500 to-green-500"></div>
 
             {/* Timeline entries */}
             <div className="space-y-8" data-testid="timeline-entries">
@@ -168,7 +168,7 @@ export function ProgressPhotosPage() {
                   >
                     {/* Timeline dot */}
                     <div className={`absolute left-2.5 md:left-4.5 w-4 h-4 rounded-full border-4 border-white dark:border-gray-900 ${
-                      isFirst ? 'bg-green-500' : isLast ? 'bg-blue-600' : 'bg-purple-600'
+                      isFirst ? 'bg-green-500' : isLast ? 'bg-teal-600' : 'bg-cyan-500'
                     }`}></div>
 
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
@@ -195,7 +195,7 @@ export function ProgressPhotosPage() {
                             </div>
                           )}
                           {isLast && (
-                            <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            <div className="absolute top-2 left-2 bg-teal-600 text-white text-xs font-bold px-2 py-1 rounded-full">
                               LATEST
                             </div>
                           )}
@@ -208,7 +208,7 @@ export function ProgressPhotosPage() {
                               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                                 {formatDate(entry.loggedAt)}
                               </p>
-                              <p className="text-3xl font-bold text-blue-600" data-testid={`text-weight-${entry.id}`}>
+                              <p className="text-3xl font-bold text-teal-600" data-testid={`text-weight-${entry.id}`}>
                                 {formatWeight(entry.weightGrams)}
                               </p>
                             </div>
@@ -282,7 +282,7 @@ export function ProgressPhotosPage() {
                     <p className="font-semibold text-lg">
                       {formatDate(weightEntries[selectedPhotoIndex].loggedAt)}
                     </p>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-2xl font-bold text-teal-600">
                       {formatWeight(weightEntries[selectedPhotoIndex].weightGrams)}
                     </p>
                   </div>
