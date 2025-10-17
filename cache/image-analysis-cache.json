@@ -1,97 +1,23 @@
 {
   "entries": [
     [
-      "5fc835d6db51e8a7ea344304811c6c1167a8c040028bdf7922ef714157bac60c",
-      {
-        "imageHash": "5fc835d6db51e8a7ea344304811c6c1167a8c040028bdf7922ef714157bac60c",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_0e953fd00f29da1859403eef34fd02af.jpg",
-          "confidence": 98,
-          "totalCalories": 90,
-          "totalProtein": 5,
-          "totalCarbs": 11,
-          "totalFat": 3,
-          "detectedFoods": [
-            {
-              "name": "Soup, tomato",
-              "portion": "300ml",
-              "calories": 57,
-              "protein": 2,
-              "carbs": 11,
-              "fat": 1,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Basil, fresh",
-              "portion": "5g",
-              "calories": 1,
-              "protein": 0,
-              "carbs": 0,
-              "fat": 0,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Chicken, wing, frozen, glazed, barbecue flavored",
-              "portion": "15ml",
-              "calories": 32,
-              "protein": 3,
-              "carbs": 0,
-              "fat": 2,
-              "icon": "apple-alt"
-            }
-          ]
-        },
-        "timestamp": 1760003392849,
-        "accessCount": 1,
-        "lastAccessed": 1760003392849
-      }
-    ],
-    [
-      "d52928cff6e7726adc3af7ba65722ecbed5709f44c64e9bef0adc3fc60b6fc8c",
-      {
-        "imageHash": "d52928cff6e7726adc3af7ba65722ecbed5709f44c64e9bef0adc3fc60b6fc8c",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_2e66bfe5b254c28c8fc0ad9fa959d218.jpg",
-          "confidence": 90,
-          "totalCalories": 208,
-          "totalProtein": 11,
-          "totalCarbs": 22,
-          "totalFat": 9,
-          "detectedFoods": [
-            {
-              "name": "Soup, meatball",
-              "portion": "400g",
-              "calories": 208,
-              "protein": 11,
-              "carbs": 22,
-              "fat": 9,
-              "icon": "meatball"
-            }
-          ]
-        },
-        "timestamp": 1760009714952,
-        "accessCount": 1,
-        "lastAccessed": 1760009714952
-      }
-    ],
-    [
       "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
       {
         "imageHash": "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
         "analysis": {
-          "imageUrl": "/tmp/uploads/processed_9899f24e3e047a42a6dafe840e37c853.jpg",
+          "imageUrl": "/tmp/uploads/processed_cb781823d9397b4b7d1f86e8ac7ce475.jpg",
           "confidence": 85,
-          "totalCalories": 59,
-          "totalProtein": 2,
-          "totalCarbs": 11,
+          "totalCalories": 52,
+          "totalProtein": 1,
+          "totalCarbs": 10,
           "totalFat": 1,
           "detectedFoods": [
             {
-              "name": "Soup, tomato",
-              "portion": "300ml",
-              "calories": 57,
-              "protein": 2,
-              "carbs": 11,
+              "name": "Soup, borscht",
+              "portion": "250ml",
+              "calories": 50,
+              "protein": 1,
+              "carbs": 10,
               "fat": 1,
               "icon": "bowl"
             },
@@ -102,104 +28,13 @@
               "protein": 0,
               "carbs": 0,
               "fat": 0,
-              "icon": "apple-alt"
+              "icon": "leaf"
             }
           ]
         },
-        "timestamp": 1760123818795,
+        "timestamp": 1760693590780,
         "accessCount": 1,
-        "lastAccessed": 1760123818795
-      }
-    ],
-    [
-      "be4185c173abac73d59fdf29f178b31d376f5974a9953c26afeddeb1c891479d",
-      {
-        "imageHash": "be4185c173abac73d59fdf29f178b31d376f5974a9953c26afeddeb1c891479d",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_b3cff8701e91612cdc05e3857049db5e.jpg",
-          "confidence": 95,
-          "totalCalories": 1371,
-          "totalProtein": 60,
-          "totalCarbs": 86,
-          "totalFat": 89,
-          "detectedFoods": [
-            {
-              "name": "Egg, whole, fried no added fat",
-              "portion": "2 large eggs",
-              "calories": 143,
-              "protein": 12,
-              "carbs": 1,
-              "fat": 10,
-              "icon": "egg"
-            },
-            {
-              "name": "Sausage, smoked link sausage, pork",
-              "portion": "2 sausages (120g)",
-              "calories": 371,
-              "protein": 14,
-              "carbs": 1,
-              "fat": 34,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Blood sausage",
-              "portion": "1 slice (60g)",
-              "calories": 227,
-              "protein": 9,
-              "carbs": 1,
-              "fat": 21,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Mushrooms, NS as to form, cooked",
-              "portion": "100g",
-              "calories": 66,
-              "protein": 4,
-              "carbs": 5,
-              "fat": 4,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Beans, baked, canned, with pork and sweet sauce",
-              "portion": "180g",
-              "calories": 189,
-              "protein": 8,
-              "carbs": 39,
-              "fat": 2,
-              "icon": "🍽️"
-            },
-            {
-              "name": "CHICK-FIL-A, hash browns",
-              "portion": "1 hash brown (50g)",
-              "calories": 151,
-              "protein": 2,
-              "carbs": 15,
-              "fat": 9,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Pork bacon, NS as to fresh, smoked or cured, cooked",
-              "portion": "1 slice (25g)",
-              "calories": 121,
-              "protein": 9,
-              "carbs": 0,
-              "fat": 9,
-              "icon": "bacon"
-            },
-            {
-              "name": "Orange juice, canned, unsweetened",
-              "portion": "220ml",
-              "calories": 103,
-              "protein": 2,
-              "carbs": 24,
-              "fat": 0,
-              "icon": "🍽️"
-            }
-          ]
-        },
-        "timestamp": 1760124916489,
-        "accessCount": 1,
-        "lastAccessed": 1760124916489
+        "lastAccessed": 1760693590780
       }
     ]
   ],
@@ -208,11 +43,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 4,
+    "currentSize": 1,
     "maxSize": 1000,
     "totalEvictions": 0,
-    "oldestEntry": 1760003392849,
-    "newestEntry": 1760124916489
+    "oldestEntry": 1760693590780,
+    "newestEntry": 1760693590780
   },
-  "timestamp": 1760124916490
+  "timestamp": 1760693590781
 }

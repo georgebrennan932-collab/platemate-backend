@@ -79,6 +79,12 @@ function initializeEditableFood(food: DetectedFood): EditableFood {
   };
 }
 
+// Helper function to strip baseline data before sending to server
+function stripBaselineData(editableFood: EditableFood): DetectedFood {
+  const { baselinePortionValue, baselinePortionUnit, baselineCalories, baselineProtein, baselineCarbs, baselineFat, ...detectedFood } = editableFood;
+  return detectedFood as DetectedFood;
+}
+
 export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [showDiaryDialog, setShowDiaryDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<"breakfast" | "lunch" | "dinner" | "snack">("lunch");
@@ -488,9 +494,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   const saveChangesMutation = useMutation({
     mutationFn: async () => {
-      // Server calculates totals for security - only send detectedFoods
+      // Server calculates totals for security - only send detectedFoods without baseline data
       const response = await apiRequest('PATCH', `/api/analyses/${data.id}`, {
-        detectedFoods: editableFoods
+        detectedFoods: editableFoods.map(stripBaselineData)
       });
       return await response.json();
     },
@@ -583,9 +589,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         const updatedFoods = [...editableFoods, initializeEditableFood(newFood)];
         setEditableFoods(updatedFoods);
         
-        // Save changes to the database
+        // Save changes to the database (strip baseline data)
         const updateResponse = await apiRequest('PATCH', `/api/analyses/${data.id}`, {
-          detectedFoods: updatedFoods
+          detectedFoods: updatedFoods.map(stripBaselineData)
         });
         return await updateResponse.json();
       }
@@ -645,10 +651,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
       
-      // Create a modified analysis with updated food data
+      // Create a modified analysis with updated food data (strip baseline data)
       const modifiedAnalysis = {
         ...data,
-        detectedFoods: editableFoods,
+        detectedFoods: editableFoods.map(stripBaselineData),
         totalCalories: totals.calories,
         totalProtein: totals.protein,
         totalCarbs: totals.carbs,
