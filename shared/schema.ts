@@ -40,6 +40,11 @@ export const userProfiles = pgTable("user_profiles", {
   weightGoal: varchar("weight_goal"), // lose_weight, maintain_weight, gain_weight
   weeklyWeightChangeKg: integer("weekly_weight_change_kg"), // target kg per week (can be negative for loss)
   medication: varchar("medication"), // weight loss medication if any
+  // AI Coach personalization fields
+  dietaryRequirements: text("dietary_requirements").array(), // vegetarian, vegan, keto, paleo, etc.
+  allergies: text("allergies").array(), // nuts, dairy, gluten, shellfish, etc.
+  foodDislikes: text("food_dislikes"), // foods user doesn't like
+  healthConditions: text("health_conditions"), // diabetes, hypertension, etc.
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -268,6 +273,10 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   activityLevel: z.enum(["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"]).optional(),
   weightGoal: z.enum(["lose_weight", "maintain_weight", "gain_weight"]).optional(),
   medication: z.enum(["none", "ozempic", "wegovy", "mounjaro", "other_glp1"]).optional(),
+  dietaryRequirements: z.array(z.string()).optional(),
+  allergies: z.array(z.string()).optional(),
+  foodDislikes: z.string().optional(),
+  healthConditions: z.string().optional(),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
