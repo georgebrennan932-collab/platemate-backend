@@ -1965,13 +1965,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   ];
 
+  // Recipe cache with 24-hour TTL
+  const recipeCache = new Map<string, { recipes: any[], timestamp: number }>();
+  const RECIPE_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+  const getCachedRecipes = (dietaryFilter: string) => {
+    const cacheKey = dietaryFilter || 'all';
+    const cached = recipeCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < RECIPE_CACHE_TTL) {
+      return cached.recipes;
+    }
+    
+    return null;
+  };
+
+  const setCachedRecipes = (dietaryFilter: string, recipes: any[]) => {
+    const cacheKey = dietaryFilter || 'all';
+    recipeCache.set(cacheKey, {
+      recipes,
+      timestamp: Date.now()
+    });
+  };
+
   // Recipe routes
   app.get("/api/recipes", async (req, res) => {
     try {
       const dietaryFilter = req.query.diet as string || "";
       
+      // Check cache first
+      const cachedRecipes = getCachedRecipes(dietaryFilter);
+      if (cachedRecipes) {
+        return res.json(cachedRecipes);
+      }
+      
       try {
         const recipes = await aiManager.generateRecipes(dietaryFilter);
+        setCachedRecipes(dietaryFilter, recipes);
         res.json(recipes);
       } catch (aiError) {
         console.log('AI providers unavailable, serving fallback recipes');
@@ -2003,8 +2033,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { diet, search } = req.params;
       const dietaryFilter = diet || "";
       
+      // Check cache first
+      const cachedRecipes = getCachedRecipes(dietaryFilter);
+      if (cachedRecipes) {
+        return res.json(cachedRecipes);
+      }
+      
       try {
         const recipes = await aiManager.generateRecipes(dietaryFilter);
+        setCachedRecipes(dietaryFilter, recipes);
         res.json(recipes);
       } catch (aiError) {
         console.log('AI providers unavailable, serving fallback recipes');
