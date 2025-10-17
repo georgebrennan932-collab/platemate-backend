@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
-import { Edit2, Trash2, Calendar, Target, StickyNote } from "lucide-react";
+import { Edit2, Trash2, Calendar, Target, StickyNote, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { WeightEntry } from "@shared/schema";
@@ -19,6 +20,7 @@ export function WeightList({ onEdit, displayUnit = "kg", compact = false }: Weig
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewPhotoEntry, setViewPhotoEntry] = useState<WeightEntry | null>(null);
 
   // Fetch weight entries
   const { data: weightEntries = [], isLoading, error } = useQuery<WeightEntry[]>({
@@ -134,7 +136,7 @@ export function WeightList({ onEdit, displayUnit = "kg", compact = false }: Weig
         {weightEntries.map((entry, index) => (
           <Card key={entry.id} className="hover:shadow-sm transition-shadow">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="flex items-center space-x-2">
@@ -157,6 +159,26 @@ export function WeightList({ onEdit, displayUnit = "kg", compact = false }: Weig
                       </span>
                     </div>
                   </div>
+                  
+                  {entry.imageUrl && (
+                    <div className="mb-2">
+                      <button
+                        onClick={() => setViewPhotoEntry(entry)}
+                        className="relative group rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+                        data-testid={`button-view-photo-${entry.id}`}
+                        title="Click to view full-size photo"
+                      >
+                        <img 
+                          src={entry.imageUrl} 
+                          alt="Progress photo"
+                          className="w-24 h-24 object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                          <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </button>
+                    </div>
+                  )}
                   
                   {entry.notes && (
                     <div className="flex items-start space-x-2 text-sm text-muted-foreground">
@@ -222,6 +244,45 @@ export function WeightList({ onEdit, displayUnit = "kg", compact = false }: Weig
           </Card>
         ))}
       </div>
+
+      {/* Full-screen photo viewer dialog */}
+      <Dialog open={!!viewPhotoEntry} onOpenChange={(open) => !open && setViewPhotoEntry(null)}>
+        <DialogContent className="max-w-4xl p-6" data-testid="dialog-view-photo">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Progress Photo - {viewPhotoEntry && formatFullDate(viewPhotoEntry.loggedAt)}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {viewPhotoEntry?.imageUrl && (
+              <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                <img 
+                  src={viewPhotoEntry.imageUrl} 
+                  alt="Progress photo full size"
+                  className="w-full h-auto max-h-[70vh] object-contain mx-auto"
+                  data-testid="img-progress-photo"
+                />
+              </div>
+            )}
+            {viewPhotoEntry && (
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Target className="h-5 w-5 text-green-600" />
+                  <span className="text-lg font-bold text-green-600">
+                    {formatWeight(viewPhotoEntry.weightGrams)}
+                  </span>
+                </div>
+                {viewPhotoEntry.notes && (
+                  <div className="flex items-start space-x-2 text-sm text-muted-foreground">
+                    <StickyNote className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <p>{viewPhotoEntry.notes}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
