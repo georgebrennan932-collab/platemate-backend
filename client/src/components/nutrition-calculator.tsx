@@ -168,17 +168,20 @@ export function NutritionCalculator({ goals, consumed }: NutritionCalculatorProp
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
-          <Calculator className="h-8 w-8 text-primary" />
-          Nutrition Calculator
+        <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2 text-white">
+          <Calculator className="h-8 w-8 text-white" />
+          Nutrition Planner
         </h1>
-        <p className="text-muted-foreground">
-          Plan your meals and calculate exactly what you need to reach your goals
+        <p className="text-white/90 text-base mb-3">
+          See what nutrients you still need today and plan meals to reach your goals
+        </p>
+        <p className="text-white/70 text-sm max-w-2xl mx-auto">
+          Already logged breakfast and lunch? This tool shows what's left to eat for the day based on your nutrition targets.
         </p>
       </div>
 
       <Tabs defaultValue="remaining" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
           <TabsTrigger value="remaining" data-testid="tab-remaining">Remaining</TabsTrigger>
           <TabsTrigger value="planner" data-testid="tab-planner">Meal Planner</TabsTrigger>
           <TabsTrigger value="suggestions" data-testid="tab-suggestions">Smart Suggestions</TabsTrigger>
