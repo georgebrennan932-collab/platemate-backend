@@ -30,6 +30,7 @@ import { ChallengesPage } from "./pages/ChallengesPage";
 import { MenuAnalysisPage } from "./pages/MenuAnalysisPage";
 import AICoachPage from "./pages/AICoachPage";
 import ProfilePage from "./pages/ProfilePage";
+import { ProgressPhotosPage } from "./pages/ProgressPhotosPage";
 import NotFound from "./pages/not-found";
 
 // Root route component that checks authentication
@@ -164,6 +165,7 @@ function App() {
       <Route path="/insights" component={InsightsPage} />
       <Route path="/challenges" component={ChallengesPage} />
       <Route path="/menu-analysis" component={MenuAnalysisPage} />
+      <Route path="/progress-photos" component={ProgressPhotosPage} />
       <Route path="/camera" component={CameraTestPage} />
       <Route path="/food-camera" component={CameraPage} />
       <Route path="/voice" component={VoicePage} />
