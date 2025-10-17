@@ -83,14 +83,17 @@ export function DropdownNavigation() {
       >
         {navItems.map((item) => {
           const Icon = item.icon;
+          const isAICoach = item.href === "/ai-coach";
           return (
             <Link key={item.href} href={item.href}>
               <DropdownMenuItem
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors min-h-[48px]",
-                  item.isActive 
-                    ? "bg-primary/10 text-primary font-medium" 
-                    : "text-foreground hover:bg-accent"
+                  isAICoach
+                    ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold hover:from-teal-700 hover:to-cyan-700 shadow-md"
+                    : item.isActive 
+                      ? "bg-primary/10 text-primary font-medium" 
+                      : "text-foreground hover:bg-accent"
                 )}
                 data-testid={`nav-${item.label.toLowerCase()}`}
                 aria-current={item.isActive ? 'page' : undefined}
