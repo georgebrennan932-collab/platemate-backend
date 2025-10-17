@@ -108,15 +108,8 @@ export function RecipesPage() {
 
   // Fetch saved recipes (always enabled to check save status)
   const { data: savedRecipes, isLoading: savedLoading } = useQuery<Recipe[]>({
-    queryKey: ["/api/recipes/saved"],
-    queryFn: async () => {
-      // Add timestamp to bust HTTP cache
-      const response = await fetch(`/api/recipes/saved?t=${Date.now()}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch saved recipes: ${response.status}`);
-      }
-      return response.json();
-    }
+    queryKey: ["/api/recipes/saved"]
+    // Note: Server has caching disabled, so no custom queryFn needed
   });
 
   // Refresh recipes mutation

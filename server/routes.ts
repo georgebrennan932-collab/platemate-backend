@@ -2159,6 +2159,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's saved recipes (MUST be before dynamic route)
   app.get("/api/recipes/saved", async (req: any, res) => {
     console.log("🚨 SAVED RECIPES ENDPOINT HIT - timestamp:", Date.now());
+    console.log("🚨 req.user:", JSON.stringify(req.user));
+    console.log("🚨 Authorization header:", req.headers.authorization);
     try {
       const userId = req.user?.claims?.sub;
       console.log("🚨 User ID:", userId);
