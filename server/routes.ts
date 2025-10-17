@@ -2202,9 +2202,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Recipe routes
-  app.get("/api/recipes", async (req, res) => {
+  app.get("/api/recipes", async (req: any, res) => {
     try {
       const dietaryFilter = req.query.diet as string || "";
+      const userId = req.user?.claims?.sub;
+      
+      // Fetch user profile for allergies and preferences
+      let userProfile = null;
+      if (userId) {
+        try {
+          userProfile = await storage.getUserProfile(userId);
+        } catch (profileError) {
+          console.log('Could not fetch user profile for recipes');
+        }
+      }
       
       // Check cache first
       const cachedRecipes = getCachedRecipes(dietaryFilter);
@@ -2213,7 +2224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        const recipes = await aiManager.generateRecipes(dietaryFilter);
+        const recipes = await aiManager.generateRecipes(dietaryFilter, userProfile);
         setCachedRecipes(dietaryFilter, recipes);
         res.json(recipes);
       } catch (aiError) {
@@ -2288,10 +2299,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dynamic recipe route for diet filtering
-  app.get("/api/recipes/:diet?/:search?", async (req, res) => {
+  app.get("/api/recipes/:diet?/:search?", async (req: any, res) => {
     try {
       const { diet, search } = req.params;
       const dietaryFilter = diet || "";
+      const userId = req.user?.claims?.sub;
+      
+      // Fetch user profile for allergies and preferences
+      let userProfile = null;
+      if (userId) {
+        try {
+          userProfile = await storage.getUserProfile(userId);
+        } catch (profileError) {
+          console.log('Could not fetch user profile for recipes');
+        }
+      }
       
       // Check cache first
       const cachedRecipes = getCachedRecipes(dietaryFilter);
@@ -2300,7 +2322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        const recipes = await aiManager.generateRecipes(dietaryFilter);
+        const recipes = await aiManager.generateRecipes(dietaryFilter, userProfile);
         setCachedRecipes(dietaryFilter, recipes);
         res.json(recipes);
       } catch (aiError) {
@@ -2328,9 +2350,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Refresh recipes - clear cache and get new ones
-  app.post("/api/recipes/refresh", async (req, res) => {
+  app.post("/api/recipes/refresh", async (req: any, res) => {
     try {
       const dietaryFilter = req.body.dietaryFilter || "";
+      const userId = req.user?.claims?.sub;
+      
+      // Fetch user profile for allergies and preferences
+      let userProfile = null;
+      if (userId) {
+        try {
+          userProfile = await storage.getUserProfile(userId);
+        } catch (profileError) {
+          console.log('Could not fetch user profile for recipes');
+        }
+      }
       
       // Clear the cache for this dietary filter
       const cacheKey = dietaryFilter || 'all';
@@ -2338,7 +2371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate new recipes
       try {
-        const recipes = await aiManager.generateRecipes(dietaryFilter);
+        const recipes = await aiManager.generateRecipes(dietaryFilter, userProfile);
         setCachedRecipes(dietaryFilter, recipes);
         res.json(recipes);
       } catch (aiError) {

@@ -1252,7 +1252,7 @@ export class AIManager {
   /**
    * Generate recipes based on dietary requirements
    */
-  async generateRecipes(dietaryFilter: string = ""): Promise<any[]> {
+  async generateRecipes(dietaryFilter: string = "", userProfile: any = null): Promise<any[]> {
     const availableProviders = this.getAvailableProviders();
     
     // Try each available provider
@@ -1263,7 +1263,7 @@ export class AIManager {
           
           // Check if provider has generateRecipes method
           if ('generateRecipes' in provider && typeof (provider as any).generateRecipes === 'function') {
-            const result = await (provider as any).generateRecipes(dietaryFilter);
+            const result = await (provider as any).generateRecipes(dietaryFilter, userProfile);
             return result;
           } else {
             console.log(`${provider.name} does not support recipe generation, trying next provider`);
