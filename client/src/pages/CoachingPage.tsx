@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen, Clock, Check, TestTube2, Sparkles } from "lucide-react";
+import { ArrowLeft, Heart, Brain, Lightbulb, RefreshCw, Star, Trophy, Zap, Calendar, Bell, BookOpen, Clock, Check, TestTube2, Sparkles, Settings, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { notificationService } from "@/lib/notification-service";
 import { soundService } from "@/lib/sound-service";
@@ -219,6 +219,33 @@ export function CoachingPage() {
       </div>
 
       <div className="max-w-md mx-auto p-4 space-y-6">
+        
+        {/* Coach Settings */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link href="/coach-personality">
+            <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-purple-500 to-violet-600 text-white border-0">
+              <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
+                <Sparkles className="h-8 w-8" />
+                <div>
+                  <div className="font-semibold">Personality</div>
+                  <div className="text-xs opacity-90">Choose coaching style</div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link href="/coach-profile">
+            <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-purple-500 to-violet-600 text-white border-0">
+              <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
+                <User className="h-8 w-8" />
+                <div>
+                  <div className="font-semibold">Profile</div>
+                  <div className="text-xs opacity-90">Personal details</div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
         
         {/* Daily Coaching Card */}
         <Card className="health-card border-l-4 border-l-primary">
