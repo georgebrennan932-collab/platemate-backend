@@ -275,10 +275,12 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   activityLevel: z.enum(["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"]).optional(),
   weightGoal: z.enum(["lose_weight", "maintain_weight", "gain_weight"]).optional(),
   medication: z.enum(["none", "ozempic", "wegovy", "mounjaro", "other_glp1"]).optional(),
+  name: z.string().nullable().optional(),
+  nickname: z.string().nullable().optional(),
   dietaryRequirements: z.array(z.string()).optional(),
   allergies: z.array(z.string()).optional(),
-  foodDislikes: z.string().optional(),
-  healthConditions: z.string().optional(),
+  foodDislikes: z.string().nullable().optional(),
+  healthConditions: z.string().nullable().optional(),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
