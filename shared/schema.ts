@@ -174,6 +174,32 @@ export const userChallengeProgress = pgTable("user_challenge_progress", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Saved Recipes: User's favorite recipes
+export const savedRecipes = pgTable("saved_recipes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  recipeId: varchar("recipe_id").notNull(), // AI-generated recipe ID or external recipe ID
+  recipeName: varchar("recipe_name").notNull(),
+  recipeData: jsonb("recipe_data").notNull().$type<{
+    name: string;
+    description: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    servings: number;
+    prepTime: number;
+    cookTime: number;
+    difficulty: "Easy" | "Medium" | "Hard";
+    ingredients: string[];
+    instructions: string[];
+    tags: string[];
+    dietaryInfo: string[];
+    recipeLink?: string;
+  }>(),
+  savedAt: timestamp("saved_at").notNull().defaultNow(),
+});
+
 export const DetectedFoodSchema = z.object({
   name: z.string(),
   portion: z.string(),
@@ -339,6 +365,15 @@ export type ChallengeWithProgress = Challenge & {
   progress?: UserChallengeProgress;
 };
 
+// Saved recipes schemas
+export const insertSavedRecipeSchema = createInsertSchema(savedRecipes).omit({
+  id: true,
+  savedAt: true,
+});
+
+export type InsertSavedRecipe = z.infer<typeof insertSavedRecipeSchema>;
+export type SavedRecipe = typeof savedRecipes.$inferSelect;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   diaryEntries: many(diaryEntries),
@@ -420,6 +455,13 @@ export const userChallengeProgressRelations = relations(userChallengeProgress, (
   challenge: one(challenges, {
     fields: [userChallengeProgress.challengeId],
     references: [challenges.id],
+  }),
+}));
+
+export const savedRecipesRelations = relations(savedRecipes, ({ one }) => ({
+  user: one(users, {
+    fields: [savedRecipes.userId],
+    references: [users.id],
   }),
 }));
 
