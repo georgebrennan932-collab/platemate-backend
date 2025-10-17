@@ -29,6 +29,7 @@ import { InsightsPage } from "./pages/InsightsPage";
 import { ChallengesPage } from "./pages/ChallengesPage";
 import { MenuAnalysisPage } from "./pages/MenuAnalysisPage";
 import AICoachPage from "./pages/AICoachPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/not-found";
 
 // Root route component that checks authentication
@@ -156,6 +157,7 @@ function App() {
       <Route path="/coaching" component={CoachingPage} />
       <Route path="/ai-coach" component={AICoachPage} />
       <Route path="/goals" component={GoalsPage} />
+      <Route path="/profile" component={ProfilePage} />
       <Route path="/rewards" component={RewardsPage} />
       <Route path="/injection-advice" component={InjectionAdvicePage} />
       <Route path="/help" component={HelpPage} />
