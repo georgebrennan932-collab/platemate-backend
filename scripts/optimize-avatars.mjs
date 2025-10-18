@@ -7,11 +7,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const avatars = [
-  { input: 'futuristic_female_ai_dfb0d9ca.jpg', output: 'military_avatar.webp' },
-  { input: 'futuristic_female_ai_beb432ef.jpg', output: 'gym_bro_avatar.webp' },
-  { input: 'futuristic_female_ai_42e22d97.jpg', output: 'zen_avatar.webp' },
-  { input: 'futuristic_female_ai_151d1a61.jpg', output: 'clinical_avatar.webp' },
-  { input: 'futuristic_female_ai_a70ff4a5.jpg', output: 'dark_humour_avatar.webp' }
+  { input: 'stern_serious_milita_37e162a0.jpg', output: 'military_avatar.webp' },
+  { input: 'friendly_energetic_g_44b179d2.jpg', output: 'gym_bro_avatar.webp' },
+  { input: 'calm_peaceful_zen_me_9a6381ca.jpg', output: 'zen_avatar.webp' },
+  { input: 'professional_clinica_1f7fa67b.jpg', output: 'clinical_avatar.webp' },
+  { input: 'playful_smirking_fun_115ee28e.jpg', output: 'dark_humour_avatar.webp' }
 ];
 
 const sourceDir = join(__dirname, '..', 'attached_assets', 'stock_images');
