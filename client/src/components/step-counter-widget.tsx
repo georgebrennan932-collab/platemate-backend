@@ -58,6 +58,7 @@ export function StepCounterWidget() {
     
     // Show immediate feedback that button was pressed
     if (!silent) {
+      alert('Sync button clicked! Starting sync...');
       toast({
         title: "Syncing Steps...",
         description: "Connecting to Health Connect",
