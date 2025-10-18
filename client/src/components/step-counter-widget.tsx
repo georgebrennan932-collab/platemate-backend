@@ -55,18 +55,24 @@ export function StepCounterWidget() {
   const fetchStepsFromDevice = async (silent: boolean = false) => {
     console.log('[StepCounter] fetchStepsFromDevice called, silent:', silent);
     
-    // Prevent duplicate syncs within 1 minute
+    // Show immediate feedback that button was pressed
+    if (!silent) {
+      toast({
+        title: "Syncing Steps...",
+        description: "Connecting to Health Connect",
+      });
+    }
+    
+    // Prevent duplicate syncs within 10 seconds (reduced for testing)
     if (lastSyncAttempt) {
       const timeSinceLastSync = Date.now() - lastSyncAttempt.getTime();
-      if (timeSinceLastSync < 60000) {
+      if (timeSinceLastSync < 10000) {
         console.log('[StepCounter] Skipping sync - last attempt was', timeSinceLastSync, 'ms ago');
-        if (!silent) {
-          toast({
-            title: "Please Wait",
-            description: "Wait a minute before syncing again",
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Please Wait",
+          description: `Wait ${Math.ceil((10000 - timeSinceLastSync) / 1000)} seconds before syncing again`,
+          variant: "destructive",
+        });
         return;
       }
     }
@@ -143,15 +149,15 @@ export function StepCounterWidget() {
     }
   };
 
-  // Auto-sync on mount and every 5 minutes
-  useEffect(() => {
-    fetchStepsFromDevice(true);
-    const interval = setInterval(() => {
-      fetchStepsFromDevice(true);
-    }, 300000); // 5 minutes
-    
-    return () => clearInterval(interval);
-  }, []);
+  // Auto-sync disabled temporarily for testing - will re-enable after confirming manual sync works
+  // useEffect(() => {
+  //   fetchStepsFromDevice(true);
+  //   const interval = setInterval(() => {
+  //     fetchStepsFromDevice(true);
+  //   }, 300000); // 5 minutes
+  //   
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const handleManualUpdate = () => {
     const steps = parseInt(manualSteps);
