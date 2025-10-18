@@ -128,6 +128,16 @@ export const weightEntries = pgTable("weight_entries", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const stepEntries = pgTable("step_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  stepCount: integer("step_count").notNull(), // total steps for the day
+  loggedDate: timestamp("logged_date").notNull(), // date of step count (start of day)
+  source: varchar("source").default("device"), // 'device' for health API, 'manual' for user entry
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(), // updated when step count changes during the day
+});
+
 // Simple food entries for mobile app compatibility
 export const simpleFoodEntries = pgTable("simple_food_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -354,6 +364,23 @@ export const updateWeightEntrySchema = insertWeightEntrySchema.partial().omit({
 export type InsertWeightEntry = z.infer<typeof insertWeightEntrySchema>;
 export type WeightEntry = typeof weightEntries.$inferSelect;
 
+export const insertStepEntrySchema = createInsertSchema(stepEntries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  loggedDate: z.string().or(z.date()), // Accept string or Date
+  source: z.enum(["device", "manual"]).default("device"),
+});
+
+export const updateStepEntrySchema = insertStepEntrySchema.partial().omit({
+  userId: true, // Cannot change user ownership
+});
+
+export type InsertStepEntry = z.infer<typeof insertStepEntrySchema>;
+export type UpdateStepEntry = z.infer<typeof updateStepEntrySchema>;
+export type StepEntry = typeof stepEntries.$inferSelect;
+
 // Food confirmation schemas for confidence threshold workflow
 export const insertFoodConfirmationSchema = createInsertSchema(foodConfirmations).omit({
   id: true,
@@ -465,6 +492,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   diaryEntries: many(diaryEntries),
   drinkEntries: many(drinkEntries),
   weightEntries: many(weightEntries),
+  stepEntries: many(stepEntries),
   simpleFoodEntries: many(simpleFoodEntries),
   reflections: many(reflections),
   challengeProgress: many(userChallengeProgress),
@@ -511,6 +539,13 @@ export const drinkEntriesRelations = relations(drinkEntries, ({ one }) => ({
 export const weightEntriesRelations = relations(weightEntries, ({ one }) => ({
   user: one(users, {
     fields: [weightEntries.userId],
+    references: [users.id],
+  }),
+}));
+
+export const stepEntriesRelations = relations(stepEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [stepEntries.userId],
     references: [users.id],
   }),
 }));

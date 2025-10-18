@@ -1836,6 +1836,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Step entry routes - activity tracking from device health data
+  app.get("/api/steps/today", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const todaySteps = await storage.getTodaySteps(userId);
+      res.json(todaySteps || { stepCount: 0 });
+    } catch (error) {
+      console.error("Get today's steps error:", error);
+      res.status(500).json({ error: "Failed to retrieve today's steps" });
+    }
+  });
+
+  app.get("/api/steps", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 30;
+      const stepEntries = await storage.getStepEntries(userId, { limit });
+      res.json(stepEntries);
+    } catch (error) {
+      console.error("Get step entries error:", error);
+      res.status(500).json({ error: "Failed to retrieve step entries" });
+    }
+  });
+
+  app.post("/api/steps", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { stepCount } = req.body;
+      
+      if (typeof stepCount !== 'number' || stepCount < 0) {
+        return res.status(400).json({ error: "Invalid step count" });
+      }
+
+      const stepEntry = await storage.updateTodaySteps(userId, stepCount);
+      res.json(stepEntry);
+    } catch (error) {
+      console.error("Create/update step entry error:", error);
+      res.status(400).json({ error: "Invalid step entry data" });
+    }
+  });
+
   // Reflection routes - AI-powered daily/weekly insights
   app.get("/api/reflections", async (req: any, res) => {
     try {

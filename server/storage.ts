@@ -1,6 +1,6 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, type Challenge, type InsertChallenge, type UserChallengeProgress, type InsertUserChallengeProgress, type ChallengeWithProgress, foodAnalyses, diaryEntries, drinkEntries, weightEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections, challenges, userChallengeProgress } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type StepEntry, type InsertStepEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, type Challenge, type InsertChallenge, type UserChallengeProgress, type InsertUserChallengeProgress, type ChallengeWithProgress, foodAnalyses, diaryEntries, drinkEntries, weightEntries, stepEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections, challenges, userChallengeProgress } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, gte, lt } from "drizzle-orm";
 
 export interface IStorage {
   getFoodAnalysis(id: string): Promise<FoodAnalysis | undefined>;
@@ -35,6 +35,12 @@ export interface IStorage {
   getWeightEntry(id: string): Promise<WeightEntry | undefined>;
   updateWeightEntry(id: string, entry: Partial<InsertWeightEntry>): Promise<WeightEntry | undefined>;
   deleteWeightEntry(id: string): Promise<boolean>;
+  
+  // Step methods
+  createStepEntry(entry: InsertStepEntry): Promise<StepEntry>;
+  getTodaySteps(userId: string): Promise<StepEntry | undefined>;
+  getStepEntries(userId: string, options?: { start?: Date; end?: Date; limit?: number }): Promise<StepEntry[]>;
+  updateTodaySteps(userId: string, stepCount: number): Promise<StepEntry>;
   
   // Nutrition goals methods
   getNutritionGoals(userId: string): Promise<NutritionGoals | undefined>;
@@ -329,6 +335,80 @@ export class DatabaseStorage implements IStorage {
   async deleteWeightEntry(id: string): Promise<boolean> {
     const result = await db.delete(weightEntries).where(eq(weightEntries.id, id));
     return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Step entry methods
+  async createStepEntry(entry: InsertStepEntry): Promise<StepEntry> {
+    const [stepEntry] = await db
+      .insert(stepEntries)
+      .values({
+        ...entry,
+        loggedDate: typeof entry.loggedDate === 'string' ? new Date(entry.loggedDate) : entry.loggedDate
+      })
+      .returning();
+    return stepEntry;
+  }
+
+  async getTodaySteps(userId: string): Promise<StepEntry | undefined> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const [stepEntry] = await db
+      .select()
+      .from(stepEntries)
+      .where(
+        and(
+          eq(stepEntries.userId, userId),
+          gte(stepEntries.loggedDate, today),
+          lt(stepEntries.loggedDate, tomorrow
+          )
+        )
+      )
+      .limit(1);
+    
+    return stepEntry || undefined;
+  }
+
+  async getStepEntries(userId: string, options: { start?: Date; end?: Date; limit?: number } = {}): Promise<StepEntry[]> {
+    const { limit = 30 } = options;
+    return await db
+      .select()
+      .from(stepEntries)
+      .where(eq(stepEntries.userId, userId))
+      .orderBy(desc(stepEntries.loggedDate))
+      .limit(limit);
+  }
+
+  async updateTodaySteps(userId: string, stepCount: number): Promise<StepEntry> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Try to find existing entry for today
+    const existingEntry = await this.getTodaySteps(userId);
+    
+    if (existingEntry) {
+      // Update existing entry
+      const [updated] = await db
+        .update(stepEntries)
+        .set({ 
+          stepCount,
+          updatedAt: new Date()
+        })
+        .where(eq(stepEntries.id, existingEntry.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new entry
+      return await this.createStepEntry({
+        userId,
+        stepCount,
+        loggedDate: today,
+        source: 'device'
+      });
+    }
   }
 
   // Nutrition goals methods
