@@ -73,10 +73,22 @@ export function StepCounterWidget() {
         return;
       }
 
-      // Request authorization
-      await (Health as any).requestAuthorization({
-        read: ['STEPS'],
-        write: []
+      // Check if Health Connect is available
+      const { available } = await Health.isHealthAvailable();
+      if (!available) {
+        if (!silent) {
+          toast({
+            title: "Health Connect Not Installed",
+            description: "Please install Google Health Connect from Play Store",
+            variant: "destructive",
+          });
+        }
+        return;
+      }
+
+      // Request authorization with correct permission format
+      await Health.requestHealthPermissions({
+        permissions: ['READ_STEPS']
       });
 
       // Get today's date range
@@ -84,16 +96,17 @@ export function StepCounterWidget() {
       today.setHours(0, 0, 0, 0);
       const now = new Date();
 
-      // Query step count
-      const result = await (Health as any).query({
-        sampleType: 'STEPS',
+      // Query step count using correct method and parameters
+      const result = await Health.queryAggregated({
+        dataType: 'steps',
         startDate: today.toISOString(),
-        endDate: now.toISOString()
+        endDate: now.toISOString(),
+        bucket: 'day'
       });
 
       // Sum all step counts for today
-      const totalSteps = Array.isArray(result) 
-        ? result.reduce((sum: number, item: any) => sum + (item.value || item.count || 0), 0)
+      const totalSteps = result.aggregatedData && result.aggregatedData.length > 0
+        ? result.aggregatedData.reduce((sum, sample) => sum + sample.value, 0)
         : 0;
 
       await updateStepsMutation.mutateAsync(totalSteps);
@@ -108,7 +121,7 @@ export function StepCounterWidget() {
       if (!silent) {
         toast({
           title: "Sync Failed",
-          description: "Use manual entry to add your steps",
+          description: error.message || "Use manual entry to add your steps",
           variant: "destructive",
         });
       }
