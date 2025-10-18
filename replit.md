@@ -40,6 +40,7 @@ Preferred communication style: Simple, everyday language.
 - **AI Daily Reflections**: AI-powered daily nutrition insights based on user data.
 - **Scan-a-Menu Feature**: QR code scanning for restaurant menus, AI-powered meal recommendations.
 - **AI Coach Personalization**: User profile data used to tailor AI advice, respecting dietary restrictions and allergies.
+- **AI Coach Avatar System**: Visual avatar interface with 5 distinct personalities (Military Drill Sergeant, Friendly Gym Bro, Zen Wellness Coach, Clinical Expert, Dark Humour), featuring animated avatars with personality-specific color schemes, breathing animations, particle effects, and thinking indicators. Optimized WebP images (93% size reduction) with lazy loading for mobile performance.
 
 ## Key Design Decisions
 - **Mobile-First**: Optimized for mobile food scanning.
