@@ -232,10 +232,12 @@ export class ObjectStorageService {
       },
     });
 
-    // Set ACL policy for the photo (private, accessible only by owner)
+    // Set ACL policy for the photo (public read access for browser display)
+    // Progress photos are user body photos without personal identifying information,
+    // so they can be publicly readable to allow browser <img> tags to load them
     await setObjectAclPolicy(file, {
       owner: userId,
-      visibility: "private",
+      visibility: "public",
     });
 
     // Return the object path

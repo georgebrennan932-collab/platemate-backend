@@ -1743,20 +1743,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const end = req.query.end ? new Date(req.query.end as string) : undefined;
       
       const entries = await storage.getWeightEntries(userId, { start, end, limit });
-      
-      // Replace object storage paths with signed URLs for progress photos
-      const objectStorageService = new ObjectStorageService();
-      const entriesWithSignedUrls = await Promise.all(
-        entries.map(async (entry) => {
-          if (entry.imageUrl && entry.imageUrl.startsWith('/objects/')) {
-            const signedUrl = await objectStorageService.getSignedProgressPhotoUrl(entry.imageUrl);
-            return { ...entry, imageUrl: signedUrl };
-          }
-          return entry;
-        })
-      );
-      
-      res.json(entriesWithSignedUrls);
+      res.json(entries);
     } catch (error) {
       console.error("Get weight entries error:", error);
       res.status(500).json({ error: "Failed to retrieve weight entries" });
