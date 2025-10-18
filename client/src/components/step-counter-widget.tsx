@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Health } from 'capacitor-health';
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 
 interface StepData {
   stepCount: number;
@@ -16,6 +16,7 @@ interface StepData {
 export function StepCounterWidget() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
   const [manualSteps, setManualSteps] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
@@ -179,53 +180,52 @@ export function StepCounterWidget() {
 
   return (
     <>
-      <Link href="/rewards">
-        <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-4 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-300/50 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-full relative">
-                <Zap className="h-6 w-6 text-white animate-pulse" />
-                <div className="absolute inset-0 rounded-full animate-ping bg-yellow-300/30"></div>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white mb-0.5">Steps Rewards</h3>
-                {isLoading ? (
-                  <p className="text-white/80 text-xs">Loading...</p>
-                ) : (
-                  <p className="text-white/90 text-xs">{stepCount.toLocaleString()} steps = {earnedCalories} calories earned</p>
-                )}
-              </div>
+      <div 
+        onClick={() => setLocation('/rewards')}
+        className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-4 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-300/50 cursor-pointer"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-full relative">
+              <Zap className="h-6 w-6 text-white animate-pulse" />
+              <div className="absolute inset-0 rounded-full animate-ping bg-yellow-300/30"></div>
             </div>
-            <div className="flex flex-col items-end space-y-1">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  fetchStepsFromDevice(false);
-                }}
-                disabled={isSyncing || updateStepsMutation.isPending}
-                className="p-1.5 bg-white/20 hover:bg-white/30 disabled:bg-white/10 rounded-lg transition-all"
-                data-testid="button-sync-steps"
-                title="Sync from device"
-              >
-                <RefreshCw className={`h-4 w-4 text-white ${isSyncing ? 'animate-spin' : ''}`} />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsManualDialogOpen(true);
-                }}
-                className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-all"
-                data-testid="button-manual-steps"
-                title="Manual entry"
-              >
-                <Plus className="h-4 w-4 text-white" />
-              </button>
+            <div>
+              <h3 className="text-lg font-bold text-white mb-0.5">Steps Rewards</h3>
+              {isLoading ? (
+                <p className="text-white/80 text-xs">Loading...</p>
+              ) : (
+                <p className="text-white/90 text-xs">{stepCount.toLocaleString()} steps = {earnedCalories} calories earned</p>
+              )}
             </div>
           </div>
+          <div className="flex flex-col items-end space-y-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                fetchStepsFromDevice(false);
+              }}
+              disabled={isSyncing || updateStepsMutation.isPending}
+              className="p-1.5 bg-white/20 hover:bg-white/30 disabled:bg-white/10 rounded-lg transition-all"
+              data-testid="button-sync-steps"
+              title="Sync from device"
+            >
+              <RefreshCw className={`h-4 w-4 text-white ${isSyncing ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsManualDialogOpen(true);
+              }}
+              className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-all"
+              data-testid="button-manual-steps"
+              title="Manual entry"
+            >
+              <Plus className="h-4 w-4 text-white" />
+            </button>
+          </div>
         </div>
-      </Link>
+      </div>
 
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
         <DialogContent className="bg-white dark:bg-gray-800">
