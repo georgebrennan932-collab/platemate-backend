@@ -7,11 +7,18 @@ import { Link } from "wouter";
 import { ArrowLeft, Lightbulb, Send, Sparkles, Target, ChefHat, TrendingUp, Heart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { AICoachAvatar, PersonalityType } from "@/components/ai-coach-avatar";
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+}
+
+interface Personality {
+  id: PersonalityType;
+  name: string;
+  description: string;
 }
 
 interface QuickAction {
@@ -21,6 +28,34 @@ interface QuickAction {
   prompt: string;
   color: string;
 }
+
+const personalities: Personality[] = [
+  {
+    id: 'military',
+    name: 'Drill Sergeant',
+    description: 'Intense, direct, no excuses'
+  },
+  {
+    id: 'gym_bro',
+    name: 'Gym Bro',
+    description: 'Casual, hyped energy'
+  },
+  {
+    id: 'zen',
+    name: 'Zen Coach',
+    description: 'Calm, mindful, balanced'
+  },
+  {
+    id: 'clinical',
+    name: 'Clinical Expert',
+    description: 'Professional, evidence-based'
+  },
+  {
+    id: 'dark_humour',
+    name: 'Dark Humour',
+    description: 'Sarcastic but supportive'
+  }
+];
 
 const quickActions: QuickAction[] = [
   {
@@ -57,6 +92,7 @@ export default function AICoachPage() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [selectedPersonality, setSelectedPersonality] = useState<PersonalityType>('gym_bro');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -69,10 +105,11 @@ export default function AICoachPage() {
   }, [messages]);
 
   const chatMutation = useMutation({
-    mutationFn: async ({ prompt, history }: { prompt: string; history: Message[] }) => {
+    mutationFn: async ({ prompt, history, personality }: { prompt: string; history: Message[]; personality: PersonalityType }) => {
       const response = await apiRequest('POST', '/api/ai-coach', { 
         prompt,
-        conversationHistory: history.map(m => ({ role: m.role, content: m.content }))
+        conversationHistory: history.map(m => ({ role: m.role, content: m.content })),
+        personality
       });
       if (!response.ok) {
         throw new Error('Failed to get AI response');
@@ -106,7 +143,7 @@ export default function AICoachPage() {
     }];
     setMessages(newMessages);
     setInput('');
-    chatMutation.mutate({ prompt: userMessage, history: newMessages });
+    chatMutation.mutate({ prompt: userMessage, history: newMessages, personality: selectedPersonality });
   };
 
   const handleQuickAction = (action: QuickAction) => {
@@ -116,7 +153,7 @@ export default function AICoachPage() {
       timestamp: new Date()
     }];
     setMessages(newMessages);
-    chatMutation.mutate({ prompt: action.prompt, history: newMessages });
+    chatMutation.mutate({ prompt: action.prompt, history: newMessages, personality: selectedPersonality });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -148,6 +185,55 @@ export default function AICoachPage() {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 -mt-4 pb-32">
+        {/* AI Coach Avatar */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-center mb-8"
+        >
+          <AICoachAvatar 
+            personality={selectedPersonality} 
+            isThinking={chatMutation.isPending}
+            size="large"
+          />
+        </motion.div>
+
+        {/* Personality Selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="mb-8"
+        >
+          <h2 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-gray-100">
+            Choose Your Coach
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {personalities.map((personality) => (
+              <motion.button
+                key={personality.id}
+                onClick={() => setSelectedPersonality(personality.id)}
+                className={`p-3 rounded-xl border-2 transition-all ${
+                  selectedPersonality === personality.id
+                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-teal-300 dark:hover:border-teal-600'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                data-testid={`button-personality-${personality.id}`}
+              >
+                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  {personality.name}
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  {personality.description}
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Quick Actions - Always visible */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -155,7 +241,7 @@ export default function AICoachPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-8"
         >
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
               <Sparkles className="h-5 w-5 text-teal-600 dark:text-teal-400" />
               Quick Actions
             </h2>
