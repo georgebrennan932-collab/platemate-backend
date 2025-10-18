@@ -180,12 +180,12 @@ export function StepCounterWidget() {
 
   return (
     <>
-      <div 
-        onClick={() => setLocation('/rewards')}
-        className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-4 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-300/50 cursor-pointer"
-      >
+      <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-4 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-300/50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div 
+            onClick={() => setLocation('/rewards')}
+            className="flex items-center space-x-3 flex-1 cursor-pointer"
+          >
             <div className="p-2 bg-white/20 backdrop-blur-sm rounded-full relative">
               <Zap className="h-6 w-6 text-white animate-pulse" />
               <div className="absolute inset-0 rounded-full animate-ping bg-yellow-300/30"></div>
@@ -199,10 +199,10 @@ export function StepCounterWidget() {
               )}
             </div>
           </div>
-          <div className="flex flex-col items-end space-y-1">
+          <div className="flex flex-col items-end space-y-1 ml-2">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
+                console.log('[StepCounter] Sync button clicked!');
                 fetchStepsFromDevice(false);
               }}
               disabled={isSyncing || updateStepsMutation.isPending}
@@ -213,8 +213,8 @@ export function StepCounterWidget() {
               <RefreshCw className={`h-4 w-4 text-white ${isSyncing ? 'animate-spin' : ''}`} />
             </button>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
+                console.log('[StepCounter] Manual entry button clicked!');
                 setIsManualDialogOpen(true);
               }}
               className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-all"
