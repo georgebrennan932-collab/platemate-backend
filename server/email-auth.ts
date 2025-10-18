@@ -89,45 +89,63 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log("=== LOGIN ATTEMPT ===");
+    console.log("Email:", email);
+    console.log("Password length:", password?.length);
+
     // Validate input
     if (!email || !password) {
+      console.log("ERROR: Missing email or password");
       return res.status(400).json({ error: "Email and password are required" });
     }
 
     // Find user by email
     const userKey = getUserKey(email);
+    console.log("Looking up user with key:", userKey);
+    
     const userResult: any = await db.get(userKey);
+    console.log("User result:", JSON.stringify(userResult, null, 2));
     
     if (!userResult || userResult.ok !== true || !userResult.value) {
+      console.log("ERROR: User not found in database");
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
     const user = userResult.value;
+    console.log("User found, has passwordHash:", !!user.passwordHash);
 
     // Check if user has a password hash (old users from OIDC system might not)
     if (!user.passwordHash) {
+      console.log("ERROR: User has no password hash");
       return res.status(401).json({ 
         error: "Account needs password setup. Please use 'Forgot Password' to set a new password or register again." 
       });
     }
 
     // Verify password
+    console.log("Verifying password...");
     const isValid = await bcrypt.compare(password, user.passwordHash);
+    console.log("Password valid:", isValid);
     
     if (!isValid) {
+      console.log("ERROR: Invalid password");
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // Ensure user exists in PostgreSQL database (for backward compatibility)
+    console.log("Upserting user to PostgreSQL...");
     await storage.upsertUser({
       id: email,
       email,
     });
+    console.log("User upserted successfully");
 
     // Generate session token
     const token = uuidv4();
     sessions[token] = email;
+    console.log("Session created, token:", token);
 
+    console.log("=== LOGIN SUCCESS ===");
     res.json({
       success: true,
       token,
@@ -136,8 +154,10 @@ router.post("/login", async (req, res) => {
       }
     });
   } catch (error: any) {
-    console.error("Login error:", error);
-    console.error("Login error stack:", error.stack);
+    console.error("=== LOGIN ERROR ===");
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("Error details:", JSON.stringify(error, null, 2));
     res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
