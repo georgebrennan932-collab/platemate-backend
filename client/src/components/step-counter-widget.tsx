@@ -84,29 +84,25 @@ export function StepCounterWidget() {
 
     try {
       // Check if running in native app
-      console.log('[StepCounter] Checking Capacitor availability');
-      console.log('[StepCounter] window.Capacitor:', typeof window !== 'undefined' ? (window as any).Capacitor : 'undefined');
-      
       if (typeof window === 'undefined' || !(window as any).Capacitor) {
-        console.log('[StepCounter] Not running in Capacitor app');
         throw new Error('Step tracking requires the native mobile app');
       }
+      alert('Step 1: Capacitor detected');
 
       // Check if Health Connect is available
-      console.log('[StepCounter] Checking Health availability');
       const { available } = await Health.isHealthAvailable();
-      console.log('[StepCounter] Health available:', available);
+      alert(`Step 2: Health available = ${available}`);
       
       if (!available) {
         throw new Error('Health Connect is not installed. Please install it from the Play Store');
       }
 
       // Request authorization with correct permission format
-      console.log('[StepCounter] Requesting permissions');
+      alert('Step 3: Requesting permissions...');
       const permissionResult = await Health.requestHealthPermissions({
         permissions: ['READ_STEPS']
       });
-      console.log('[StepCounter] Permission result:', permissionResult);
+      alert(`Step 4: Permissions granted = ${JSON.stringify(permissionResult)}`);
 
       // Get today's date range
       const today = new Date();
@@ -140,7 +136,7 @@ export function StepCounterWidget() {
         });
       }
     } catch (error: any) {
-      console.error('[StepCounter] Error:', error);
+      alert(`ERROR: ${error.message || error.toString()}`);
       toast({
         title: "Sync Failed",
         description: error.message || "Use manual entry to add your steps",
