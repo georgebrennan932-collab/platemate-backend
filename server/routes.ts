@@ -1639,6 +1639,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Referenced from blueprint: javascript_object_storage
   app.get("/objects/:objectPath(*)", async (req: any, res) => {
     const userId = req.user?.claims?.sub;
+    console.log(`📷 Object request: ${req.path}, userId: ${userId}, session: ${req.session?.id}, user: ${JSON.stringify(req.user)}`);
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(
@@ -1649,7 +1650,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: userId,
         requestedPermission: ObjectPermission.READ,
       });
+      console.log(`🔐 Access check result for ${req.path}: canAccess=${canAccess}, userId=${userId}`);
       if (!canAccess) {
+        console.log(`❌ Access denied for ${req.path}`);
         return res.sendStatus(401);
       }
       objectStorageService.downloadObject(objectFile, res);
