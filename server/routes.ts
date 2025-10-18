@@ -1452,7 +1452,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai-coach",  async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { prompt, conversationHistory } = req.body;
+      const { prompt, conversationHistory, personality: selectedPersonality } = req.body;
       
       if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
         return res.status(400).json({ error: "Prompt is required" });
@@ -1467,9 +1467,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user's profile for dietary requirements, allergies, and preferences
       const userProfile = await storage.getUserProfile(userId);
       
-      // Get AI coach memory and personality for personalized coaching
+      // Get AI coach memory for personalized coaching
       const coachMemory = await coachMemoryService.getOrCreateMemory(userId);
-      const personality = personalityManager.getPersonality(coachMemory.selectedPersonality || 'zen');
+      
+      // Use personality from request if provided, otherwise fall back to stored preference
+      const personalityType = selectedPersonality || coachMemory.selectedPersonality || 'gym_bro';
+      const personality = personalityManager.getPersonality(personalityType);
+      
+      // Update coach memory with the selected personality for persistence
+      if (selectedPersonality && selectedPersonality !== coachMemory.selectedPersonality) {
+        await coachMemoryService.updateMemory(userId, { selectedPersonality });
+      }
       
       // Build full context including conversation history for continuity
       let contextualPrompt = prompt.trim();
