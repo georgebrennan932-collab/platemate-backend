@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Activity, RefreshCw, Plus } from "lucide-react";
+import { Activity, RefreshCw, Plus, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Health } from 'capacitor-health';
+import { Link } from "wouter";
 
 interface StepData {
   stepCount: number;
@@ -18,10 +19,11 @@ export function StepCounterWidget() {
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
   const [manualSteps, setManualSteps] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncAttempt, setLastSyncAttempt] = useState<Date | null>(null);
 
   const { data: todaySteps, isLoading } = useQuery<StepData>({
     queryKey: ['/api/steps/today'],
-    refetchInterval: 60000,
+    refetchInterval: 300000, // Refetch every 5 minutes
   });
 
   const updateStepsMutation = useMutation({
@@ -50,12 +52,25 @@ export function StepCounterWidget() {
     },
   });
 
-  const fetchStepsFromDevice = async () => {
+  const fetchStepsFromDevice = async (silent: boolean = false) => {
+    // Prevent duplicate syncs within 1 minute
+    if (lastSyncAttempt) {
+      const timeSinceLastSync = Date.now() - lastSyncAttempt.getTime();
+      if (timeSinceLastSync < 60000) {
+        return;
+      }
+    }
+
     setIsSyncing(true);
+    setLastSyncAttempt(new Date());
+
     try {
       // Check if running in native app
       if (typeof window === 'undefined' || !(window as any).Capacitor) {
-        throw new Error('Step tracking requires the native mobile app');
+        if (!silent) {
+          throw new Error('Step tracking requires the native mobile app');
+        }
+        return;
       }
 
       // Request authorization
@@ -82,16 +97,35 @@ export function StepCounterWidget() {
         : 0;
 
       await updateStepsMutation.mutateAsync(totalSteps);
+      
+      if (!silent) {
+        toast({
+          title: "Steps Synced!",
+          description: `${totalSteps.toLocaleString()} steps recorded`,
+        });
+      }
     } catch (error: any) {
-      toast({
-        title: "Sync Failed",
-        description: "Use manual entry to add your steps",
-        variant: "destructive",
-      });
+      if (!silent) {
+        toast({
+          title: "Sync Failed",
+          description: "Use manual entry to add your steps",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSyncing(false);
     }
   };
+
+  // Auto-sync on mount and every 5 minutes
+  useEffect(() => {
+    fetchStepsFromDevice(true);
+    const interval = setInterval(() => {
+      fetchStepsFromDevice(true);
+    }, 300000); // 5 minutes
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const handleManualUpdate = () => {
     const steps = parseInt(manualSteps);
@@ -109,61 +143,57 @@ export function StepCounterWidget() {
   };
 
   const stepCount = todaySteps?.stepCount ?? 0;
-  const caloriesBurned = Math.round(stepCount * 0.04);
+  const earnedCalories = Math.round(stepCount * 0.04); // Reward calculation
 
   return (
     <>
-      <div className="bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 rounded-3xl p-6 shadow-2xl border-2 border-green-300/50">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
-              <Activity className="h-7 w-7 text-white" />
+      <Link href="/rewards">
+        <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-4 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-300/50 cursor-pointer">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-full relative">
+                <Zap className="h-6 w-6 text-white animate-pulse" />
+                <div className="absolute inset-0 rounded-full animate-ping bg-yellow-300/30"></div>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white mb-0.5">Steps Rewards</h3>
+                {isLoading ? (
+                  <p className="text-white/80 text-xs">Loading...</p>
+                ) : (
+                  <p className="text-white/90 text-xs">{stepCount.toLocaleString()} steps = {earnedCalories} calories earned</p>
+                )}
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">Daily Steps</h3>
-              <p className="text-white/90 text-sm">Track your activity</p>
+            <div className="flex flex-col items-end space-y-1">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  fetchStepsFromDevice(false);
+                }}
+                disabled={isSyncing || updateStepsMutation.isPending}
+                className="p-1.5 bg-white/20 hover:bg-white/30 disabled:bg-white/10 rounded-lg transition-all"
+                data-testid="button-sync-steps"
+                title="Sync from device"
+              >
+                <RefreshCw className={`h-4 w-4 text-white ${isSyncing ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsManualDialogOpen(true);
+                }}
+                className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-all"
+                data-testid="button-manual-steps"
+                title="Manual entry"
+              >
+                <Plus className="h-4 w-4 text-white" />
+              </button>
             </div>
           </div>
         </div>
-
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4">
-          <div className="text-center">
-            {isLoading ? (
-              <div className="text-white/80 text-sm">Loading...</div>
-            ) : (
-              <>
-                <div className="text-5xl font-bold text-white mb-1" data-testid="text-step-count">
-                  {stepCount.toLocaleString()}
-                </div>
-                <div className="text-white/80 text-sm mb-2">steps today</div>
-                <div className="text-white/90 text-xs">
-                  ~{caloriesBurned} calories burned
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={fetchStepsFromDevice}
-            disabled={isSyncing || updateStepsMutation.isPending}
-            className="flex items-center justify-center space-x-2 bg-white/20 hover:bg-white/30 disabled:bg-white/10 text-white rounded-xl py-3 px-4 transition-all duration-200 font-medium text-sm"
-            data-testid="button-sync-steps"
-          >
-            <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Syncing...' : 'Sync Device'}</span>
-          </button>
-          <button
-            onClick={() => setIsManualDialogOpen(true)}
-            className="flex items-center justify-center space-x-2 bg-white/20 hover:bg-white/30 text-white rounded-xl py-3 px-4 transition-all duration-200 font-medium text-sm"
-            data-testid="button-manual-steps"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Manual Entry</span>
-          </button>
-        </div>
-      </div>
+      </Link>
 
       <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
         <DialogContent className="bg-white dark:bg-gray-800">
