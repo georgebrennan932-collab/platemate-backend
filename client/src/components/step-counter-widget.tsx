@@ -53,10 +53,20 @@ export function StepCounterWidget() {
   });
 
   const fetchStepsFromDevice = async (silent: boolean = false) => {
+    console.log('[StepCounter] fetchStepsFromDevice called, silent:', silent);
+    
     // Prevent duplicate syncs within 1 minute
     if (lastSyncAttempt) {
       const timeSinceLastSync = Date.now() - lastSyncAttempt.getTime();
       if (timeSinceLastSync < 60000) {
+        console.log('[StepCounter] Skipping sync - last attempt was', timeSinceLastSync, 'ms ago');
+        if (!silent) {
+          toast({
+            title: "Please Wait",
+            description: "Wait a minute before syncing again",
+            variant: "destructive",
+          });
+        }
         return;
       }
     }
@@ -66,36 +76,37 @@ export function StepCounterWidget() {
 
     try {
       // Check if running in native app
+      console.log('[StepCounter] Checking Capacitor availability');
+      console.log('[StepCounter] window.Capacitor:', typeof window !== 'undefined' ? (window as any).Capacitor : 'undefined');
+      
       if (typeof window === 'undefined' || !(window as any).Capacitor) {
-        if (!silent) {
-          throw new Error('Step tracking requires the native mobile app');
-        }
-        return;
+        console.log('[StepCounter] Not running in Capacitor app');
+        throw new Error('Step tracking requires the native mobile app');
       }
 
       // Check if Health Connect is available
+      console.log('[StepCounter] Checking Health availability');
       const { available } = await Health.isHealthAvailable();
+      console.log('[StepCounter] Health available:', available);
+      
       if (!available) {
-        if (!silent) {
-          toast({
-            title: "Health Connect Not Installed",
-            description: "Please install Google Health Connect from Play Store",
-            variant: "destructive",
-          });
-        }
-        return;
+        throw new Error('Health Connect is not installed. Please install it from the Play Store');
       }
 
       // Request authorization with correct permission format
-      await Health.requestHealthPermissions({
+      console.log('[StepCounter] Requesting permissions');
+      const permissionResult = await Health.requestHealthPermissions({
         permissions: ['READ_STEPS']
       });
+      console.log('[StepCounter] Permission result:', permissionResult);
 
       // Get today's date range
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const now = new Date();
 
+      console.log('[StepCounter] Querying steps from', today.toISOString(), 'to', now.toISOString());
+      
       // Query step count using correct method and parameters
       const result = await Health.queryAggregated({
         dataType: 'steps',
@@ -103,12 +114,15 @@ export function StepCounterWidget() {
         endDate: now.toISOString(),
         bucket: 'day'
       });
+      
+      console.log('[StepCounter] Query result:', result);
 
       // Sum all step counts for today
       const totalSteps = result.aggregatedData && result.aggregatedData.length > 0
         ? result.aggregatedData.reduce((sum, sample) => sum + sample.value, 0)
         : 0;
 
+      console.log('[StepCounter] Total steps:', totalSteps);
       await updateStepsMutation.mutateAsync(totalSteps);
       
       if (!silent) {
@@ -118,13 +132,12 @@ export function StepCounterWidget() {
         });
       }
     } catch (error: any) {
-      if (!silent) {
-        toast({
-          title: "Sync Failed",
-          description: error.message || "Use manual entry to add your steps",
-          variant: "destructive",
-        });
-      }
+      console.error('[StepCounter] Error:', error);
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Use manual entry to add your steps",
+        variant: "destructive",
+      });
     } finally {
       setIsSyncing(false);
     }
