@@ -16,10 +16,16 @@ export function ProgressPhotosPage() {
   const { data: weightEntries = [], isLoading } = useQuery<WeightEntry[]>({
     queryKey: ['/api/weights'],
     select: (data) => {
+      console.log('🔍 Raw weight data from API:', data);
       // Filter only entries with photos and sort by date (oldest first for timeline)
-      return (data || [])
-        .filter(entry => entry.imageUrl)
+      const filtered = (data || [])
+        .filter(entry => {
+          console.log(`Entry ${entry.id}: imageUrl = "${entry.imageUrl}"`, typeof entry.imageUrl);
+          return entry.imageUrl;
+        })
         .sort((a, b) => new Date(a.loggedAt).getTime() - new Date(b.loggedAt).getTime());
+      console.log('✅ Filtered entries with photos:', filtered);
+      return filtered;
     },
   });
 
