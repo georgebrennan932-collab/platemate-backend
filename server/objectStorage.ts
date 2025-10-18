@@ -241,6 +241,23 @@ export class ObjectStorageService {
     // Return the object path
     return `/objects/progress/${objectId}.jpg`;
   }
+
+  // Generate a signed URL for a progress photo (valid for 24 hours)
+  async getSignedProgressPhotoUrl(objectPath: string): Promise<string> {
+    try {
+      const { bucketName, objectName } = parseObjectPath(objectPath);
+      return await signObjectURL({
+        bucketName,
+        objectName,
+        method: "GET",
+        ttlSec: 86400, // 24 hours
+      });
+    } catch (error) {
+      console.error(`Failed to generate signed URL for ${objectPath}:`, error);
+      // Return original path as fallback
+      return objectPath;
+    }
+  }
 }
 
 function parseObjectPath(path: string): {

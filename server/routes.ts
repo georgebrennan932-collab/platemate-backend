@@ -1639,7 +1639,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Referenced from blueprint: javascript_object_storage
   app.get("/objects/:objectPath(*)", async (req: any, res) => {
     const userId = req.user?.claims?.sub;
-    console.log(`📷 Object request: ${req.path}, userId: ${userId}, session: ${req.session?.id}, user: ${JSON.stringify(req.user)}`);
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(
@@ -1650,9 +1649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: userId,
         requestedPermission: ObjectPermission.READ,
       });
-      console.log(`🔐 Access check result for ${req.path}: canAccess=${canAccess}, userId=${userId}`);
       if (!canAccess) {
-        console.log(`❌ Access denied for ${req.path}`);
         return res.sendStatus(401);
       }
       objectStorageService.downloadObject(objectFile, res);
@@ -1746,7 +1743,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const end = req.query.end ? new Date(req.query.end as string) : undefined;
       
       const entries = await storage.getWeightEntries(userId, { start, end, limit });
-      res.json(entries);
+      
+      // Replace object storage paths with signed URLs for progress photos
+      const objectStorageService = new ObjectStorageService();
+      const entriesWithSignedUrls = await Promise.all(
+        entries.map(async (entry) => {
+          if (entry.imageUrl && entry.imageUrl.startsWith('/objects/')) {
+            const signedUrl = await objectStorageService.getSignedProgressPhotoUrl(entry.imageUrl);
+            return { ...entry, imageUrl: signedUrl };
+          }
+          return entry;
+        })
+      );
+      
+      res.json(entriesWithSignedUrls);
     } catch (error) {
       console.error("Get weight entries error:", error);
       res.status(500).json({ error: "Failed to retrieve weight entries" });
