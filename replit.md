@@ -1,6 +1,6 @@
 # Overview
 
-PlateMate is a full-stack web and native mobile application designed for AI-powered food image analysis. It identifies food items from user-uploaded photos, calculates nutritional information (calories, macronutrients), and provides detailed breakdowns. The application aims to offer a mobile-first, intuitive experience for food scanning and nutrition tracking, available as both a Progressive Web App (PWA) and native iOS/Android applications.
+PlateMate is a full-stack web and native mobile application designed for AI-powered food image analysis. It identifies food items from user-uploaded photos, calculates nutritional information, and provides detailed breakdowns. The application aims to offer a mobile-first, intuitive experience for food scanning and nutrition tracking, available as both a Progressive Web App (PWA) and native iOS/Android applications.
 
 # User Preferences
 
@@ -9,46 +9,48 @@ Preferred communication style: Simple, everyday language.
 # System Architecture
 
 ## Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **Routing**: Wouter
-- **UI Components**: Radix UI primitives with shadcn/ui
-- **Styling**: Tailwind CSS with CSS custom properties
-- **State Management**: TanStack Query (React Query)
-- **Form Handling**: React Hook Form with Zod validation
-- **Mobile Integration**: Capacitor for native iOS/Android apps, including camera and file system access, and deep-link handling for OAuth.
-- **UI/UX**: Mobile-first responsive design, atomic component architecture, engaging Framer Motion animations for page transitions and interactive elements. Modern design aesthetics with gradients and polished layouts.
+- **Framework**: React 18 with TypeScript, Vite, Wouter for routing.
+- **UI**: Radix UI, shadcn/ui, Tailwind CSS.
+- **State Management**: TanStack Query (React Query).
+- **Form Handling**: React Hook Form with Zod validation.
+- **Mobile Integration**: Capacitor for native iOS/Android apps, camera access, file system access, deep-link handling for OAuth.
+- **UI/UX**: Mobile-first responsive design, atomic component architecture, Framer Motion animations, modern aesthetics with gradients.
 
 ## Backend
-- **Runtime**: Node.js with Express.js
-- **Language**: TypeScript
-- **API Design**: RESTful API with JSON responses
-- **File Processing**: Multer for uploads, Sharp for image optimization (rotation, client-side compression focus).
+- **Runtime**: Node.js with Express.js, TypeScript.
+- **API Design**: RESTful API with JSON responses.
+- **File Processing**: Multer for uploads, Sharp for image optimization.
 - **Error Handling**: Centralized middleware.
 
 ## Data Storage
-- **Current Development**: In-memory storage.
-- **Planned/Configured**: PostgreSQL via Drizzle ORM and Drizzle Kit for schema management, integrated with Neon Database.
+- **Database**: PostgreSQL via Drizzle ORM and Drizzle Kit, integrated with Neon Database.
+- **Current Development**: In-memory storage for rapid prototyping.
 
 ## Authentication and Authorization
 - **Method**: Email/Password authentication using @replit/database for user storage.
 - **Session Management**: In-memory session storage with bearer token authentication.
-- **Password Reset**: Security question-based ("What is your favorite food?") reset with bcrypt-hashed answers and expiring tokens.
-- **User Isolation**: Strict data isolation for each authenticated user across diary entries, analyses, weights, drinks, and nutrition goals.
+- **Password Reset**: Security question-based reset with bcrypt-hashed answers and expiring tokens.
+- **User Isolation**: Strict data isolation for all user-specific data.
 - **Mobile OAuth**: Capacitor-compatible flow using system browser with deep-link callbacks and secure bridge tokens.
 
 ## AI Services
-- **Multi-Provider System**: Supports OpenAI (GPT-4o-mini for analysis, GPT-5 for advice) and Google Gemini (Flash/Pro) with automatic failover, health monitoring, and load balancing.
-- **Core Functionality**: Food recognition, nutritional analysis, quantity detection, and UK-to-US food term mapping for USDA database lookups.
-- **User Interaction**: Comprehensive food analysis editing, allowing users to modify food names, portions, and add/remove items with real-time nutrition recalculation and persistence to the database.
+- **Multi-Provider System**: Supports OpenAI (GPT-4o-mini, GPT-5) and Google Gemini (Flash/Pro) with automatic failover, health monitoring, and load balancing.
+- **Core Functionality**: Food recognition, nutritional analysis, quantity detection, UK-to-US food term mapping.
+- **User Interaction**: Comprehensive food analysis editing with real-time nutrition recalculation.
+- **AI Daily Reflections**: AI-powered daily nutrition insights based on user data.
+- **Scan-a-Menu Feature**: QR code scanning for restaurant menus, AI-powered meal recommendations.
+- **AI Coach Personalization**: User profile data used to tailor AI advice, respecting dietary restrictions and allergies.
 
 ## Key Design Decisions
 - **Mobile-First**: Optimized for mobile food scanning.
-- **Type Safety**: End-to-end TypeScript implementation.
+- **Type Safety**: End-to-end TypeScript.
 - **Image Handling**: Client-side compression and server-side optimization.
-- **Extensible AI**: Architecture prepared for various external food recognition APIs.
+- **Extensible AI**: Architecture supports various external food recognition APIs.
 - **Development Experience**: Hot reloading, TypeScript checking, integrated error overlays.
 - **Barcode Scanning**: Full-screen camera barcode scanning using BarcodeDetector API and ZXing fallback, integrated with OpenFoodFacts API.
+- **Gamification**: Challenges and rewards system for user engagement.
+- **Activity Tracking**: Integrated step counter with rewards, using Capacitor-health plugin.
+- **Unified Theme**: Consistent vibrant purple color scheme across the application.
 
 # External Dependencies
 
@@ -56,92 +58,8 @@ Preferred communication style: Simple, everyday language.
 - **Database**: Neon Database (PostgreSQL)
 - **Image Processing**: Sharp
 - **UI Icons**: Lucide React, Font Awesome
-- **Development Tools**: Replit-specific tooling
-- **Fonts**: Google Fonts (Roboto)
+- **Fonts**: Google Fonts
 - **Mobile Platform**: Capacitor (for iOS/Android native app deployment)
 - **Barcode Data**: OpenFoodFacts API
-
-# Recent Changes
-
-- **Gamification: Challenges & Rewards System**: Implemented comprehensive gamification system with:
-  - PostgreSQL challenges and userChallengeProgress tables for tracking achievements
-  - 10 predefined challenges across 3 types: count (meal/weight logging), streak (consecutive days), and goal (meeting nutrition targets)
-  - ChallengeService with automatic progress tracking when users log meals, weights, or meet daily goals
-  - Automatic challenge completion detection and point rewards system
-  - Challenges page with beautiful card-based UI showing active and completed challenges with progress bars
-  - Trophy icon navigation tab replacing Rewards in bottom navigation
-  - Challenge initialization on server startup (idempotent seeding)
-  - Integration hooks in diary and weight entry creation for automatic progress updates
-  - Goal-checking endpoint for water/calorie/protein target achievements
-  - Points and streak tracking with visual stats cards
-- **AI Daily Reflections (MVP)**: Implemented AI-powered daily nutrition reflections feature with:
-  - PostgreSQL reflections table storing insights (what went well, areas to improve, action steps), sentiment scores, and sharing metadata
-  - ReflectionService using existing AI providers (OpenAI/Gemini) to analyze user's daily nutrition data and generate personalized insights
-  - Insights page with Lightbulb icon added to bottom navigation (between Diary and Calculator tabs)
-  - Generate/refresh functionality with one-reflection-per-day limit to prevent duplicate generations
-  - Sound effects integration (success on generate, error on failure)
-  - Share tracking (placeholder for future social media integration)
-  - Period toggle UI prepared for future weekly reflections (currently shows "coming soon" message)
-- **Engaging Page Animations**: Implemented Framer Motion animations throughout app including fade-in/scale page transitions (0.6s), staggered diary meal cards with dramatic spring bounce effects (slide from -100px, scale 0.7→1, 3D rotation), progress indicator cards with scale-up animations, and hover effects (scale 1.02-1.03) on interactive cards. Auto-scroll to top when switching to diary tab ensures animations are visible
-- **Sound Effects System**: Integrated soundService throughout app with success sounds for saving meals/adding foods, click sounds for deleting entries, scan sounds for analysis start, and error sounds for failures. Web Audio API generates sounds programmatically with localStorage persistence for user preferences
-- **Diary Navigation**: Added back button to "Today's Meals" header for easy return to dashboard view
-- **Confetti Celebrations Disabled**: Removed all confetti celebration effects per user request from home page, camera page, and progress indicators
-- **Shareable Achievement Cards**: Implemented image-based social sharing for Challenges and Insights pages with:
-  - dom-to-image-more library for generating beautiful achievement card images (Safari-compatible with toBlob)
-  - Custom share card components (ChallengeShareCard with blue gradient, InsightShareCard with purple/metallic gradient)
-  - Web Share API integration with cascading fallback chain: image share → text-only share → download
-  - Text-only fallback summaries with emojis when image sharing is unsupported or fails
-  - Context-aware filenames for downloads (e.g., platemate-reflection-daily-2025-10-11.png)
-  - Challenge cards showing points, streak, and completed challenges with gradient backgrounds
-  - Insight cards displaying reflection highlights, positivity scores, and action steps with white text on purple/metallic gradient
-  - Proper share cancellation handling to avoid false success states
-  - Share tracking in database only when user confirms the share
-  - Fixes Facebook login issue by sharing images/text instead of session-protected URLs
-- **UI Design Consistency Updates**: Updated Challenges and Insights pages for consistency with app design:
-  - Added back buttons to both pages matching the pattern used in Diary and other pages (Link with ArrowLeft icon)
-  - Updated Challenges page color scheme to blue/indigo gradients (from purple/pink) for better harmony
-  - Updated Insights page color scheme to green/emerald gradients (from indigo/purple) for better differentiation
-  - Maintained dark mode support across all color changes
-  - Ensured all interactive elements have proper data-testid attributes for accessibility
-- **Recipe Performance & UX Improvements**: Enhanced recipe collection page with major performance boost and expanded viewing:
-  - Server-side caching with 24-hour TTL for AI-generated recipes (recipes now load instantly instead of regenerating on every page visit)
-  - Expand/collapse functionality for ingredients - tap "+X more" to view all ingredients, "Show less" to collapse
-  - Expand/collapse functionality for cooking instructions - tap "Show all X steps" to view complete recipe, "Show less" to collapse
-  - State management using Set to track which recipe cards are expanded
-  - Improved mobile UX with clickable buttons replacing static truncation text
-- **Scan-a-Menu Feature (MVP - Security-First)**: New QR code scanning feature for restaurant menus with AI-powered meal recommendations:
-  - Backend endpoint /api/fetch-webpage with comprehensive SSRF protection (currently disabled for MVP security, returns 403)
-  - Backend endpoint /api/analyze-menu using AI to parse menu text, extract meals, calculate nutrition, and recommend best matches based on user's nutrition goals
-  - Updated barcode scanner to detect URL QR codes and navigate to MenuAnalysisPage using wouter (SPA navigation)
-  - MenuAnalysisPage with manual menu text input (paste menu content) for secure MVP implementation
-  - AI-recommended meals displayed with match scores, nutrition info, and Add to Diary buttons
-  - Meal recommendations ranked by how well they match user's calorie and macro targets
-  - Each recommendation includes match score, match reason, and complete nutritional breakdown
-  - One-tap meal addition to diary with automatic meal type selection (breakfast/lunch/dinner/snack)
-  - Comprehensive error handling with response validation throughout the flow
-  - Fallback recommendations when AI is unavailable
-  - Mobile-optimized UI with gradient backgrounds and Framer Motion animations
-  - Security note: Server-side URL fetching disabled to prevent SSRF attacks; future enhancement will include DNS resolution and IP validation for secure automated fetching
-- **User Profile System for AI Coach Personalization**: Comprehensive user profile feature enabling AI Coach to provide tailored dietary advice:
-  - Extended userProfiles table with new fields: name (text), nickname (text), dietaryRequirements (array), allergies (array), foodDislikes (text), healthConditions (text)
-  - ProfilePage with Personal Information section (name and nickname fields) at the top, followed by intuitive tag-based selection for dietary requirements (Vegetarian, Vegan, Keto, etc.) and allergies (Nuts, Dairy, Gluten, etc.)
-  - Text fields for food dislikes and health conditions with optional input
-  - Profile accessible via User icon in dropdown navigation menu
-  - Backend API at /api/user-profile (GET/POST) for retrieving and updating profile data
-  - AI Coach integration: profile data automatically included in AI context for all nutrition questions
-  - AI providers (OpenAI GPT-5 and Gemini Flash) updated to respect dietary restrictions and allergies in recommendations
-  - AI Coach addresses users by their preferred nickname (or name as fallback) for personalized, friendly interactions
-  - System prompts emphasize never suggesting foods that violate user's dietary requirements or allergies
-  - Profile persists across sessions in PostgreSQL database with automatic sync on updates
-  - Purple/pink gradient design matching AI Coach theme for visual consistency
-- **Unified Purple Theme Across All Pages**: Implemented consistent vibrant purple color scheme throughout entire application for cohesive brand identity:
-  - All page backgrounds: Solid vibrant purple (bg-purple-500) matching homepage aesthetic
-  - Page headers: Purple-to-violet gradients (from-purple-600 to-violet-600) for visual depth
-  - Pages updated: Home, Progress Photos, Weight Tracking, Insights, Challenges, Menu Analysis, Diary
-  - Weight tracking: Purple icons, purple weight values, purple-to-violet gradient save button
-  - Progress Photos: Purple camera icon, purple timeline, purple weight displays
-  - Insights page: Purple header and background replacing green theme
-  - Challenges page: Purple header and background replacing blue theme
-  - CSS variable --bg-gradient set to solid purple-500 for consistent branding
-  - All interactive elements use purple as primary accent color throughout app
-  - Timeline dots, badges, and UI accents all use purple/violet palette for unified look
+- **Social Sharing**: `dom-to-image-more` library, Web Share API
+- **Health Tracking**: `capacitor-health` plugin
