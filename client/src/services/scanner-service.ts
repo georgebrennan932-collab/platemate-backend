@@ -279,7 +279,7 @@ class WebBarcodeScanner implements ScannerService {
 
       // Create BarcodeDetector with supported formats
       const barcodeDetector = new (window as any).BarcodeDetector({
-        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39']
+        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code']
       });
 
       console.log('🔍 Starting barcode detection...');
@@ -305,6 +305,17 @@ class WebBarcodeScanner implements ScannerService {
           length: barcode.rawValue?.length
         });
         
+        // QR codes contain URLs/text - return raw value without normalization
+        if (barcode.format === 'qr_code') {
+          console.log('✅ QR CODE ACCEPTED:', barcode.rawValue);
+          this.onDetected?.({
+            barcode: barcode.rawValue,
+            format: barcode.format
+          });
+          return; // Stop scanning on detection
+        }
+        
+        // Product barcodes need normalization
         const normalized = this.normalizeBarcode(barcode.rawValue);
         console.log('🔄 NORMALIZATION RESULT:', {
           original: barcode.rawValue,
@@ -364,11 +375,24 @@ class WebBarcodeScanner implements ScannerService {
         try {
           const result = await this.reader!.decodeOnceFromVideoElement(videoElement);
           if (result) {
-            const normalized = this.normalizeBarcode(result.getText());
+            const format = result.getBarcodeFormat().toString();
+            const rawValue = result.getText();
+            
+            // QR codes contain URLs/text - return raw value without normalization
+            if (format === 'QR_CODE') {
+              this.onDetected?.({
+                barcode: rawValue,
+                format: format
+              });
+              return; // Stop scanning on success
+            }
+            
+            // Product barcodes need normalization
+            const normalized = this.normalizeBarcode(rawValue);
             if (normalized) {
               this.onDetected?.({
                 barcode: normalized,
-                format: result.getBarcodeFormat().toString()
+                format: format
               });
               return; // Stop scanning on success
             }
