@@ -5,8 +5,9 @@ import gymBroVideo from "@assets/1760859862860_1760865007770.mp4";
 import zenVideo from "@assets/1760860089731_1760865007735.mp4";
 import clinicalVideo from "@assets/1760860104807_1760865007708.mp4";
 import darkHumourVideo from "@assets/1760860192581_1760865007745.mp4";
+import alexVideo from "@assets/1760871634663_1760876511667.mp4";
 
-export type PersonalityType = 'military' | 'gym_bro' | 'zen' | 'clinical' | 'dark_humour';
+export type PersonalityType = 'military' | 'gym_bro' | 'zen' | 'clinical' | 'dark_humour' | 'alex';
 
 interface AvatarConfig {
   video: string;
@@ -45,6 +46,12 @@ const AVATAR_CONFIG: Record<PersonalityType, AvatarConfig> = {
     glowColor: 'rgba(236, 72, 153, 0.6)', // Pink
     particleColor: '#ec4899',
     name: 'Ryder'
+  },
+  alex: {
+    video: alexVideo,
+    glowColor: 'rgba(251, 146, 60, 0.6)', // Orange
+    particleColor: '#fb923c',
+    name: 'Alex'
   }
 };
 
@@ -138,6 +145,19 @@ export function ActivePersonalityStage({ personality, isThinking = false }: Acti
           scale: isThinking ? [1, 1.06, 1, 1.06, 1] : [1, 1.03, 1],
           transition: {
             duration: isThinking ? 0.8 : 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        };
+      case 'alex':
+        // Confident head tilt with sarcastic swagger - Army-meets-mum energy
+        return {
+          rotate: isThinking ? [-7, 7, -7, 7, 0] : [0, -6, 6, 0],
+          y: isThinking ? [-10, 10, -10, 10, 0] : [-8, 8, -8, 0],
+          x: isThinking ? [0, 15, -15, 0] : [0, 10, -10, 0],
+          scale: isThinking ? [1, 1.04, 1, 1.04, 1] : [1, 1.03, 1],
+          transition: {
+            duration: isThinking ? 1 : 1.8,
             repeat: Infinity,
             ease: "easeInOut"
           }
@@ -358,6 +378,19 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
           scale: isThinking ? [1, 1.03, 1, 1.03, 1] : [1, 1.02, 1],
           transition: {
             duration: isThinking ? 0.8 : 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        };
+      case 'alex':
+        // Confident head tilt with sarcastic swagger - Army-meets-mum energy
+        return {
+          rotate: isThinking ? [-4, 4, -4, 4, 0] : [0, -3, 3, 0],
+          y: isThinking ? [-3, 3, -3, 3, 0] : [-2, 2, -2, 0],
+          x: isThinking ? [0, 4, -4, 0] : [0, 3, -3, 0],
+          scale: isThinking ? [1, 1.03, 1, 1.03, 1] : [1, 1.02, 1],
+          transition: {
+            duration: isThinking ? 1 : 1.8,
             repeat: Infinity,
             ease: "easeInOut"
           }
