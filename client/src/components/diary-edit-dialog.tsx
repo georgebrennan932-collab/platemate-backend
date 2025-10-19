@@ -97,9 +97,14 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
   });
 
   const onSubmit = (data: DiaryEditFormData) => {
+    console.log("🔄 Form submitted:", data);
+    console.log("📝 Portion input value:", portionInput);
+    
     // Commit any uncommitted portion input before submitting
     const portionValue = parseInt(portionInput) || 100;
     const clampedValue = Math.max(10, Math.min(500, portionValue));
+    
+    console.log("✅ Final portion value:", clampedValue);
     
     updateDiaryMutation.mutate({
       ...data,
@@ -131,7 +136,17 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(
+          onSubmit,
+          (errors) => {
+            console.error("❌ Form validation errors:", errors);
+            toast({
+              variant: "destructive",
+              title: "Validation Error",
+              description: "Please check all fields and try again.",
+            });
+          }
+        )} className="space-y-6">
           {/* Portion Size Slider and Input */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
