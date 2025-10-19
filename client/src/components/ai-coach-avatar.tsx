@@ -20,31 +20,31 @@ const AVATAR_CONFIG: Record<PersonalityType, AvatarConfig> = {
     image: militaryAvatar,
     glowColor: 'rgba(239, 68, 68, 0.6)', // Red
     particleColor: '#ef4444',
-    name: 'Drill Sergeant'
+    name: 'Sergeant Stone'
   },
   gym_bro: {
     image: gymBroAvatar,
     glowColor: 'rgba(34, 197, 94, 0.6)', // Green
     particleColor: '#22c55e',
-    name: 'Gym Bro'
+    name: 'Coach Mike'
   },
   zen: {
     image: zenAvatar,
     glowColor: 'rgba(168, 85, 247, 0.6)', // Purple
     particleColor: '#a855f7',
-    name: 'Zen Coach'
+    name: 'Maya'
   },
   clinical: {
     image: clinicalAvatar,
     glowColor: 'rgba(6, 182, 212, 0.6)', // Cyan
     particleColor: '#06b6d4',
-    name: 'Clinical Expert'
+    name: 'Dr. Rivera'
   },
   dark_humour: {
     image: darkHumourAvatar,
     glowColor: 'rgba(236, 72, 153, 0.6)', // Pink
     particleColor: '#ec4899',
-    name: 'Dark Humour'
+    name: 'Ryder'
   }
 };
 

@@ -32,27 +32,27 @@ interface QuickAction {
 const personalities: Personality[] = [
   {
     id: 'military',
-    name: 'Drill Sergeant',
+    name: 'Sergeant Stone',
     description: 'Intense, direct, no excuses'
   },
   {
     id: 'gym_bro',
-    name: 'Gym Bro',
+    name: 'Coach Mike',
     description: 'Casual, hyped energy'
   },
   {
     id: 'zen',
-    name: 'Zen Coach',
+    name: 'Maya',
     description: 'Calm, mindful, balanced'
   },
   {
     id: 'clinical',
-    name: 'Clinical Expert',
+    name: 'Dr. Rivera',
     description: 'Professional, evidence-based'
   },
   {
     id: 'dark_humour',
-    name: 'Dark Humour',
+    name: 'Ryder',
     description: 'Sarcastic but supportive'
   }
 ];
