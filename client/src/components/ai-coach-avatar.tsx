@@ -175,10 +175,9 @@ export function ActivePersonalityStage({ personality, isThinking = false }: Acti
         />
 
         {/* Main avatar with amplified animation */}
-        <motion.div
+        <div
           className="relative w-64 h-64 md:w-80 md:h-80 rounded-3xl overflow-hidden border-4 shadow-2xl"
           style={{ borderColor: config.particleColor }}
-          animate={getStageAnimation()}
         >
           <video 
             src={config.video} 
@@ -204,7 +203,7 @@ export function ActivePersonalityStage({ personality, isThinking = false }: Acti
               ease: "easeInOut"
             }}
           />
-        </motion.div>
+        </div>
 
         {/* Floating particles */}
         {particles.map((particle) => (
@@ -411,10 +410,9 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
         />
 
         {/* Avatar image with personality-specific animation */}
-        <motion.div
+        <div
           className={`relative ${sizes[size]} rounded-full overflow-hidden border-4 shadow-2xl`}
           style={{ borderColor: config.particleColor }}
-          animate={getPersonalityAnimation()}
         >
           <video 
             src={config.video} 
@@ -440,7 +438,7 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
               ease: "easeInOut"
             }}
           />
-        </motion.div>
+        </div>
 
         {/* Floating particles */}
         {particles.map((particle) => (
