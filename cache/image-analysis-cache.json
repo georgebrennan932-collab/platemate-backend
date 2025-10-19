@@ -1,216 +1,24 @@
 {
   "entries": [
     [
-      "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
-      {
-        "imageHash": "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_cb781823d9397b4b7d1f86e8ac7ce475.jpg",
-          "confidence": 85,
-          "totalCalories": 52,
-          "totalProtein": 1,
-          "totalCarbs": 10,
-          "totalFat": 1,
-          "detectedFoods": [
-            {
-              "name": "Soup, borscht",
-              "portion": "250ml",
-              "calories": 50,
-              "protein": 1,
-              "carbs": 10,
-              "fat": 1,
-              "icon": "bowl"
-            },
-            {
-              "name": "Cilantro, raw",
-              "portion": "10g",
-              "calories": 2,
-              "protein": 0,
-              "carbs": 0,
-              "fat": 0,
-              "icon": "leaf"
-            }
-          ]
-        },
-        "timestamp": 1760693590780,
-        "accessCount": 2,
-        "lastAccessed": 1760693833060
-      }
-    ],
-    [
       "be4185c173abac73d59fdf29f178b31d376f5974a9953c26afeddeb1c891479d",
       {
         "imageHash": "be4185c173abac73d59fdf29f178b31d376f5974a9953c26afeddeb1c891479d",
         "analysis": {
-          "imageUrl": "/tmp/uploads/processed_cc6a4a968f406ce30b0213a0271b81f6.jpg",
-          "confidence": 85,
-          "totalCalories": 824,
-          "totalProtein": 37,
-          "totalCarbs": 55,
-          "totalFat": 51,
+          "imageUrl": "/tmp/uploads/processed_f85a47c1f6531e56169cdf8d3552dacb.jpg",
+          "confidence": 95,
+          "totalCalories": 1488,
+          "totalProtein": 66,
+          "totalCarbs": 88,
+          "totalFat": 99,
           "detectedFoods": [
             {
               "name": "Egg, whole, fried no added fat",
-              "portion": "2 large eggs",
-              "calories": 143,
-              "protein": 12,
-              "carbs": 1,
-              "fat": 10,
-              "icon": "egg"
-            },
-            {
-              "name": "Sausage, smoked link sausage, pork",
-              "portion": "2 sausages",
-              "calories": 155,
-              "protein": 6,
-              "carbs": 0,
-              "fat": 14,
-              "icon": "bacon"
-            },
-            {
-              "name": "Blood sausage",
-              "portion": "1 slice",
-              "calories": 171,
-              "protein": 7,
-              "carbs": 1,
-              "fat": 16,
-              "icon": "bacon"
-            },
-            {
-              "name": "Baked beans",
-              "portion": "150g",
-              "calories": 158,
-              "protein": 7,
-              "carbs": 32,
-              "fat": 1,
-              "icon": "bread-slice"
-            },
-            {
-              "name": "Mushrooms, raw",
-              "portion": "100g",
-              "calories": 31,
-              "protein": 3,
-              "carbs": 4,
-              "fat": 0,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "CHICK-FIL-A, hash browns",
-              "portion": "1 piece",
-              "calories": 166,
-              "protein": 2,
-              "carbs": 17,
-              "fat": 10,
-              "icon": "bread-slice"
-            }
-          ]
-        },
-        "timestamp": 1760694056023,
-        "accessCount": 1,
-        "lastAccessed": 1760694056023
-      }
-    ],
-    [
-      "013e83f697d594435b617e593861fdb5e6f74e042b62812fbebbafdf0bc88335",
-      {
-        "imageHash": "013e83f697d594435b617e593861fdb5e6f74e042b62812fbebbafdf0bc88335",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_78cb07f05c4df8bc61ea95da1be56ef7.jpg",
-          "confidence": 90,
-          "totalCalories": 927,
-          "totalProtein": 52,
-          "totalCarbs": 37,
-          "totalFat": 62,
-          "detectedFoods": [
-            {
-              "name": "Fish, salmon, fried",
-              "portion": "150g",
-              "calories": 461,
-              "protein": 26,
-              "carbs": 18,
-              "fat": 31,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Fish, salmon, fried",
-              "portion": "150g",
-              "calories": 461,
-              "protein": 26,
-              "carbs": 18,
-              "fat": 31,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Dill weed, fresh",
-              "portion": "3g",
-              "calories": 1,
-              "protein": 0,
-              "carbs": 0,
-              "fat": 0,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Lemon juice, raw",
-              "portion": "20g",
-              "calories": 4,
-              "protein": 0,
-              "carbs": 1,
-              "fat": 0,
-              "icon": "apple-alt"
-            }
-          ]
-        },
-        "timestamp": 1760694112533,
-        "accessCount": 1,
-        "lastAccessed": 1760694112533
-      }
-    ],
-    [
-      "b86d60c6cc8fbc6baa8e4633f5296d1a3c5a36597c79fd2d5cdcaacd4082f9c8",
-      {
-        "imageHash": "b86d60c6cc8fbc6baa8e4633f5296d1a3c5a36597c79fd2d5cdcaacd4082f9c8",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_9fad310d6244cb46e77d9138fa393428.jpg",
-          "confidence": 95,
-          "totalCalories": 1364,
-          "totalProtein": 67,
-          "totalCarbs": 65,
-          "totalFat": 94,
-          "detectedFoods": [
-            {
-              "name": "Sausage, smoked link sausage, pork",
-              "portion": "2 sausages (130g)",
-              "calories": 402,
-              "protein": 16,
-              "carbs": 1,
-              "fat": 37,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Baked beans",
-              "portion": "200g",
-              "calories": 210,
-              "protein": 9,
-              "carbs": 43,
-              "fat": 2,
-              "icon": "🍽️"
-            },
-            {
-              "name": "CHICK-FIL-A, hash browns",
-              "portion": "1 hash brown (50g)",
-              "calories": 151,
-              "protein": 2,
-              "carbs": 15,
-              "fat": 9,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Egg, whole, cooked, scrambled",
-              "portion": "110g",
-              "calories": 164,
+              "portion": "2 medium",
+              "calories": 126,
               "protein": 11,
-              "carbs": 2,
-              "fat": 12,
+              "carbs": 1,
+              "fat": 9,
               "icon": "egg"
             },
             {
@@ -220,77 +28,67 @@
               "protein": 9,
               "carbs": 1,
               "fat": 21,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Pork bacon, NS as to fresh, smoked or cured, cooked",
-              "portion": "1 rasher (30g)",
-              "calories": 145,
-              "protein": 11,
-              "carbs": 1,
-              "fat": 11,
               "icon": "bacon"
             },
             {
-              "name": "Scallops, grilled",
-              "portion": "1/2 medium tomato (60g)",
-              "calories": 65,
-              "protein": 9,
-              "carbs": 2,
+              "name": "Sausage, smoked link sausage, pork",
+              "portion": "2 medium (120g)",
+              "calories": 371,
+              "protein": 14,
+              "carbs": 1,
+              "fat": 34,
+              "icon": "bacon"
+            },
+            {
+              "name": "Pork bacon, NS as to fresh, smoked or cured, cooked",
+              "portion": "2 rashers (50g)",
+              "calories": 242,
+              "protein": 19,
+              "carbs": 1,
+              "fat": 18,
+              "icon": "bacon"
+            },
+            {
+              "name": "Baked beans",
+              "portion": "175g",
+              "calories": 184,
+              "protein": 8,
+              "carbs": 38,
               "fat": 2,
-              "icon": "🍽️"
+              "icon": "apple-alt"
+            },
+            {
+              "name": "CHICK-FIL-A, hash browns",
+              "portion": "1 medium (70g)",
+              "calories": 211,
+              "protein": 2,
+              "carbs": 21,
+              "fat": 13,
+              "icon": "apple-alt"
+            },
+            {
+              "name": "Mushrooms, NS as to form, cooked",
+              "portion": "50g",
+              "calories": 33,
+              "protein": 2,
+              "carbs": 3,
+              "fat": 2,
+              "icon": "apple-alt"
+            },
+            {
+              "name": "Orange juice, canned, unsweetened",
+              "portion": "200ml",
+              "calories": 94,
+              "protein": 1,
+              "carbs": 22,
+              "fat": 0,
+              "icon": "apple-alt"
             }
           ]
         },
-        "timestamp": 1760701628408,
+        "timestamp": 1760873266280,
         "accessCount": 1,
-        "lastAccessed": 1760701628408
-      }
-    ],
-    [
-      "8b3c4b2c4ca25c37b30cf1588e505f63d8b71f97b5c0fb8a5ef2b5c4574a08f8",
-      {
-        "imageHash": "8b3c4b2c4ca25c37b30cf1588e505f63d8b71f97b5c0fb8a5ef2b5c4574a08f8",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_54e1db180cc7ec3dc6a316017b54a8d3.jpg",
-          "confidence": 95,
-          "totalCalories": 1024,
-          "totalProtein": 48,
-          "totalCarbs": 103,
-          "totalFat": 45,
-          "detectedFoods": [
-            {
-              "name": "Chicken, NS as to part, grilled with sauce, skin eaten",
-              "portion": "180g",
-              "calories": 380,
-              "protein": 36,
-              "carbs": 13,
-              "fat": 19,
-              "icon": "🍗"
-            },
-            {
-              "name": "DENNY'S, french fries",
-              "portion": "150g",
-              "calories": 423,
-              "protein": 5,
-              "carbs": 53,
-              "fat": 21,
-              "icon": "🍽️"
-            },
-            {
-              "name": "Bread, egg, toasted",
-              "portion": "2 medium slices (70g)",
-              "calories": 221,
-              "protein": 7,
-              "carbs": 37,
-              "fat": 5,
-              "icon": "bread-slice"
-            }
-          ]
-        },
-        "timestamp": 1760709555551,
-        "accessCount": 1,
-        "lastAccessed": 1760709555551
+        "lastAccessed": 1760873266280
       }
     ]
   ],
@@ -299,11 +97,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 5,
+    "currentSize": 1,
     "maxSize": 1000,
     "totalEvictions": 0,
-    "oldestEntry": 1760693590780,
-    "newestEntry": 1760709555551
+    "oldestEntry": 1760873266280,
+    "newestEntry": 1760873266280
   },
-  "timestamp": 1760709555552
+  "timestamp": 1760873266280
 }
