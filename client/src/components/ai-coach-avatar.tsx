@@ -1,15 +1,15 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import militaryAvatar from "@assets/avatars/military_avatar.webp";
-import gymBroAvatar from "@assets/avatars/gym_bro_avatar.webp";
-import zenAvatar from "@assets/avatars/zen_avatar.webp";
-import clinicalAvatar from "@assets/avatars/clinical_avatar.webp";
-import darkHumourAvatar from "@assets/avatars/dark_humour_avatar.webp";
+import militaryVideo from "@assets/1760859782981_1760865007751.mp4";
+import gymBroVideo from "@assets/1760859862860_1760865007770.mp4";
+import zenVideo from "@assets/1760860089731_1760865007735.mp4";
+import clinicalVideo from "@assets/1760860104807_1760865007708.mp4";
+import darkHumourVideo from "@assets/1760860192581_1760865007745.mp4";
 
 export type PersonalityType = 'military' | 'gym_bro' | 'zen' | 'clinical' | 'dark_humour';
 
 interface AvatarConfig {
-  image: string;
+  video: string;
   glowColor: string;
   particleColor: string;
   name: string;
@@ -17,31 +17,31 @@ interface AvatarConfig {
 
 const AVATAR_CONFIG: Record<PersonalityType, AvatarConfig> = {
   military: {
-    image: militaryAvatar,
+    video: militaryVideo,
     glowColor: 'rgba(239, 68, 68, 0.6)', // Red
     particleColor: '#ef4444',
     name: 'Sergeant Stone'
   },
   gym_bro: {
-    image: gymBroAvatar,
+    video: gymBroVideo,
     glowColor: 'rgba(34, 197, 94, 0.6)', // Green
     particleColor: '#22c55e',
     name: 'Coach Mike'
   },
   zen: {
-    image: zenAvatar,
+    video: zenVideo,
     glowColor: 'rgba(168, 85, 247, 0.6)', // Purple
     particleColor: '#a855f7',
     name: 'Maya'
   },
   clinical: {
-    image: clinicalAvatar,
+    video: clinicalVideo,
     glowColor: 'rgba(6, 182, 212, 0.6)', // Cyan
     particleColor: '#06b6d4',
     name: 'Dr. Rivera'
   },
   dark_humour: {
-    image: darkHumourAvatar,
+    video: darkHumourVideo,
     glowColor: 'rgba(236, 72, 153, 0.6)', // Pink
     particleColor: '#ec4899',
     name: 'Ryder'
@@ -180,12 +180,13 @@ export function ActivePersonalityStage({ personality, isThinking = false }: Acti
           style={{ borderColor: config.particleColor }}
           animate={getStageAnimation()}
         >
-          <img 
-            src={config.image} 
-            alt={config.name}
+          <video 
+            src={config.video} 
             className="w-full h-full object-cover"
-            loading="lazy"
-            decoding="async"
+            autoPlay
+            loop
+            muted
+            playsInline
           />
           
           {/* Overlay glow effect */}
@@ -415,12 +416,13 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
           style={{ borderColor: config.particleColor }}
           animate={getPersonalityAnimation()}
         >
-          <img 
-            src={config.image} 
-            alt={config.name}
+          <video 
+            src={config.video} 
             className="w-full h-full object-cover"
-            loading="lazy"
-            decoding="async"
+            autoPlay
+            loop
+            muted
+            playsInline
           />
           
           {/* Overlay glow effect */}
