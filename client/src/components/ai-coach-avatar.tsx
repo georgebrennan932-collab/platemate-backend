@@ -80,6 +80,79 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
     large: 'w-56 h-56'
   };
 
+  // Personality-specific animations
+  const getPersonalityAnimation = () => {
+    switch (personality) {
+      case 'military':
+        // Aggressive shouting motion
+        return {
+          rotate: isThinking ? [-2, 2, -2, 2, -2] : [-1, 1, -1],
+          y: isThinking ? [0, -3, 0, -3, 0] : [0, -2, 0],
+          transition: {
+            duration: isThinking ? 0.4 : 0.8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        };
+      case 'gym_bro':
+        // Enthusiastic wave/bounce
+        return {
+          rotate: isThinking ? [0, -5, 5, -5, 5, 0] : [0, -3, 3, 0],
+          y: isThinking ? [0, -5, 0, -5, 0] : [0, -3, 0],
+          scale: isThinking ? [1, 1.02, 1, 1.02, 1] : [1, 1.01, 1],
+          transition: {
+            duration: isThinking ? 0.6 : 1.2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        };
+      case 'zen':
+        // Gentle meditation breathing/sway
+        return {
+          rotate: [0, -1, 0, 1, 0],
+          y: [0, -2, 0, -2, 0],
+          scale: [1, 1.005, 1, 1.005, 1],
+          transition: {
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        };
+      case 'clinical':
+        // Thoughtful pondering with head tilt
+        return {
+          rotate: isThinking ? [-3, 3, -3, 3, 0] : [0, 2, 0, -2, 0],
+          x: isThinking ? [0, 2, 0, -2, 0] : [0, 1, 0],
+          transition: {
+            duration: isThinking ? 1.5 : 3,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        };
+      case 'dark_humour':
+        // Mischievous tilt and smirk
+        return {
+          rotate: isThinking ? [0, 3, -3, 3, 0] : [0, 2, 0, -2, 0],
+          y: isThinking ? [0, -2, 0, -2, 0] : [0, -1, 0],
+          scale: isThinking ? [1, 1.01, 1, 1.01, 1] : [1, 1.005, 1],
+          transition: {
+            duration: isThinking ? 1 : 2.5,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        };
+      default:
+        return {
+          scale: [1, 1.01, 1],
+          transition: {
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        };
+    }
+  };
+
   return (
     <div className="relative flex items-center justify-center">
       <div className={`relative ${containerSizes[size]}`}>
@@ -115,18 +188,11 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
           }}
         />
 
-        {/* Avatar image with breathing animation */}
+        {/* Avatar image with personality-specific animation */}
         <motion.div
           className={`relative ${sizes[size]} rounded-full overflow-hidden border-4 shadow-2xl`}
           style={{ borderColor: config.particleColor }}
-          animate={{
-            scale: isThinking ? [1, 1.02, 1] : [1, 1.01, 1],
-          }}
-          transition={{
-            duration: isThinking ? 1 : 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          animate={getPersonalityAnimation()}
         >
           <img 
             src={config.image} 
