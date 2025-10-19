@@ -190,8 +190,11 @@ export default function AICoachPage() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="flex justify-center mb-8"
+          className="flex flex-col items-center gap-3 mb-8"
         >
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {personalities.find(p => p.id === selectedPersonality)?.name}
+          </h2>
           <AICoachAvatar 
             personality={selectedPersonality} 
             isThinking={chatMutation.isPending}
@@ -209,12 +212,12 @@ export default function AICoachPage() {
           <h2 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-gray-100">
             Choose Your Coach
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {personalities.map((personality) => (
               <motion.button
                 key={personality.id}
                 onClick={() => setSelectedPersonality(personality.id)}
-                className={`p-3 rounded-xl border-2 transition-all ${
+                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                   selectedPersonality === personality.id
                     ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
                     : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-teal-300 dark:hover:border-teal-600'
@@ -223,11 +226,17 @@ export default function AICoachPage() {
                 whileTap={{ scale: 0.95 }}
                 data-testid={`button-personality-${personality.id}`}
               >
-                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  {personality.name}
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  {personality.description}
+                <AICoachAvatar 
+                  personality={personality.id} 
+                  size="small"
+                />
+                <div className="text-center">
+                  <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    {personality.name}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    {personality.description}
+                  </div>
                 </div>
               </motion.button>
             ))}
