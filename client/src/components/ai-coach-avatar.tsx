@@ -17,31 +17,31 @@ interface AvatarConfig {
 
 const AVATAR_CONFIG: Record<PersonalityType, AvatarConfig> = {
   military: {
-    video: militaryVideo,
+    video: zenVideo,
     glowColor: 'rgba(239, 68, 68, 0.6)', // Red
     particleColor: '#ef4444',
     name: 'Sergeant Stone'
   },
   gym_bro: {
-    video: gymBroVideo,
+    video: clinicalVideo,
     glowColor: 'rgba(34, 197, 94, 0.6)', // Green
     particleColor: '#22c55e',
     name: 'Coach Mike'
   },
   zen: {
-    video: zenVideo,
+    video: gymBroVideo,
     glowColor: 'rgba(168, 85, 247, 0.6)', // Purple
     particleColor: '#a855f7',
     name: 'Maya'
   },
   clinical: {
-    video: clinicalVideo,
+    video: darkHumourVideo,
     glowColor: 'rgba(6, 182, 212, 0.6)', // Cyan
     particleColor: '#06b6d4',
     name: 'Dr. Rivera'
   },
   dark_humour: {
-    video: darkHumourVideo,
+    video: militaryVideo,
     glowColor: 'rgba(236, 72, 153, 0.6)', // Pink
     particleColor: '#ec4899',
     name: 'Ryder'
