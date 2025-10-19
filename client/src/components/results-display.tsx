@@ -647,10 +647,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           imageUrl: data.imageUrl,
           confidence: data.confidence,
           detectedFoods: editableFoods.map(stripBaselineData),
-          totalCalories: totals.calories,
-          totalProtein: totals.protein,
-          totalCarbs: totals.carbs,
-          totalFat: totals.fat
+          totalCalories: Math.round(totals.calories),
+          totalProtein: Math.round(totals.protein),
+          totalCarbs: Math.round(totals.carbs),
+          totalFat: Math.round(totals.fat)
         };
       }
       
