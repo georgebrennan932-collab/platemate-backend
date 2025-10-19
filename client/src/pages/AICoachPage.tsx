@@ -54,6 +54,11 @@ const personalities: Personality[] = [
     id: 'dark_humour',
     name: 'Ryder',
     description: 'Sarcastic but supportive'
+  },
+  {
+    id: 'alex',
+    name: 'Alex',
+    description: 'Army veteran, mum of 3. Brutally honest, sarcastic, weirdly motivating.'
   }
 ];
 
