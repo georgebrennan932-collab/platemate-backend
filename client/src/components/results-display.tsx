@@ -102,6 +102,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [showLowConfidenceDialog, setShowLowConfidenceDialog] = useState(false);
   const [nutritionUpdateTimer, setNutritionUpdateTimer] = useState<NodeJS.Timeout | null>(null);
   const [lastRequestFoods, setLastRequestFoods] = useState<string>('');
+  // Local state for portion input values (allows free typing)
+  const [portionInputValues, setPortionInputValues] = useState<{[key: number]: string}>({});
   
   // Use refs for values that don't need to trigger re-renders
   const nutritionUpdateControllerRef = useRef<AbortController | null>(null);
@@ -333,9 +335,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                 baselineProtein: updatedFood.protein || currentFood.baselineProtein,
                 baselineCarbs: updatedFood.carbs || currentFood.baselineCarbs,
                 baselineFat: updatedFood.fat || currentFood.baselineFat,
-                // Update baseline portion if portion changed
-                baselinePortionValue: value,
-                baselinePortionUnit: unit,
+                // Only update baseline portion if the parsed value is valid (> 0)
+                baselinePortionValue: value > 0 ? value : currentFood.baselinePortionValue,
+                baselinePortionUnit: unit || currentFood.baselinePortionUnit,
               };
             }
             return currentFood;
@@ -950,8 +952,43 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                         <div className="flex gap-2">
                           <input
                             type="number"
-                            value={parsePortionString(food.portion).value}
-                            onChange={(e) => updateFoodPortionValue(index, parseFloat(e.target.value) || 0)}
+                            value={
+                              portionInputValues[index] !== undefined
+                                ? portionInputValues[index]
+                                : parsePortionString(food.portion).value
+                            }
+                            onChange={(e) => {
+                              // Update local state immediately for responsive typing
+                              setPortionInputValues(prev => ({
+                                ...prev,
+                                [index]: e.target.value
+                              }));
+                            }}
+                            onBlur={(e) => {
+                              const newValue = parseFloat(e.target.value);
+                              // Validate and commit the value
+                              if (!isNaN(newValue) && newValue > 0) {
+                                updateFoodPortionValue(index, newValue);
+                                // Clear local state after committing
+                                setPortionInputValues(prev => {
+                                  const updated = { ...prev };
+                                  delete updated[index];
+                                  return updated;
+                                });
+                              } else {
+                                // Reset to current value if invalid
+                                setPortionInputValues(prev => {
+                                  const updated = { ...prev };
+                                  delete updated[index];
+                                  return updated;
+                                });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur();
+                              }
+                            }}
                             className="w-20 sm:w-24 px-2 sm:px-4 py-3 text-base font-medium border-2 border-orange-300 dark:border-orange-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 bg-white dark:bg-gray-800 transition-all shadow-sm"
                             placeholder="100"
                             min="0"
