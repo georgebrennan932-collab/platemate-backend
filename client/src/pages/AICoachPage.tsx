@@ -7,7 +7,7 @@ import { Link } from "wouter";
 import { ArrowLeft, Lightbulb, Send, Sparkles, Target, ChefHat, TrendingUp, Heart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { AICoachAvatar, PersonalityType } from "@/components/ai-coach-avatar";
+import { AICoachAvatar, ActivePersonalityStage, PersonalityType } from "@/components/ai-coach-avatar";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -95,14 +95,27 @@ export default function AICoachPage() {
   const [selectedPersonality, setSelectedPersonality] = useState<PersonalityType>('gym_bro');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const scrollToStage = () => {
+    // Use requestAnimationFrame to ensure DOM has updated
+    requestAnimationFrame(() => {
+      stageRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Auto-scroll to stage when personality changes
+    scrollToStage();
+  }, [selectedPersonality]);
 
   const chatMutation = useMutation({
     mutationFn: async ({ prompt, history, personality }: { prompt: string; history: Message[]; personality: PersonalityType }) => {
@@ -185,20 +198,17 @@ export default function AICoachPage() {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 -mt-4 pb-32">
-        {/* AI Coach Avatar */}
+        {/* Active Personality Animation Stage */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          ref={stageRef}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col items-center gap-3 mb-8"
+          className="mb-8"
         >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {personalities.find(p => p.id === selectedPersonality)?.name}
-          </h2>
-          <AICoachAvatar 
+          <ActivePersonalityStage 
             personality={selectedPersonality} 
             isThinking={chatMutation.isPending}
-            size="large"
           />
         </motion.div>
 
