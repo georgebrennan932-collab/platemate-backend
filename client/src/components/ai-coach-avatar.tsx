@@ -84,9 +84,8 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
   const getPersonalityAnimation = () => {
     switch (personality) {
       case 'military':
-        // Aggressive shouting motion - make image bigger and shake vigorously
+        // Aggressive shouting motion - vigorous shaking
         return {
-          scale: isThinking ? [1.15, 1.12, 1.15, 1.12, 1.15] : [1.1, 1.12, 1.1],
           rotate: isThinking ? [-5, 5, -5, 5, -5] : [-3, 3, -3],
           y: isThinking ? [-5, 5, -5, 5, -5] : [-3, 3, -3],
           x: isThinking ? [-3, 3, -3, 3, -3] : [-2, 2, -2],
@@ -99,10 +98,10 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
       case 'gym_bro':
         // Enthusiastic wave/bounce - energetic movement
         return {
-          scale: isThinking ? [1.15, 1.2, 1.15, 1.2, 1.15] : [1.1, 1.15, 1.1],
           rotate: isThinking ? [0, -8, 8, -8, 8, 0] : [0, -5, 5, 0],
           y: isThinking ? [0, -8, 0, -8, 0] : [0, -5, 0],
           x: isThinking ? [-5, 0, 5, 0, -5] : [-3, 0, 3, 0],
+          scale: isThinking ? [1, 1.05, 1, 1.05, 1] : [1, 1.03, 1],
           transition: {
             duration: isThinking ? 0.5 : 1,
             repeat: Infinity,
@@ -112,10 +111,10 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
       case 'zen':
         // Gentle meditation breathing/sway - smooth and slow
         return {
-          scale: [1.1, 1.12, 1.1, 1.12, 1.1],
           rotate: [0, -2, 0, 2, 0],
           y: [0, -4, 0, -4, 0],
           x: [-2, 0, 2, 0, -2],
+          scale: [1, 1.01, 1, 1.01, 1],
           transition: {
             duration: 5,
             repeat: Infinity,
@@ -125,7 +124,6 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
       case 'clinical':
         // Thoughtful pondering with head tilt - analytical movement
         return {
-          scale: isThinking ? [1.15, 1.12, 1.15, 1.12, 1.15] : [1.1, 1.12, 1.1],
           rotate: isThinking ? [-6, 6, -6, 6, 0] : [0, 4, 0, -4, 0],
           x: isThinking ? [0, 5, 0, -5, 0] : [0, 3, 0, -3, 0],
           y: isThinking ? [-3, 0, -3, 0, -3] : [-2, 0, -2, 0, -2],
@@ -138,10 +136,10 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
       case 'dark_humour':
         // Mischievous tilt and smirk - playful movement
         return {
-          scale: isThinking ? [1.15, 1.18, 1.15, 1.18, 1.15] : [1.1, 1.13, 1.1],
           rotate: isThinking ? [0, 5, -5, 5, 0] : [0, 3, 0, -3, 0],
           y: isThinking ? [0, -4, 0, -4, 0] : [0, -3, 0],
           x: isThinking ? [3, -3, 3, -3, 0] : [2, -2, 2, 0],
+          scale: isThinking ? [1, 1.03, 1, 1.03, 1] : [1, 1.02, 1],
           transition: {
             duration: isThinking ? 0.8 : 2,
             repeat: Infinity,
@@ -150,7 +148,7 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
         };
       default:
         return {
-          scale: [1.1, 1.12, 1.1],
+          scale: [1, 1.02, 1],
           transition: {
             duration: 2,
             repeat: Infinity,
@@ -196,17 +194,17 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
         />
 
         {/* Avatar image with personality-specific animation */}
-        <div
+        <motion.div
           className={`relative ${sizes[size]} rounded-full overflow-hidden border-4 shadow-2xl`}
           style={{ borderColor: config.particleColor }}
+          animate={getPersonalityAnimation()}
         >
-          <motion.img 
+          <img 
             src={config.image} 
             alt={config.name}
             className="w-full h-full object-cover"
             loading="lazy"
             decoding="async"
-            animate={getPersonalityAnimation()}
           />
           
           {/* Overlay glow effect */}
@@ -224,7 +222,7 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
               ease: "easeInOut"
             }}
           />
-        </div>
+        </motion.div>
 
         {/* Floating particles */}
         {particles.map((particle) => (
