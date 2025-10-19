@@ -291,8 +291,13 @@ export function AICoachAvatar({ personality, isThinking = false, size = 'medium'
     large: 'w-56 h-56'
   };
 
-  // Personality-specific animations
+  // Personality-specific animations (disabled for small thumbnails)
   const getPersonalityAnimation = () => {
+    // No animations for small thumbnails to avoid visual conflict
+    if (size === 'small') {
+      return {};
+    }
+
     switch (personality) {
       case 'military':
         // Aggressive shouting motion - vigorous shaking
