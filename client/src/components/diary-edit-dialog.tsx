@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,6 +35,9 @@ interface DiaryEditDialogProps {
 export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryEditDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Local state for portion input to allow typing without immediate clamping
+  const [portionInput, setPortionInput] = useState<string>("100");
 
   // Initialize form with current entry data
   const form = useForm<DiaryEditFormData>({
@@ -50,12 +53,14 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
   // Update form when entry changes
   useEffect(() => {
     if (entry) {
+      const portionValue = entry.portionMultiplier || 100;
       form.reset({
         mealType: entry.mealType as "breakfast" | "lunch" | "dinner" | "snack" | "custom",
-        portionMultiplier: entry.portionMultiplier || 100,
+        portionMultiplier: portionValue,
         notes: entry.notes || "",
         customMealName: entry.customMealName || "",
       });
+      setPortionInput(portionValue.toString());
     }
   }, [entry, form]);
 
@@ -92,7 +97,14 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
   });
 
   const onSubmit = (data: DiaryEditFormData) => {
-    updateDiaryMutation.mutate(data);
+    // Commit any uncommitted portion input before submitting
+    const portionValue = parseInt(portionInput) || 100;
+    const clampedValue = Math.max(10, Math.min(500, portionValue));
+    
+    updateDiaryMutation.mutate({
+      ...data,
+      portionMultiplier: clampedValue,
+    });
   };
 
   const portionValue = form.watch("portionMultiplier");
@@ -120,15 +132,40 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Portion Size Slider */}
+          {/* Portion Size Slider and Input */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Portion Size</Label>
-              <span className="text-lg font-bold text-primary">{portionDisplay}x</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={portionInput}
+                  onChange={(e) => {
+                    // Allow typing freely
+                    setPortionInput(e.target.value);
+                  }}
+                  onBlur={(e) => {
+                    // Validate and clamp on blur
+                    const value = parseInt(e.target.value) || 100;
+                    const clampedValue = Math.max(10, Math.min(500, value));
+                    form.setValue("portionMultiplier", clampedValue);
+                    setPortionInput(clampedValue.toString());
+                  }}
+                  min={10}
+                  max={500}
+                  step={10}
+                  className="w-20 px-2 py-1 text-sm border rounded-md text-center dark:bg-gray-800 dark:border-gray-700"
+                  data-testid="input-portion-value"
+                />
+                <span className="text-lg font-bold text-primary">{portionDisplay}x</span>
+              </div>
             </div>
             <Slider
               value={[portionValue]}
-              onValueChange={(values) => form.setValue("portionMultiplier", values[0])}
+              onValueChange={(values) => {
+                form.setValue("portionMultiplier", values[0]);
+                setPortionInput(values[0].toString());
+              }}
               min={10}
               max={500}
               step={10}
