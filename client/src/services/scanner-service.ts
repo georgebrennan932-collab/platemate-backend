@@ -522,12 +522,134 @@ class WebBarcodeScanner implements ScannerService {
   }
 }
 
+// Native Capacitor Scanner for iOS/Android apps
+class NativeBarcodeScanner implements ScannerService {
+  private isActive = false;
+  private onDetected?: (result: ScannerResult) => void;
+  private onError?: (error: ScannerError) => void;
+  private torchEnabled = false;
+
+  constructor(
+    onDetected: (result: ScannerResult) => void,
+    onError: (error: ScannerError) => void
+  ) {
+    this.onDetected = onDetected;
+    this.onError = onError;
+  }
+
+  async startScanning(videoElement: HTMLVideoElement, stream?: MediaStream): Promise<void> {
+    try {
+      console.log('📱 Starting native barcode scanner...');
+      
+      // Import the Capacitor plugin
+      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+      
+      // Request camera permission
+      const permissionResult = await BarcodeScanner.requestPermissions();
+      if (permissionResult.camera !== 'granted') {
+        throw new Error('Camera permission denied');
+      }
+      
+      this.isActive = true;
+      
+      // Hide the webview to show native camera
+      document.body.classList.add('barcode-scanner-active');
+      
+      // Start scanning
+      const result = await BarcodeScanner.scan({
+        formats: [] // Empty array scans all formats including QR codes
+      });
+      
+      this.isActive = false;
+      document.body.classList.remove('barcode-scanner-active');
+      
+      if (result.barcodes && result.barcodes.length > 0) {
+        const barcode = result.barcodes[0];
+        console.log('✅ Native scanner detected:', {
+          rawValue: barcode.rawValue,
+          format: barcode.format
+        });
+        
+        // QR codes return raw value (format can be FORMAT_QR_CODE or QR_CODE)
+        if (barcode.format?.includes('QR')) {
+          this.onDetected?.({
+            barcode: barcode.rawValue || '',
+            format: 'qr_code'
+          });
+          return;
+        }
+        
+        // Product barcodes need normalization
+        const normalized = normalizeBarcodeValue(barcode.rawValue || '');
+        if (normalized) {
+          this.onDetected?.({
+            barcode: normalized,
+            format: barcode.format?.toLowerCase().replace('format_', '') || 'unknown'
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Native scanner error:', error);
+      this.isActive = false;
+      document.body.classList.remove('barcode-scanner-active');
+      
+      this.onError?.({
+        type: error.message?.includes('permission') ? 'permission' : 'unknown',
+        message: error.message || 'Failed to scan barcode'
+      });
+    }
+  }
+
+  stopScanning(): void {
+    this.isActive = false;
+    document.body.classList.remove('barcode-scanner-active');
+    
+    // Stop the native scanner
+    import('@capacitor-mlkit/barcode-scanning').then(({ BarcodeScanner }) => {
+      BarcodeScanner.stopScan().catch(() => {
+        // Ignore errors on stop
+      });
+    });
+  }
+
+  isScanning(): boolean {
+    return this.isActive;
+  }
+
+  async toggleTorch(): Promise<boolean> {
+    try {
+      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+      this.torchEnabled = !this.torchEnabled;
+      await BarcodeScanner.toggleTorch();
+      return this.torchEnabled;
+    } catch {
+      return false;
+    }
+  }
+
+  async isTorchSupported(): Promise<boolean> {
+    try {
+      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+      const result = await BarcodeScanner.isTorchAvailable();
+      return result.available;
+    } catch {
+      return false;
+    }
+  }
+}
+
 // Export factory function
 export function createBarcodeScanner(
   onDetected: (result: ScannerResult) => void,
   onError: (error: ScannerError) => void
 ): ScannerService {
-  // For now, always use web scanner
-  // TODO: Add native Capacitor scanner when compatible version is available
+  // Use native scanner on mobile platforms
+  if (Capacitor.isNativePlatform()) {
+    console.log('📱 Creating native barcode scanner for mobile app');
+    return new NativeBarcodeScanner(onDetected, onError);
+  }
+  
+  // Use web scanner on browsers
+  console.log('🌐 Creating web barcode scanner for browser');
   return new WebBarcodeScanner(onDetected, onError);
 }

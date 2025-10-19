@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { Button } from '@/components/ui/button';
 import { createBarcodeScanner, ScannerResult, ScannerError } from '@/services/scanner-service';
 import { PermissionDebugger } from '@/components/permission-debugger';
+import { Capacitor } from '@capacitor/core';
 
 interface ScannerModalProps {
   isOpen: boolean;
@@ -69,27 +70,38 @@ export function ScannerModal({ isOpen, onScanSuccess, onClose, mode = 'barcode' 
   }, [isOpen, onScanSuccess]);
 
   const startScanning = async () => {
-    if (!videoRef.current || !scannerRef.current) return;
+    if (!scannerRef.current) return;
     
     try {
-      // CRITICAL: Request camera access SYNCHRONOUSLY before any state updates
-      // This ensures the browser considers it part of the user gesture
-      // Use back camera (environment) for scanning barcodes
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
-      
-      // Now update state after we have the stream
       setError(null);
       setIsScanning(true);
       
-      // Pass the stream to the scanner
-      await scannerRef.current.startScanning(videoRef.current, stream);
-      setScannerReady(true);
-      
-      // Check torch support
-      const supported = await scannerRef.current.isTorchSupported();
-      setTorchSupported(supported);
+      // Native platforms handle their own camera UI
+      if (Capacitor.isNativePlatform()) {
+        console.log('📱 Starting native scanner (handles own UI)');
+        // Native scanner doesn't need video element or stream
+        await scannerRef.current.startScanning(videoRef.current!);
+        setScannerReady(true);
+      } else {
+        // Web platforms need getUserMedia and video element
+        if (!videoRef.current) return;
+        
+        console.log('🌐 Starting web scanner with camera stream');
+        // CRITICAL: Request camera access SYNCHRONOUSLY before any state updates
+        // This ensures the browser considers it part of the user gesture
+        // Use back camera (environment) for scanning barcodes
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        
+        // Pass the stream to the scanner
+        await scannerRef.current.startScanning(videoRef.current, stream);
+        setScannerReady(true);
+        
+        // Check torch support
+        const supported = await scannerRef.current.isTorchSupported();
+        setTorchSupported(supported);
+      }
     } catch (error) {
       console.error('Failed to start scanning:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

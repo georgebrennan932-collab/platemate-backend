@@ -643,3 +643,14 @@
     hsl(280 70% 60%) 0%, 
     hsl(260 75% 65%) 100%);
 }
+
+/* Native barcode scanner - hide webview when scanning */
+body.barcode-scanner-active {
+  visibility: hidden;
+  --background: transparent !important;
+  --ion-background-color: transparent !important;
+}
+
+body.barcode-scanner-active .barcode-scanner-modal {
+  visibility: visible;
+}
