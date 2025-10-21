@@ -677,6 +677,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       
       // Trigger a re-render of the StreakCounter component
       window.dispatchEvent(new Event('streakUpdated'));
+      
+      // Return to camera view so scan buttons are visible
+      onScanAnother();
     },
     onError: (error: Error) => {
       console.error("Error adding to diary:", error);
