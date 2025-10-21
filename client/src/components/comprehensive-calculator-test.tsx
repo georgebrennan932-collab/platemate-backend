@@ -250,7 +250,7 @@ export function ComprehensiveCalculatorTest() {
 
     testScenarios.forEach((scenario) => {
       const calculationData = calculateNutritionTargets(scenario.data);
-      const macros = calculateMacroTargets(calculationData.targetCalories);
+      const macros = calculateMacroTargets(calculationData.targetCalories, scenario.data.weightGoal);
       const validation = validateMacroCalculations(macros);
 
       // Test that macros back-calculate to target calories correctly
@@ -263,35 +263,50 @@ export function ComprehensiveCalculatorTest() {
         category: 'macro_validation'
       });
 
-      // Test macro percentages are correct
+      // Test macro percentages are correct based on weight goal
       const proteinPercent = (macros.dailyProtein * 4) / macros.dailyCalories;
       const carbsPercent = (macros.dailyCarbs * 4) / macros.dailyCalories;
       const fatPercent = (macros.dailyFat * 9) / macros.dailyCalories;
 
+      // Expected percentages vary by weight goal (science-based approach)
+      let expectedProtein = 0.25;
+      let expectedCarbs = 0.40;
+      let expectedFat = 0.35;
+      
+      if (scenario.data.weightGoal === 'lose_weight') {
+        expectedProtein = 0.30;  // Higher protein for weight loss
+        expectedCarbs = 0.35;
+        expectedFat = 0.35;
+      } else if (scenario.data.weightGoal === 'gain_weight') {
+        expectedProtein = 0.25;
+        expectedCarbs = 0.45;
+        expectedFat = 0.30;
+      }
+
       macroResults.push({
-        step: `${scenario.name} - Protein % (20%)`,
-        expected: 0.20,
+        step: `${scenario.name} - Protein % (${(expectedProtein * 100).toFixed(0)}%)`,
+        expected: expectedProtein,
         actual: Number(proteinPercent.toFixed(3)),
-        passed: Math.abs(proteinPercent - 0.20) < 0.05,
-        details: `Actual: ${(proteinPercent * 100).toFixed(1)}%`,
+        passed: Math.abs(proteinPercent - expectedProtein) < 0.05,
+        details: `Actual: ${(proteinPercent * 100).toFixed(1)}%, Goal: ${scenario.data.weightGoal}`,
         category: 'macro_validation'
       });
 
       macroResults.push({
-        step: `${scenario.name} - Carbs % (40%)`,
-        expected: 0.40,
+        step: `${scenario.name} - Carbs % (${(expectedCarbs * 100).toFixed(0)}%)`,
+        expected: expectedCarbs,
         actual: Number(carbsPercent.toFixed(3)),
-        passed: Math.abs(carbsPercent - 0.40) < 0.05,
-        details: `Actual: ${(carbsPercent * 100).toFixed(1)}%`,
+        passed: Math.abs(carbsPercent - expectedCarbs) < 0.05,
+        details: `Actual: ${(carbsPercent * 100).toFixed(1)}%, Goal: ${scenario.data.weightGoal}`,
         category: 'macro_validation'
       });
 
       macroResults.push({
-        step: `${scenario.name} - Fat % (40%)`,
-        expected: 0.40,
+        step: `${scenario.name} - Fat % (${(expectedFat * 100).toFixed(0)}%)`,
+        expected: expectedFat,
         actual: Number(fatPercent.toFixed(3)),
-        passed: Math.abs(fatPercent - 0.40) < 0.05,
-        details: `Actual: ${(fatPercent * 100).toFixed(1)}%`,
+        passed: Math.abs(fatPercent - expectedFat) < 0.05,
+        details: `Actual: ${(fatPercent * 100).toFixed(1)}%, Goal: ${scenario.data.weightGoal}`,
         category: 'macro_validation'
       });
     });

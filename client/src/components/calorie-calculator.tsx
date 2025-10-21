@@ -45,6 +45,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
   const [, setLocation] = useLocation();
   const [calculatedCalories, setCalculatedCalories] = React.useState<number | null>(null);
   const [bmrData, setBmrData] = React.useState<any>(null);
+  const [currentWeightGoal, setCurrentWeightGoal] = React.useState<string>('maintain_weight');
   
   // Load form data from localStorage as fallback
   const loadFormDataFromStorage = () => {
@@ -198,6 +199,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     
     setCalculatedCalories(calculationData.targetCalories);
     setBmrData(calculationData);
+    setCurrentWeightGoal(data.weightGoal);
     
     // Automatically update nutrition goals with weight goal for science-based macros
     const goals = calculateMacroTargets(calculationData.targetCalories, data.weightGoal);
@@ -211,7 +213,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
 
   const handleUpdateGoals = () => {
     if (calculatedCalories) {
-      const goals = calculateMacroTargets(calculatedCalories);
+      const goals = calculateMacroTargets(calculatedCalories, currentWeightGoal);
       updateGoalsMutation.mutate(goals);
     }
   };
@@ -770,19 +772,19 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="text-center p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                      <div className="font-bold text-orange-600 dark:text-orange-400">{calculateMacroTargets(calculatedCalories).dailyCalories}</div>
+                      <div className="font-bold text-orange-600 dark:text-orange-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyCalories}</div>
                       <div className="text-xs text-orange-600/70 dark:text-orange-400/70 font-medium">🔥 Calories</div>
                     </div>
                     <div className="text-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                      <div className="font-bold text-blue-600 dark:text-blue-400">{calculateMacroTargets(calculatedCalories).dailyProtein}g</div>
+                      <div className="font-bold text-blue-600 dark:text-blue-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyProtein}g</div>
                       <div className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium">🥩 Protein</div>
                     </div>
                     <div className="text-center p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                      <div className="font-bold text-green-600 dark:text-green-400">{calculateMacroTargets(calculatedCalories).dailyCarbs}g</div>
+                      <div className="font-bold text-green-600 dark:text-green-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyCarbs}g</div>
                       <div className="text-xs text-green-600/70 dark:text-green-400/70 font-medium">🍞 Carbs</div>
                     </div>
                     <div className="text-center p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                      <div className="font-bold text-yellow-600 dark:text-yellow-400">{calculateMacroTargets(calculatedCalories).dailyFat}g</div>
+                      <div className="font-bold text-yellow-600 dark:text-yellow-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyFat}g</div>
                       <div className="text-xs text-yellow-600/70 dark:text-yellow-400/70 font-medium">🥑 Fat</div>
                     </div>
                   </div>
