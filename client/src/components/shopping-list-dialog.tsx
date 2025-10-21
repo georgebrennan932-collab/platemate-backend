@@ -346,7 +346,7 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
   // Add shopping item mutation
   const addItemMutation = useMutation({
     mutationFn: async (itemName: string) => {
-      return await apiRequest('/api/shopping-list', 'POST', {
+      return await apiRequest('POST', '/api/shopping-list', {
         itemName,
         source: 'custom',
         checked: 0,
@@ -361,7 +361,7 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
   // Update shopping item mutation (for checking/unchecking)
   const updateItemMutation = useMutation({
     mutationFn: async ({ id, checked }: { id: string; checked: number }) => {
-      return await apiRequest(`/api/shopping-list/${id}`, 'PATCH', { checked });
+      return await apiRequest('PATCH', `/api/shopping-list/${id}`, { checked });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/shopping-list'] });
@@ -371,7 +371,7 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
   // Delete shopping item mutation
   const deleteItemMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/shopping-list/${id}`, 'DELETE');
+      return await apiRequest('DELETE', `/api/shopping-list/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/shopping-list'] });
