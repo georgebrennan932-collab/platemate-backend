@@ -23,6 +23,7 @@ import { reflectionService } from "./services/reflection-service";
 import { challengeService } from "./services/challenge-service";
 import { consumeBridgeToken } from "./bridgeTokens";
 import type { Session } from "express-session";
+import { userContextService } from "./services/user-context-service";
 
 // Configure multer for image uploads with deployment-aware storage
 const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || process.env.REPLIT_DEPLOYMENT === 'true';
@@ -1458,14 +1459,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Prompt is required" });
       }
 
-      // Get user's recent diary entries for personalized context
-      const entries = await storage.getDiaryEntries(userId, 30); // Last 30 entries for better context
-      
-      // Get user's nutrition goals for more personalized advice
-      const nutritionGoals = await storage.getNutritionGoals(userId);
-      
-      // Get user's profile for dietary requirements, allergies, and preferences
-      const userProfile = await storage.getUserProfile(userId);
+      // Gather comprehensive user context for personalized coaching
+      const userContext = await userContextService.getUserContext(userId);
       
       // Get AI coach memory for personalized coaching
       const coachMemory = await coachMemoryService.getOrCreateMemory(userId);
@@ -1490,8 +1485,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contextualPrompt = `Previous conversation:\n${historyText}\n\nCurrent question: ${prompt.trim()}`;
       }
       
-      // Generate conversational response with full context including user profile, coach memory, and personality
-      const response = await aiManager.answerNutritionQuestion(contextualPrompt, entries, userProfile, nutritionGoals, coachMemory, personality);
+      // Generate conversational response with full user context, coach memory, and personality
+      const response = await aiManager.answerNutritionQuestionWithContext(
+        contextualPrompt, 
+        userContext,
+        coachMemory, 
+        personality
+      );
       
       res.json({ 
         response,

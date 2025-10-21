@@ -1140,6 +1140,71 @@ export class AIManager {
   }
 
   /**
+   * Answer a custom nutrition question with comprehensive user context
+   * This version uses the full user context aggregated by the user context service
+   */
+  async answerNutritionQuestionWithContext(
+    question: string,
+    userContext: any,
+    coachMemory?: any,
+    personality?: any
+  ): Promise<string> {
+    const availableProviders = this.getAvailableProviders();
+    
+    // Import the user context service
+    const { userContextService } = await import('../services/user-context-service');
+    
+    // Format context for AI prompt
+    const contextString = userContextService.formatContextForAI(userContext);
+    
+    // Try each available provider
+    for (const provider of availableProviders) {
+      for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
+        try {
+          // Build comprehensive prompt with user context
+          let fullPrompt = question;
+          
+          // Add formatted user context to the prompt
+          if (contextString) {
+            fullPrompt = `${question}\n\n=== USER DATA CONTEXT ===\n${contextString}\n=== END CONTEXT ===\n\nPlease provide personalized advice based on the user's specific data and patterns above.`;
+          }
+          
+          // Use the existing answerNutritionQuestion method but with enriched context
+          const response = await provider.answerNutritionQuestion(
+            fullPrompt,
+            userContext.recentDiary || [],
+            userContext.profile || undefined,
+            userContext.nutritionGoals || undefined,
+            coachMemory,
+            personality
+          );
+          
+          return response;
+          
+        } catch (error: any) {
+          // If it's a rate limit error, try next provider immediately
+          if (error.isRateLimit) {
+            break;
+          }
+          
+          // If it's the last attempt with this provider, continue to next provider
+          if (attempt === provider.maxRetries) {
+            break;
+          }
+          
+          // Wait before retry (exponential backoff)
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          await this.sleep(waitTime);
+        }
+      }
+    }
+
+    // All providers failed, return a helpful fallback response
+    console.warn("All AI providers failed for custom question with context, returning fallback response");
+    return "I'm sorry, I'm having trouble accessing my AI services right now. Please try asking your question again in a moment, or consult with a healthcare professional for personalized nutrition advice.";
+  }
+
+  /**
    * Generate daily coaching content using the best available provider
    */
   async generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching> {
