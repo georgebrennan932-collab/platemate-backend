@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 // OAUTH DISABLED: import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema, savedRecipes, insertShoppingListItemSchema, updateShoppingListItemSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema, savedRecipes, insertShoppingListItemSchema, updateShoppingListItemSchema, insertShiftScheduleSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -2211,6 +2211,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Set user profile error:", error);
       res.status(400).json({ error: "Invalid user profile data" });
+    }
+  });
+
+  // Shift Schedule endpoints for weekly meal planning
+  // GET shift schedule for a date range
+  app.get("/api/shift-schedule",  async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const schedules = await storage.getShiftSchedules(userId, startDate as string, endDate as string);
+      res.json(schedules);
+    } catch (error) {
+      console.error("Get shift schedule error:", error);
+      res.status(500).json({ error: "Failed to fetch shift schedule" });
+    }
+  });
+
+  // POST create or update shift schedule for a specific date
+  app.post("/api/shift-schedule",  async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const validatedSchedule = insertShiftScheduleSchema.parse({
+        ...req.body,
+        userId
+      });
+
+      const schedule = await storage.upsertShiftSchedule(validatedSchedule);
+      res.json(schedule);
+    } catch (error) {
+      console.error("Create shift schedule error:", error);
+      res.status(400).json({ error: "Invalid shift schedule data" });
+    }
+  });
+
+  // DELETE shift schedule by date
+  app.delete("/api/shift-schedule/:date",  async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { date } = req.params;
+      await storage.deleteShiftSchedule(userId, date);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete shift schedule error:", error);
+      res.status(500).json({ error: "Failed to delete shift schedule" });
     }
   });
 

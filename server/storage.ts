@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type StepEntry, type InsertStepEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, type Challenge, type InsertChallenge, type UserChallengeProgress, type InsertUserChallengeProgress, type ChallengeWithProgress, type ShoppingListItem, type InsertShoppingListItem, type UpdateShoppingListItem, foodAnalyses, diaryEntries, drinkEntries, weightEntries, stepEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections, challenges, userChallengeProgress, shoppingListItems } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type StepEntry, type InsertStepEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, type Challenge, type InsertChallenge, type UserChallengeProgress, type InsertUserChallengeProgress, type ChallengeWithProgress, type ShoppingListItem, type InsertShoppingListItem, type UpdateShoppingListItem, type ShiftSchedule, type InsertShiftSchedule, foodAnalyses, diaryEntries, drinkEntries, weightEntries, stepEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections, challenges, userChallengeProgress, shoppingListItems, shiftSchedules } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lt } from "drizzle-orm";
 
@@ -49,6 +49,12 @@ export interface IStorage {
   // User profile methods
   getUserProfile(userId: string): Promise<UserProfile | undefined>;
   upsertUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
+  
+  // Shift schedule methods for weekly meal planning
+  getShiftSchedules(userId: string, startDate: string, endDate: string): Promise<ShiftSchedule[]>;
+  getShiftSchedule(userId: string, date: string): Promise<ShiftSchedule | undefined>;
+  upsertShiftSchedule(schedule: InsertShiftSchedule): Promise<ShiftSchedule>;
+  deleteShiftSchedule(userId: string, date: string): Promise<boolean>;
   
   // Simple food entry methods (for mobile app compatibility)
   createSimpleFoodEntry(entry: InsertSimpleFoodEntry): Promise<SimpleFoodEntry>;
@@ -458,6 +464,77 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return profile;
+  }
+
+  // Shift schedule methods for weekly meal planning
+  async getShiftSchedules(userId: string, startDate: string, endDate: string): Promise<ShiftSchedule[]> {
+    const schedules = await db
+      .select()
+      .from(shiftSchedules)
+      .where(
+        and(
+          eq(shiftSchedules.userId, userId),
+          gte(shiftSchedules.shiftDate, startDate),
+          lt(shiftSchedules.shiftDate, endDate)
+        )
+      )
+      .orderBy(shiftSchedules.shiftDate);
+    return schedules;
+  }
+
+  async getShiftSchedule(userId: string, date: string): Promise<ShiftSchedule | undefined> {
+    const [schedule] = await db
+      .select()
+      .from(shiftSchedules)
+      .where(
+        and(
+          eq(shiftSchedules.userId, userId),
+          eq(shiftSchedules.shiftDate, date)
+        )
+      );
+    return schedule || undefined;
+  }
+
+  async upsertShiftSchedule(scheduleData: InsertShiftSchedule): Promise<ShiftSchedule> {
+    // First, try to find an existing schedule for this user and date
+    const existing = await this.getShiftSchedule(scheduleData.userId, scheduleData.shiftDate);
+    
+    if (existing) {
+      // Update existing schedule
+      const [updated] = await db
+        .update(shiftSchedules)
+        .set({
+          ...scheduleData,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(shiftSchedules.userId, scheduleData.userId),
+            eq(shiftSchedules.shiftDate, scheduleData.shiftDate)
+          )
+        )
+        .returning();
+      return updated;
+    } else {
+      // Insert new schedule
+      const [schedule] = await db
+        .insert(shiftSchedules)
+        .values(scheduleData)
+        .returning();
+      return schedule;
+    }
+  }
+
+  async deleteShiftSchedule(userId: string, date: string): Promise<boolean> {
+    const result = await db
+      .delete(shiftSchedules)
+      .where(
+        and(
+          eq(shiftSchedules.userId, userId),
+          eq(shiftSchedules.shiftDate, date)
+        )
+      );
+    return true;
   }
 
   // Simple food entry methods (for mobile app compatibility)
