@@ -936,6 +936,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create food confirmation for low confidence analysis (<90%)
   app.post("/api/food-confirmations",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       const validatedData = insertFoodConfirmationSchema.parse({
         ...req.body,
@@ -959,6 +963,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get pending food confirmations for user
   app.get("/api/food-confirmations",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       const status = req.query.status as string | undefined;
       
@@ -973,6 +981,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get specific food confirmation
   app.get("/api/food-confirmations/:id",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       const confirmation = await storage.getFoodConfirmation(req.params.id);
       
@@ -1060,6 +1072,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Refresh analysis - reanalyze the image with current AI providers
   app.post("/api/analyses/:id/refresh",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const { id } = req.params;
       const userId = req.user.claims.sub;
 
@@ -1375,6 +1391,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Diet advice routes (protected)
   app.get("/api/diet-advice",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       const entries = await storage.getDiaryEntries(userId, 30); // Get last 30 entries for this user
       if (!entries || entries.length === 0) {
@@ -1400,6 +1420,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/diet-advice/generate",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       const entries = await storage.getDiaryEntries(userId, 30);
       if (!entries || entries.length === 0) {
@@ -1425,6 +1449,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Custom AI question endpoint
   app.post("/api/ai/ask",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       const { question } = req.body;
       
@@ -1452,6 +1480,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Coach conversational endpoint with conversation history
   app.post("/api/ai-coach",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       const { prompt, conversationHistory, personality: selectedPersonality } = req.body;
       
@@ -1506,6 +1538,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Coach Memory endpoints - require authentication
   app.get("/api/coach-memory",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       
       // Get or create memory for the user (auto-creates default if doesn't exist)
@@ -1520,6 +1556,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/coach-memory",  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       
       // Validate the update data
@@ -2177,6 +2217,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Daily coaching endpoints
   app.get('/api/coaching/daily',  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       
       // Get user's diary entries for personalized coaching
@@ -2197,6 +2241,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/coaching/generate',  async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       
       // Get user's diary entries for personalized coaching
