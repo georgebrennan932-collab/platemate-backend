@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { useEffect } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { App as CapacitorApp } from '@capacitor/app';
@@ -35,6 +35,17 @@ import { ProgressPhotosPage } from "./pages/ProgressPhotosPage";
 import { CoachPersonalityPage } from "./pages/CoachPersonalityPage";
 import { CoachProfilePage } from "./pages/CoachProfilePage";
 import NotFound from "./pages/not-found";
+
+// Scroll to top component - automatically scrolls to top on route change
+function ScrollToTop() {
+  const [location] = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+  
+  return null;
+}
 
 // Root route component that checks authentication
 function RootRoute() {
@@ -143,40 +154,43 @@ function App() {
   }, []);
 
   return (
-    <Switch>
-      <Route path="/" component={RootRoute} />
-      <Route path="/landing" component={LandingPage} />
-      <Route path="/login" component={LoginPage} />
-      <Route path="/register" component={RegisterPage} />
-      <Route path="/forgot-password" component={ForgotPasswordPage} />
-      <Route path="/scan" component={CameraPage} />
-      <Route path="/home" component={Home} />
-      <Route path="/diary" component={DiaryPage} />
-      <Route path="/calculator" component={CalculatorPage} />
-      <Route path="/calculator-test" component={CalculatorTestPage} />
-      <Route path="/activity" component={ActivityPage} />
-      <Route path="/advice" component={DietAdvicePage} />
-      <Route path="/ai-advice" component={DietAdvicePage} />
-      <Route path="/diet-advice" component={DietAdvicePage} />
-      <Route path="/recipes" component={RecipesPage} />
-      <Route path="/coaching" component={CoachingPage} />
-      <Route path="/ai-coach" component={AICoachPage} />
-      <Route path="/goals" component={GoalsPage} />
-      <Route path="/profile" component={ProfilePage} />
-      <Route path="/rewards" component={RewardsPage} />
-      <Route path="/injection-advice" component={InjectionAdvicePage} />
-      <Route path="/help" component={HelpPage} />
-      <Route path="/insights" component={InsightsPage} />
-      <Route path="/challenges" component={ChallengesPage} />
-      <Route path="/menu-analysis" component={MenuAnalysisPage} />
-      <Route path="/progress-photos" component={ProgressPhotosPage} />
-      <Route path="/coach-personality" component={CoachPersonalityPage} />
-      <Route path="/coach-profile" component={CoachProfilePage} />
-      <Route path="/camera" component={CameraTestPage} />
-      <Route path="/food-camera" component={CameraPage} />
-      <Route path="/voice" component={VoicePage} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <ScrollToTop />
+      <Switch>
+        <Route path="/" component={RootRoute} />
+        <Route path="/landing" component={LandingPage} />
+        <Route path="/login" component={LoginPage} />
+        <Route path="/register" component={RegisterPage} />
+        <Route path="/forgot-password" component={ForgotPasswordPage} />
+        <Route path="/scan" component={CameraPage} />
+        <Route path="/home" component={Home} />
+        <Route path="/diary" component={DiaryPage} />
+        <Route path="/calculator" component={CalculatorPage} />
+        <Route path="/calculator-test" component={CalculatorTestPage} />
+        <Route path="/activity" component={ActivityPage} />
+        <Route path="/advice" component={DietAdvicePage} />
+        <Route path="/ai-advice" component={DietAdvicePage} />
+        <Route path="/diet-advice" component={DietAdvicePage} />
+        <Route path="/recipes" component={RecipesPage} />
+        <Route path="/coaching" component={CoachingPage} />
+        <Route path="/ai-coach" component={AICoachPage} />
+        <Route path="/goals" component={GoalsPage} />
+        <Route path="/profile" component={ProfilePage} />
+        <Route path="/rewards" component={RewardsPage} />
+        <Route path="/injection-advice" component={InjectionAdvicePage} />
+        <Route path="/help" component={HelpPage} />
+        <Route path="/insights" component={InsightsPage} />
+        <Route path="/challenges" component={ChallengesPage} />
+        <Route path="/menu-analysis" component={MenuAnalysisPage} />
+        <Route path="/progress-photos" component={ProgressPhotosPage} />
+        <Route path="/coach-personality" component={CoachPersonalityPage} />
+        <Route path="/coach-profile" component={CoachProfilePage} />
+        <Route path="/camera" component={CameraTestPage} />
+        <Route path="/food-camera" component={CameraPage} />
+        <Route path="/voice" component={VoicePage} />
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 
