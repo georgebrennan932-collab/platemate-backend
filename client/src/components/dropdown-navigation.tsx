@@ -155,31 +155,28 @@ export function DropdownNavigation() {
   ];
 
   return (
-    <motion.div
-      drag
-      dragMomentum={false}
-      dragElastic={0}
-      onDragEnd={handleDragEnd}
+    <div
       style={{
         position: 'fixed',
         left: position.x,
         top: position.y,
         zIndex: 50
       }}
-      className="cursor-move"
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group"
+          <motion.button
+            drag
+            dragMomentum={false}
+            dragElastic={0}
+            onDragEnd={handleDragEnd}
+            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group inline-flex items-center justify-center cursor-move touch-none"
             data-testid="button-menu"
             aria-label="Open navigation menu (draggable)"
           >
             <Menu className="h-6 w-6" />
             <GripVertical className="h-3 w-3 absolute bottom-0 right-0 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
-          </Button>
+          </motion.button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="start" 
@@ -211,6 +208,6 @@ export function DropdownNavigation() {
           })}
         </DropdownMenuContent>
       </DropdownMenu>
-    </motion.div>
+    </div>
   );
 }
