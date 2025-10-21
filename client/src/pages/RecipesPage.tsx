@@ -288,15 +288,27 @@ export function RecipesPage() {
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <Link to="/">
+              {viewMode === "saved" ? (
                 <button 
+                  onClick={() => setViewMode("all")}
                   className="p-2 hover:bg-muted rounded-lg transition-colors"
-                  data-testid="button-back"
+                  data-testid="button-back-to-all"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-              </Link>
-              <h1 className="text-xl font-bold">Recipe Collection</h1>
+              ) : (
+                <Link to="/">
+                  <button 
+                    className="p-2 hover:bg-muted rounded-lg transition-colors"
+                    data-testid="button-back"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                </Link>
+              )}
+              <h1 className="text-xl font-bold">
+                {viewMode === "saved" ? "Saved Recipes" : "Recipe Collection"}
+              </h1>
             </div>
             {viewMode === "all" && (
               <Button
