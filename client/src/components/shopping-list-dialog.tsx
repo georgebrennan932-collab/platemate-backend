@@ -1,6 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState, useEffect, useMemo } from "react";
+import { Plus, X } from "lucide-react";
+import { nanoid } from "nanoid";
 
 interface Recipe {
   id: string;
@@ -19,6 +23,11 @@ interface ParsedIngredient {
   quantity: number;
   unit: string;
   ingredient: string;
+}
+
+interface CustomItem {
+  id: string;
+  label: string;
 }
 
 function parseIngredient(ingredientStr: string): ParsedIngredient {
@@ -261,22 +270,105 @@ function formatShoppingList(aggregated: Map<string, ParsedIngredient[]>): string
 }
 
 export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDialogProps) {
-  const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const [customItems, setCustomItems] = useState<CustomItem[]>([]);
+  const [newItemInput, setNewItemInput] = useState("");
   
-  const aggregated = aggregateIngredients(recipes);
-  const shoppingList = formatShoppingList(aggregated);
+  // Load custom items from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('shopping-list-custom-items');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        // Migrate old string array format to new object format
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (typeof parsed[0] === 'string') {
+            // Old format: convert to new format
+            const migrated = parsed.map(label => ({ id: nanoid(), label }));
+            setCustomItems(migrated);
+          } else {
+            // New format: use as is
+            setCustomItems(parsed);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load custom items:', e);
+      }
+    }
+  }, []);
   
-  const toggleItem = (index: number) => {
+  // Save custom items to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('shopping-list-custom-items', JSON.stringify(customItems));
+  }, [customItems]);
+  
+  // Calculate shopping list from recipes
+  const shoppingList = useMemo(() => {
+    const aggregated = aggregateIngredients(recipes);
+    return formatShoppingList(aggregated);
+  }, [recipes]);
+  
+  // Clean up checked items when recipe list or custom items change
+  useEffect(() => {
     setCheckedItems(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
+      const validIds = new Set([
+        ...customItems.map(item => item.id),
+        ...shoppingList.map(item => `recipe-${item.toLowerCase().replace(/\s+/g, '-')}`)
+      ]);
+      // Remove any checked IDs that no longer exist
+      prev.forEach(id => {
+        if (!validIds.has(id)) {
+          newSet.delete(id);
+        }
+      });
+      return newSet;
+    });
+  }, [customItems, shoppingList]);
+  
+  const toggleItem = (itemId: string) => {
+    setCheckedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
       } else {
-        newSet.add(index);
+        newSet.add(itemId);
       }
       return newSet;
     });
   };
+  
+  const addCustomItem = () => {
+    const trimmed = newItemInput.trim();
+    if (trimmed) {
+      const newItem: CustomItem = {
+        id: nanoid(),
+        label: trimmed
+      };
+      setCustomItems(prev => [...prev, newItem]);
+      setNewItemInput("");
+    }
+  };
+  
+  const deleteCustomItem = (itemId: string) => {
+    setCustomItems(prev => prev.filter(item => item.id !== itemId));
+    // Also uncheck if it was checked
+    setCheckedItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(itemId);
+      return newSet;
+    });
+  };
+  
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      addCustomItem();
+    }
+  };
+  
+  const totalItems = shoppingList.length + customItems.length;
+  const checkedCount = checkedItems.size;
+  const remainingCount = totalItems - checkedCount;
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -285,7 +377,7 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
           <DialogTitle className="flex items-center gap-2">
             Shopping List
             <span className="text-sm font-normal text-muted-foreground">
-              ({shoppingList.length - checkedItems.size} of {shoppingList.length} remaining)
+              ({remainingCount} of {totalItems} remaining)
             </span>
           </DialogTitle>
           <DialogDescription>
@@ -293,38 +385,118 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
           </DialogDescription>
         </DialogHeader>
         
+        {/* Add Custom Item Input */}
+        <div className="flex gap-2 px-1">
+          <Input
+            placeholder="Add essential item (e.g., Milk, Bread)"
+            value={newItemInput}
+            onChange={(e) => setNewItemInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            data-testid="input-custom-item"
+          />
+          <Button 
+            onClick={addCustomItem}
+            size="icon"
+            disabled={!newItemInput.trim()}
+            data-testid="button-add-item"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        
         <div className="flex-1 overflow-y-auto pr-2">
-          <div className="space-y-2">
-            {shoppingList.map((item, index) => (
-              <div 
-                key={index} 
-                className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors cursor-pointer"
-                onClick={() => toggleItem(index)}
-                data-testid={`shopping-item-${index}`}
-              >
-                <Checkbox
-                  checked={checkedItems.has(index)}
-                  onCheckedChange={() => toggleItem(index)}
-                  className="mt-0.5"
-                  data-testid={`checkbox-item-${index}`}
-                />
-                <span 
-                  className={`flex-1 ${checkedItems.has(index) ? 'line-through text-muted-foreground' : ''}`}
-                >
-                  {item}
-                </span>
+          {/* Your Essentials Section */}
+          {customItems.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold mb-2 px-1 text-primary">
+                Your Essentials
+              </h3>
+              <div className="space-y-2">
+                {customItems.map((item, index) => {
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="flex items-start gap-2 p-3 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors"
+                      data-testid={`custom-item-${index}`}
+                    >
+                      <Checkbox
+                        checked={checkedItems.has(item.id)}
+                        onCheckedChange={() => toggleItem(item.id)}
+                        className="mt-0.5"
+                        data-testid={`checkbox-custom-${index}`}
+                      />
+                      <span 
+                        className={`flex-1 cursor-pointer ${checkedItems.has(item.id) ? 'line-through text-muted-foreground' : ''}`}
+                        onClick={() => toggleItem(item.id)}
+                      >
+                        {item.label}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        onClick={() => deleteCustomItem(item.id)}
+                        data-testid={`button-delete-custom-${index}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
           
-          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              <strong>From recipes:</strong>
-            </p>
-            <p className="text-sm mt-1">
-              {recipes.map(r => r.name).join(', ')}
-            </p>
-          </div>
+          {/* From Recipes Section */}
+          {shoppingList.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold mb-2 px-1 text-muted-foreground">
+                From Recipes
+              </h3>
+              <div className="space-y-2">
+                {shoppingList.map((item, index) => {
+                  // Use item content as stable ID to survive recipe changes
+                  const itemId = `recipe-${item.toLowerCase().replace(/\s+/g, '-')}`;
+                  return (
+                    <div 
+                      key={itemId} 
+                      className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors cursor-pointer"
+                      onClick={() => toggleItem(itemId)}
+                      data-testid={`shopping-item-${index}`}
+                    >
+                      <Checkbox
+                        checked={checkedItems.has(itemId)}
+                        onCheckedChange={() => toggleItem(itemId)}
+                        className="mt-0.5"
+                        data-testid={`checkbox-item-${index}`}
+                      />
+                      <span 
+                        className={`flex-1 ${checkedItems.has(itemId) ? 'line-through text-muted-foreground' : ''}`}
+                      >
+                        {item}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Recipes:</strong>
+                </p>
+                <p className="text-sm mt-1">
+                  {recipes.map(r => r.name).join(', ')}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {/* Empty State */}
+          {shoppingList.length === 0 && customItems.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">Add custom items or select recipes to build your shopping list</p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
