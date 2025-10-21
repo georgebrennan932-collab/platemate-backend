@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, Loader2, Sparkles, ChevronLeft, ChevronRight, Trash2, Utensils, ShoppingCart, Truck, Home, Package } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
+import { Calendar, Clock, Loader2, Sparkles, ChevronLeft, ChevronRight, Trash2, Utensils, ShoppingCart, Truck, Home, Package, LogIn } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "date-fns";
 
 interface ShiftSchedule {
@@ -34,6 +36,7 @@ const SHIFT_TYPES = [
 
 export default function ShiftPlannerPage() {
   const { toast } = useToast();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 })); // Monday
   const [selectedShifts, setSelectedShifts] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
@@ -42,14 +45,19 @@ export default function ShiftPlannerPage() {
   const startDate = format(weekStart, "yyyy-MM-dd");
   const endDate = format(endOfWeek(weekStart, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
-  // Fetch existing shift schedules
+  // Fetch existing shift schedules (skip if not authenticated)
   const { data: schedules, isLoading } = useQuery<ShiftSchedule[]>({
     queryKey: ["/api/shift-schedules", startDate, endDate],
     queryFn: async () => {
-      const response = await fetch(`/api/shift-schedules?startDate=${startDate}&endDate=${endDate}`);
+      const response = await fetch(`/api/shift-schedules?startDate=${startDate}&endDate=${endDate}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`
+        }
+      });
       if (!response.ok) throw new Error("Failed to fetch schedules");
       return response.json();
-    }
+    },
+    enabled: isAuthenticated
   });
 
   // Initialize selectedShifts from fetched schedules
@@ -202,6 +210,62 @@ export default function ShiftPlannerPage() {
   const getShiftTypeInfo = (type: string) => {
     return SHIFT_TYPES.find(st => st.value === type) || SHIFT_TYPES[0];
   };
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{background: 'var(--bg-gradient)'}}>
+        <div className="text-white text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{background: 'var(--bg-gradient)'}}>
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 h-16 w-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+              <Calendar className="h-8 w-8 text-purple-600" />
+            </div>
+            <CardTitle className="text-2xl">Login Required</CardTitle>
+            <CardDescription className="text-base">
+              The Weekly Shift Planner helps you schedule your shifts and get personalized meal plans. Please log in to access this feature.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+              <h4 className="font-semibold text-sm mb-2">What you can do:</h4>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <li className="flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                  <span>Schedule your shifts for the week ahead</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Utensils className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                  <span>Get AI-generated meal plans optimized for your work schedule</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Truck className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                  <span>Receive portable meal suggestions for on-the-go shifts</span>
+                </li>
+              </ul>
+            </div>
+            <Link href="/">
+              <Button className="w-full" size="lg" data-testid="button-go-to-login">
+                <LogIn className="mr-2 h-5 w-5" />
+                Go to Login
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
