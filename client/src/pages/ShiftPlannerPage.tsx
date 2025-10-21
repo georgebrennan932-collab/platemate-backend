@@ -117,6 +117,7 @@ export default function ShiftPlannerPage() {
   });
 
   const handleShiftChange = (date: string, shiftType: string) => {
+    console.log("🔄 Shift changed:", date, shiftType);
     setSelectedShifts(prev => ({
       ...prev,
       [date]: shiftType
@@ -125,16 +126,21 @@ export default function ShiftPlannerPage() {
   };
 
   const handleSaveAll = async () => {
+    console.log("💾 Save All clicked! Selected shifts:", selectedShifts);
     try {
       // Save all shifts
       const promises = Object.entries(selectedShifts).map(([date, shiftType]) => {
+        console.log(`📅 Processing shift for ${date}: ${shiftType}`);
         if (shiftType === "none") {
           // Delete the shift if it's marked as "none"
+          console.log(`🗑️ Deleting shift for ${date}`);
           return deleteShiftMutation.mutateAsync(date);
         }
+        console.log(`✅ Saving shift for ${date}`);
         return saveShiftMutation.mutateAsync({ shiftDate: date, shiftType });
       });
 
+      console.log(`📤 Sending ${promises.length} requests...`);
       await Promise.all(promises);
       
       toast({
@@ -143,6 +149,7 @@ export default function ShiftPlannerPage() {
       });
       setHasChanges(false);
     } catch (error) {
+      console.error("❌ Save error:", error);
       toast({
         title: "Failed to Save",
         description: "Please try again",
