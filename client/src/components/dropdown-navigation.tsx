@@ -201,15 +201,20 @@ export function DropdownNavigation() {
             ref={buttonRef}
             variant="ghost"
             size="icon"
-            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group cursor-move"
+            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group"
             data-testid="button-menu"
             aria-label="Open navigation menu (draggable)"
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
-            onClick={handleClick}
           >
             <Menu className="h-6 w-6" />
-            <GripVertical className="h-3 w-3 absolute bottom-0 right-0 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
+            <div
+              className="h-5 w-5 absolute bottom-0 right-0 flex items-center justify-center cursor-move rounded-full hover:bg-accent/50 transition-colors"
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+              onClick={handleClick}
+              aria-label="Drag to reposition menu"
+            >
+              <GripVertical className="h-3 w-3 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
+            </div>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
