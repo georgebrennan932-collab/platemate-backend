@@ -719,6 +719,64 @@ ${JSON.stringify(analysisData, null, 2)}`;
         }
       };
       
+      // Extract shift pattern information from user profile
+      let shiftGuidance = "";
+      if (userProfile) {
+        const today = new Date().toISOString().split('T')[0];
+        let currentShift = userProfile.defaultShiftType || 'regular';
+        
+        // Use today's override if set
+        if (userProfile.todayShiftDate === today && userProfile.todayShiftType) {
+          currentShift = userProfile.todayShiftType;
+        }
+        
+        // Build shift-specific guidance
+        if (currentShift === 'day_off') {
+          shiftGuidance = `\n\nSHIFT PATTERN GUIDANCE (Day Off):
+The user has no shift today. They have more flexibility for meal timing and preparation.
+- Suggest balanced meals throughout the day at regular intervals
+- This is a good opportunity for meal prep or batch cooking
+- Recommend more complex recipes that require time`;
+        } else if (currentShift === 'night_shift') {
+          shiftGuidance = `\n\nSHIFT PATTERN GUIDANCE (Night Shift):
+The user is working overnight hours. Adapt all meal advice for night shift:
+- Avoid heavy carbs during night hours (causes drowsiness)
+- Focus on meals that stabilize blood sugar without disrupting post-shift sleep
+- Recommend protein-rich snacks to maintain energy during shift
+- Suggest light, easily digestible meals before bedtime after shift
+- Adjust circadian calorie timing (lower calories after midnight, more before shift)`;
+        } else if (currentShift === 'long_shift') {
+          shiftGuidance = `\n\nSHIFT PATTERN GUIDANCE (Long 12.5hr Clinical Shift):
+The user is working a long NHS/emergency shift with limited eating windows.
+- Compress meal suggestions into 2-3 slots (pre-shift + breaks)
+- Recommend meals that can be eaten cold or reheated quickly
+- Increase calories in pre-shift meal to prevent hunger
+- Suggest portable, easy-to-eat foods (wraps, protein bars, fruit)
+- Add post-shift recovery meal with protein and anti-inflammatory foods
+${userProfile.customBreakWindows && userProfile.customBreakWindows.length > 0 ? `- Break times available: ${userProfile.customBreakWindows.join(', ')}` : ''}`;
+        } else if (currentShift === 'early_shift') {
+          shiftGuidance = `\n\nSHIFT PATTERN GUIDANCE (Early Shift):
+The user works early hours (typically 6am-2pm).
+- Suggest quick, energizing breakfast options (can eat before 6am)
+- Mid-morning snack is crucial for sustained energy
+- Recommend having main meal after shift ends (early afternoon)
+- Evening meals can be lighter since shift ends early`;
+        } else if (currentShift === 'late_shift') {
+          shiftGuidance = `\n\nSHIFT PATTERN GUIDANCE (Late Shift):
+The user works late hours (typically 2pm-10pm).
+- Suggest substantial late breakfast/brunch
+- Light pre-shift meal around 1pm
+- Recommend snacks during shift (6-7pm)
+- Late dinner after shift ends (post-10pm) should be lighter`;
+        } else if (currentShift === 'custom' && userProfile.customShiftStart && userProfile.customShiftEnd) {
+          shiftGuidance = `\n\nSHIFT PATTERN GUIDANCE (Custom Shift):
+The user works ${userProfile.customShiftStart} to ${userProfile.customShiftEnd}.
+- Adapt meal timing around these custom hours
+- Suggest meals that fit their available eating windows
+${userProfile.customBreakWindows && userProfile.customBreakWindows.length > 0 ? `- Break times available: ${userProfile.customBreakWindows.join(', ')}` : '- Recommend portable foods if break times are limited'}`;
+        }
+      }
+
       // Build system prompt with personality as PRIMARY identity
       const systemPrompt = `${personalitySettings.systemPrompt}
 
@@ -733,13 +791,15 @@ ${personalitySettings.responseStyle.emoji ? '- Use emojis to make conversations 
 ${userDisplayName ? `The user prefers to be called "${userDisplayName}". Use this name naturally when addressing them to make the conversation more personal and friendly.` : ''}
 
 Context about the user (for reference when relevant):
-${contextData}${profileContext}${memoryContext}${goalsContext}
+${contextData}${profileContext}${memoryContext}${goalsContext}${shiftGuidance}
 
 Guidelines:
 - You can discuss ANY topic: relationships, career, hobbies, news, sports, motivation, life advice, philosophy, entertainment, technology, or anything else the user wants to talk about
 - When nutrition/health topics come up, consider their dietary requirements, allergies, and health conditions
 - Never suggest foods they're allergic to or that violate their dietary restrictions
 - Reference their personal goals, interests, and lifestyle when relevant${userDisplayName ? `\n- Address the user as "${userDisplayName}" to make the conversation feel personal` : ''}
+- CRITICAL: Always adapt meal timing, calorie distribution, and food suggestions based on their current shift pattern
+- For shift workers: prioritize portable, quick-prep, and shift-friendly foods
 - Stay fully in character with your unique personality - this is who you ARE, not just how you talk
 - Give practical, actionable advice in your distinctive style
 - If medical advice is needed, recommend consulting a healthcare professional
