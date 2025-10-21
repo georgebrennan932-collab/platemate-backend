@@ -5,7 +5,7 @@ import { mapUKFoodTerms } from "../uk-food-mapping";
 
 export class OpenAIProvider extends AIProvider {
   public readonly name = "OpenAI";
-  public readonly priority = 1; // Highest priority
+  public readonly priority = 3; // Lowest priority (quota exceeded, emergency only)
   public readonly maxRetries = 2;
 
   private client: OpenAI;

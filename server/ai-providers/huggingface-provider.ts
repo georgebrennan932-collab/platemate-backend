@@ -3,7 +3,7 @@ import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, 
 
 export class HuggingFaceProvider extends AIProvider {
   public readonly name = "HuggingFace";
-  public readonly priority = 3; // Third priority (after Gemini)
+  public readonly priority = 2; // Second priority (free backup)
   public readonly maxRetries = 2;
 
   private apiKey: string;

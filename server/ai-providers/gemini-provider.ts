@@ -5,7 +5,7 @@ import { mapUKFoodTerms } from "../uk-food-mapping";
 
 export class GeminiProvider extends AIProvider {
   public readonly name = "Gemini";
-  public readonly priority = 2; // Secondary priority
+  public readonly priority = 1; // Highest priority (free, unlimited)
   public readonly maxRetries = 2;
 
   private client: GoogleGenAI;
