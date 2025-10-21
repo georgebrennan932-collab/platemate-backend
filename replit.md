@@ -52,6 +52,15 @@ Preferred communication style: Simple, everyday language.
 - **Gamification**: Challenges and rewards system for user engagement.
 - **Activity Tracking**: Integrated step counter with rewards, using Capacitor-health plugin.
 - **Unified Theme**: Consistent vibrant purple color scheme across the application.
+- **Weekly Shift Planner**: Advanced scheduling system for shift workers (especially NHS/frontline workers) that generates AI-optimized meal plans based on work schedules. Features include:
+  - Calendar view for 7-day shift scheduling (day/night/evening/rotating/custom shifts)
+  - Break window customization and custom shift timing support
+  - AI-powered meal plan generation with shift-specific optimization for timing, portability, and nutrition
+  - Meal strategies considering pre-shift energy, during-shift sustainability, and post-shift recovery
+  - Portability classifications (portable, meal-prep-friendly, home-only) for on-the-go workers
+  - Comprehensive meal cards with nutrition breakdown, ingredients, benefits, and shift-specific tips
+  - Database persistence using PostgreSQL (shiftSchedules table)
+  - Full test coverage with data-testid attributes on all interactive and dynamic elements
 
 # External Dependencies
 
