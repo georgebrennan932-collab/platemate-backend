@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, User, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, User, Save, Loader2, Clock, Briefcase } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -21,6 +22,10 @@ const profileFormSchema = z.object({
   allergies: z.string().optional(),
   foodDislikes: z.string().optional(),
   healthConditions: z.string().optional(),
+  defaultShiftType: z.string().optional(),
+  customShiftStart: z.string().optional(),
+  customShiftEnd: z.string().optional(),
+  enableDailyShiftCheckIn: z.boolean().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
@@ -29,6 +34,9 @@ export function ProfilePage() {
   const { toast } = useToast();
   const [dietaryTags, setDietaryTags] = useState<string[]>([]);
   const [allergyTags, setAllergyTags] = useState<string[]>([]);
+  const [selectedShiftType, setSelectedShiftType] = useState<string>("regular");
+  const [breakTimes, setBreakTimes] = useState<string[]>([]);
+  const [dailyCheckInEnabled, setDailyCheckInEnabled] = useState(false);
 
   // Fetch user profile
   const { data: profile, isLoading } = useQuery<any>({
@@ -44,6 +52,10 @@ export function ProfilePage() {
       allergies: "",
       foodDislikes: "",
       healthConditions: "",
+      defaultShiftType: "regular",
+      customShiftStart: "",
+      customShiftEnd: "",
+      enableDailyShiftCheckIn: false,
     },
   });
 
@@ -56,6 +68,15 @@ export function ProfilePage() {
       if (profile.allergies && Array.isArray(profile.allergies)) {
         setAllergyTags(profile.allergies);
       }
+      if (profile.defaultShiftType) {
+        setSelectedShiftType(profile.defaultShiftType);
+      }
+      if (profile.customBreakWindows && Array.isArray(profile.customBreakWindows)) {
+        setBreakTimes(profile.customBreakWindows);
+      }
+      if (profile.enableDailyShiftCheckIn !== undefined) {
+        setDailyCheckInEnabled(profile.enableDailyShiftCheckIn === 1);
+      }
       // Reset form with profile data
       form.reset({
         name: profile.name || "",
@@ -64,6 +85,10 @@ export function ProfilePage() {
         allergies: "",
         foodDislikes: profile.foodDislikes || "",
         healthConditions: profile.healthConditions || "",
+        defaultShiftType: profile.defaultShiftType || "regular",
+        customShiftStart: profile.customShiftStart || "",
+        customShiftEnd: profile.customShiftEnd || "",
+        enableDailyShiftCheckIn: profile.enableDailyShiftCheckIn === 1,
       });
     }
   }, [profile, form]);
@@ -97,8 +122,36 @@ export function ProfilePage() {
       allergies: allergyTags,
       foodDislikes: data.foodDislikes || null,
       healthConditions: data.healthConditions || null,
+      defaultShiftType: selectedShiftType,
+      customShiftStart: data.customShiftStart || null,
+      customShiftEnd: data.customShiftEnd || null,
+      customBreakWindows: breakTimes,
+      enableDailyShiftCheckIn: dailyCheckInEnabled ? 1 : 0,
     });
   };
+
+  const addBreakTime = () => {
+    setBreakTimes([...breakTimes, ""]);
+  };
+
+  const updateBreakTime = (index: number, value: string) => {
+    const updated = [...breakTimes];
+    updated[index] = value;
+    setBreakTimes(updated);
+  };
+
+  const removeBreakTime = (index: number) => {
+    setBreakTimes(breakTimes.filter((_, i) => i !== index));
+  };
+
+  const shiftTypes = [
+    { value: "regular", label: "Regular Daytime", description: "Standard 9-5 working hours" },
+    { value: "early_shift", label: "Early Shift", description: "e.g., 6am-2pm" },
+    { value: "late_shift", label: "Late Shift", description: "e.g., 2pm-10pm" },
+    { value: "night_shift", label: "Night Shift", description: "Overnight hours" },
+    { value: "long_shift", label: "Long 12.5hr Clinical Shift", description: "For NHS/emergency workers" },
+    { value: "custom", label: "Custom Shift", description: "Set your own hours" },
+  ];
 
   const commonDietaryOptions = [
     "Vegetarian",
@@ -293,6 +346,132 @@ export function ProfilePage() {
               className="min-h-[100px]"
               data-testid="input-health-conditions"
             />
+          </div>
+
+          {/* Work Pattern Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Briefcase className="h-5 w-5 text-purple-600" />
+              <h2 className="text-lg font-semibold">Work Pattern</h2>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Help your AI Coach adapt meal timing and nutrition advice for your work schedule
+            </p>
+            
+            {/* Shift Type Selection */}
+            <div className="space-y-3 mb-6">
+              <Label className="text-sm font-medium">Default Shift Type</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {shiftTypes.map((shift) => (
+                  <button
+                    key={shift.value}
+                    type="button"
+                    onClick={() => setSelectedShiftType(shift.value)}
+                    className={`p-4 rounded-xl text-left border-2 transition-all ${
+                      selectedShiftType === shift.value
+                        ? "border-purple-600 bg-purple-50 dark:bg-purple-900/20"
+                        : "border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700"
+                    }`}
+                    data-testid={`shift-type-${shift.value}`}
+                  >
+                    <div className="font-medium text-sm">{shift.label}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {shift.description}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Shift Times (shown when custom is selected) */}
+            {selectedShiftType === "custom" && (
+              <div className="space-y-4 mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="customShiftStart" className="text-sm flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Shift Start
+                    </Label>
+                    <Input
+                      id="customShiftStart"
+                      type="time"
+                      {...form.register("customShiftStart")}
+                      className="mt-1"
+                      data-testid="input-shift-start"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="customShiftEnd" className="text-sm flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Shift End
+                    </Label>
+                    <Input
+                      id="customShiftEnd"
+                      type="time"
+                      {...form.register("customShiftEnd")}
+                      className="mt-1"
+                      data-testid="input-shift-end"
+                    />
+                  </div>
+                </div>
+
+                {/* Break Times */}
+                <div>
+                  <Label className="text-sm mb-2 block">Break Times (Optional)</Label>
+                  <div className="space-y-2">
+                    {breakTimes.map((breakTime, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          type="time"
+                          value={breakTime}
+                          onChange={(e) => updateBreakTime(index, e.target.value)}
+                          placeholder="HH:MM"
+                          className="flex-1"
+                          data-testid={`input-break-time-${index}`}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeBreakTime(index)}
+                          data-testid={`button-remove-break-${index}`}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addBreakTime}
+                      className="w-full"
+                      data-testid="button-add-break"
+                    >
+                      + Add Break Time
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Daily Check-in Toggle */}
+            <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+              <div className="flex-1 pr-4">
+                <Label htmlFor="dailyCheckIn" className="text-sm font-medium cursor-pointer">
+                  Daily Shift Check-in
+                </Label>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  Get asked about your shift at the start of each day for personalized meal planning
+                </p>
+              </div>
+              <Switch
+                id="dailyCheckIn"
+                checked={dailyCheckInEnabled}
+                onCheckedChange={setDailyCheckInEnabled}
+                data-testid="switch-daily-checkin"
+              />
+            </div>
           </div>
 
           {/* Save Button */}
