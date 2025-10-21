@@ -245,8 +245,12 @@ export function DropdownNavigation() {
         left: position.x,
         top: position.y,
         zIndex: 50,
-        touchAction: 'none'
+        touchAction: 'none',
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
       }}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       <DropdownMenu open={dropdownOpen} onOpenChange={handleDropdownOpenChange}>
         <DropdownMenuTrigger asChild>
@@ -255,10 +259,9 @@ export function DropdownNavigation() {
             variant="ghost"
             size="icon"
             className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group cursor-move"
+            style={{ touchAction: 'none' }}
             data-testid="button-menu"
             aria-label="Open navigation menu (tap) or drag to move"
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
             onClick={handleClick}
           >
             <Menu className="h-6 w-6" />

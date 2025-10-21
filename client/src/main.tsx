@@ -5,36 +5,16 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import App from "./App";
 import "./index.css";
 
-// CRITICAL: Automatically dismiss Vite error overlay for benign errors
-const dismissViteErrorOverlay = () => {
-  const overlay = document.querySelector('vite-error-overlay');
-  if (overlay) {
-    overlay.remove();
-  }
-};
-
-// Watch for error overlays and auto-dismiss them
-const overlayObserver = new MutationObserver(() => {
-  dismissViteErrorOverlay();
-});
-overlayObserver.observe(document.body, { childList: true, subtree: true });
-
-// CRITICAL: Override ResizeObserver to suppress benign errors
-const originalResizeObserver = window.ResizeObserver;
-window.ResizeObserver = class extends originalResizeObserver {
+// CRITICAL: Override ResizeObserver to completely suppress benign loop errors
+const OriginalResizeObserver = window.ResizeObserver;
+window.ResizeObserver = class SilentResizeObserver extends OriginalResizeObserver {
   constructor(callback: ResizeObserverCallback) {
-    super((entries, observer) => {
-      requestAnimationFrame(() => {
-        try {
-          callback(entries, observer);
-        } catch (e: any) {
-          // Silently ignore ResizeObserver errors
-          if (!e?.message?.includes('ResizeObserver')) {
-            throw e;
-          }
-        }
+    const wrappedCallback: ResizeObserverCallback = (entries, observer) => {
+      window.requestAnimationFrame(() => {
+        callback(entries, observer);
       });
-    });
+    };
+    super(wrappedCallback);
   }
 };
 
