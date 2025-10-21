@@ -138,6 +138,43 @@ class UserContextService {
     // User Profile
     if (context.profile) {
       const profile = context.profile;
+      
+      // Determine current shift type (today's override or default)
+      let currentShiftInfo = 'Regular daytime hours';
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (profile.todayShiftDate === today && profile.todayShiftType) {
+        // Use today's override shift
+        const shiftLabels: Record<string, string> = {
+          'day_off': 'Day Off - No shift today',
+          'regular': 'Regular Daytime (9am-5pm)',
+          'early_shift': 'Early Shift (6am-2pm)',
+          'late_shift': 'Late Shift (2pm-10pm)',
+          'night_shift': 'Night Shift (Overnight)',
+          'long_shift': 'Long Clinical Shift (12.5 hours, NHS/Emergency)',
+          'custom': `Custom Shift (${profile.customShiftStart || 'Not set'} to ${profile.customShiftEnd || 'Not set'})`
+        };
+        currentShiftInfo = shiftLabels[profile.todayShiftType] || profile.todayShiftType;
+      } else if (profile.defaultShiftType) {
+        // Use default shift pattern
+        const shiftLabels: Record<string, string> = {
+          'regular': 'Regular Daytime (9am-5pm)',
+          'early_shift': 'Early Shift (6am-2pm)',
+          'late_shift': 'Late Shift (2pm-10pm)',
+          'night_shift': 'Night Shift (Overnight)',
+          'long_shift': 'Long Clinical Shift (12.5 hours, NHS/Emergency)',
+          'custom': `Custom Shift (${profile.customShiftStart || 'Not set'} to ${profile.customShiftEnd || 'Not set'})`
+        };
+        currentShiftInfo = shiftLabels[profile.defaultShiftType] || profile.defaultShiftType;
+      }
+      
+      // Add break windows if custom shift
+      let breakInfo = '';
+      if ((profile.todayShiftType === 'custom' || profile.defaultShiftType === 'custom') && 
+          profile.customBreakWindows && profile.customBreakWindows.length > 0) {
+        breakInfo = `\n- Break Times: ${profile.customBreakWindows.join(', ')}`;
+      }
+      
       sections.push(`USER PROFILE:
 - Name: ${profile.name || 'Not set'}
 - Age: ${profile.age || 'Not set'}
@@ -151,7 +188,10 @@ class UserContextService {
 - Allergies: ${profile.allergies?.join(', ') || 'None'}
 - Food Dislikes: ${profile.foodDislikes || 'None'}
 - Health Conditions: ${profile.healthConditions || 'None'}
-- Medication: ${profile.medication || 'None'}`);
+- Medication: ${profile.medication || 'None'}
+
+WORK PATTERN & SHIFT SCHEDULE:
+- Current Shift Pattern: ${currentShiftInfo}${breakInfo}`);
     }
 
     // Nutrition Goals
