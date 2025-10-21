@@ -150,11 +150,11 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
           const colors = colorSchemes[label as keyof typeof colorSchemes];
           
           // Calculate stacked position when collapsed - using negative margin instead of absolute positioning
-          const stackOffset = isExpanded ? 0 : index * 8;
-          const stackScale = isExpanded ? 1 : 1 - (index * 0.02);
-          const stackOpacity = isExpanded ? 1 : (index === 0 ? 1 : 0.7);
+          const stackOffset = isExpanded ? 0 : index * 4;
+          const stackScale = isExpanded ? 1 : 1 - (index * 0.015);
+          const stackOpacity = isExpanded ? 1 : (index === 0 ? 1 : 0.85);
           const stackZIndex = isExpanded ? 10 : (4 - index);
-          const negativeMargin = !isExpanded && index > 0 ? '-180px' : '0';
+          const negativeMargin = !isExpanded && index > 0 ? '-218px' : '0';
           
           return (
             <motion.div 
