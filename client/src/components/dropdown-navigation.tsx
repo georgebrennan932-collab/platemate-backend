@@ -8,12 +8,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export function DropdownNavigation() {
   const [location] = useLocation();
   const [position, setPosition] = useState({ x: 16, y: 16 }); // Default top-left
+  const [isDragging, setIsDragging] = useState(false);
 
   // Clamp position to viewport bounds
   const clampPosition = (pos: { x: number; y: number }) => {
@@ -75,6 +75,11 @@ export function DropdownNavigation() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Handle drag start - mark as dragging
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
   // Save position to localStorage when it changes
   const handleDragEnd = (event: any, info: any) => {
     const rawX = position.x + info.offset.x;
@@ -83,12 +88,16 @@ export function DropdownNavigation() {
     // Validate before clamping
     if (!Number.isFinite(rawX) || !Number.isFinite(rawY)) {
       console.error('Invalid drag position:', { rawX, rawY });
+      setIsDragging(false);
       return;
     }
     
     const newPosition = clampPosition({ x: rawX, y: rawY });
     setPosition(newPosition);
     localStorage.setItem('dropdown-menu-position', JSON.stringify(newPosition));
+    
+    // Delay setting isDragging to false to prevent click event from opening menu
+    setTimeout(() => setIsDragging(false), 100);
   };
 
   const navItems = [
@@ -169,7 +178,15 @@ export function DropdownNavigation() {
             drag
             dragMomentum={false}
             dragElastic={0}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onClick={(e) => {
+              // Prevent click if we just finished dragging
+              if (isDragging) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
             className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group inline-flex items-center justify-center cursor-move touch-none"
             data-testid="button-menu"
             aria-label="Open navigation menu (draggable)"
