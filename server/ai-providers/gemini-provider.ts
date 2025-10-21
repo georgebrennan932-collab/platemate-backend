@@ -1058,6 +1058,7 @@ Respond with JSON object containing 'tips' array.`;
       
       // Build user-specific constraints
       let userConstraints = "";
+      let shiftFriendlyGuidance = "";
       if (userProfile) {
         const constraints: string[] = [];
         
@@ -1076,6 +1077,52 @@ Respond with JSON object containing 'tips' array.`;
         if (constraints.length > 0) {
           userConstraints = "\n\nUSER-SPECIFIC REQUIREMENTS:\n" + constraints.join('\n');
         }
+        
+        // Extract shift pattern information
+        const today = new Date().toISOString().split('T')[0];
+        let currentShift = userProfile.defaultShiftType || 'regular';
+        
+        // Use today's override if set
+        if (userProfile.todayShiftDate === today && userProfile.todayShiftType) {
+          currentShift = userProfile.todayShiftType;
+        }
+        
+        // Build shift-specific recipe guidance
+        if (currentShift === 'night_shift' || currentShift === 'long_shift') {
+          shiftFriendlyGuidance = "\n\nSHIFT-FRIENDLY RECIPE REQUIREMENTS:";
+          
+          if (currentShift === 'night_shift') {
+            shiftFriendlyGuidance += `\nUser works NIGHT SHIFTS. Prioritize recipes that are:
+- Portable and easy to pack in containers
+- Can be eaten cold or reheated quickly
+- Quick prep time (under 20 minutes prep)
+- Avoid heavy carbs that cause drowsiness
+- Protein-rich to maintain energy during overnight hours
+- Include make-ahead/batch-cooking options`;
+          } else if (currentShift === 'long_shift') {
+            shiftFriendlyGuidance += `\nUser works LONG 12.5hr SHIFTS (NHS/Emergency). Prioritize recipes that are:
+- Can be eaten with one hand or on-the-go
+- Portable in containers (wraps, bowls, mason jar meals)
+- Very quick prep (under 15 minutes) or can be batch-cooked
+- Can be eaten cold if microwaves unavailable
+- High protein and sustained energy (no sugar crashes)
+- Include snack-friendly options (protein bars, energy balls, portable fruits)`;
+          }
+        } else if (currentShift === 'early_shift' || currentShift === 'late_shift') {
+          shiftFriendlyGuidance = "\n\nSHIFT-FRIENDLY RECIPE REQUIREMENTS:";
+          
+          if (currentShift === 'early_shift') {
+            shiftFriendlyGuidance += `\nUser works EARLY SHIFTS (6am-2pm). Include:
+- Quick breakfast options that can be prepared in under 10 minutes
+- Energizing morning meals
+- Make-ahead breakfast options (overnight oats, etc.)`;
+          } else if (currentShift === 'late_shift') {
+            shiftFriendlyGuidance += `\nUser works LATE SHIFTS (2pm-10pm). Include:
+- Substantial brunch/lunch recipes
+- Portable snacks for during shift
+- Lighter late-evening meal options`;
+          }
+        }
       }
       
       const systemPrompt = `You are a professional chef and nutritionist. Generate 8-10 healthy and delicious recipes${filterText}.
@@ -1093,7 +1140,7 @@ Focus on:
 - Easy-to-find ingredients
 - Clear, actionable instructions
 - Variety in meal types (breakfast, lunch, dinner, snacks)
-- Different cooking methods and cuisines${userConstraints}
+- Different cooking methods and cuisines${userConstraints}${shiftFriendlyGuidance}
 
 Respond with JSON in this exact format:
 {
