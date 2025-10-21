@@ -71,6 +71,21 @@ export const nutritionGoals = pgTable("nutrition_goals", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Weekly shift schedule for advance meal planning
+export const shiftSchedules = pgTable("shift_schedules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  shiftDate: varchar("shift_date").notNull(), // YYYY-MM-DD format
+  shiftType: varchar("shift_type").notNull(), // day_off, regular, early_shift, late_shift, night_shift, long_shift, custom
+  customShiftStart: varchar("custom_shift_start"), // HH:MM format for custom shifts
+  customShiftEnd: varchar("custom_shift_end"), // HH:MM format for custom shifts
+  breakWindows: text("break_windows").array(), // Array of HH:MM times for break windows
+  mealPlanGenerated: integer("meal_plan_generated").default(0), // 0 = not generated, 1 = generated
+  mealPlanData: jsonb("meal_plan_data"), // Stores AI-generated meal plan
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const foodAnalyses = pgTable("food_analyses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   imageUrl: text("image_url").notNull(),
@@ -341,6 +356,24 @@ export const insertNutritionGoalsSchema = createInsertSchema(nutritionGoals).omi
   updatedAt: true,
 });
 
+export const insertShiftScheduleSchema = createInsertSchema(shiftSchedules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  shiftDate: z.string(), // YYYY-MM-DD format
+  shiftType: z.enum(["day_off", "regular", "early_shift", "late_shift", "night_shift", "long_shift", "custom"]),
+  customShiftStart: z.string().nullable().optional(),
+  customShiftEnd: z.string().nullable().optional(),
+  breakWindows: z.array(z.string()).nullable().optional(),
+  mealPlanGenerated: z.number().int().min(0).max(1).default(0).optional(),
+  mealPlanData: z.any().optional(), // JSON data for meal plan
+});
+
+export const updateShiftScheduleSchema = insertShiftScheduleSchema.partial().omit({
+  userId: true, // Cannot change user ownership
+});
+
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   id: true,
   createdAt: true,
@@ -374,6 +407,9 @@ export type InsertDrinkEntry = z.infer<typeof insertDrinkEntrySchema>;
 export type DrinkEntry = typeof drinkEntries.$inferSelect;
 export type InsertNutritionGoals = z.infer<typeof insertNutritionGoalsSchema>;
 export type NutritionGoals = typeof nutritionGoals.$inferSelect;
+export type InsertShiftSchedule = z.infer<typeof insertShiftScheduleSchema>;
+export type UpdateShiftSchedule = z.infer<typeof updateShiftScheduleSchema>;
+export type ShiftSchedule = typeof shiftSchedules.$inferSelect;
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
 
