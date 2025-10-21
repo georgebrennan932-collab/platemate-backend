@@ -211,13 +211,6 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
   };
 
 
-  const handleUpdateGoals = () => {
-    if (calculatedCalories) {
-      const goals = calculateMacroTargets(calculatedCalories, currentWeightGoal);
-      updateGoalsMutation.mutate(goals);
-    }
-  };
-
   const onSubmit = (data: ProfileFormData) => {
     console.log('Form submitted with data:', data);
     console.log('Form errors:', form.formState.errors);
