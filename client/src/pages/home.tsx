@@ -26,6 +26,7 @@ import { launchLogin } from "@/lib/auth-launcher";
 import { StreakCounter } from "@/components/streak-counter";
 import { StepCounterWidget } from "@/components/step-counter-widget";
 import { updateStreak } from "@/lib/streak-tracker";
+import { ShiftCheckInModal } from "@/components/shift-checkin-modal";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
@@ -67,6 +68,9 @@ export default function Home() {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [scannerMode, setScannerMode] = useState<'barcode' | 'menu'>('barcode');
   
+  // Shift check-in state
+  const [showShiftCheckIn, setShowShiftCheckIn] = useState(false);
+  
   
   // Confetti disabled per user request
   // const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
@@ -94,6 +98,13 @@ export default function Home() {
     throwOnError: false,
   });
 
+  // Fetch user profile for shift check-in
+  const { data: userProfile } = useQuery<any>({
+    queryKey: ['/api/user-profile'],
+    enabled: isAuthenticated,
+    throwOnError: false,
+  });
+
   // Calculate today's consumed nutrition using standardized function
   const todayConsumedNutrition = diaryEntries && drinkEntries 
     ? calculateTodayNutrition(diaryEntries, drinkEntries)
@@ -107,6 +118,32 @@ export default function Home() {
     };
     checkSpeechSupport();
   }, []);
+
+  // Check if shift check-in should be shown
+  useEffect(() => {
+    if (!isAuthenticated || !userProfile) return;
+
+    // Check if daily check-in is enabled
+    if (userProfile.enableDailyShiftCheckIn !== 1) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Check if user already dismissed or set shift for today
+    const dismissed = localStorage.getItem(`shift-checkin-dismissed-${today}`);
+    if (dismissed) return;
+
+    // Check if shift was already set for today
+    if (userProfile.todayShiftDate === today && userProfile.todayShiftType) {
+      return;
+    }
+
+    // Show the check-in modal after a short delay
+    const timer = setTimeout(() => {
+      setShowShiftCheckIn(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, userProfile]);
 
   // Check for authentication failure in URL
   useEffect(() => {
@@ -1485,6 +1522,12 @@ export default function Home() {
         onClose={() => {
           setShowManualEntry(false);
         }}
+      />
+
+      {/* Shift Check-In Modal */}
+      <ShiftCheckInModal
+        isOpen={showShiftCheckIn}
+        onClose={() => setShowShiftCheckIn(false)}
       />
 
       {/* Hidden file input for gallery */}
