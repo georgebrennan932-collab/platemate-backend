@@ -5,6 +5,23 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import App from "./App";
 import "./index.css";
 
+// CRITICAL: Override ResizeObserver to suppress benign errors
+const originalResizeObserver = window.ResizeObserver;
+window.ResizeObserver = class extends originalResizeObserver {
+  constructor(callback: ResizeObserverCallback) {
+    super((entries, observer) => {
+      try {
+        callback(entries, observer);
+      } catch (e: any) {
+        // Silently ignore ResizeObserver errors
+        if (!e?.message?.includes('ResizeObserver')) {
+          throw e;
+        }
+      }
+    });
+  }
+};
+
 // CRITICAL: Global error handlers to prevent Android WebView crashes
 // Android WebView crashes on uncaught promise rejections and JS errors
 window.addEventListener('unhandledrejection', (event) => {
@@ -20,12 +37,12 @@ window.addEventListener('error', (event) => {
   )) {
     event.stopImmediatePropagation();
     event.preventDefault();
-    return;
+    return false;
   }
   
   console.error('🚨 Uncaught Error (prevented WebView crash):', event.error);
   event.preventDefault(); // Prevent crash
-});
+}, true); // Use capture phase to catch errors early
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
