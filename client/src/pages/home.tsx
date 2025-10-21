@@ -67,6 +67,9 @@ export default function Home() {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [scannerMode, setScannerMode] = useState<'barcode' | 'menu'>('barcode');
   
+  // Camera interface visibility
+  const [showCameraInterface, setShowCameraInterface] = useState(false);
+  
   
   // Confetti disabled per user request
   // const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
@@ -874,22 +877,41 @@ export default function Home() {
         </div>
       </div>
       
+      {/* Scan Food Button - shown when camera interface is hidden */}
+      {!showCameraInterface && currentState === 'camera' && (
+        <div className="max-w-md mx-auto px-6 mb-8">
+          <motion.button
+            onClick={() => setShowCameraInterface(true)}
+            className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 text-white py-8 px-8 rounded-3xl font-bold shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 flex flex-col items-center justify-center space-y-4 border-2 border-purple-300/50"
+            data-testid="button-scan-food"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Camera className="h-16 w-16" />
+            <div>
+              <div className="text-2xl font-bold">Scan Your Food</div>
+              <div className="text-sm opacity-90 mt-1">Camera · Barcode · Voice · Type</div>
+            </div>
+          </motion.button>
+        </div>
+      )}
+
       {/* Step Counter Widget */}
-      {isAuthenticated && currentState === 'camera' && (
+      {isAuthenticated && showCameraInterface && currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <StepCounterWidget />
         </div>
       )}
 
       {/* Streak Counter */}
-      {isAuthenticated && currentState === 'camera' && (
+      {isAuthenticated && showCameraInterface && currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <StreakCounter />
         </div>
       )}
 
       {/* All Add Buttons */}
-      {currentState === 'camera' && (
+      {showCameraInterface && currentState === 'camera' && (
         <div className="max-w-md mx-auto px-4 mb-4">
           <div className="grid grid-cols-2 gap-3 mb-4">
             <button
@@ -972,7 +994,7 @@ export default function Home() {
       )}
 
       {/* Menu Scanner Button */}
-      {currentState === 'camera' && (
+      {showCameraInterface && currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <motion.button
             onClick={() => {
@@ -995,7 +1017,7 @@ export default function Home() {
       )}
 
       {/* Portion Analysis Tip - positioned near camera button */}
-      {currentState === 'camera' && (
+      {showCameraInterface && currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mt-4 mb-6">
           <div className="text-center">
             <p className="text-sm text-gray-700 dark:text-gray-300 font-medium bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl px-4 py-3 inline-block" data-testid="text-scale-advice">
@@ -1006,7 +1028,7 @@ export default function Home() {
       )}
 
       {/* Weight Loss Injection Guide */}
-      {currentState === 'camera' && (
+      {showCameraInterface && currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <div className="text-center">
             <Link href="/injection-advice">
@@ -1020,7 +1042,7 @@ export default function Home() {
       )}
 
       {/* Calories Remaining Box - moved above nutritional values */}
-      {currentState === 'camera' && isAuthenticated && nutritionGoals && (
+      {showCameraInterface && currentState === 'camera' && isAuthenticated && nutritionGoals && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
             <div className="text-center">
@@ -1061,7 +1083,7 @@ export default function Home() {
       )}
       
       {/* Weigh In Button */}
-      {currentState === 'camera' && (
+      {showCameraInterface && currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <Link 
             href="/diary?tab=weight"
@@ -1078,7 +1100,7 @@ export default function Home() {
 
 
       <div className="max-w-md mx-auto" id="camera-section">
-        {currentState === 'camera' && (
+        {showCameraInterface && currentState === 'camera' && (
           <CameraInterface
             onAnalysisStart={handleAnalysisStart}
             onAnalysisSuccess={handleAnalysisSuccess}
@@ -1089,7 +1111,7 @@ export default function Home() {
         )}
 
         {/* Touch to Analyze Instruction - positioned below camera interface */}
-        {currentState === 'camera' && (
+        {showCameraInterface && currentState === 'camera' && (
           <div className="px-6 mt-4 mb-6">
             <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400 font-medium bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl px-4 py-3 inline-block" data-testid="text-analyze-instruction">
