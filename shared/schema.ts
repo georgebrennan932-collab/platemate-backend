@@ -47,6 +47,14 @@ export const userProfiles = pgTable("user_profiles", {
   allergies: text("allergies").array(), // nuts, dairy, gluten, shellfish, etc.
   foodDislikes: text("food_dislikes"), // foods user doesn't like
   healthConditions: text("health_conditions"), // diabetes, hypertension, etc.
+  // Shift pattern fields for frontline workers
+  defaultShiftType: varchar("default_shift_type"), // regular, early_shift, late_shift, night_shift, long_shift, custom
+  customShiftStart: varchar("custom_shift_start"), // HH:MM format for custom shifts
+  customShiftEnd: varchar("custom_shift_end"), // HH:MM format for custom shifts
+  customBreakWindows: text("custom_break_windows").array(), // Array of HH:MM times for breaks
+  enableDailyShiftCheckIn: integer("enable_daily_shift_check_in").default(0), // 0 = disabled, 1 = enabled
+  todayShiftType: varchar("today_shift_type"), // Override for today's shift
+  todayShiftDate: varchar("today_shift_date"), // Date string (YYYY-MM-DD) for today's override
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -348,6 +356,13 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   allergies: z.array(z.string()).optional(),
   foodDislikes: z.string().nullable().optional(),
   healthConditions: z.string().nullable().optional(),
+  defaultShiftType: z.enum(["regular", "early_shift", "late_shift", "night_shift", "long_shift", "custom"]).optional(),
+  customShiftStart: z.string().optional(),
+  customShiftEnd: z.string().optional(),
+  customBreakWindows: z.array(z.string()).optional(),
+  enableDailyShiftCheckIn: z.number().int().min(0).max(1).optional(),
+  todayShiftType: z.enum(["regular", "early_shift", "late_shift", "night_shift", "long_shift", "custom", "day_off"]).optional(),
+  todayShiftDate: z.string().optional(),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
