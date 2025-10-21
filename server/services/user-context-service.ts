@@ -226,13 +226,20 @@ class UserContextService {
 - Total Points: ${context.totalPoints}`);
 
     // Shopping List
-    if (context.shoppingList.length > 0) {
-      const items = context.shoppingList
-        .slice(0, 10)
-        .map(item => item.itemName || item.name || item)
-        .join(', ');
-      sections.push(`SHOPPING LIST:
-- Items: ${items}${context.shoppingList.length > 10 ? '...' : ''}`);
+    if (context.shoppingList && context.shoppingList.length > 0) {
+      const uncheckedItems = context.shoppingList.filter((item: any) => !item.checked || item.checked === 0);
+      const checkedItems = context.shoppingList.filter((item: any) => item.checked === 1);
+      
+      const itemsList = context.shoppingList
+        .map((item: any, index: number) => {
+          const name = item.itemName || item.name || item;
+          const status = item.checked === 1 ? '✓' : '○';
+          return `${status} ${name}`;
+        })
+        .join('\n  ');
+      
+      sections.push(`SHOPPING LIST (${context.shoppingList.length} items, ${uncheckedItems.length} remaining):
+  ${itemsList}`);
     }
 
     return sections.join('\n\n');
