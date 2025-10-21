@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type StepEntry, type InsertStepEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, type Challenge, type InsertChallenge, type UserChallengeProgress, type InsertUserChallengeProgress, type ChallengeWithProgress, foodAnalyses, diaryEntries, drinkEntries, weightEntries, stepEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections, challenges, userChallengeProgress } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type StepEntry, type InsertStepEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, type Challenge, type InsertChallenge, type UserChallengeProgress, type InsertUserChallengeProgress, type ChallengeWithProgress, type ShoppingListItem, type InsertShoppingListItem, type UpdateShoppingListItem, foodAnalyses, diaryEntries, drinkEntries, weightEntries, stepEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections, challenges, userChallengeProgress, shoppingListItems } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lt } from "drizzle-orm";
 
@@ -78,6 +78,13 @@ export interface IStorage {
   completeChallenge(userId: string, challengeId: string): Promise<UserChallengeProgress | undefined>;
   getUserCompletedChallenges(userId: string): Promise<ChallengeWithProgress[]>;
   getUserPoints(userId: string): Promise<number>;
+  
+  // Shopping list methods
+  getShoppingList(userId: string): Promise<ShoppingListItem[]>;
+  addShoppingItem(item: InsertShoppingListItem): Promise<ShoppingListItem>;
+  updateShoppingItem(id: string, userId: string, updates: UpdateShoppingListItem): Promise<ShoppingListItem | undefined>;
+  deleteShoppingItem(id: string, userId: string): Promise<boolean>;
+  clearShoppingList(userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -725,6 +732,47 @@ export class DatabaseStorage implements IStorage {
   async getUserPoints(userId: string): Promise<number> {
     const completedChallenges = await this.getUserCompletedChallenges(userId);
     return completedChallenges.reduce((total, challenge) => total + challenge.rewardPoints, 0);
+  }
+
+  // Shopping list methods
+  async getShoppingList(userId: string): Promise<ShoppingListItem[]> {
+    const items = await db
+      .select()
+      .from(shoppingListItems)
+      .where(eq(shoppingListItems.userId, userId))
+      .orderBy(desc(shoppingListItems.createdAt));
+    return items;
+  }
+
+  async addShoppingItem(item: InsertShoppingListItem): Promise<ShoppingListItem> {
+    const [newItem] = await db
+      .insert(shoppingListItems)
+      .values(item)
+      .returning();
+    return newItem;
+  }
+
+  async updateShoppingItem(id: string, userId: string, updates: UpdateShoppingListItem): Promise<ShoppingListItem | undefined> {
+    const [updatedItem] = await db
+      .update(shoppingListItems)
+      .set(updates)
+      .where(and(eq(shoppingListItems.id, id), eq(shoppingListItems.userId, userId)))
+      .returning();
+    return updatedItem || undefined;
+  }
+
+  async deleteShoppingItem(id: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(shoppingListItems)
+      .where(and(eq(shoppingListItems.id, id), eq(shoppingListItems.userId, userId)));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  async clearShoppingList(userId: string): Promise<boolean> {
+    const result = await db
+      .delete(shoppingListItems)
+      .where(eq(shoppingListItems.userId, userId));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 }
 

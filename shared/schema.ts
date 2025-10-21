@@ -260,6 +260,20 @@ export const aiCoachMemory = pgTable("ai_coach_memory", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Shopping List: User's shopping list items
+export const shoppingListItems = pgTable("shopping_list_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  itemName: text("item_name").notNull(),
+  checked: integer("checked").notNull().default(0), // 0 = unchecked, 1 = checked
+  source: varchar("source").notNull().default("custom"), // 'custom' or 'recipe'
+  recipeId: varchar("recipe_id"), // Reference to recipe if from recipe
+  recipeName: text("recipe_name"), // Recipe name for display
+  quantity: text("quantity"), // For recipe ingredients (e.g., "2", "1/2")
+  unit: text("unit"), // For recipe ingredients (e.g., "cups", "tbsp")
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const DetectedFoodSchema = z.object({
   name: z.string(),
   portion: z.string(),
@@ -487,6 +501,26 @@ export type InsertAiCoachMemory = z.infer<typeof insertAiCoachMemorySchema>;
 export type UpdateAiCoachMemory = z.infer<typeof updateAiCoachMemorySchema>;
 export type AiCoachMemory = typeof aiCoachMemory.$inferSelect;
 
+// Shopping list schemas
+export const insertShoppingListItemSchema = createInsertSchema(shoppingListItems).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  source: z.enum(["custom", "recipe"]).default("custom"),
+  checked: z.number().int().min(0).max(1).default(0),
+});
+
+export const updateShoppingListItemSchema = z.object({
+  itemName: z.string().optional(),
+  checked: z.number().int().min(0).max(1).optional(),
+  quantity: z.string().optional(),
+  unit: z.string().optional(),
+});
+
+export type InsertShoppingListItem = z.infer<typeof insertShoppingListItemSchema>;
+export type UpdateShoppingListItem = z.infer<typeof updateShoppingListItemSchema>;
+export type ShoppingListItem = typeof shoppingListItems.$inferSelect;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   diaryEntries: many(diaryEntries),
@@ -496,6 +530,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   simpleFoodEntries: many(simpleFoodEntries),
   reflections: many(reflections),
   challengeProgress: many(userChallengeProgress),
+  shoppingListItems: many(shoppingListItems),
   nutritionGoals: one(nutritionGoals),
   profile: one(userProfiles),
 }));
@@ -582,6 +617,13 @@ export const userChallengeProgressRelations = relations(userChallengeProgress, (
 export const savedRecipesRelations = relations(savedRecipes, ({ one }) => ({
   user: one(users, {
     fields: [savedRecipes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const shoppingListItemsRelations = relations(shoppingListItems, ({ one }) => ({
+  user: one(users, {
+    fields: [shoppingListItems.userId],
     references: [users.id],
   }),
 }));

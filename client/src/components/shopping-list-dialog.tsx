@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect, useMemo } from "react";
 import { Plus, X, ShoppingBasket, Star } from "lucide-react";
 import { nanoid } from "nanoid";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 interface Recipe {
   id: string;
@@ -332,37 +334,52 @@ function getIngredientEmoji(item: string): string {
 }
 
 export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDialogProps) {
-  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
-  const [customItems, setCustomItems] = useState<CustomItem[]>([]);
   const [newItemInput, setNewItemInput] = useState("");
+  const [checkedRecipeItems, setCheckedRecipeItems] = useState<Set<string>>(new Set());
   
-  // Load custom items from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem('shopping-list-custom-items');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // Migrate old string array format to new object format
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          if (typeof parsed[0] === 'string') {
-            // Old format: convert to new format
-            const migrated = parsed.map(label => ({ id: nanoid(), label }));
-            setCustomItems(migrated);
-          } else {
-            // New format: use as is
-            setCustomItems(parsed);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load custom items:', e);
-      }
-    }
-  }, []);
+  // Fetch shopping list items from API
+  const { data: shoppingListItems = [], isLoading } = useQuery<any[]>({
+    queryKey: ['/api/shopping-list'],
+    enabled: isOpen,
+  });
   
-  // Save custom items to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('shopping-list-custom-items', JSON.stringify(customItems));
-  }, [customItems]);
+  // Add shopping item mutation
+  const addItemMutation = useMutation({
+    mutationFn: async (itemName: string) => {
+      return await apiRequest('/api/shopping-list', 'POST', {
+        itemName,
+        source: 'custom',
+        checked: 0,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shopping-list'] });
+      setNewItemInput("");
+    },
+  });
+  
+  // Update shopping item mutation (for checking/unchecking)
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ id, checked }: { id: string; checked: number }) => {
+      return await apiRequest(`/api/shopping-list/${id}`, 'PATCH', { checked });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shopping-list'] });
+    },
+  });
+  
+  // Delete shopping item mutation
+  const deleteItemMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest(`/api/shopping-list/${id}`, 'DELETE');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shopping-list'] });
+    },
+  });
+  
+  // Filter custom items from database items
+  const customItems = shoppingListItems.filter((item: any) => item.source === 'custom');
   
   // Calculate shopping list from recipes
   const shoppingList = useMemo(() => {
@@ -370,54 +387,30 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
     return formatShoppingList(aggregated);
   }, [recipes]);
   
-  // Clean up checked items when recipe list or custom items change
-  useEffect(() => {
-    setCheckedItems(prev => {
-      const newSet = new Set(prev);
-      const validIds = new Set([
-        ...customItems.map(item => item.id),
-        ...shoppingList.map(item => `recipe-${item.toLowerCase().replace(/\s+/g, '-')}`)
-      ]);
-      // Remove any checked IDs that no longer exist
-      prev.forEach(id => {
-        if (!validIds.has(id)) {
-          newSet.delete(id);
-        }
-      });
-      return newSet;
-    });
-  }, [customItems, shoppingList]);
+  const toggleItem = (item: any) => {
+    const newChecked = item.checked === 1 ? 0 : 1;
+    updateItemMutation.mutate({ id: item.id, checked: newChecked });
+  };
   
-  const toggleItem = (itemId: string) => {
-    setCheckedItems(prev => {
+  const addCustomItem = () => {
+    const trimmed = newItemInput.trim();
+    if (trimmed) {
+      addItemMutation.mutate(trimmed);
+    }
+  };
+  
+  const deleteCustomItem = (itemId: string) => {
+    deleteItemMutation.mutate(itemId);
+  };
+  
+  const toggleRecipeItem = (itemId: string) => {
+    setCheckedRecipeItems(prev => {
       const newSet = new Set(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
       } else {
         newSet.add(itemId);
       }
-      return newSet;
-    });
-  };
-  
-  const addCustomItem = () => {
-    const trimmed = newItemInput.trim();
-    if (trimmed) {
-      const newItem: CustomItem = {
-        id: nanoid(),
-        label: trimmed
-      };
-      setCustomItems(prev => [...prev, newItem]);
-      setNewItemInput("");
-    }
-  };
-  
-  const deleteCustomItem = (itemId: string) => {
-    setCustomItems(prev => prev.filter(item => item.id !== itemId));
-    // Also uncheck if it was checked
-    setCheckedItems(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(itemId);
       return newSet;
     });
   };
@@ -429,7 +422,7 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
   };
   
   const totalItems = shoppingList.length + customItems.length;
-  const checkedCount = checkedItems.size;
+  const checkedCount = customItems.filter((item: any) => item.checked === 1).length + checkedRecipeItems.size;
   const remainingCount = totalItems - checkedCount;
   
   return (
@@ -489,26 +482,26 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
                 </h3>
               </div>
               <div className="space-y-2">
-                {customItems.map((item, index) => {
-                  const isChecked = checkedItems.has(item.id);
+                {customItems.map((item: any, index) => {
+                  const isChecked = item.checked === 1;
                   return (
                     <div 
                       key={item.id} 
                       className="flex items-center gap-3 p-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
-                      onClick={() => toggleItem(item.id)}
+                      onClick={() => toggleItem(item)}
                       data-testid={`custom-item-${index}`}
                     >
                       <Checkbox
                         checked={isChecked}
-                        onCheckedChange={() => toggleItem(item.id)}
+                        onCheckedChange={() => toggleItem(item)}
                         className="h-5 w-5 rounded-full border-2"
                         data-testid={`checkbox-custom-${index}`}
                       />
-                      <span className="text-2xl">{getIngredientEmoji(item.label)}</span>
+                      <span className="text-2xl">{getIngredientEmoji(item.itemName)}</span>
                       <span 
                         className={`flex-1 text-base ${isChecked ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100 font-medium'}`}
                       >
-                        {item.label}
+                        {item.itemName}
                       </span>
                       <Button
                         variant="ghost"
@@ -542,17 +535,17 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
                 {shoppingList.map((item, index) => {
                   // Use item content as stable ID to survive recipe changes
                   const itemId = `recipe-${item.toLowerCase().replace(/\s+/g, '-')}`;
-                  const isChecked = checkedItems.has(itemId);
+                  const isChecked = checkedRecipeItems.has(itemId);
                   return (
                     <div 
                       key={itemId} 
                       className="flex items-center gap-3 p-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => toggleItem(itemId)}
+                      onClick={() => toggleRecipeItem(itemId)}
                       data-testid={`shopping-item-${index}`}
                     >
                       <Checkbox
                         checked={isChecked}
-                        onCheckedChange={() => toggleItem(itemId)}
+                        onCheckedChange={() => toggleRecipeItem(itemId)}
                         className="h-5 w-5 rounded-full border-2"
                         data-testid={`checkbox-item-${index}`}
                       />

@@ -229,7 +229,7 @@ class UserContextService {
     if (context.shoppingList.length > 0) {
       const items = context.shoppingList
         .slice(0, 10)
-        .map(item => item.name || item)
+        .map(item => item.itemName || item.name || item)
         .join(', ');
       sections.push(`SHOPPING LIST:
 - Items: ${items}${context.shoppingList.length > 10 ? '...' : ''}`);

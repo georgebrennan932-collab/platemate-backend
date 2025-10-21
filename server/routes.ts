@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 // OAUTH DISABLED: import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema, savedRecipes } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema, savedRecipes, insertShoppingListItemSchema, updateShoppingListItemSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -2688,6 +2688,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error adding mood entry:", error);
       res.status(500).json({ error: "Failed to add mood entry" });
+    }
+  });
+
+  // Shopping List routes
+  app.get("/api/shopping-list", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const items = await storage.getShoppingList(userId);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching shopping list:", error);
+      res.status(500).json({ error: "Failed to fetch shopping list" });
+    }
+  });
+
+  app.post("/api/shopping-list", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const validatedData = insertShoppingListItemSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      const item = await storage.addShoppingItem(validatedData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error adding shopping item:", error);
+      res.status(400).json({ error: "Failed to add shopping item" });
+    }
+  });
+
+  app.patch("/api/shopping-list/:id", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const validatedData = updateShoppingListItemSchema.parse(req.body);
+      const updated = await storage.updateShoppingItem(req.params.id, userId, validatedData);
+      if (!updated) {
+        return res.status(404).json({ error: "Shopping item not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating shopping item:", error);
+      res.status(400).json({ error: "Failed to update shopping item" });
+    }
+  });
+
+  app.delete("/api/shopping-list/:id", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const deleted = await storage.deleteShoppingItem(req.params.id, userId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Shopping item not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting shopping item:", error);
+      res.status(500).json({ error: "Failed to delete shopping item" });
+    }
+  });
+
+  app.delete("/api/shopping-list", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      await storage.clearShoppingList(userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error clearing shopping list:", error);
+      res.status(500).json({ error: "Failed to clear shopping list" });
     }
   });
 
