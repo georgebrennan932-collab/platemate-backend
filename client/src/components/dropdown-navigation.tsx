@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu, User, Images } from "lucide-react";
+import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu, User, Images, GripVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,9 +8,108 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useState, useEffect, useRef } from "react";
 
 export function DropdownNavigation() {
   const [location] = useLocation();
+  const [position, setPosition] = useState({ x: 16, y: 100 }); // Start middle-left
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Load saved position
+  useEffect(() => {
+    const saved = localStorage.getItem('nav-menu-position');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          setPosition(parsed);
+        }
+      } catch (e) {
+        console.error('Failed to load position:', e);
+      }
+    }
+  }, []);
+
+  // Clamp position to viewport
+  const clampToViewport = (x: number, y: number) => {
+    const buttonSize = 56; // 14 * 4px
+    const margin = 8;
+    return {
+      x: Math.max(margin, Math.min(x, window.innerWidth - buttonSize - margin)),
+      y: Math.max(margin, Math.min(y, window.innerHeight - buttonSize - margin))
+    };
+  };
+
+  // Start dragging
+  const handleDragStart = (clientX: number, clientY: number) => {
+    setIsDragging(true);
+    setDragStart({
+      x: clientX - position.x,
+      y: clientY - position.y
+    });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleDragStart(e.clientX, e.clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
+
+  // Handle dragging
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMove = (clientX: number, clientY: number) => {
+      const newPos = clampToViewport(
+        clientX - dragStart.x,
+        clientY - dragStart.y
+      );
+      setPosition(newPos);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      handleMove(e.clientX, e.clientY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
+    const handleEnd = () => {
+      setIsDragging(false);
+      localStorage.setItem('nav-menu-position', JSON.stringify(position));
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging, dragStart, position]);
+
+  // Prevent dropdown opening while dragging
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
 
   const navItems = [
     {
@@ -76,21 +175,34 @@ export function DropdownNavigation() {
   ];
 
   return (
-    <div className="fixed top-4 left-4 z-50">
+    <div
+      style={{
+        position: 'fixed',
+        left: position.x,
+        top: position.y,
+        zIndex: 50,
+        touchAction: 'none'
+      }}
+    >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
+          <Button
+            ref={buttonRef}
+            variant="ghost"
             size="icon"
-            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform"
+            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group cursor-move"
             data-testid="button-menu"
-            aria-label="Open navigation menu"
+            aria-label="Open navigation menu (draggable)"
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+            onClick={handleClick}
           >
             <Menu className="h-6 w-6" />
+            <GripVertical className="h-3 w-3 absolute bottom-0 right-0 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="start" 
+        <DropdownMenuContent
+          align="start"
           className="w-56 ml-4 mt-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-border/50"
           data-testid="dropdown-navigation-menu"
         >
@@ -104,8 +216,8 @@ export function DropdownNavigation() {
                     "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors min-h-[48px]",
                     isAICoach
                       ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold hover:from-teal-700 hover:to-cyan-700 shadow-md"
-                      : item.isActive 
-                        ? "bg-primary/10 text-primary font-medium" 
+                      : item.isActive
+                        ? "bg-primary/10 text-primary font-medium"
                         : "text-foreground hover:bg-accent"
                   )}
                   data-testid={`nav-${item.label.toLowerCase()}`}
