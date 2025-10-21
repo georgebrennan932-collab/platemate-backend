@@ -16,6 +16,7 @@ export function DropdownNavigation() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [hasMoved, setHasMoved] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Load saved position
@@ -45,8 +46,7 @@ export function DropdownNavigation() {
 
   // Start dragging
   const handleDragStart = (clientX: number, clientY: number) => {
-    setIsDragging(true);
-    setDropdownOpen(false); // Close dropdown immediately
+    setHasMoved(false);
     setDragStart({
       x: clientX - position.x,
       y: clientY - position.y
@@ -54,6 +54,7 @@ export function DropdownNavigation() {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     handleDragStart(e.clientX, e.clientY);
   };
 
@@ -65,14 +66,29 @@ export function DropdownNavigation() {
 
   // Handle dragging
   useEffect(() => {
-    if (!isDragging) return;
+    if (dragStart.x === 0 && dragStart.y === 0) return;
+
+    let moved = false;
 
     const handleMove = (clientX: number, clientY: number) => {
-      const newPos = clampToViewport(
-        clientX - dragStart.x,
-        clientY - dragStart.y
-      );
-      setPosition(newPos);
+      const deltaX = Math.abs(clientX - (position.x + dragStart.x));
+      const deltaY = Math.abs(clientY - (position.y + dragStart.y));
+      
+      // If moved more than 5px, consider it a drag
+      if (deltaX > 5 || deltaY > 5) {
+        if (!moved) {
+          moved = true;
+          setHasMoved(true);
+          setIsDragging(true);
+          setDropdownOpen(false);
+        }
+        
+        const newPos = clampToViewport(
+          clientX - dragStart.x,
+          clientY - dragStart.y
+        );
+        setPosition(newPos);
+      }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -88,9 +104,14 @@ export function DropdownNavigation() {
     };
 
     const handleEnd = () => {
-      localStorage.setItem('nav-menu-position', JSON.stringify(position));
-      // Small delay before allowing dropdown to open
-      setTimeout(() => setIsDragging(false), 150);
+      if (moved) {
+        localStorage.setItem('nav-menu-position', JSON.stringify(position));
+      }
+      setDragStart({ x: 0, y: 0 });
+      setTimeout(() => {
+        setIsDragging(false);
+        setHasMoved(false);
+      }, 100);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -104,20 +125,21 @@ export function DropdownNavigation() {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleEnd);
     };
-  }, [isDragging, dragStart, position]);
+  }, [dragStart, position]);
 
   // Prevent dropdown opening while dragging
   const handleClick = (e: React.MouseEvent) => {
-    if (isDragging) {
+    if (hasMoved) {
       e.preventDefault();
       e.stopPropagation();
+      return false;
     }
   };
 
   // Handle dropdown open/close
   const handleDropdownOpenChange = (open: boolean) => {
-    // Don't allow opening while dragging
-    if (!isDragging) {
+    // Don't allow opening if we just dragged
+    if (!hasMoved) {
       setDropdownOpen(open);
     }
   };
@@ -201,20 +223,15 @@ export function DropdownNavigation() {
             ref={buttonRef}
             variant="ghost"
             size="icon"
-            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group"
+            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group cursor-move"
             data-testid="button-menu"
-            aria-label="Open navigation menu (draggable)"
+            aria-label="Open navigation menu (tap) or drag to move"
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+            onClick={handleClick}
           >
             <Menu className="h-6 w-6" />
-            <div
-              className="h-5 w-5 absolute bottom-0 right-0 flex items-center justify-center cursor-move rounded-full hover:bg-accent/50 transition-colors"
-              onMouseDown={handleMouseDown}
-              onTouchStart={handleTouchStart}
-              onClick={handleClick}
-              aria-label="Drag to reposition menu"
-            >
-              <GripVertical className="h-3 w-3 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
-            </div>
+            <GripVertical className="h-3 w-3 absolute bottom-0 right-0 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
