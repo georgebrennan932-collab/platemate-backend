@@ -288,40 +288,35 @@ export function RecipesPage() {
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              {viewMode === "saved" ? (
-                <button 
-                  onClick={() => setViewMode("all")}
-                  className="p-2 hover:bg-muted rounded-lg transition-colors"
-                  data-testid="button-back-to-all"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-              ) : (
-                <Link to="/">
-                  <button 
-                    className="p-2 hover:bg-muted rounded-lg transition-colors"
-                    data-testid="button-back"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </button>
-                </Link>
-              )}
               <h1 className="text-xl font-bold">
                 {viewMode === "saved" ? "Saved Recipes" : "Recipe Collection"}
               </h1>
             </div>
-            {viewMode === "all" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => refreshMutation.mutate()}
-                disabled={refreshMutation.isPending}
-                data-testid="button-refresh-recipes"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {viewMode === "saved" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewMode("all")}
+                  data-testid="button-back-to-all"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to All
+                </Button>
+              )}
+              {viewMode === "all" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshMutation.mutate()}
+                  disabled={refreshMutation.isPending}
+                  data-testid="button-refresh-recipes"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              )}
+            </div>
           </div>
           
           {/* View Mode Toggle */}
