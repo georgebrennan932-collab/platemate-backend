@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu, User, Images, GripVertical } from "lucide-react";
+import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu, User, Images } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,97 +8,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useRef } from "react";
 
 export function DropdownNavigation() {
   const [location] = useLocation();
-  const [position, setPosition] = useState({ x: 16, y: 16 }); // Default top-left
-  const [isDragging, setIsDragging] = useState(false);
-
-  // Clamp position to viewport bounds
-  const clampPosition = (pos: { x: number; y: number }) => {
-    const buttonSize = 56; // 14 * 4 (h-14 in tailwind)
-    const margin = 8;
-    
-    const maxX = window.innerWidth - buttonSize - margin;
-    const maxY = window.innerHeight - buttonSize - margin;
-    
-    return {
-      x: Math.max(margin, Math.min(pos.x, maxX)),
-      y: Math.max(margin, Math.min(pos.y, maxY))
-    };
-  };
-
-  // Load position from localStorage on mount
-  useEffect(() => {
-    const defaultPos = { x: 16, y: 16 };
-    const stored = localStorage.getItem('dropdown-menu-position');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // Validate that x and y are finite numbers
-        if (typeof parsed.x === 'number' && typeof parsed.y === 'number' && 
-            Number.isFinite(parsed.x) && Number.isFinite(parsed.y)) {
-          // Validate and clamp stored position
-          const clamped = clampPosition(parsed);
-          setPosition(clamped);
-          // Update localStorage if position was clamped
-          if (clamped.x !== parsed.x || clamped.y !== parsed.y) {
-            localStorage.setItem('dropdown-menu-position', JSON.stringify(clamped));
-          }
-        } else {
-          // Invalid data, reset to default
-          setPosition(defaultPos);
-          localStorage.setItem('dropdown-menu-position', JSON.stringify(defaultPos));
-        }
-      } catch (e) {
-        console.error('Failed to load menu position:', e);
-        // Reset to default on parse error
-        setPosition(defaultPos);
-        localStorage.setItem('dropdown-menu-position', JSON.stringify(defaultPos));
-      }
-    }
-
-    // Handle window resize to keep button in bounds
-    const handleResize = () => {
-      setPosition(current => {
-        const clamped = clampPosition(current);
-        if (clamped.x !== current.x || clamped.y !== current.y) {
-          localStorage.setItem('dropdown-menu-position', JSON.stringify(clamped));
-          return clamped;
-        }
-        return current;
-      });
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Handle drag start - mark as dragging
-  const handleDragStart = () => {
-    setIsDragging(true);
-  };
-
-  // Save position to localStorage when it changes
-  const handleDragEnd = (event: any, info: any) => {
-    const rawX = position.x + info.offset.x;
-    const rawY = position.y + info.offset.y;
-    
-    // Validate before clamping
-    if (!Number.isFinite(rawX) || !Number.isFinite(rawY)) {
-      console.error('Invalid drag position:', { rawX, rawY });
-      setIsDragging(false);
-      return;
-    }
-    
-    const newPosition = clampPosition({ x: rawX, y: rawY });
-    setPosition(newPosition);
-    localStorage.setItem('dropdown-menu-position', JSON.stringify(newPosition));
-    
-    // Delay setting isDragging to false to prevent click event from opening menu
-    setTimeout(() => setIsDragging(false), 100);
-  };
 
   const navItems = [
     {
@@ -164,36 +76,18 @@ export function DropdownNavigation() {
   ];
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        left: position.x,
-        top: position.y,
-        zIndex: 50
-      }}
-    >
+    <div className="fixed top-4 left-4 z-50">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <motion.button
-            drag
-            dragMomentum={false}
-            dragElastic={0}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onClick={(e) => {
-              // Prevent click if we just finished dragging
-              if (isDragging) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group inline-flex items-center justify-center cursor-move touch-none"
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform"
             data-testid="button-menu"
-            aria-label="Open navigation menu (draggable)"
+            aria-label="Open navigation menu"
           >
             <Menu className="h-6 w-6" />
-            <GripVertical className="h-3 w-3 absolute bottom-0 right-0 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
-          </motion.button>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="start" 
