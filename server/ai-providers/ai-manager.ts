@@ -1,6 +1,7 @@
 import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, DiaryEntry, ProviderError, ProviderStatus, DailyCoaching, EducationalTip } from "./types";
 import { OpenAIProvider } from "./openai-provider";
 import { GeminiProvider } from "./gemini-provider";
+import { HuggingFaceProvider } from "./huggingface-provider";
 import { usdaService } from "../services/usda-service";
 import { openFoodFactsService } from "../services/openfoodfacts-service";
 import { imageAnalysisCache } from "../services/image-analysis-cache";
@@ -15,9 +16,10 @@ export class AIManager {
   };
 
   constructor() {
-    // Initialize providers in priority order (Gemini first, OpenAI fallback)
+    // Initialize providers in priority order (Gemini first, HuggingFace second, OpenAI fallback)
     this.providers = [
       new GeminiProvider(),
+      new HuggingFaceProvider(),
       new OpenAIProvider()
     ].sort((a, b) => a.priority - b.priority);
 
