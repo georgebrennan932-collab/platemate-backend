@@ -12,6 +12,7 @@ import { insertUserProfileSchema, type InsertUserProfile, type UserProfile } fro
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 import { z } from 'zod';
 import { 
   calculateNutritionTargets, 
@@ -41,6 +42,7 @@ type ProfileFormData = z.infer<typeof profileFormSchema>;
 export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [calculatedCalories, setCalculatedCalories] = React.useState<number | null>(null);
   const [bmrData, setBmrData] = React.useState<any>(null);
   
@@ -156,10 +158,15 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     },
     onSuccess: () => {
       toast({
-        title: "Goals Synced! 🎯",
-        description: "Your nutrition goals have been automatically updated and synced across all pages.",
+        title: "Goals Saved! 🎯",
+        description: "Redirecting to your goals page...",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/nutrition-goals'] });
+      
+      // Redirect to goals page after short delay
+      setTimeout(() => {
+        setLocation('/goals');
+      }, 1500);
     },
     onError: (error: Error) => {
       toast({
@@ -192,8 +199,8 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
     setCalculatedCalories(calculationData.targetCalories);
     setBmrData(calculationData);
     
-    // Automatically update nutrition goals when calculations are done
-    const goals = calculateMacroTargets(calculationData.targetCalories);
+    // Automatically update nutrition goals with weight goal for science-based macros
+    const goals = calculateMacroTargets(calculationData.targetCalories, data.weightGoal);
     updateGoalsMutation.mutate(goals);
     
     if (onCaloriesCalculated) {

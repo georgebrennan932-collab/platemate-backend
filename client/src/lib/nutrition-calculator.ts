@@ -162,13 +162,31 @@ export function calculateTargetCalories(
 }
 
 /**
- * Calculate recommended macronutrient targets based on calculated calories
+ * Calculate recommended macronutrient targets based on calculated calories and weight goal
+ * Science-based approach with higher protein for weight loss/maintenance
  */
-export function calculateMacroTargets(calories: number): MacroTargets {
-  // More realistic macronutrient distribution for sustainable health
-  const proteinCaloriesPercent = 0.20; // 20% protein (more reasonable for most people)
-  const carbsCaloriesPercent = 0.40;   // 40% carbs (better for weight management)  
-  const fatCaloriesPercent = 0.40;     // 40% fat (supports satiety and hormone function)
+export function calculateMacroTargets(calories: number, weightGoal?: string): MacroTargets {
+  let proteinCaloriesPercent: number;
+  let carbsCaloriesPercent: number;
+  let fatCaloriesPercent: number;
+  
+  // Science-based macro distribution based on goals
+  if (weightGoal === 'lose_weight') {
+    // Higher protein for weight loss - preserves muscle mass, increases satiety
+    proteinCaloriesPercent = 0.30;  // 30% protein (optimal for fat loss)
+    carbsCaloriesPercent = 0.35;    // 35% carbs (moderate for energy)  
+    fatCaloriesPercent = 0.35;      // 35% fat (supports hormones and satiety)
+  } else if (weightGoal === 'gain_weight') {
+    // Moderate protein, higher carbs for muscle gain
+    proteinCaloriesPercent = 0.25;  // 25% protein (muscle building)
+    carbsCaloriesPercent = 0.45;    // 45% carbs (energy for training)
+    fatCaloriesPercent = 0.30;      // 30% fat (hormone support)
+  } else {
+    // Balanced macros for maintenance
+    proteinCaloriesPercent = 0.25;  // 25% protein (maintenance)
+    carbsCaloriesPercent = 0.40;    // 40% carbs (balanced energy)
+    fatCaloriesPercent = 0.35;      // 35% fat (satiety and health)
+  }
   
   const proteinGrams = Math.round((calories * proteinCaloriesPercent) / 4); // 4 calories per gram protein
   const carbsGrams = Math.round((calories * carbsCaloriesPercent) / 4);     // 4 calories per gram carbs
