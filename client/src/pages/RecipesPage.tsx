@@ -632,6 +632,58 @@ export function RecipesPage() {
       {/* Bottom Help Section */}
       <BottomHelpSection />
 
+      {/* Floating Action Button for Shopping List */}
+      {viewMode === "saved" && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="fixed bottom-24 right-4 z-40"
+        >
+          <motion.div
+            animate={selectedRecipes.size > 0 ? {
+              scale: [1, 1.1, 1],
+            } : {}}
+            transition={{
+              duration: 2,
+              repeat: selectedRecipes.size > 0 ? Infinity : 0,
+              repeatType: "loop"
+            }}
+          >
+            <Button
+              onClick={() => setShowShoppingList(true)}
+              size="lg"
+              className="h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 relative group"
+              aria-label={selectedRecipes.size > 0 ? `View shopping list with ${selectedRecipes.size} recipes` : "View shopping list"}
+              data-testid="button-fab-shopping-list"
+            >
+              <ShoppingCart className="h-7 w-7" />
+              <span className="sr-only">Shopping List</span>
+              {selectedRecipes.size > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 h-7 w-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center ring-4 ring-white dark:ring-gray-900"
+                  aria-label={`${selectedRecipes.size} recipes selected`}
+                >
+                  {selectedRecipes.size}
+                </motion.span>
+              )}
+            </Button>
+          </motion.div>
+          {selectedRecipes.size === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute bottom-full mb-3 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap shadow-lg pointer-events-none"
+              role="tooltip"
+            >
+              Select recipes to create a shopping list
+              <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900"></div>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
       {/* Shopping List Dialog */}
       <ShoppingListDialog
         isOpen={showShoppingList}

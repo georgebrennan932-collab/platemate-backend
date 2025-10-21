@@ -450,7 +450,9 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
                 🎉 All done! Great shopping!
               </span>
             ) : (
-              <span>Add items to your list</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Add essentials below or select recipes
+              </span>
             )}
           </DialogDescription>
         </DialogHeader>
@@ -580,14 +582,34 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
           
           {/* Empty State */}
           {shoppingList.length === 0 && customItems.length === 0 && (
-            <div className="text-center py-12">
+            <div className="text-center py-8 px-4">
               <ShoppingBasket className="h-16 w-16 mx-auto mb-4 text-purple-300 dark:text-purple-700" />
-              <p className="text-base text-gray-600 dark:text-gray-400 font-medium">
-                Add custom items or select recipes
+              <p className="text-lg text-gray-700 dark:text-gray-300 font-semibold mb-2">
+                Start Your Shopping List
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                to build your shopping list
-              </p>
+              <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400 text-left max-w-sm mx-auto">
+                <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-900/50 rounded-lg">
+                  <span className="text-2xl">📝</span>
+                  <div>
+                    <p className="font-medium">Add essentials above</p>
+                    <p className="text-xs">Quick items like milk, bread, eggs</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-900/50 rounded-lg">
+                  <span className="text-2xl">🍳</span>
+                  <div>
+                    <p className="font-medium">Select saved recipes</p>
+                    <p className="text-xs">Ingredients added automatically</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-900/50 rounded-lg">
+                  <span className="text-2xl">✅</span>
+                  <div>
+                    <p className="font-medium">Check off as you shop</p>
+                    <p className="text-xs">Items stay visible so you can undo</p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
