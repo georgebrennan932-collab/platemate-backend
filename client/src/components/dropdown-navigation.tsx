@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu, User, Images, GripVertical } from "lucide-react";
+import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu, User, Images, GripVertical, CalendarClock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -217,6 +217,12 @@ export function DropdownNavigation() {
       icon: Target,
       label: "Goals",
       isActive: location === "/goals"
+    },
+    {
+      href: "/shift-planner",
+      icon: CalendarClock,
+      label: "Shift Planner",
+      isActive: location === "/shift-planner"
     },
     {
       href: "/profile",
