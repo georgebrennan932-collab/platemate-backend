@@ -13,6 +13,16 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 window.addEventListener('error', (event) => {
+  // Ignore benign ResizeObserver errors that are common with UI libraries
+  if (event.message && (
+    event.message.includes('ResizeObserver loop') ||
+    event.message.includes('ResizeObserver loop completed with undelivered notifications')
+  )) {
+    event.stopImmediatePropagation();
+    event.preventDefault();
+    return;
+  }
+  
   console.error('🚨 Uncaught Error (prevented WebView crash):', event.error);
   event.preventDefault(); // Prevent crash
 });
