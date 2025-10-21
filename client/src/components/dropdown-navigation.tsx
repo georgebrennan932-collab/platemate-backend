@@ -15,6 +15,7 @@ export function DropdownNavigation() {
   const [position, setPosition] = useState({ x: 16, y: 100 }); // Start middle-left
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Load saved position
@@ -45,6 +46,7 @@ export function DropdownNavigation() {
   // Start dragging
   const handleDragStart = (clientX: number, clientY: number) => {
     setIsDragging(true);
+    setDropdownOpen(false); // Close dropdown immediately
     setDragStart({
       x: clientX - position.x,
       y: clientY - position.y
@@ -86,8 +88,9 @@ export function DropdownNavigation() {
     };
 
     const handleEnd = () => {
-      setIsDragging(false);
       localStorage.setItem('nav-menu-position', JSON.stringify(position));
+      // Small delay before allowing dropdown to open
+      setTimeout(() => setIsDragging(false), 150);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -108,6 +111,14 @@ export function DropdownNavigation() {
     if (isDragging) {
       e.preventDefault();
       e.stopPropagation();
+    }
+  };
+
+  // Handle dropdown open/close
+  const handleDropdownOpenChange = (open: boolean) => {
+    // Don't allow opening while dragging
+    if (!isDragging) {
+      setDropdownOpen(open);
     }
   };
 
@@ -184,7 +195,7 @@ export function DropdownNavigation() {
         touchAction: 'none'
       }}
     >
-      <DropdownMenu>
+      <DropdownMenu open={dropdownOpen} onOpenChange={handleDropdownOpenChange}>
         <DropdownMenuTrigger asChild>
           <Button
             ref={buttonRef}
