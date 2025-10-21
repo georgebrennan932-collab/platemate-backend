@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Flame, Beef, Wheat, Droplets } from "lucide-react";
+import { Flame, Beef, Wheat, Droplets, ChevronDown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import type { NutritionGoals } from "@shared/schema";
 // Confetti disabled: import { ConfettiCelebration, useConfetti } from "@/components/confetti-celebration";
@@ -17,6 +17,8 @@ interface ProgressIndicatorsProps {
 }
 
 export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   if (!goals) return null;
 
   // Confetti disabled per user request
@@ -85,58 +87,96 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
   // }, [progressData, triggerConfetti]);
 
   return (
-    <div className="space-y-6">
-      {progressData.map(({ icon: Icon, label, consumed, target, unit, testId }, index) => {
-        const progress = calculateProgress(consumed, target);
-        const progressColor = getProgressColor(progress);
-        const isAchieved = progress >= 100;
-        
-        // Define color schemes for each nutrient
-        const colorSchemes = {
-          'Calories': {
-            bg: 'from-red-50 to-orange-50 dark:from-red-900/10 dark:to-orange-900/10',
-            icon: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
-            text: 'text-red-700 dark:text-red-300',
-            accent: 'text-red-600 dark:text-red-400'
-          },
-          'Protein': {
-            bg: 'from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10',
-            icon: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-            text: 'text-blue-700 dark:text-blue-300',
-            accent: 'text-blue-600 dark:text-blue-400'
-          },
-          'Carbs': {
-            bg: 'from-orange-50 to-amber-50 dark:from-orange-900/10 dark:to-amber-900/10',
-            icon: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
-            text: 'text-orange-700 dark:text-orange-300',
-            accent: 'text-orange-600 dark:text-orange-400'
-          },
-          'Fat': {
-            bg: 'from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10',
-            icon: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
-            text: 'text-yellow-700 dark:text-yellow-300',
-            accent: 'text-yellow-600 dark:text-yellow-400'
+    <div className="relative">
+      {/* Tap indicator when collapsed */}
+      {!isExpanded && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20 bg-primary/90 text-primary-foreground px-4 py-2 rounded-full text-sm font-medium shadow-lg flex items-center gap-2"
+        >
+          <span>Tap to expand</span>
+          <ChevronDown className="h-4 w-4 animate-bounce" />
+        </motion.div>
+      )}
+      
+      <div 
+        className={`relative ${isExpanded ? 'space-y-6' : 'h-[200px]'} cursor-pointer`}
+        onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsExpanded(!isExpanded);
           }
-        };
-        
-        const colors = colorSchemes[label as keyof typeof colorSchemes];
-        
-        return (
-          <motion.div 
-            key={label}
-            initial={{ opacity: 0, scale: 0.8, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ 
-              duration: 0.6, 
-              delay: index * 0.15, 
-              ease: "easeOut",
-              type: "spring",
-              stiffness: 100
-            }}
-            whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
-            className={`relative bg-gradient-to-br ${colors.bg} rounded-2xl p-6 shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden`}
-            data-testid={testId}
-          >
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
+        aria-label={isExpanded ? "Collapse nutrition cards" : "Expand nutrition cards"}
+      >
+        {progressData.map(({ icon: Icon, label, consumed, target, unit, testId }, index) => {
+          const progress = calculateProgress(consumed, target);
+          const progressColor = getProgressColor(progress);
+          const isAchieved = progress >= 100;
+          
+          // Define color schemes for each nutrient
+          const colorSchemes = {
+            'Calories': {
+              bg: 'from-red-50 to-orange-50 dark:from-red-900/10 dark:to-orange-900/10',
+              icon: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+              text: 'text-red-700 dark:text-red-300',
+              accent: 'text-red-600 dark:text-red-400'
+            },
+            'Protein': {
+              bg: 'from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10',
+              icon: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+              text: 'text-blue-700 dark:text-blue-300',
+              accent: 'text-blue-600 dark:text-blue-400'
+            },
+            'Carbs': {
+              bg: 'from-orange-50 to-amber-50 dark:from-orange-900/10 dark:to-amber-900/10',
+              icon: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
+              text: 'text-orange-700 dark:text-orange-300',
+              accent: 'text-orange-600 dark:text-orange-400'
+            },
+            'Fat': {
+              bg: 'from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10',
+              icon: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
+              text: 'text-yellow-700 dark:text-yellow-300',
+              accent: 'text-yellow-600 dark:text-yellow-400'
+            }
+          };
+          
+          const colors = colorSchemes[label as keyof typeof colorSchemes];
+          
+          // Calculate stacked position when collapsed
+          const stackOffset = isExpanded ? 0 : index * 15;
+          const stackScale = isExpanded ? 1 : 1 - (index * 0.03);
+          const stackOpacity = isExpanded ? 1 : (index === 0 ? 1 : 0.6);
+          const stackZIndex = isExpanded ? 10 : (4 - index);
+          
+          return (
+            <motion.div 
+              key={label}
+              initial={{ opacity: 0, scale: 0.8, y: 30 }}
+              animate={{ 
+                opacity: stackOpacity,
+                scale: stackScale,
+                y: isExpanded ? 0 : stackOffset,
+                zIndex: stackZIndex
+              }}
+              transition={{ 
+                duration: 0.4,
+                ease: "easeOut",
+                type: "spring",
+                stiffness: 150,
+                damping: 20
+              }}
+              whileHover={isExpanded ? { scale: 1.03, transition: { duration: 0.2 } } : {}}
+              className={`${isExpanded ? 'relative' : 'absolute top-0 left-0 right-0'} bg-gradient-to-br ${colors.bg} rounded-2xl p-6 shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden`}
+              style={{ pointerEvents: isExpanded || index === 0 ? 'auto' : 'none' }}
+              data-testid={testId}
+            >
             {/* Decorative background element */}
             <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 dark:bg-black/10 rounded-full"></div>
             
@@ -217,8 +257,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
           </motion.div>
         );
       })}
-      
-      {/* Confetti celebration disabled per user request */}
+      </div>
     </div>
   );
 }
