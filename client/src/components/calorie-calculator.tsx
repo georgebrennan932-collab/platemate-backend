@@ -327,23 +327,23 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
   }
 
   return (
-    <div className="space-y-8">
-      <Card className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30 border-0 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-t-lg">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <Calculator className="h-6 w-6" />
+    <div className="space-y-6 pb-8">
+      <Card className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-blue-950/20 dark:to-purple-950/20 border border-border/50 shadow-2xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 text-white pb-8 pt-6 px-6">
+          <CardTitle className="flex items-center gap-3 text-2xl font-bold">
+            <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm">
+              <Calculator className="h-7 w-7" />
             </div>
             Personal Calorie Calculator
           </CardTitle>
-          <CardDescription className="text-blue-100 text-base">
-            ✨ Calculate your daily calorie needs based on your physical stats and weight goals
+          <CardDescription className="text-purple-50 text-base mt-2 leading-relaxed">
+            Calculate your daily calorie and macro needs based on science-based formulas
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-8">
+        <CardContent className="p-6 md:p-8">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Basic Info */}
                 <FormField
                   control={form.control}
@@ -371,7 +371,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           }}
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-age"
-                          className="border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
+                          className="border-2 border-border/40 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-background rounded-xl px-4 py-3 text-base h-12"
                         />
                       </FormControl>
                       <FormMessage />
@@ -389,7 +389,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-sex" className="border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base">
+                          <SelectTrigger data-testid="select-sex" className="border-2 border-border/40 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-background rounded-xl px-4 py-3 text-base h-12">
                             <SelectValue placeholder="Select sex" />
                           </SelectTrigger>
                         </FormControl>
@@ -429,7 +429,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           }}
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-height"
-                          className="border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
+                          className="border-2 border-border/40 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-background rounded-xl px-4 py-3 text-base h-12"
                         />
                       </FormControl>
                       <FormMessage />
@@ -463,7 +463,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           }}
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-current-weight"
-                          className="border-2 border-gray-200 hover:border-orange-300 focus:border-orange-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
+                          className="border-2 border-border/40 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-background rounded-xl px-4 py-3 text-base h-12"
                         />
                       </FormControl>
                       <FormMessage />
@@ -497,7 +497,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           }}
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-goal-weight"
-                          className="border-2 border-gray-200 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
+                          className="border-2 border-border/40 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-background rounded-xl px-4 py-3 text-base h-12"
                         />
                       </FormControl>
                       <FormMessage />
@@ -518,7 +518,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-activity" className="border-2 border-gray-200 hover:border-emerald-300 focus:border-emerald-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base">
+                          <SelectTrigger data-testid="select-activity" className="border-2 border-border/40 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-background rounded-xl px-4 py-3 text-base h-12">
                             <SelectValue placeholder="Select activity level" />
                           </SelectTrigger>
                         </FormControl>
@@ -537,7 +537,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
               </div>
 
               {/* Weight Goal */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
                   name="weightGoal"
@@ -548,7 +548,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-weight-goal" className="border-2 border-gray-200 hover:border-pink-300 focus:border-pink-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base">
+                          <SelectTrigger data-testid="select-weight-goal" className="border-2 border-border/40 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-background rounded-xl px-4 py-3 text-base h-12">
                             <SelectValue placeholder="Select weight goal" />
                           </SelectTrigger>
                         </FormControl>
@@ -591,7 +591,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                           value={field.value === 0 || field.value === null || field.value === undefined ? '' : field.value}
                           data-testid="input-weekly-change"
                           placeholder="0.5"
-                          className="border-2 border-gray-200 hover:border-indigo-300 focus:border-indigo-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base"
+                          className="border-2 border-border/40 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-background rounded-xl px-4 py-3 text-base h-12"
                         />
                       </FormControl>
                       <FormMessage />
@@ -614,7 +614,7 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-medication" className="border-2 border-gray-200 hover:border-teal-300 focus:border-teal-500 transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 rounded-lg px-4 py-3 text-base">
+                        <SelectTrigger data-testid="select-medication" className="border-2 border-border/40 hover:border-purple-300 focus:border-purple-500 transition-all duration-200 shadow-sm bg-background rounded-xl px-4 py-3 text-base h-12">
                           <SelectValue placeholder="Select medication (if any)" />
                         </SelectTrigger>
                       </FormControl>
@@ -631,24 +631,25 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
                 )}
               />
 
-              <div className="space-y-4 pt-4">
+              <div className="space-y-3 pt-6">
                 <Button 
                   type="button"
                   onClick={handleCalculateOnly}
-                  className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+                  className="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 hover:from-purple-700 hover:via-purple-600 hover:to-pink-600 text-white font-bold py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] text-lg"
                   data-testid="button-calculate-only"
                 >
-                  ✨ Calculate Daily Calories
+                  <Calculator className="h-5 w-5 mr-2" />
+                  Calculate My Nutrition Goals
                 </Button>
                 
                 <Button 
                   type="submit" 
                   variant="outline"
-                  className="w-full border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 font-medium py-4 rounded-xl transition-all duration-300" 
+                  className="w-full border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/30 font-semibold py-6 rounded-xl transition-all duration-300 text-base" 
                   disabled={saveProfileMutation.isPending}
                   data-testid="button-save-profile"
                 >
-                  {saveProfileMutation.isPending ? '💾 Saving...' : '💾 Save Profile & Calculate'}
+                  {saveProfileMutation.isPending ? 'Saving...' : 'Save Profile & Calculate'}
                 </Button>
               </div>
             </form>
@@ -658,20 +659,20 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
 
       {/* Results */}
       {calculatedCalories && bmrData && (
-        <Card className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/30 dark:via-emerald-950/30 dark:to-teal-950/30 border-0 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white rounded-t-lg">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 bg-white/20 rounded-lg">
-                🎯
+        <Card className="bg-gradient-to-br from-white via-green-50/20 to-emerald-50/20 dark:from-gray-900 dark:via-green-950/10 dark:to-emerald-950/10 border border-border/50 shadow-2xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white pb-8 pt-6 px-6">
+            <CardTitle className="flex items-center gap-3 text-2xl font-bold">
+              <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm">
+                <Target className="h-7 w-7" />
               </div>
-              Your Personalized Calorie Targets
+              Your Personalized Nutrition Goals
             </CardTitle>
-            <CardDescription className="text-green-100 text-base">
-              ✨ Based on your physical stats and weight goals
+            <CardDescription className="text-green-50 text-base mt-2 leading-relaxed">
+              Science-based targets calculated for your unique profile
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <CardContent className="p-6 md:p-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* BMR Card */}
               <div className="text-center p-6 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-blue-200/50">
                 <div className="mb-3">
@@ -727,18 +728,33 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
               </div>
             </div>
             
-            <div className="mt-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50 rounded-xl border border-gray-200/50 dark:border-gray-600/30">
-              <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                <span className="text-xl">📊</span> How we calculated this:
+            <div className="mt-6 p-5 bg-gradient-to-r from-purple-50/50 to-pink-50/50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-xl border border-purple-200/50 dark:border-purple-800/30">
+              <h4 className="font-semibold text-base mb-3 flex items-center gap-2 text-purple-900 dark:text-purple-100">
+                <Calculator className="h-5 w-5" /> Science-Based Calculation Method
               </h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• <strong>BMR:</strong> Mifflin-St Jeor equation based on your age, sex, height, and weight</li>
-                <li>• <strong>TDEE:</strong> BMR × activity level multiplier</li>
-                <li>• <strong>Target:</strong> TDEE adjusted for your weight goal (±{Math.abs(form.getValues('weeklyWeightChangeKg') || 0.5)}kg/week)</li>
+              <ul className="text-sm text-foreground/80 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500 mt-0.5">•</span>
+                  <span><strong>BMR:</strong> Mifflin-St Jeor equation based on your age, sex, height, and weight</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500 mt-0.5">•</span>
+                  <span><strong>TDEE:</strong> BMR × activity level multiplier</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500 mt-0.5">•</span>
+                  <span><strong>Target:</strong> TDEE adjusted for your weight goal (±{Math.abs(form.getValues('weeklyWeightChangeKg') || 0.5)}kg/week)</span>
+                </li>
                 {bmrData.medicationAdjustment && (
-                  <li>• <strong>Medication adjustment:</strong> Increased minimum calories for {bmrData.medicationAdjustment.name} to prevent malnutrition</li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-500 mt-0.5">•</span>
+                    <span><strong>Medication adjustment:</strong> Increased minimum calories for {bmrData.medicationAdjustment.name} to prevent malnutrition</span>
+                  </li>
                 )}
-                <li>• <strong>Timeline:</strong> Based on safe weight change rate</li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500 mt-0.5">•</span>
+                  <span><strong>Timeline:</strong> Based on safe weight change rate</span>
+                </li>
               </ul>
             </div>
 
@@ -760,43 +776,36 @@ export function CalorieCalculator({ onCaloriesCalculated }: CalorieCalculatorPro
               </div>
             )}
 
-            {/* Update Goals Button */}
-            <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 via-indigo-50 to-green-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-green-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl shadow-lg">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-lg text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
-                    🎯 Update Your Nutrition Goals
-                  </h4>
-                  <p className="text-blue-700 dark:text-blue-300 mb-4">
-                    Set your daily targets to {calculatedCalories} calories with balanced macronutrients:
-                  </p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="text-center p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                      <div className="font-bold text-orange-600 dark:text-orange-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyCalories}</div>
-                      <div className="text-xs text-orange-600/70 dark:text-orange-400/70 font-medium">🔥 Calories</div>
-                    </div>
-                    <div className="text-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                      <div className="font-bold text-blue-600 dark:text-blue-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyProtein}g</div>
-                      <div className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium">🥩 Protein</div>
-                    </div>
-                    <div className="text-center p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                      <div className="font-bold text-green-600 dark:text-green-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyCarbs}g</div>
-                      <div className="text-xs text-green-600/70 dark:text-green-400/70 font-medium">🍞 Carbs</div>
-                    </div>
-                    <div className="text-center p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                      <div className="font-bold text-yellow-600 dark:text-yellow-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyFat}g</div>
-                      <div className="text-xs text-yellow-600/70 dark:text-yellow-400/70 font-medium">🥑 Fat</div>
-                    </div>
+            {/* Automatic redirect - goals are updated automatically */}
+            <div className="mt-6 p-6 bg-gradient-to-r from-purple-100 via-pink-100 to-purple-100 dark:from-purple-900/30 dark:via-pink-900/30 dark:to-purple-900/30 border-2 border-purple-300 dark:border-purple-700 rounded-2xl shadow-lg">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full mb-4">
+                  <Target className="h-8 w-8 text-white" />
+                </div>
+                <h4 className="font-bold text-xl text-purple-900 dark:text-purple-100 mb-2">
+                  Goals Updated Successfully! 
+                </h4>
+                <p className="text-purple-700 dark:text-purple-300 mb-4 text-base">
+                  Your nutrition targets have been automatically set. You'll be redirected to your goals page shortly.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                  <div className="text-center p-4 bg-white/80 dark:bg-gray-900/50 rounded-xl border border-purple-200 dark:border-purple-800">
+                    <div className="font-bold text-2xl text-purple-600 dark:text-purple-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyCalories}</div>
+                    <div className="text-xs text-purple-600/70 dark:text-purple-400/70 font-semibold mt-1">Calories</div>
+                  </div>
+                  <div className="text-center p-4 bg-white/80 dark:bg-gray-900/50 rounded-xl border border-purple-200 dark:border-purple-800">
+                    <div className="font-bold text-2xl text-purple-600 dark:text-purple-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyProtein}g</div>
+                    <div className="text-xs text-purple-600/70 dark:text-purple-400/70 font-semibold mt-1">Protein</div>
+                  </div>
+                  <div className="text-center p-4 bg-white/80 dark:bg-gray-900/50 rounded-xl border border-purple-200 dark:border-purple-800">
+                    <div className="font-bold text-2xl text-purple-600 dark:text-purple-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyCarbs}g</div>
+                    <div className="text-xs text-purple-600/70 dark:text-purple-400/70 font-semibold mt-1">Carbs</div>
+                  </div>
+                  <div className="text-center p-4 bg-white/80 dark:bg-gray-900/50 rounded-xl border border-purple-200 dark:border-purple-800">
+                    <div className="font-bold text-2xl text-purple-600 dark:text-purple-400">{calculateMacroTargets(calculatedCalories, currentWeightGoal).dailyFat}g</div>
+                    <div className="text-xs text-purple-600/70 dark:text-purple-400/70 font-semibold mt-1">Fat</div>
                   </div>
                 </div>
-                <Button 
-                  onClick={handleUpdateGoals}
-                  disabled={updateGoalsMutation.isPending}
-                  className="ml-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-green-600 hover:from-blue-700 hover:via-indigo-700 hover:to-green-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  data-testid="button-update-goals"
-                >
-                  {updateGoalsMutation.isPending ? '⏳ Updating...' : '🎯 Update Goals'}
-                </Button>
               </div>
             </div>
           </CardContent>
