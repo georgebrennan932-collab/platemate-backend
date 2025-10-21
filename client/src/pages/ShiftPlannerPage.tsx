@@ -4,8 +4,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, Loader2, Sparkles, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { Calendar, Clock, Loader2, Sparkles, ChevronLeft, ChevronRight, Trash2, Utensils, ShoppingCart, Truck, Home, Package } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "date-fns";
 
 interface ShiftSchedule {
@@ -387,6 +389,251 @@ export default function ShiftPlannerPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Meal Plans Section */}
+        {schedules && schedules.some(s => s.mealPlanGenerated === 1) && (
+          <Card className="border-2 border-green-500">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-green-600" />
+                Your AI-Generated Meal Plans
+              </CardTitle>
+              <CardDescription>
+                Personalized meals optimized for your shift schedule
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full space-y-4">
+                {schedules
+                  .filter(schedule => schedule.mealPlanGenerated === 1 && schedule.mealPlanData)
+                  .map((schedule) => {
+                    const mealPlan = schedule.mealPlanData as any;
+                    const shiftInfo = getShiftTypeInfo(schedule.shiftType);
+                    
+                    return (
+                      <AccordionItem 
+                        key={schedule.id} 
+                        value={schedule.shiftDate}
+                        className="border rounded-lg px-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-800 dark:to-green-900"
+                      >
+                        <AccordionTrigger 
+                          className="hover:no-underline"
+                          data-testid={`accordion-meal-plan-${schedule.shiftDate}`}
+                        >
+                          <div className="flex items-center justify-between w-full pr-4">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{shiftInfo.icon}</span>
+                              <div className="text-left">
+                                <div className="font-semibold" data-testid={`text-meal-plan-date-${schedule.shiftDate}`}>
+                                  {format(parseISO(schedule.shiftDate), "EEEE, MMMM d")}
+                                </div>
+                                <div className="text-sm text-gray-600 dark:text-gray-300">
+                                  {shiftInfo.label}
+                                </div>
+                              </div>
+                            </div>
+                            <Badge 
+                              variant="secondary" 
+                              className="bg-green-600 text-white"
+                              data-testid={`badge-meal-count-${schedule.shiftDate}`}
+                            >
+                              {mealPlan.meals?.length || 0} Meals
+                            </Badge>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-4 pt-4">
+                            {/* Daily Summary */}
+                            {mealPlan.dailySummary && (
+                              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg" data-testid={`text-daily-summary-${schedule.shiftDate}`}>
+                                <h4 className="font-semibold text-sm text-gray-600 dark:text-gray-300 mb-2">
+                                  Daily Strategy
+                                </h4>
+                                <p className="text-sm">{mealPlan.dailySummary}</p>
+                              </div>
+                            )}
+
+                            {/* Calorie Distribution */}
+                            {mealPlan.calorieDistribution && (
+                              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg" data-testid={`calorie-distribution-${schedule.shiftDate}`}>
+                                <h4 className="font-semibold text-sm text-gray-600 dark:text-gray-300 mb-3">
+                                  Energy Distribution
+                                </h4>
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                  <div>
+                                    <div className="text-2xl font-bold text-blue-600" data-testid={`text-preshift-calories-${schedule.shiftDate}`}>
+                                      {mealPlan.calorieDistribution.preShift}
+                                    </div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-300">Pre-Shift</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-2xl font-bold text-purple-600" data-testid={`text-duringshift-calories-${schedule.shiftDate}`}>
+                                      {mealPlan.calorieDistribution.duringShift}
+                                    </div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-300">During Shift</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-2xl font-bold text-pink-600" data-testid={`text-postshift-calories-${schedule.shiftDate}`}>
+                                      {mealPlan.calorieDistribution.postShift}
+                                    </div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-300">Post-Shift</div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Meals */}
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-sm text-gray-600 dark:text-gray-300">
+                                Meal Plan
+                              </h4>
+                              {mealPlan.meals?.map((meal: any, index: number) => (
+                                <div 
+                                  key={index}
+                                  className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                                  data-testid={`meal-card-${schedule.shiftDate}-${index}`}
+                                >
+                                  <div className="flex items-start justify-between mb-3">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Badge 
+                                          variant="outline" 
+                                          className="text-xs"
+                                          data-testid={`badge-meal-type-${schedule.shiftDate}-${index}`}
+                                        >
+                                          {meal.mealType}
+                                        </Badge>
+                                        <Badge 
+                                          variant="outline" 
+                                          className={`text-xs ${
+                                            meal.portability === 'portable' 
+                                              ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                              : meal.portability === 'meal-prep-friendly'
+                                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                                              : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                                          }`}
+                                          data-testid={`badge-portability-${schedule.shiftDate}-${index}`}
+                                        >
+                                          {meal.portability === 'portable' && <Truck className="h-3 w-3 mr-1" />}
+                                          {meal.portability === 'meal-prep-friendly' && <Package className="h-3 w-3 mr-1" />}
+                                          {meal.portability === 'home-only' && <Home className="h-3 w-3 mr-1" />}
+                                          {meal.portability}
+                                        </Badge>
+                                      </div>
+                                      <h5 className="font-bold text-lg" data-testid={`text-meal-name-${schedule.shiftDate}-${index}`}>{meal.name}</h5>
+                                      <p 
+                                        className="text-sm text-gray-600 dark:text-gray-300 mt-1"
+                                        data-testid={`text-meal-description-${schedule.shiftDate}-${index}`}
+                                      >
+                                        {meal.description}
+                                      </p>
+                                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                        <span 
+                                          className="flex items-center gap-1"
+                                          data-testid={`text-meal-timing-${schedule.shiftDate}-${index}`}
+                                        >
+                                          <Clock className="h-3 w-3" />
+                                          {meal.timing}
+                                        </span>
+                                        <span 
+                                          className="flex items-center gap-1"
+                                          data-testid={`text-meal-preptime-${schedule.shiftDate}-${index}`}
+                                        >
+                                          <Utensils className="h-3 w-3" />
+                                          {meal.prepTime}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Nutrition Info */}
+                                  <div className="grid grid-cols-4 gap-2 mb-3 p-3 bg-gray-50 dark:bg-gray-700 rounded" data-testid={`nutrition-info-${schedule.shiftDate}-${index}`}>
+                                    <div className="text-center">
+                                      <div className="text-sm font-bold" data-testid={`text-calories-${schedule.shiftDate}-${index}`}>{meal.calories}</div>
+                                      <div className="text-xs text-gray-600 dark:text-gray-300">cal</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-sm font-bold text-red-600" data-testid={`text-protein-${schedule.shiftDate}-${index}`}>{meal.protein}g</div>
+                                      <div className="text-xs text-gray-600 dark:text-gray-300">protein</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-sm font-bold text-blue-600" data-testid={`text-carbs-${schedule.shiftDate}-${index}`}>{meal.carbs}g</div>
+                                      <div className="text-xs text-gray-600 dark:text-gray-300">carbs</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-sm font-bold text-yellow-600" data-testid={`text-fat-${schedule.shiftDate}-${index}`}>{meal.fat}g</div>
+                                      <div className="text-xs text-gray-600 dark:text-gray-300">fat</div>
+                                    </div>
+                                  </div>
+
+                                  {/* Benefits */}
+                                  {meal.benefits && (
+                                    <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 rounded">
+                                      <div className="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">
+                                        Why This Meal?
+                                      </div>
+                                      <p 
+                                        className="text-xs text-gray-700 dark:text-gray-300"
+                                        data-testid={`text-meal-benefits-${schedule.shiftDate}-${index}`}
+                                      >
+                                        {meal.benefits}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {/* Ingredients */}
+                                  {meal.ingredients && meal.ingredients.length > 0 && (
+                                    <div className="mb-3">
+                                      <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                                        Ingredients:
+                                      </div>
+                                      <div className="flex flex-wrap gap-1">
+                                        {meal.ingredients.map((ingredient: string, i: number) => (
+                                          <Badge 
+                                            key={i} 
+                                            variant="secondary" 
+                                            className="text-xs"
+                                            data-testid={`badge-ingredient-${schedule.shiftDate}-${index}-${i}`}
+                                          >
+                                            {ingredient}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Tips */}
+                                  {meal.tips && meal.tips.length > 0 && (
+                                    <div className="border-t pt-3 mt-3">
+                                      <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                                        Shift-Specific Tips:
+                                      </div>
+                                      <ul className="space-y-1">
+                                        {meal.tips.map((tip: string, i: number) => (
+                                          <li 
+                                            key={i} 
+                                            className="text-xs text-gray-600 dark:text-gray-300 flex items-start gap-2"
+                                            data-testid={`text-meal-tip-${schedule.shiftDate}-${index}-${i}`}
+                                          >
+                                            <Sparkles className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
+                                            <span>{tip}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+              </Accordion>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Info Card */}
         <Card>
