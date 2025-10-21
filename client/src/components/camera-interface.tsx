@@ -314,40 +314,38 @@ export function CameraInterface({
 
   return (
     <div className="relative p-1">
-      {/* Camera View Container */}
-      <div 
-        className="relative aspect-square overflow-hidden rounded-3xl shadow-lg border border-white/20 cursor-pointer transition-all duration-200 hover:shadow-xl" 
-        style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}
-        onClick={handleCameraCapture}
-        data-testid="camera-panel-clickable"
-        role="button"
-        aria-label={previewUrl ? "Analyze selected food image" : "Take or select a photo of your food"}
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleCameraCapture();
-          }
-        }}
-      >
-        
-        {/* Static Image Preview */}
-        {previewUrl && (
+      {/* Camera View Container - only show when image is selected */}
+      {previewUrl && (
+        <div 
+          className="relative aspect-square overflow-hidden rounded-3xl shadow-lg border border-white/20 cursor-pointer transition-all duration-200 hover:shadow-xl" 
+          style={{background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'}}
+          onClick={handleCameraCapture}
+          data-testid="camera-panel-clickable"
+          role="button"
+          aria-label="Analyze selected food image"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleCameraCapture();
+            }
+          }}
+        >
+          
+          {/* Static Image Preview */}
           <img 
             src={previewUrl} 
             alt="Selected food image for analysis" 
             className="w-full h-full object-cover rounded-3xl"
             data-testid="img-preview"
           />
-        )}
-        
-        
-        {/* Plate detection circle - only show when has preview */}
-        {previewUrl && (
+          
+          
+          {/* Plate detection circle */}
           <div className="absolute inset-16 border border-white/30 rounded-full border-dashed" aria-hidden="true"></div>
-        )}
-        
-      </div>
+          
+        </div>
+      )}
       
 
 

@@ -101,7 +101,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
       )}
       
       <div 
-        className={`relative ${isExpanded ? 'space-y-6' : 'h-[200px]'} cursor-pointer`}
+        className={`relative ${isExpanded ? 'space-y-6' : ''} cursor-pointer`}
         onClick={() => setIsExpanded(!isExpanded)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -149,11 +149,12 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
           
           const colors = colorSchemes[label as keyof typeof colorSchemes];
           
-          // Calculate stacked position when collapsed
+          // Calculate stacked position when collapsed - using negative margin instead of absolute positioning
           const stackOffset = isExpanded ? 0 : index * 15;
           const stackScale = isExpanded ? 1 : 1 - (index * 0.03);
           const stackOpacity = isExpanded ? 1 : (index === 0 ? 1 : 0.6);
           const stackZIndex = isExpanded ? 10 : (4 - index);
+          const negativeMargin = !isExpanded && index > 0 ? '-165px' : '0';
           
           return (
             <motion.div 
@@ -162,7 +163,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
               animate={{ 
                 opacity: stackOpacity,
                 scale: stackScale,
-                y: isExpanded ? 0 : stackOffset,
+                y: stackOffset,
                 zIndex: stackZIndex
               }}
               transition={{ 
@@ -173,8 +174,11 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
                 damping: 20
               }}
               whileHover={isExpanded ? { scale: 1.03, transition: { duration: 0.2 } } : {}}
-              className={`${isExpanded ? 'relative' : 'absolute top-0 left-0 right-0'} bg-gradient-to-br ${colors.bg} rounded-2xl p-6 shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden`}
-              style={{ pointerEvents: isExpanded || index === 0 ? 'auto' : 'none' }}
+              className={`relative bg-gradient-to-br ${colors.bg} rounded-2xl p-6 shadow-lg border border-white/20 dark:border-gray-700/50 overflow-hidden`}
+              style={{ 
+                pointerEvents: isExpanded || index === 0 ? 'auto' : 'none',
+                marginTop: negativeMargin
+              }}
               data-testid={testId}
             >
             {/* Decorative background element */}

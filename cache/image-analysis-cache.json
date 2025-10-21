@@ -1,94 +1,21 @@
 {
   "entries": [
     [
-      "be4185c173abac73d59fdf29f178b31d376f5974a9953c26afeddeb1c891479d",
+      "2876d235728ecf14e3686daaa9dd4684658941500b1d3eb3e854058969da6e30",
       {
-        "imageHash": "be4185c173abac73d59fdf29f178b31d376f5974a9953c26afeddeb1c891479d",
+        "imageHash": "2876d235728ecf14e3686daaa9dd4684658941500b1d3eb3e854058969da6e30",
         "analysis": {
-          "imageUrl": "/tmp/uploads/processed_f85a47c1f6531e56169cdf8d3552dacb.jpg",
-          "confidence": 95,
-          "totalCalories": 1488,
-          "totalProtein": 66,
-          "totalCarbs": 88,
-          "totalFat": 99,
-          "detectedFoods": [
-            {
-              "name": "Egg, whole, fried no added fat",
-              "portion": "2 medium",
-              "calories": 126,
-              "protein": 11,
-              "carbs": 1,
-              "fat": 9,
-              "icon": "egg"
-            },
-            {
-              "name": "Blood sausage",
-              "portion": "1 slice (60g)",
-              "calories": 227,
-              "protein": 9,
-              "carbs": 1,
-              "fat": 21,
-              "icon": "bacon"
-            },
-            {
-              "name": "Sausage, smoked link sausage, pork",
-              "portion": "2 medium (120g)",
-              "calories": 371,
-              "protein": 14,
-              "carbs": 1,
-              "fat": 34,
-              "icon": "bacon"
-            },
-            {
-              "name": "Pork bacon, NS as to fresh, smoked or cured, cooked",
-              "portion": "2 rashers (50g)",
-              "calories": 242,
-              "protein": 19,
-              "carbs": 1,
-              "fat": 18,
-              "icon": "bacon"
-            },
-            {
-              "name": "Baked beans",
-              "portion": "175g",
-              "calories": 184,
-              "protein": 8,
-              "carbs": 38,
-              "fat": 2,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "CHICK-FIL-A, hash browns",
-              "portion": "1 medium (70g)",
-              "calories": 211,
-              "protein": 2,
-              "carbs": 21,
-              "fat": 13,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Mushrooms, NS as to form, cooked",
-              "portion": "50g",
-              "calories": 33,
-              "protein": 2,
-              "carbs": 3,
-              "fat": 2,
-              "icon": "apple-alt"
-            },
-            {
-              "name": "Orange juice, canned, unsweetened",
-              "portion": "200ml",
-              "calories": 94,
-              "protein": 1,
-              "carbs": 22,
-              "fat": 0,
-              "icon": "apple-alt"
-            }
-          ]
+          "imageUrl": "/tmp/uploads/processed_0e7688b7b9397551e658f4134133c843.jpg",
+          "confidence": 100,
+          "totalCalories": 0,
+          "totalProtein": 0,
+          "totalCarbs": 0,
+          "totalFat": 0,
+          "detectedFoods": []
         },
-        "timestamp": 1760873266280,
+        "timestamp": 1761051305173,
         "accessCount": 1,
-        "lastAccessed": 1760873266280
+        "lastAccessed": 1761051305173
       }
     ]
   ],
@@ -100,8 +27,8 @@
     "currentSize": 1,
     "maxSize": 1000,
     "totalEvictions": 0,
-    "oldestEntry": 1760873266280,
-    "newestEntry": 1760873266280
+    "oldestEntry": 1761051305173,
+    "newestEntry": 1761051305173
   },
-  "timestamp": 1760873266280
+  "timestamp": 1761051305174
 }
