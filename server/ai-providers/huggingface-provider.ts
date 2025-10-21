@@ -23,7 +23,7 @@ export class HuggingFaceProvider extends AIProvider {
       }
 
       // Simple health check with a text generation model
-      const response = await fetch(`${this.baseUrl}/meta-llama/Llama-3.2-3B-Instruct`, {
+      const response = await fetch(`${this.baseUrl}/google/flan-t5-base`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${this.apiKey}`,
@@ -46,7 +46,7 @@ export class HuggingFaceProvider extends AIProvider {
         responseTime,
         timestamp: new Date(),
         details: {
-          model: "meta-llama/Llama-3.2-3B-Instruct",
+          model: "google/flan-t5-base",
           apiVersion: "1.0"
         }
       };
@@ -63,17 +63,14 @@ export class HuggingFaceProvider extends AIProvider {
     }
   }
 
-  private async queryVisionModel(imageBase64: string, prompt: string): Promise<string> {
-    // Use BLIP or LLaVA for image analysis
-    const response = await fetch(`${this.baseUrl}/Salesforce/blip-image-captioning-large`, {
+  private async queryVisionModel(imageBytes: Buffer): Promise<string> {
+    // Use BLIP for image captioning - send binary data directly
+    const response = await fetch(`${this.baseUrl}/Salesforce/blip-image-captioning-base`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        inputs: imageBase64
-      })
+      body: new Uint8Array(imageBytes)
     });
 
     if (!response.ok) {
@@ -86,7 +83,8 @@ export class HuggingFaceProvider extends AIProvider {
   }
 
   private async queryTextModel(prompt: string, maxTokens: number = 1000): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/meta-llama/Llama-3.2-3B-Instruct`, {
+    // Use Google's Flan-T5 which is free and available
+    const response = await fetch(`${this.baseUrl}/google/flan-t5-large`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${this.apiKey}`,
@@ -97,8 +95,7 @@ export class HuggingFaceProvider extends AIProvider {
         parameters: {
           max_new_tokens: maxTokens,
           temperature: 0.7,
-          top_p: 0.9,
-          return_full_text: false
+          top_p: 0.9
         }
       })
     });
@@ -133,10 +130,9 @@ export class HuggingFaceProvider extends AIProvider {
 
       // Read image file
       const imageBytes = await fs.readFile(imagePath);
-      const imageBase64 = imageBytes.toString("base64");
       
       // First, get a caption of the image
-      const caption = await this.queryVisionModel(imageBase64, "Describe this food image");
+      const caption = await this.queryVisionModel(imageBytes);
 
       // Then use text model to analyze the food
       const prompt = `Based on this food image description: "${caption}"
@@ -314,9 +310,8 @@ Return ONLY a JSON object with this exact structure (no additional text):
       }
 
       const imageBytes = await fs.readFile(imagePath);
-      const imageBase64 = imageBytes.toString("base64");
       
-      const caption = await this.queryVisionModel(imageBase64, "List the foods in this image");
+      const caption = await this.queryVisionModel(imageBytes);
 
       const prompt = `Based on this food image description: "${caption}"
 
