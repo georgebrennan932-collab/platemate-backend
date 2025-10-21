@@ -15,10 +15,10 @@ export class AIManager {
   };
 
   constructor() {
-    // Initialize providers in priority order
+    // Initialize providers in priority order (Gemini first, OpenAI fallback)
     this.providers = [
-      new OpenAIProvider(),
-      new GeminiProvider()
+      new GeminiProvider(),
+      new OpenAIProvider()
     ].sort((a, b) => a.priority - b.priority);
 
     // Define fallback data for when all providers fail
