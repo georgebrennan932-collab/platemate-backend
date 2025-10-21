@@ -3,7 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useMemo } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, ShoppingBasket, Star } from "lucide-react";
 import { nanoid } from "nanoid";
 
 interface Recipe {
@@ -269,6 +269,68 @@ function formatShoppingList(aggregated: Map<string, ParsedIngredient[]>): string
   return items.sort();
 }
 
+// Helper to get emoji for ingredient
+function getIngredientEmoji(item: string): string {
+  const lower = item.toLowerCase();
+  
+  // Fruits & Berries
+  if (lower.includes('berries') || lower.includes('strawberr') || lower.includes('blueberr')) return '🫐';
+  if (lower.includes('apple')) return '🍎';
+  if (lower.includes('banana')) return '🍌';
+  if (lower.includes('orange')) return '🍊';
+  if (lower.includes('lemon') || lower.includes('lime')) return '🍋';
+  
+  // Vegetables
+  if (lower.includes('tomato')) return '🍅';
+  if (lower.includes('lettuce') || lower.includes('salad')) return '🥗';
+  if (lower.includes('carrot')) return '🥕';
+  if (lower.includes('broccoli')) return '🥦';
+  if (lower.includes('onion')) return '🧅';
+  if (lower.includes('garlic')) return '🧄';
+  if (lower.includes('pepper') && !lower.includes('black pepper')) return '🫑';
+  if (lower.includes('potato')) return '🥔';
+  if (lower.includes('spinach') || lower.includes('kale')) return '🥬';
+  
+  // Protein
+  if (lower.includes('egg')) return '🥚';
+  if (lower.includes('chicken') || lower.includes('poultry')) return '🍗';
+  if (lower.includes('beef') || lower.includes('steak')) return '🥩';
+  if (lower.includes('fish') || lower.includes('salmon')) return '🐟';
+  if (lower.includes('shrimp') || lower.includes('prawn')) return '🍤';
+  
+  // Dairy
+  if (lower.includes('milk')) return '🥛';
+  if (lower.includes('cheese')) return '🧀';
+  if (lower.includes('butter')) return '🧈';
+  if (lower.includes('yogurt')) return '🥛';
+  if (lower.includes('cream')) return '🥛';
+  
+  // Grains & Bread
+  if (lower.includes('bread')) return '🍞';
+  if (lower.includes('rice')) return '🍚';
+  if (lower.includes('pasta')) return '🍝';
+  if (lower.includes('oat')) return '🌾';
+  if (lower.includes('flour')) return '🌾';
+  
+  // Nuts & Seeds
+  if (lower.includes('almond') || lower.includes('nut')) return '🥜';
+  if (lower.includes('seed')) return '🌰';
+  
+  // Seasonings
+  if (lower.includes('salt')) return '🧂';
+  if (lower.includes('pepper') && lower.includes('black')) return '🧂';
+  if (lower.includes('cinnamon') || lower.includes('spice')) return '✨';
+  if (lower.includes('vanilla')) return '✨';
+  
+  // Misc
+  if (lower.includes('sugar') || lower.includes('honey')) return '🍯';
+  if (lower.includes('oil') || lower.includes('olive')) return '🫒';
+  if (lower.includes('sauce')) return '🥫';
+  
+  // Default
+  return '🛒';
+}
+
 export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDialogProps) {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [customItems, setCustomItems] = useState<CustomItem[]>([]);
@@ -372,16 +434,24 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col" data-testid="dialog-shopping-list">
+      <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-purple-950/30 dark:via-pink-950/30 dark:to-orange-950/30 border-0" data-testid="dialog-shopping-list">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <ShoppingBasket className="h-6 w-6 text-purple-600" />
             Shopping List
-            <span className="text-sm font-normal text-muted-foreground">
-              ({remainingCount} of {totalItems} remaining)
-            </span>
           </DialogTitle>
-          <DialogDescription>
-            Check off items as you add them to your cart
+          <DialogDescription className="text-base">
+            {remainingCount > 0 ? (
+              <span className="text-purple-700 dark:text-purple-300 font-semibold">
+                {remainingCount} of {totalItems} remaining
+              </span>
+            ) : totalItems > 0 ? (
+              <span className="text-green-600 dark:text-green-400 font-semibold">
+                🎉 All done! Great shopping!
+              </span>
+            ) : (
+              <span>Add items to your list</span>
+            )}
           </DialogDescription>
         </DialogHeader>
         
@@ -392,50 +462,60 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
             value={newItemInput}
             onChange={(e) => setNewItemInput(e.target.value)}
             onKeyPress={handleKeyPress}
+            className="bg-white dark:bg-gray-900 border-purple-200 dark:border-purple-800 focus-visible:ring-purple-500"
             data-testid="input-custom-item"
           />
           <Button 
             onClick={addCustomItem}
             size="icon"
             disabled={!newItemInput.trim()}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
             data-testid="button-add-item"
           >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
         
-        <div className="flex-1 overflow-y-auto pr-2">
+        <div className="flex-1 overflow-y-auto pr-2 space-y-4">
           {/* Your Essentials Section */}
           {customItems.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold mb-2 px-1 text-primary">
-                Your Essentials
-              </h3>
+            <div>
+              <div className="mb-3 p-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center gap-2">
+                <Star className="h-5 w-5 text-white" />
+                <h3 className="text-base font-bold text-white">
+                  Your Essentials
+                </h3>
+              </div>
               <div className="space-y-2">
                 {customItems.map((item, index) => {
+                  const isChecked = checkedItems.has(item.id);
                   return (
                     <div 
                       key={item.id} 
-                      className="flex items-start gap-2 p-3 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors"
+                      className="flex items-center gap-3 p-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                      onClick={() => toggleItem(item.id)}
                       data-testid={`custom-item-${index}`}
                     >
                       <Checkbox
-                        checked={checkedItems.has(item.id)}
+                        checked={isChecked}
                         onCheckedChange={() => toggleItem(item.id)}
-                        className="mt-0.5"
+                        className="h-5 w-5 rounded-full border-2"
                         data-testid={`checkbox-custom-${index}`}
                       />
+                      <span className="text-2xl">{getIngredientEmoji(item.label)}</span>
                       <span 
-                        className={`flex-1 cursor-pointer ${checkedItems.has(item.id) ? 'line-through text-muted-foreground' : ''}`}
-                        onClick={() => toggleItem(item.id)}
+                        className={`flex-1 text-base ${isChecked ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100 font-medium'}`}
                       >
                         {item.label}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                        onClick={() => deleteCustomItem(item.id)}
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteCustomItem(item.id);
+                        }}
                         data-testid={`button-delete-custom-${index}`}
                       >
                         <X className="h-4 w-4" />
@@ -450,28 +530,33 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
           {/* From Recipes Section */}
           {shoppingList.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold mb-2 px-1 text-muted-foreground">
-                From Recipes
-              </h3>
+              <div className="mb-3 p-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 flex items-center gap-2">
+                <ShoppingBasket className="h-5 w-5 text-white" />
+                <h3 className="text-base font-bold text-white">
+                  From Recipes
+                </h3>
+              </div>
               <div className="space-y-2">
                 {shoppingList.map((item, index) => {
                   // Use item content as stable ID to survive recipe changes
                   const itemId = `recipe-${item.toLowerCase().replace(/\s+/g, '-')}`;
+                  const isChecked = checkedItems.has(itemId);
                   return (
                     <div 
                       key={itemId} 
-                      className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors cursor-pointer"
+                      className="flex items-center gap-3 p-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer"
                       onClick={() => toggleItem(itemId)}
                       data-testid={`shopping-item-${index}`}
                     >
                       <Checkbox
-                        checked={checkedItems.has(itemId)}
+                        checked={isChecked}
                         onCheckedChange={() => toggleItem(itemId)}
-                        className="mt-0.5"
+                        className="h-5 w-5 rounded-full border-2"
                         data-testid={`checkbox-item-${index}`}
                       />
+                      <span className="text-2xl">{getIngredientEmoji(item)}</span>
                       <span 
-                        className={`flex-1 ${checkedItems.has(itemId) ? 'line-through text-muted-foreground' : ''}`}
+                        className={`flex-1 text-base ${isChecked ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100 font-medium'}`}
                       >
                         {item}
                       </span>
@@ -480,21 +565,29 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
                 })}
               </div>
               
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Recipes:</strong>
-                </p>
-                <p className="text-sm mt-1">
-                  {recipes.map(r => r.name).join(', ')}
-                </p>
-              </div>
+              {recipes.length > 0 && (
+                <div className="mt-4 p-4 bg-white/60 dark:bg-gray-900/60 rounded-xl backdrop-blur-sm">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    From your recipes:
+                  </p>
+                  <p className="text-sm mt-1 text-gray-800 dark:text-gray-200">
+                    {recipes.map(r => r.name).join(', ')}
+                  </p>
+                </div>
+              )}
             </div>
           )}
           
           {/* Empty State */}
           {shoppingList.length === 0 && customItems.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">Add custom items or select recipes to build your shopping list</p>
+            <div className="text-center py-12">
+              <ShoppingBasket className="h-16 w-16 mx-auto mb-4 text-purple-300 dark:text-purple-700" />
+              <p className="text-base text-gray-600 dark:text-gray-400 font-medium">
+                Add custom items or select recipes
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                to build your shopping list
+              </p>
             </div>
           )}
         </div>
