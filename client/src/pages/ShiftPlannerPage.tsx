@@ -75,7 +75,7 @@ export default function ShiftPlannerPage() {
   // Save shift schedule mutation
   const saveShiftMutation = useMutation({
     mutationFn: async (data: { shiftDate: string; shiftType: string }) => {
-      return apiRequest("/api/shift-schedules", "POST", data);
+      return apiRequest("POST", "/api/shift-schedules", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shift-schedules"] });
@@ -85,7 +85,7 @@ export default function ShiftPlannerPage() {
   // Delete shift schedule mutation
   const deleteShiftMutation = useMutation({
     mutationFn: async (date: string) => {
-      return apiRequest(`/api/shift-schedules/${date}`, "DELETE");
+      return apiRequest("DELETE", `/api/shift-schedules/${date}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shift-schedules"] });
@@ -95,7 +95,7 @@ export default function ShiftPlannerPage() {
   // Generate meal plan mutation
   const generateMealPlanMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("/api/shift-schedules/generate-meal-plan", "POST", {
+      return apiRequest("POST", "/api/shift-schedules/generate-meal-plan", {
         startDate,
         endDate
       });
