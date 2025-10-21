@@ -21,6 +21,7 @@ export function ShiftCheckInModal({ isOpen, onClose }: ShiftCheckInModalProps) {
     { value: "late_shift", label: "Late Shift", emoji: "🌆", description: "2pm-10pm" },
     { value: "night_shift", label: "Night Shift", emoji: "🌙", description: "Overnight hours" },
     { value: "long_shift", label: "Long Clinical Shift", emoji: "🏥", description: "12.5hr NHS/emergency" },
+    { value: "custom", label: "Custom Hours", emoji: "⚙️", description: "Use profile custom times" },
   ];
 
   const updateShiftMutation = useMutation({
