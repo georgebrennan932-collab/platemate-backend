@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu, User, Images } from "lucide-react";
+import { Camera, Book, Calculator, Target, ChefHat, Brain, Trophy, Lightbulb, Menu, User, Images, GripVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,9 +8,88 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 export function DropdownNavigation() {
   const [location] = useLocation();
+  const [position, setPosition] = useState({ x: 16, y: 16 }); // Default top-left
+
+  // Clamp position to viewport bounds
+  const clampPosition = (pos: { x: number; y: number }) => {
+    const buttonSize = 56; // 14 * 4 (h-14 in tailwind)
+    const margin = 8;
+    
+    const maxX = window.innerWidth - buttonSize - margin;
+    const maxY = window.innerHeight - buttonSize - margin;
+    
+    return {
+      x: Math.max(margin, Math.min(pos.x, maxX)),
+      y: Math.max(margin, Math.min(pos.y, maxY))
+    };
+  };
+
+  // Load position from localStorage on mount
+  useEffect(() => {
+    const defaultPos = { x: 16, y: 16 };
+    const stored = localStorage.getItem('dropdown-menu-position');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        // Validate that x and y are finite numbers
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number' && 
+            Number.isFinite(parsed.x) && Number.isFinite(parsed.y)) {
+          // Validate and clamp stored position
+          const clamped = clampPosition(parsed);
+          setPosition(clamped);
+          // Update localStorage if position was clamped
+          if (clamped.x !== parsed.x || clamped.y !== parsed.y) {
+            localStorage.setItem('dropdown-menu-position', JSON.stringify(clamped));
+          }
+        } else {
+          // Invalid data, reset to default
+          setPosition(defaultPos);
+          localStorage.setItem('dropdown-menu-position', JSON.stringify(defaultPos));
+        }
+      } catch (e) {
+        console.error('Failed to load menu position:', e);
+        // Reset to default on parse error
+        setPosition(defaultPos);
+        localStorage.setItem('dropdown-menu-position', JSON.stringify(defaultPos));
+      }
+    }
+
+    // Handle window resize to keep button in bounds
+    const handleResize = () => {
+      setPosition(current => {
+        const clamped = clampPosition(current);
+        if (clamped.x !== current.x || clamped.y !== current.y) {
+          localStorage.setItem('dropdown-menu-position', JSON.stringify(clamped));
+          return clamped;
+        }
+        return current;
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Save position to localStorage when it changes
+  const handleDragEnd = (event: any, info: any) => {
+    const rawX = position.x + info.offset.x;
+    const rawY = position.y + info.offset.y;
+    
+    // Validate before clamping
+    if (!Number.isFinite(rawX) || !Number.isFinite(rawY)) {
+      console.error('Invalid drag position:', { rawX, rawY });
+      return;
+    }
+    
+    const newPosition = clampPosition({ x: rawX, y: rawY });
+    setPosition(newPosition);
+    localStorage.setItem('dropdown-menu-position', JSON.stringify(newPosition));
+  };
 
   const navItems = [
     {
@@ -76,47 +155,62 @@ export function DropdownNavigation() {
   ];
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="fixed top-4 left-4 z-50 h-12 w-12 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform"
-          data-testid="button-menu"
-          aria-label="Open navigation menu"
+    <motion.div
+      drag
+      dragMomentum={false}
+      dragElastic={0}
+      onDragEnd={handleDragEnd}
+      style={{
+        position: 'fixed',
+        left: position.x,
+        top: position.y,
+        zIndex: 50
+      }}
+      className="cursor-move"
+    >
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-14 w-14 rounded-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border/50 shadow-lg hover:scale-105 transition-transform relative group"
+            data-testid="button-menu"
+            aria-label="Open navigation menu (draggable)"
+          >
+            <Menu className="h-6 w-6" />
+            <GripVertical className="h-3 w-3 absolute bottom-0 right-0 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent 
+          align="start" 
+          className="w-56 ml-4 mt-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-border/50"
+          data-testid="dropdown-navigation-menu"
         >
-          <Menu className="h-6 w-6" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="start" 
-        className="w-56 ml-4 mt-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-border/50"
-        data-testid="dropdown-navigation-menu"
-      >
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isAICoach = item.href === "/ai-coach";
-          return (
-            <Link key={item.href} href={item.href}>
-              <DropdownMenuItem
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors min-h-[48px]",
-                  isAICoach
-                    ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold hover:from-teal-700 hover:to-cyan-700 shadow-md"
-                    : item.isActive 
-                      ? "bg-primary/10 text-primary font-medium" 
-                      : "text-foreground hover:bg-accent"
-                )}
-                data-testid={`nav-${item.label.toLowerCase()}`}
-                aria-current={item.isActive ? 'page' : undefined}
-              >
-                <Icon className="h-5 w-5" aria-hidden="true" />
-                <span className="text-base">{item.label}</span>
-              </DropdownMenuItem>
-            </Link>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isAICoach = item.href === "/ai-coach";
+            return (
+              <Link key={item.href} href={item.href}>
+                <DropdownMenuItem
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors min-h-[48px]",
+                    isAICoach
+                      ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold hover:from-teal-700 hover:to-cyan-700 shadow-md"
+                      : item.isActive 
+                        ? "bg-primary/10 text-primary font-medium" 
+                        : "text-foreground hover:bg-accent"
+                  )}
+                  data-testid={`nav-${item.label.toLowerCase()}`}
+                  aria-current={item.isActive ? 'page' : undefined}
+                >
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                  <span className="text-base">{item.label}</span>
+                </DropdownMenuItem>
+              </Link>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </motion.div>
   );
 }
