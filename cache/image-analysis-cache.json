@@ -17,6 +17,52 @@
         "accessCount": 1,
         "lastAccessed": 1761051305173
       }
+    ],
+    [
+      "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
+      {
+        "imageHash": "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
+        "analysis": {
+          "imageUrl": "/tmp/uploads/processed_953f8c0da3d662dfac9cfe6dc25667b9.jpg",
+          "confidence": 95,
+          "totalCalories": 79,
+          "totalProtein": 3,
+          "totalCarbs": 13,
+          "totalFat": 2,
+          "detectedFoods": [
+            {
+              "name": "Soup, tomato",
+              "portion": "350ml",
+              "calories": 67,
+              "protein": 2,
+              "carbs": 13,
+              "fat": 1,
+              "icon": "🍽️"
+            },
+            {
+              "name": "Basil, fresh",
+              "portion": "5g",
+              "calories": 1,
+              "protein": 0,
+              "carbs": 0,
+              "fat": 0,
+              "icon": "🍽️"
+            },
+            {
+              "name": "Chicken, wing, frozen, glazed, barbecue flavored",
+              "portion": "5ml",
+              "calories": 11,
+              "protein": 1,
+              "carbs": 0,
+              "fat": 1,
+              "icon": "🍽️"
+            }
+          ]
+        },
+        "timestamp": 1761051616863,
+        "accessCount": 1,
+        "lastAccessed": 1761051616863
+      }
     ]
   ],
   "stats": {
@@ -24,11 +70,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 1,
+    "currentSize": 2,
     "maxSize": 1000,
     "totalEvictions": 0,
     "oldestEntry": 1761051305173,
-    "newestEntry": 1761051305173
+    "newestEntry": 1761051616863
   },
-  "timestamp": 1761051305174
+  "timestamp": 1761051616863
 }
