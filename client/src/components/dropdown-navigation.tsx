@@ -18,6 +18,15 @@ export function DropdownNavigation() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [hasMoved, setHasMoved] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const isMountedRef = useRef(true);
+
+  // Track mount status
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Load saved position
   useEffect(() => {
@@ -26,10 +35,12 @@ export function DropdownNavigation() {
       try {
         const parsed = JSON.parse(saved);
         if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
-          setPosition(parsed);
+          if (isMountedRef.current) {
+            setPosition(parsed);
+          }
         }
       } catch (e) {
-        console.error('Failed to load position:', e);
+        // Silently ignore errors
       }
     }
   }, []);
@@ -71,23 +82,33 @@ export function DropdownNavigation() {
     let moved = false;
 
     const handleMove = (clientX: number, clientY: number) => {
-      const deltaX = Math.abs(clientX - (position.x + dragStart.x));
-      const deltaY = Math.abs(clientY - (position.y + dragStart.y));
+      if (!isMountedRef.current) return;
       
-      // If moved more than 5px, consider it a drag
-      if (deltaX > 5 || deltaY > 5) {
-        if (!moved) {
-          moved = true;
-          setHasMoved(true);
-          setIsDragging(true);
-          setDropdownOpen(false);
-        }
+      try {
+        const deltaX = Math.abs(clientX - (position.x + dragStart.x));
+        const deltaY = Math.abs(clientY - (position.y + dragStart.y));
         
-        const newPos = clampToViewport(
-          clientX - dragStart.x,
-          clientY - dragStart.y
-        );
-        setPosition(newPos);
+        // If moved more than 5px, consider it a drag
+        if (deltaX > 5 || deltaY > 5) {
+          if (!moved) {
+            moved = true;
+            if (isMountedRef.current) {
+              setHasMoved(true);
+              setIsDragging(true);
+              setDropdownOpen(false);
+            }
+          }
+          
+          if (isMountedRef.current) {
+            const newPos = clampToViewport(
+              clientX - dragStart.x,
+              clientY - dragStart.y
+            );
+            setPosition(newPos);
+          }
+        }
+      } catch (e) {
+        // Silently ignore errors during drag
       }
     };
 
@@ -104,14 +125,24 @@ export function DropdownNavigation() {
     };
 
     const handleEnd = () => {
-      if (moved) {
-        localStorage.setItem('nav-menu-position', JSON.stringify(position));
+      if (!isMountedRef.current) return;
+      
+      try {
+        if (moved) {
+          localStorage.setItem('nav-menu-position', JSON.stringify(position));
+        }
+        if (isMountedRef.current) {
+          setDragStart({ x: 0, y: 0 });
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              setIsDragging(false);
+              setHasMoved(false);
+            }
+          }, 100);
+        }
+      } catch (e) {
+        // Silently ignore errors
       }
-      setDragStart({ x: 0, y: 0 });
-      setTimeout(() => {
-        setIsDragging(false);
-        setHasMoved(false);
-      }, 100);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
