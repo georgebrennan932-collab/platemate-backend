@@ -2896,6 +2896,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Shift schedule routes for weekly meal planning
+  app.get("/api/shift-schedules", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const schedules = await storage.getShiftSchedules(userId, startDate as string, endDate as string);
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching shift schedules:", error);
+      res.status(500).json({ error: "Failed to fetch shift schedules" });
+    }
+  });
+
+  app.post("/api/shift-schedules", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const scheduleData = insertShiftScheduleSchema.parse({
+        ...req.body,
+        userId
+      });
+
+      const schedule = await storage.upsertShiftSchedule(scheduleData);
+      res.json(schedule);
+    } catch (error) {
+      console.error("Error creating/updating shift schedule:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to save shift schedule" });
+    }
+  });
+
+  app.delete("/api/shift-schedules/:date", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { date } = req.params;
+      const success = await storage.deleteShiftSchedule(userId, date);
+      res.json({ success });
+    } catch (error) {
+      console.error("Error deleting shift schedule:", error);
+      res.status(500).json({ error: "Failed to delete shift schedule" });
+    }
+  });
+
+  // Generate weekly meal plan based on shift schedules
+  app.post("/api/shift-schedules/generate-meal-plan", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { startDate, endDate } = req.body;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      // Get shift schedules for the specified date range
+      const shifts = await storage.getShiftSchedules(userId, startDate, endDate);
+      
+      if (shifts.length === 0) {
+        return res.status(400).json({ error: "No shift schedules found for the specified date range" });
+      }
+
+      // Get user profile for personalization
+      const userProfile = await storage.getUserProfile(userId);
+
+      // Generate weekly meal plan using AI
+      const { ShiftMealPlanService } = await import("./services/shift-meal-plan-service");
+      const mealPlanService = new ShiftMealPlanService(storage);
+      const mealPlan = await mealPlanService.generateWeeklyMealPlan(userId, shifts, userProfile || undefined);
+
+      // Update each shift schedule with the generated meal plan data
+      for (const dailyPlan of mealPlan.dailyPlans) {
+        await storage.upsertShiftSchedule({
+          userId,
+          shiftDate: dailyPlan.date,
+          shiftType: dailyPlan.shiftType,
+          customShiftStart: dailyPlan.shiftStart || null,
+          customShiftEnd: dailyPlan.shiftEnd || null,
+          breakWindows: dailyPlan.breakWindows || null,
+          mealPlanGenerated: 1,
+          mealPlanData: dailyPlan as any
+        });
+      }
+
+      res.json(mealPlan);
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+      res.status(500).json({ error: "Failed to generate meal plan" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
