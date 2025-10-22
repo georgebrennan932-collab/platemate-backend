@@ -495,27 +495,8 @@ export default function ShiftPlannerPage() {
                 <ShoppingCart className="h-6 w-6 text-blue-600" />
                 Weekly Shopping List
               </CardTitle>
-              <CardDescription className="flex items-center justify-between">
-                <span>Ingredients for your entire week</span>
-                <Button
-                  onClick={() => addToShoppingListMutation.mutate()}
-                  disabled={addToShoppingListMutation.isPending}
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700"
-                  data-testid="button-add-to-shopping-list"
-                >
-                  {addToShoppingListMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add to My Shopping List
-                    </>
-                  )}
-                </Button>
+              <CardDescription>
+                Ingredients for your entire week
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -562,6 +543,34 @@ export default function ShiftPlannerPage() {
                         </div>
                       </div>
                     ))}
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-4 border-t">
+                      <Button
+                        onClick={() => addToShoppingListMutation.mutate()}
+                        disabled={addToShoppingListMutation.isPending}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                        data-testid="button-add-to-shopping-list"
+                      >
+                        {addToShoppingListMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Adding...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add to My Shopping List
+                          </>
+                        )}
+                      </Button>
+                      <Link href="/shopping-list">
+                        <Button variant="outline" className="flex-1" data-testid="button-view-shopping-list">
+                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          View Shopping List
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 );
               })()}
