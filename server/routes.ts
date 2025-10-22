@@ -2991,6 +2991,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mealPlanService = new ShiftMealPlanService(storage);
       const mealPlan = await mealPlanService.generateWeeklyMealPlan(userId, shifts, userProfile || undefined);
 
+      console.log("🛒 Meal plan shopping list check:", {
+        hasShoppingList: !!mealPlan.shoppingList,
+        itemCount: mealPlan.shoppingList?.length || 0,
+        hasWeeklyNutrition: !!mealPlan.weeklyNutrition,
+        hasWeeklyTips: !!mealPlan.weeklyTips
+      });
+
       // Update each shift schedule with the generated meal plan data
       // For the first schedule, include weekly data (shoppingList, weeklyNutrition, weeklyTips)
       for (let i = 0; i < mealPlan.dailyPlans.length; i++) {
