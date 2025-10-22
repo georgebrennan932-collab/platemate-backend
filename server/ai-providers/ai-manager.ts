@@ -507,8 +507,23 @@ export class AIManager {
     const portionLower = portion.toLowerCase().trim();
     const foodLower = foodName?.toLowerCase() || '';
     
-    // STEP 1: Handle explicit weight/volume measurements (most accurate)
-    // Match only when followed by a space or end of string (not when it's part of food name)
+    // STEP 0: Check for count-based foods FIRST (before weight measurements)
+    // Extract count numbers for contextual conversions
+    const numMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
+    const num = numMatch ? parseFloat(numMatch[1]) : 1;
+    
+    // Specific egg handling (highest priority)
+    // Check both the portion string AND the food name for "egg"
+    const isEgg = foodLower.includes('egg') || portionLower.includes('egg');
+    if (isEgg) {
+      if (portionLower.includes('large')) return num * 50; // Large egg ≈ 50g
+      if (portionLower.includes('medium')) return num * 44; // Medium egg ≈ 44g  
+      if (portionLower.includes('small')) return num * 38; // Small egg ≈ 38g
+      // Default egg size if no size specified
+      return num * 50; // Default to large egg ≈ 50g
+    }
+    
+    // STEP 1: Handle explicit weight/volume measurements
     const kgMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*kg(?:\s|$)/);
     if (kgMatch) {
       const result = parseFloat(kgMatch[1]) * 1000;
@@ -516,9 +531,8 @@ export class AIManager {
       return result;
     }
     
-    // Match grams but ensure it's not a count + unit + food pattern like "2 g eggs"
-    // Only match if "g" is followed by space/end and NOT followed by a food word
-    const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*(?:grams?|g)(?:\s+(?:of|to|for|with)|\s*$)/);
+    // Match grams - allow both "100g chicken" and "100 g chicken"
+    const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*(?:grams?|g)(?:\s|$)/);
     if (gramsMatch) {
       const result = parseFloat(gramsMatch[1]);
 
@@ -535,21 +549,6 @@ export class AIManager {
     if (mlMatch) {
       const result = parseFloat(mlMatch[1]); // Assume 1ml ≈ 1g for most foods
       return result;
-    }
-    
-    // STEP 2: Extract count numbers for contextual conversions
-    const numMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
-    const num = numMatch ? parseFloat(numMatch[1]) : 1;
-    
-    // Specific egg handling (before generic size rules)
-    // Check both the portion string AND the food name for "egg"
-    const isEgg = foodLower.includes('egg') || portionLower.includes('egg');
-    if (isEgg) {
-      if (portionLower.includes('large')) return num * 50; // Large egg ≈ 50g
-      if (portionLower.includes('medium')) return num * 44; // Medium egg ≈ 44g  
-      if (portionLower.includes('small')) return num * 38; // Small egg ≈ 38g
-      // Default egg size if no size specified
-      return num * 50; // Default to large egg ≈ 50g
     }
     
     // Contextual UK/British food portions
