@@ -88,10 +88,10 @@ export class ShiftMealPlanService {
 
       // Generate meal plan using the available provider
       if (provider.name === 'Gemini') {
-        const result = await this.generateWithGemini(systemPrompt, userPrompt, shifts);
+        const result = await this.generateWithGemini(provider, systemPrompt, userPrompt, shifts);
         return result;
       } else if (provider.name === 'OpenAI') {
-        const result = await this.generateWithOpenAI(systemPrompt, userPrompt, shifts);
+        const result = await this.generateWithOpenAI(provider, systemPrompt, userPrompt, shifts);
         return result;
       }
 
@@ -198,16 +198,12 @@ Focus on realistic, affordable meals using ingredients commonly available in UK 
   }
 
   private async generateWithGemini(
+    provider: any,
     systemPrompt: string,
     userPrompt: string,
     shifts: ShiftSchedule[]
   ): Promise<WeeklyMealPlan> {
-    const geminiProvider = (aiManager as any).providers.find((p: any) => p.name === 'gemini');
-    if (!geminiProvider) {
-      throw new Error("Gemini provider not available");
-    }
-
-    const client = geminiProvider.client;
+    const client = (provider as any).client;
     
     const response = await client.models.generateContent({
       model: "gemini-2.5-flash", // Use flash for cost efficiency
@@ -307,16 +303,12 @@ Focus on realistic, affordable meals using ingredients commonly available in UK 
   }
 
   private async generateWithOpenAI(
+    provider: any,
     systemPrompt: string,
     userPrompt: string,
     shifts: ShiftSchedule[]
   ): Promise<WeeklyMealPlan> {
-    const openaiProvider = (aiManager as any).providers.find((p: any) => p.name === 'openai');
-    if (!openaiProvider) {
-      throw new Error("OpenAI provider not available");
-    }
-
-    const client = openaiProvider.client;
+    const client = (provider as any).client;
     
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini", // Cost-efficient model for meal planning
