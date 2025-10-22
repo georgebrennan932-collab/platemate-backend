@@ -9,11 +9,36 @@ import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.getcapacitor.BridgeActivity
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.BillingResult
 
-class MainActivity : BridgeActivity() {
+class MainActivity : BridgeActivity(), PurchasesUpdatedListener {
+
+    private lateinit var billingClient: BillingClient
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize Google Play Billing
+        billingClient = BillingClient.newBuilder(this)
+            .setListener(this)
+            .enablePendingPurchases()
+            .build()
+
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    // Billing is ready, purchases can be queried in the future.
+                }
+            }
+
+            override fun onBillingServiceDisconnected() {
+                // Will retry connection automatically
+            }
+        })
         
         // Add mic icon animation
         val micIcon: ImageView = findViewById(R.id.micIcon)
@@ -41,5 +66,12 @@ class MainActivity : BridgeActivity() {
             animator.interpolator = LinearInterpolator()
             animator.start()
         }
+    }
+
+    override fun onPurchasesUpdated(
+        billingResult: BillingResult,
+        purchases: MutableList<Purchase>?
+    ) {
+        // Purchase update handling will be implemented later, leave this empty for now.
     }
 }
