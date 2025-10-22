@@ -3012,6 +3012,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add meal plan shopping list to user's shopping list
+  app.post("/api/shift-schedules/add-to-shopping-list", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { startDate, endDate } = req.body;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      // Get shift schedules for the date range to extract meal plan shopping list
+      const shifts = await storage.getShiftSchedules(userId, startDate, endDate);
+      
+      // Find the first shift with meal plan data containing shopping list
+      let shoppingList: Array<{ ingredient: string; quantity: string; category: string }> = [];
+      for (const shift of shifts) {
+        if (shift.mealPlanData && (shift.mealPlanData as any).shoppingList) {
+          shoppingList = (shift.mealPlanData as any).shoppingList;
+          break;
+        }
+      }
+
+      if (shoppingList.length === 0) {
+        return res.status(400).json({ error: "No shopping list found in meal plan" });
+      }
+
+      // Get existing shopping list items
+      const existingItems = await storage.getShoppingList(userId);
+      const existingItemsMap = new Map(
+        existingItems.map(item => [item.itemName.toLowerCase(), item])
+      );
+
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      // Add or update shopping list items
+      for (const mealPlanItem of shoppingList) {
+        const itemName = mealPlanItem.ingredient;
+        const existingItem = existingItemsMap.get(itemName.toLowerCase());
+
+        if (existingItem) {
+          // Item exists - combine quantities if possible
+          const combinedQuantity = existingItem.quantity 
+            ? `${existingItem.quantity} + ${mealPlanItem.quantity}`
+            : mealPlanItem.quantity;
+          
+          await storage.updateShoppingListItem(existingItem.id, {
+            quantity: combinedQuantity
+          });
+          updatedCount++;
+        } else {
+          // Add new item
+          await storage.addShoppingListItem({
+            userId,
+            itemName: itemName,
+            checked: 0,
+            source: "meal_plan",
+            quantity: mealPlanItem.quantity,
+            unit: null
+          });
+          addedCount++;
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        addedCount, 
+        updatedCount,
+        totalItems: shoppingList.length 
+      });
+    } catch (error) {
+      console.error("Error adding meal plan to shopping list:", error);
+      res.status(500).json({ error: "Failed to add items to shopping list" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
