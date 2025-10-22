@@ -25,9 +25,31 @@ interface ResultsDisplayProps {
 }
 
 // Helper function to parse portion string and extract numeric value and unit
-function parsePortionString(portion: string): { value: number; unit: string } {
+function parsePortionString(portion: string): { value: number; unit: string } | null {
   // Remove extra spaces and lowercase for matching
   const cleaned = portion.trim().toLowerCase();
+  
+  // Comprehensive list of units (including both abbreviated and full forms)
+  const units = 'servings?|srv|cups?|tablespoons?|tbsp|teaspoons?|tsp|ounces?|oz|pounds?|lbs?|grams?|g|kilograms?|kg|milliliters?|ml|liters?|l|slices?|pieces?|pcs?|items?';
+  
+  // First, strip generic filler words (of, a, an) appearing before units
+  // This handles "one of cup", "half a cup", "two of tablespoons" etc.
+  let normalized = cleaned;
+  const fillerPattern = new RegExp(`\\s+(?:of|a|an)\\s+(?=${units})`, 'gi');
+  normalized = normalized.replace(fillerPattern, ' ');
+  
+  // Word to number mapping for common numerals (excluding "a" and "an" as they're fillers)
+  const wordToNumber: { [key: string]: number } = {
+    'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+    'half': 0.5, 'quarter': 0.25, 'third': 0.33
+  };
+  
+  // Replace word numerals with digits
+  Object.keys(wordToNumber).forEach(word => {
+    const pattern = new RegExp(`\\b${word}\\b`, 'gi');
+    normalized = normalized.replace(pattern, wordToNumber[word].toString());
+  });
   
   // Common unit patterns (prioritize longer matches first)
   const unitPatterns = [
@@ -48,25 +70,26 @@ function parsePortionString(portion: string): { value: number; unit: string } {
   
   // Try to match each pattern
   for (const { regex, unit } of unitPatterns) {
-    const match = cleaned.match(regex);
+    const match = normalized.match(regex);
     if (match && match[1]) {
       return { value: parseFloat(match[1]), unit };
     }
   }
   
   // Fallback: just grab the first number
-  const numMatch = cleaned.match(/(\d+(?:\.\d+)?)/);
+  const numMatch = normalized.match(/(\d+(?:\.\d+)?)/);
   if (numMatch && numMatch[1]) {
     return { value: parseFloat(numMatch[1]), unit: 'g' }; // default to grams
   }
   
-  // Ultimate fallback
-  return { value: 100, unit: 'g' };
+  // Return null if no portion detected (instead of defaulting to 100g)
+  return null;
 }
 
 // Helper function to initialize editable food with baseline data
 function initializeEditableFood(food: DetectedFood): EditableFood {
-  const { value, unit } = parsePortionString(food.portion);
+  const parsed = parsePortionString(food.portion);
+  const { value, unit } = parsed || { value: 100, unit: 'g' };
   
   return {
     ...food,
@@ -97,7 +120,14 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [voiceInput, setVoiceInput] = useState('');
+  const [voiceFoodName, setVoiceFoodName] = useState('');
+  const [voicePortionAmount, setVoicePortionAmount] = useState('100');
+  const [voicePortionUnit, setVoicePortionUnit] = useState('g');
   const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
+  const [showManualEntryDialog, setShowManualEntryDialog] = useState(false);
+  const [manualFoodName, setManualFoodName] = useState('');
+  const [manualPortionAmount, setManualPortionAmount] = useState('100');
+  const [manualPortionUnit, setManualPortionUnit] = useState('g');
   const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
   const [showLowConfidenceDialog, setShowLowConfidenceDialog] = useState(false);
   const [nutritionUpdateTimer, setNutritionUpdateTimer] = useState<NodeJS.Timeout | null>(null);
@@ -192,6 +222,37 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setVoiceInput(transcript);
+        
+        // Try to parse portion from transcript (e.g., "200g chicken", "1 cup rice", "one cup rice")
+        const parsed = parsePortionString(transcript);
+        
+        if (parsed) {
+          // Portion detected - extract food name (remove portion from start if present)
+          // General pattern that handles any combination of:
+          // (number/word) [optional space] [optional fillers] (unit) [optional "of"] (food name)
+          // Examples: "200g chicken", "200 g chicken", "one cup rice", "half a cup of milk", "two tablespoons sugar"
+          const portionPattern = new RegExp(
+            `^(?:\\d+(?:\\.\\d+)?|zero|one|two|three|four|five|six|seven|eight|nine|ten|half|quarter|third)` + // number or word
+            `\\s*(?:of\\s+|a\\s+|an\\s+)*` + // optional whitespace and fillers
+            `(?:servings?|srv|cups?|tablespoons?|tbsp|teaspoons?|tsp|ounces?|oz|pounds?|lbs?|grams?|g|kilograms?|kg|milliliters?|ml|liters?|l|slices?|pieces?|pcs?|items?)` + // unit (full forms included)
+            `\\s*(?:of\\s+)?` + // optional whitespace and "of" after unit
+            `(.+)$`, // food name
+            'i'
+          );
+          
+          const match = transcript.match(portionPattern);
+          const foodName = match && match[1] ? match[1].trim() : transcript;
+          
+          setVoiceFoodName(foodName);
+          setVoicePortionAmount(parsed.value.toString());
+          setVoicePortionUnit(parsed.unit);
+        } else {
+          // No portion detected - use original transcript as food name
+          setVoiceFoodName(transcript);
+          setVoicePortionAmount('100');
+          setVoicePortionUnit('g');
+        }
+        
         setShowVoiceMealDialog(true);
         toast({
           title: "Voice captured!",
@@ -275,7 +336,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     const currentFood = editableFoods[index];
     
     // Extract current numeric value from portion
-    const currentValue = parsePortionString(currentFood.portion).value;
+    const parsed = parsePortionString(currentFood.portion);
+    const currentValue = parsed ? parsed.value : currentFood.baselinePortionValue || 100;
     
     // Update portion string with new unit (with spacing)
     updatedFoods[index] = {
@@ -323,7 +385,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             const updatedFood = nutritionData.foods[index];
             if (updatedFood) {
               // Update both displayed and baseline nutrition values from server
-              const { value, unit } = parsePortionString(updatedFood.portion);
+              const parsed = parsePortionString(updatedFood.portion);
+              const { value, unit } = parsed || { value: 100, unit: 'g' };
               return {
                 ...currentFood,
                 calories: updatedFood.calories || currentFood.calories,
@@ -466,25 +529,73 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   };
 
   const addNewFoodItem = () => {
-    const newFood: EditableFood = {
-      name: "New Food Item",
-      portion: "1 serving",
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fat: 0,
-      icon: "fas fa-utensils",
-      baselinePortionValue: 1,
-      baselinePortionUnit: "serving",
-      baselineCalories: 0,
-      baselineProtein: 0,
-      baselineCarbs: 0,
-      baselineFat: 0,
-    };
-    const updatedFoods = [...editableFoods, newFood];
-    setEditableFoods(updatedFoods);
-    setEditingIndex(updatedFoods.length - 1); // Start editing the new item immediately
-    scheduleNutritionUpdate(updatedFoods);
+    setShowManualEntryDialog(true);
+  };
+
+  const addManualMealMutation = useMutation({
+    mutationFn: async ({ foodDescription }: { foodDescription: string }) => {
+      // Analyze the text-based food description
+      const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
+      const analysis = await analysisResponse.json();
+      
+      // Add the new food to the current analysis
+      const newFood = analysis.detectedFoods[0]; // Take the first detected food
+      if (newFood) {
+        const updatedFoods = [...editableFoods, initializeEditableFood(newFood)];
+        setEditableFoods(updatedFoods);
+        
+        // Save changes to the database (strip baseline data)
+        const updateResponse = await apiRequest('PATCH', `/api/analyses/${data.id}`, {
+          detectedFoods: updatedFoods.map(stripBaselineData)
+        });
+        return await updateResponse.json();
+      }
+      return analysis;
+    },
+    onSuccess: (updatedAnalysis) => {
+      soundService.playSuccess();
+      toast({
+        title: "Food Added!",
+        description: "Manual food item has been added to your analysis.",
+      });
+      
+      // Update data totals if we got an updated analysis back
+      if (updatedAnalysis && updatedAnalysis.detectedFoods) {
+        data.detectedFoods = [...updatedAnalysis.detectedFoods];
+        data.totalCalories = updatedAnalysis.totalCalories;
+        data.totalProtein = updatedAnalysis.totalProtein;
+        data.totalCarbs = updatedAnalysis.totalCarbs;
+        data.totalFat = updatedAnalysis.totalFat;
+        setEditableFoods(updatedAnalysis.detectedFoods.map(initializeEditableFood));
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
+      setShowManualEntryDialog(false);
+      setManualFoodName('');
+      setManualPortionAmount('100');
+      setManualPortionUnit('g');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add manual food. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error adding manual food:", error);
+    },
+  });
+
+  const handleConfirmManualFood = () => {
+    if (!manualFoodName.trim()) return;
+    // Construct food description with portion
+    const foodDescription = `${manualPortionAmount} ${manualPortionUnit} ${manualFoodName.trim()}`;
+    addManualMealMutation.mutate({
+      foodDescription
+    });
   };
 
   const hasChanges = () => {
@@ -613,6 +724,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
       setShowVoiceMealDialog(false);
       setVoiceInput('');
+      setVoiceFoodName('');
+      setVoicePortionAmount('100');
+      setVoicePortionUnit('g');
     },
     onError: (error: Error) => {
       toast({
@@ -625,9 +739,11 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   });
 
   const handleConfirmVoiceFood = () => {
-    if (!voiceInput.trim()) return;
+    if (!voiceFoodName.trim()) return;
+    // Construct food description with portion
+    const foodDescription = `${voicePortionAmount} ${voicePortionUnit} ${voiceFoodName.trim()}`;
     addVoiceMealMutation.mutate({
-      foodDescription: voiceInput.trim()
+      foodDescription
     });
   };
 
@@ -958,7 +1074,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                             value={
                               portionInputValues[index] !== undefined
                                 ? portionInputValues[index]
-                                : parsePortionString(food.portion).value
+                                : (parsePortionString(food.portion)?.value || food.baselinePortionValue || 100)
                             }
                             onChange={(e) => {
                               // Update local state immediately for responsive typing
@@ -1485,8 +1601,93 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                 </div>
               </div>
               
-              <div className="text-sm text-muted-foreground">
-                <p>This will be added to your current meal analysis.</p>
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  🍽️ Food Name
+                </label>
+                <input
+                  type="text"
+                  value={voiceFoodName}
+                  onChange={(e) => setVoiceFoodName(e.target.value)}
+                  placeholder="e.g., chicken breast, salmon"
+                  className="w-full px-4 py-2 border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                  data-testid="input-voice-food-name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  📏 Portion Size
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={voicePortionAmount}
+                    onChange={(e) => setVoicePortionAmount(e.target.value)}
+                    min="0"
+                    step="0.1"
+                    placeholder="Amount"
+                    className="flex-1 px-4 py-2 border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                    data-testid="input-voice-portion-amount"
+                  />
+                  <select
+                    value={voicePortionUnit}
+                    onChange={(e) => setVoicePortionUnit(e.target.value)}
+                    className="px-4 py-2 border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                    data-testid="select-voice-portion-unit"
+                  >
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                    <option value="oz">oz</option>
+                    <option value="lb">lb</option>
+                    <option value="cup">cup</option>
+                    <option value="tbsp">tbsp</option>
+                    <option value="tsp">tsp</option>
+                    <option value="ml">ml</option>
+                    <option value="L">L</option>
+                    <option value="serving">serving</option>
+                    <option value="slice">slice</option>
+                    <option value="piece">piece</option>
+                  </select>
+                </div>
+                
+                {/* Quick Portion Presets */}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => { setVoicePortionAmount('100'); setVoicePortionUnit('g'); }}
+                    className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    data-testid="preset-100g"
+                  >
+                    100g
+                  </button>
+                  <button
+                    onClick={() => { setVoicePortionAmount('200'); setVoicePortionUnit('g'); }}
+                    className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    data-testid="preset-200g"
+                  >
+                    200g
+                  </button>
+                  <button
+                    onClick={() => { setVoicePortionAmount('1'); setVoicePortionUnit('serving'); }}
+                    className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    data-testid="preset-1-serving"
+                  >
+                    1 serving
+                  </button>
+                  <button
+                    onClick={() => { setVoicePortionAmount('1'); setVoicePortionUnit('cup'); }}
+                    className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    data-testid="preset-1-cup"
+                  >
+                    1 cup
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-sm text-foreground font-medium">
+                  Preview: {voicePortionAmount} {voicePortionUnit} {voiceFoodName}
+                </p>
               </div>
             </div>
 
@@ -1495,6 +1696,9 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                 onClick={() => {
                   setShowVoiceMealDialog(false);
                   setVoiceInput('');
+                  setVoiceFoodName('');
+                  setVoicePortionAmount('100');
+                  setVoicePortionUnit('g');
                 }}
                 className="flex-1 py-2 px-4 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors"
                 data-testid="button-cancel-voice"
@@ -1503,11 +1707,150 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               </button>
               <button
                 onClick={handleConfirmVoiceFood}
-                disabled={addVoiceMealMutation.isPending}
+                disabled={addVoiceMealMutation.isPending || !voiceFoodName.trim()}
                 className="flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 data-testid="button-confirm-voice"
               >
                 {addVoiceMealMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    <span>Add Food</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Food Entry Dialog */}
+      {showManualEntryDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Plus className="h-6 w-6 text-primary" />
+              </div>
+              Add Food Manually
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  🍽️ Food Name
+                </label>
+                <input
+                  type="text"
+                  value={manualFoodName}
+                  onChange={(e) => setManualFoodName(e.target.value)}
+                  placeholder="e.g., chicken breast, salmon, rice"
+                  className="w-full px-4 py-2 border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                  data-testid="input-manual-food-name"
+                  autoFocus
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  📏 Portion Size
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={manualPortionAmount}
+                    onChange={(e) => setManualPortionAmount(e.target.value)}
+                    min="0"
+                    step="0.1"
+                    placeholder="Amount"
+                    className="flex-1 px-4 py-2 border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                    data-testid="input-manual-portion-amount"
+                  />
+                  <select
+                    value={manualPortionUnit}
+                    onChange={(e) => setManualPortionUnit(e.target.value)}
+                    className="px-4 py-2 border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                    data-testid="select-manual-portion-unit"
+                  >
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                    <option value="oz">oz</option>
+                    <option value="lb">lb</option>
+                    <option value="cup">cup</option>
+                    <option value="tbsp">tbsp</option>
+                    <option value="tsp">tsp</option>
+                    <option value="ml">ml</option>
+                    <option value="L">L</option>
+                    <option value="serving">serving</option>
+                    <option value="slice">slice</option>
+                    <option value="piece">piece</option>
+                  </select>
+                </div>
+                
+                {/* Quick Portion Presets */}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => { setManualPortionAmount('100'); setManualPortionUnit('g'); }}
+                    className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    data-testid="preset-manual-100g"
+                  >
+                    100g
+                  </button>
+                  <button
+                    onClick={() => { setManualPortionAmount('200'); setManualPortionUnit('g'); }}
+                    className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    data-testid="preset-manual-200g"
+                  >
+                    200g
+                  </button>
+                  <button
+                    onClick={() => { setManualPortionAmount('1'); setManualPortionUnit('serving'); }}
+                    className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    data-testid="preset-manual-1-serving"
+                  >
+                    1 serving
+                  </button>
+                  <button
+                    onClick={() => { setManualPortionAmount('1'); setManualPortionUnit('cup'); }}
+                    className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                    data-testid="preset-manual-1-cup"
+                  >
+                    1 cup
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-sm text-foreground font-medium">
+                  Preview: {manualPortionAmount} {manualPortionUnit} {manualFoodName || '...'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowManualEntryDialog(false);
+                  setManualFoodName('');
+                  setManualPortionAmount('100');
+                  setManualPortionUnit('g');
+                }}
+                className="flex-1 py-2 px-4 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                data-testid="button-cancel-manual"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmManualFood}
+                disabled={addManualMealMutation.isPending || !manualFoodName.trim()}
+                className="flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                data-testid="button-confirm-manual"
+              >
+                {addManualMealMutation.isPending ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     <span>Adding...</span>
