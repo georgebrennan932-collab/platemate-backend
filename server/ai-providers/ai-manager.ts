@@ -513,8 +513,9 @@ export class AIManager {
     const num = numMatch ? parseFloat(numMatch[1]) : 1;
     
     // Specific egg handling (highest priority)
-    // Check both the portion string AND the food name for "egg"
-    const isEgg = foodLower.includes('egg') || portionLower.includes('egg');
+    // Use word boundaries to avoid false matches with "eggplant", "veggie", etc.
+    const eggPattern = /\beggs?\b/i;
+    const isEgg = eggPattern.test(foodLower) || eggPattern.test(portionLower);
     if (isEgg) {
       if (portionLower.includes('large')) return num * 50; // Large egg ≈ 50g
       if (portionLower.includes('medium')) return num * 44; // Medium egg ≈ 44g  
