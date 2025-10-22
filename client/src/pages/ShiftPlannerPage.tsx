@@ -854,6 +854,23 @@ export default function ShiftPlannerPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Floating Shopping List Button */}
+      {schedules && schedules.some(s => s.mealPlanGenerated === 1 && s.mealPlanData && (s.mealPlanData as any).shoppingList) && (
+        <div className="fixed bottom-24 right-4 z-40">
+          <Link href="/recipes?view=shopping-list">
+            <Button
+              size="lg"
+              className="h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+              aria-label="View shopping list"
+              data-testid="button-fab-shopping-list"
+            >
+              <ShoppingCart className="h-7 w-7" />
+              <span className="sr-only">Shopping List</span>
+            </Button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
