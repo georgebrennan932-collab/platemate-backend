@@ -3013,7 +3013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.upsertShiftSchedule({
           userId,
           shiftDate: dailyPlan.date,
-          shiftType: existingShift?.shiftType || 'regular',
+          shiftType: (existingShift?.shiftType || 'regular') as 'custom' | 'day_off' | 'regular' | 'early_shift' | 'late_shift' | 'night_shift' | 'long_shift',
           customShiftStart: dailyPlan.shiftStart || null,
           customShiftEnd: dailyPlan.shiftEnd || null,
           breakWindows: dailyPlan.breakWindows || null,

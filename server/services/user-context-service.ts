@@ -1,5 +1,5 @@
 import { storage } from "../storage";
-import type { UserProfile, DiaryEntry, WeightEntry, DrinkEntry } from "@shared/schema";
+import type { UserProfile, DiaryEntry, WeightEntry, DrinkEntry, ShiftSchedule } from "@shared/schema";
 
 /**
  * User Context Service
@@ -46,6 +46,9 @@ export interface UserContext {
   // Shopping and preferences
   shoppingList: any[];
   
+  // Shift schedule (current week)
+  shiftSchedules: ShiftSchedule[];
+  
   // Engagement metrics
   currentStreak: number;
   activeChallenges: any[];
@@ -58,6 +61,19 @@ class UserContextService {
    */
   async getUserContext(userId: string): Promise<UserContext> {
     try {
+      // Get current week's date range for shift schedules (timezone-safe)
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay()); // Start on Sunday
+      startOfWeek.setUTCHours(0, 0, 0, 0); // Reset to UTC midnight
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6); // End on Saturday
+      endOfWeek.setUTCHours(0, 0, 0, 0); // Reset to UTC midnight
+      
+      // Use timezone-safe date formatting to avoid off-by-one day errors
+      const startDate = startOfWeek.toLocaleDateString('en-CA', { timeZone: 'UTC' });
+      const endDate = endOfWeek.toLocaleDateString('en-CA', { timeZone: 'UTC' });
+      
       // Fetch all data in parallel for better performance
       const [
         profile,
@@ -68,6 +84,7 @@ class UserContextService {
         shoppingList,
         stepsData,
         challengeData,
+        shiftSchedules,
       ] = await Promise.all([
         storage.getUserProfile(userId),
         storage.getNutritionGoals(userId),
@@ -77,6 +94,7 @@ class UserContextService {
         this.getShoppingList(userId),
         this.getStepsToday(userId),
         this.getChallengeData(userId),
+        storage.getShiftSchedules(userId, startDate, endDate),
       ]);
 
       // Enrich diary entries with analysis data
@@ -104,6 +122,7 @@ class UserContextService {
         averageDailyCalories,
         weightTrend,
         shoppingList,
+        shiftSchedules: shiftSchedules || [],
         currentStreak: challengeData.streak,
         activeChallenges: challengeData.active,
         totalPoints: challengeData.points,
@@ -122,6 +141,7 @@ class UserContextService {
         averageDailyCalories: 0,
         weightTrend: 'insufficient_data',
         shoppingList: [],
+        shiftSchedules: [],
         currentStreak: 0,
         activeChallenges: [],
         totalPoints: 0,
@@ -139,42 +159,6 @@ class UserContextService {
     if (context.profile) {
       const profile = context.profile;
       
-      // Determine current shift type (today's override or default)
-      let currentShiftInfo = 'Regular daytime hours';
-      const today = new Date().toISOString().split('T')[0];
-      
-      if (profile.todayShiftDate === today && profile.todayShiftType) {
-        // Use today's override shift
-        const shiftLabels: Record<string, string> = {
-          'day_off': 'Day Off - No shift today',
-          'regular': 'Regular Daytime (9am-5pm)',
-          'early_shift': 'Early Shift (6am-2pm)',
-          'late_shift': 'Late Shift (2pm-10pm)',
-          'night_shift': 'Night Shift (Overnight)',
-          'long_shift': 'Long Clinical Shift (12.5 hours, NHS/Emergency)',
-          'custom': `Custom Shift (${profile.customShiftStart || 'Not set'} to ${profile.customShiftEnd || 'Not set'})`
-        };
-        currentShiftInfo = shiftLabels[profile.todayShiftType] || profile.todayShiftType;
-      } else if (profile.defaultShiftType) {
-        // Use default shift pattern
-        const shiftLabels: Record<string, string> = {
-          'regular': 'Regular Daytime (9am-5pm)',
-          'early_shift': 'Early Shift (6am-2pm)',
-          'late_shift': 'Late Shift (2pm-10pm)',
-          'night_shift': 'Night Shift (Overnight)',
-          'long_shift': 'Long Clinical Shift (12.5 hours, NHS/Emergency)',
-          'custom': `Custom Shift (${profile.customShiftStart || 'Not set'} to ${profile.customShiftEnd || 'Not set'})`
-        };
-        currentShiftInfo = shiftLabels[profile.defaultShiftType] || profile.defaultShiftType;
-      }
-      
-      // Add break windows if custom shift
-      let breakInfo = '';
-      if ((profile.todayShiftType === 'custom' || profile.defaultShiftType === 'custom') && 
-          profile.customBreakWindows && profile.customBreakWindows.length > 0) {
-        breakInfo = `\n- Break Times: ${profile.customBreakWindows.join(', ')}`;
-      }
-      
       sections.push(`USER PROFILE:
 - Name: ${profile.name || 'Not set'}
 - Age: ${profile.age || 'Not set'}
@@ -188,10 +172,67 @@ class UserContextService {
 - Allergies: ${profile.allergies?.join(', ') || 'None'}
 - Food Dislikes: ${profile.foodDislikes || 'None'}
 - Health Conditions: ${profile.healthConditions || 'None'}
-- Medication: ${profile.medication || 'None'}
+- Medication: ${profile.medication || 'None'}`);
+    }
 
-WORK PATTERN & SHIFT SCHEDULE:
-- Current Shift Pattern: ${currentShiftInfo}${breakInfo}`);
+    // Shift Schedule (Current Week)
+    if (context.shiftSchedules && context.shiftSchedules.length > 0) {
+      // Get today's date in timezone-safe format
+      const todayDate = new Date();
+      todayDate.setUTCHours(0, 0, 0, 0);
+      const today = todayDate.toLocaleDateString('en-CA', { timeZone: 'UTC' });
+      
+      const shiftLabels: Record<string, string> = {
+        'day_off': 'Day Off',
+        'regular': 'Regular (9am-5pm)',
+        'early_shift': 'Early Shift (6am-2pm)',
+        'late_shift': 'Late Shift (2pm-10pm)',
+        'night_shift': 'Night Shift (Overnight)',
+        'long_shift': 'Long Shift (12.5hrs)',
+        'custom': 'Custom Shift'
+      };
+
+      // Create a map of scheduled shifts for easy lookup
+      const shiftMap = new Map(context.shiftSchedules.map(s => [s.shiftDate, s]));
+      
+      // Generate full week schedule, showing gaps
+      const startOfWeek = new Date(todayDate);
+      startOfWeek.setDate(todayDate.getDate() - todayDate.getDay());
+      startOfWeek.setUTCHours(0, 0, 0, 0);
+      
+      const weekSchedule: string[] = [];
+      for (let i = 0; i < 7; i++) {
+        const currentDay = new Date(startOfWeek);
+        currentDay.setDate(startOfWeek.getDate() + i);
+        const dateStr = currentDay.toLocaleDateString('en-CA', { timeZone: 'UTC' });
+        const dayName = currentDay.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+        const isToday = dateStr === today;
+        const todayMarker = isToday ? ' ← TODAY' : '';
+        
+        const shift = shiftMap.get(dateStr);
+        
+        if (shift) {
+          let shiftInfo = shiftLabels[shift.shiftType] || shift.shiftType;
+          
+          if (shift.shiftType === 'custom' && shift.customShiftStart && shift.customShiftEnd) {
+            shiftInfo = `Custom (${shift.customShiftStart}-${shift.customShiftEnd})`;
+          }
+          
+          let breakInfo = '';
+          if (shift.breakWindows && shift.breakWindows.length > 0) {
+            breakInfo = `, Breaks: ${shift.breakWindows.join(', ')}`;
+          }
+          
+          weekSchedule.push(`  ${dayName} ${dateStr}: ${shiftInfo}${breakInfo}${todayMarker}`);
+        } else {
+          weekSchedule.push(`  ${dayName} ${dateStr}: No schedule logged${todayMarker}`);
+        }
+      }
+
+      sections.push(`WORK SHIFT SCHEDULE (This Week):
+${weekSchedule.join('\n')}
+
+**Important**: Use this shift schedule to provide personalized nutrition advice. Consider shift timing when suggesting meals, account for night shifts when recommending sleep/eating patterns, and acknowledge days off for meal prep opportunities. If days show "No schedule logged," the user hasn't planned their shifts for those days yet.`);
     }
 
     // Nutrition Goals
