@@ -79,22 +79,23 @@ export class ShiftMealPlanService {
     const userPrompt = this.buildUserPrompt(shifts, userProfile, dailyCalorieTarget);
 
     try {
-      // Use Gemini as primary provider (free tier)
-      const geminiProvider = (aiManager as any).providers.find((p: any) => p.name === 'gemini');
+      // Get first available provider (prefer Gemini for free tier, fallback to OpenAI)
+      const provider = aiManager.getFirstAvailableProvider(['Gemini', 'OpenAI']);
       
-      if (geminiProvider && geminiProvider.isHealthy()) {
+      if (!provider) {
+        throw new Error("No healthy AI providers available for meal plan generation");
+      }
+
+      // Generate meal plan using the available provider
+      if (provider.name === 'Gemini') {
         const result = await this.generateWithGemini(systemPrompt, userPrompt, shifts);
         return result;
-      }
-      
-      // Fallback to OpenAI if Gemini unavailable
-      const openaiProvider = (aiManager as any).providers.find((p: any) => p.name === 'openai');
-      if (openaiProvider && openaiProvider.isHealthy()) {
+      } else if (provider.name === 'OpenAI') {
         const result = await this.generateWithOpenAI(systemPrompt, userPrompt, shifts);
         return result;
       }
 
-      throw new Error("No healthy AI providers available for meal plan generation");
+      throw new Error(`Unsupported provider: ${provider.name}`);
     } catch (error) {
       console.error("Error generating weekly meal plan:", error);
       throw error;

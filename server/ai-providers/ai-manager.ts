@@ -1608,6 +1608,21 @@ Return ONLY a valid JSON object in this exact format:
   }
 
   /**
+   * Get the first available provider from a preferred list (case-insensitive)
+   */
+  public getFirstAvailableProvider(preferredNames: string[]): AIProvider | null {
+    for (const name of preferredNames) {
+      const provider = this.providers.find(
+        p => p.name.toLowerCase() === name.toLowerCase() && p.isAvailable()
+      );
+      if (provider) {
+        return provider;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Get status of all providers for monitoring
    */
   public getProviderStatuses(): ProviderStatus[] {
