@@ -71,6 +71,12 @@ export function RecipesPage() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const dietParam = urlParams.get('diet');
+    const viewParam = urlParams.get('view');
+    
+    // Auto-open shopping list if view=shopping-list parameter is present
+    if (viewParam === 'shopping-list') {
+      setShowShoppingList(true);
+    }
     
     if (dietParam) {
       // URL parameter takes precedence (manual override)

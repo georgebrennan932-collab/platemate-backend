@@ -564,7 +564,7 @@ export default function ShiftPlannerPage() {
                           </>
                         )}
                       </Button>
-                      <Link href="/recipes">
+                      <Link href="/recipes?view=shopping-list">
                         <Button variant="outline" className="flex-1" data-testid="button-view-shopping-list">
                           <ShoppingCart className="mr-2 h-4 w-4" />
                           View Shopping List
