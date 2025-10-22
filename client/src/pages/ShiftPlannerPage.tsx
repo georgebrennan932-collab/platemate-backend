@@ -441,7 +441,7 @@ export default function ShiftPlannerPage() {
               <Button
                 onClick={handleSaveAll}
                 disabled={!hasChanges || saveShiftMutation.isPending}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 data-testid="button-save-shifts"
               >
                 {saveShiftMutation.isPending ? (
@@ -489,10 +489,10 @@ export default function ShiftPlannerPage() {
 
         {/* Weekly Shopping List Section */}
         {schedules && schedules.some(s => s.mealPlanGenerated === 1 && s.mealPlanData && (s.mealPlanData as any).shoppingList) && (
-          <Card className="border-2 border-blue-500">
+          <Card className="border-2 border-green-500">
             <CardHeader>
               <CardTitle className="text-xl flex items-center gap-2">
-                <ShoppingCart className="h-6 w-6 text-blue-600" />
+                <ShoppingCart className="h-6 w-6 text-green-600" />
                 Weekly Shopping List
               </CardTitle>
               <CardDescription>
@@ -549,7 +549,7 @@ export default function ShiftPlannerPage() {
                       <Button
                         onClick={() => addToShoppingListMutation.mutate()}
                         disabled={addToShoppingListMutation.isPending}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                        className="flex-1 bg-gradient-to-br from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
                         data-testid="button-add-to-shopping-list"
                       >
                         {addToShoppingListMutation.isPending ? (
@@ -565,7 +565,10 @@ export default function ShiftPlannerPage() {
                         )}
                       </Button>
                       <Link href="/recipes?view=shopping-list">
-                        <Button variant="outline" className="flex-1" data-testid="button-view-shopping-list">
+                        <Button 
+                          className="flex-1 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg" 
+                          data-testid="button-view-shopping-list"
+                        >
                           <ShoppingCart className="mr-2 h-4 w-4" />
                           View Shopping List
                         </Button>
