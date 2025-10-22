@@ -304,13 +304,21 @@ export default function ShiftPlannerPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 p-4 pb-24">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Weekly Shift Planner
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Plan your shifts and get AI-powered meal recommendations
-          </p>
+        <div className="space-y-2">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="mb-2" data-testid="button-back-home">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back to Home
+            </Button>
+          </Link>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Weekly Shift Planner
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Plan your shifts and get AI-powered meal recommendations
+            </p>
+          </div>
         </div>
 
         {/* Week Navigation */}
