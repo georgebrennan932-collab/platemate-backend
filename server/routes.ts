@@ -3009,10 +3009,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           weeklyTips: mealPlan.weeklyTips
         } : dailyPlan;
 
+        const existingShift = shifts.find(s => s.shiftDate === dailyPlan.date);
         await storage.upsertShiftSchedule({
           userId,
           shiftDate: dailyPlan.date,
-          shiftType: dailyPlan.shiftType,
+          shiftType: existingShift?.shiftType || 'regular',
           customShiftStart: dailyPlan.shiftStart || null,
           customShiftEnd: dailyPlan.shiftEnd || null,
           breakWindows: dailyPlan.breakWindows || null,
@@ -3079,17 +3080,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? `${existingItem.quantity} + ${mealPlanItem.quantity}`
             : mealPlanItem.quantity;
           
-          await storage.updateShoppingListItem(existingItem.id, {
+          await storage.updateShoppingItem(existingItem.id, userId, {
             quantity: combinedQuantity
           });
           updatedCount++;
         } else {
           // Add new item
-          await storage.addShoppingListItem({
+          await storage.addShoppingItem({
             userId,
             itemName: itemName,
             checked: 0,
-            source: "meal_plan",
+            source: "custom",
             quantity: mealPlanItem.quantity,
             unit: null
           });
