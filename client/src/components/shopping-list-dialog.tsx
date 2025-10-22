@@ -3,7 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useMemo } from "react";
-import { Plus, X, ShoppingBasket, Star } from "lucide-react";
+import { Plus, X, ShoppingBasket, Star, Trash2 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -377,6 +377,24 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
       queryClient.invalidateQueries({ queryKey: ['/api/shopping-list'] });
     },
   });
+
+  // Clear all checked items mutation
+  const clearCheckedMutation = useMutation({
+    mutationFn: async () => {
+      // Delete all checked custom items
+      const checkedCustomItems = customItems.filter((item: any) => item.checked === 1);
+      await Promise.all(
+        checkedCustomItems.map((item: any) => 
+          apiRequest('DELETE', `/api/shopping-list/${item.id}`)
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shopping-list'] });
+      // Also clear checked recipe items
+      setCheckedRecipeItems(new Set());
+    },
+  });
   
   // Filter custom items from database items
   const customItems = shoppingListItems.filter((item: any) => item.source === 'custom');
@@ -606,6 +624,21 @@ export function ShoppingListDialog({ isOpen, onClose, recipes }: ShoppingListDia
             </div>
           )}
         </div>
+        
+        {/* Clear Checked Items Button */}
+        {checkedCount > 0 && (
+          <div className="pt-4 border-t border-purple-200 dark:border-purple-800">
+            <Button
+              onClick={() => clearCheckedMutation.mutate()}
+              disabled={clearCheckedMutation.isPending}
+              className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold"
+              data-testid="button-clear-checked"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear {checkedCount} Checked Item{checkedCount !== 1 ? 's' : ''}
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
