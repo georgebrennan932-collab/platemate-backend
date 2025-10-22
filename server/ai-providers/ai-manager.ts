@@ -508,27 +508,30 @@ export class AIManager {
     const foodLower = foodName?.toLowerCase() || '';
     
     // STEP 1: Handle explicit weight/volume measurements (most accurate)
-    const kgMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?kg\b/);
+    // Match only when followed by a space or end of string (not when it's part of food name)
+    const kgMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*kg(?:\s|$)/);
     if (kgMatch) {
       const result = parseFloat(kgMatch[1]) * 1000;
 
       return result;
     }
     
-    const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?(?:g\b|grams?\b)/);
+    // Match grams but ensure it's not a count + unit + food pattern like "2 g eggs"
+    // Only match if "g" is followed by space/end and NOT followed by a food word
+    const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*(?:grams?|g)(?:\s+(?:of|to|for|with)|\s*$)/);
     if (gramsMatch) {
       const result = parseFloat(gramsMatch[1]);
 
       return result;
     }
     
-    const ozMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?oz\b/);
+    const ozMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*oz(?:\s|$)/);
     if (ozMatch) {
       const result = parseFloat(ozMatch[1]) * 28.35; // 1 oz = 28.35g
       return result;
     }
     
-    const mlMatch = portionLower.match(/(\d+(?:\.\d+)?)\s?ml\b/);
+    const mlMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*ml(?:\s|$)/);
     if (mlMatch) {
       const result = parseFloat(mlMatch[1]); // Assume 1ml ≈ 1g for most foods
       return result;
@@ -539,10 +542,14 @@ export class AIManager {
     const num = numMatch ? parseFloat(numMatch[1]) : 1;
     
     // Specific egg handling (before generic size rules)
-    if (foodLower.includes('egg')) {
+    // Check both the portion string AND the food name for "egg"
+    const isEgg = foodLower.includes('egg') || portionLower.includes('egg');
+    if (isEgg) {
       if (portionLower.includes('large')) return num * 50; // Large egg ≈ 50g
       if (portionLower.includes('medium')) return num * 44; // Medium egg ≈ 44g  
       if (portionLower.includes('small')) return num * 38; // Small egg ≈ 38g
+      // Default egg size if no size specified
+      return num * 50; // Default to large egg ≈ 50g
     }
     
     // Contextual UK/British food portions
