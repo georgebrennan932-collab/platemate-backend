@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Calendar, Clock, Loader2, Sparkles, ChevronLeft, ChevronRight, Trash2, Utensils, ShoppingCart, Truck, Home, Package, LogIn } from "lucide-react";
+import { Calendar, Clock, Loader2, Sparkles, ChevronLeft, ChevronRight, Trash2, Utensils, ShoppingCart, Truck, Home, Package, LogIn, Plus } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "date-fns";
 
 interface ShiftSchedule {
@@ -110,6 +110,29 @@ export default function ShiftPlannerPage() {
     onError: (error: any) => {
       toast({
         title: "Failed to Generate Meal Plan",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Add to shopping list mutation
+  const addToShoppingListMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/shift-schedules/add-to-shopping-list", {
+        startDate,
+        endDate
+      });
+    },
+    onSuccess: (response: any) => {
+      toast({
+        title: "Added to Shopping List! 🛒",
+        description: `${response.addedCount} new items added, ${response.updatedCount} items updated`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Add to Shopping List",
         description: error.message || "Please try again",
         variant: "destructive",
       });
@@ -455,6 +478,88 @@ export default function ShiftPlannerPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Weekly Shopping List Section */}
+        {schedules && schedules.some(s => s.mealPlanGenerated === 1 && s.mealPlanData && (s.mealPlanData as any).shoppingList) && (
+          <Card className="border-2 border-blue-500">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <ShoppingCart className="h-6 w-6 text-blue-600" />
+                Weekly Shopping List
+              </CardTitle>
+              <CardDescription className="flex items-center justify-between">
+                <span>Ingredients for your entire week</span>
+                <Button
+                  onClick={() => addToShoppingListMutation.mutate()}
+                  disabled={addToShoppingListMutation.isPending}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                  data-testid="button-add-to-shopping-list"
+                >
+                  {addToShoppingListMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add to My Shopping List
+                    </>
+                  )}
+                </Button>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                // Find first schedule with shopping list
+                const scheduleWithList = schedules.find(
+                  s => s.mealPlanData && (s.mealPlanData as any).shoppingList
+                );
+                const shoppingList = scheduleWithList ? (scheduleWithList.mealPlanData as any).shoppingList : [];
+                
+                // Group by category
+                const groupedItems = shoppingList.reduce((acc: any, item: any) => {
+                  const category = item.category || 'Other';
+                  if (!acc[category]) acc[category] = [];
+                  acc[category].push(item);
+                  return acc;
+                }, {});
+
+                return (
+                  <div className="space-y-4">
+                    {Object.entries(groupedItems).map(([category, items]: [string, any]) => (
+                      <div key={category} className="space-y-2">
+                        <h4 className="font-semibold text-sm text-purple-600 dark:text-purple-400 uppercase tracking-wide">
+                          {category}
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {items.map((item: any, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded"
+                              data-testid={`shopping-item-${category}-${index}`}
+                            >
+                              <span className="text-sm" data-testid={`text-ingredient-${category}-${index}`}>
+                                {item.ingredient}
+                              </span>
+                              <span 
+                                className="text-xs text-gray-600 dark:text-gray-400 font-medium"
+                                data-testid={`text-quantity-${category}-${index}`}
+                              >
+                                {item.quantity}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Meal Plans Section */}
         {schedules && schedules.some(s => s.mealPlanGenerated === 1) && (
