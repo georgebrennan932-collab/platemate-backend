@@ -2992,7 +2992,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mealPlan = await mealPlanService.generateWeeklyMealPlan(userId, shifts, userProfile || undefined);
 
       // Update each shift schedule with the generated meal plan data
-      for (const dailyPlan of mealPlan.dailyPlans) {
+      // For the first schedule, include weekly data (shoppingList, weeklyNutrition, weeklyTips)
+      for (let i = 0; i < mealPlan.dailyPlans.length; i++) {
+        const dailyPlan = mealPlan.dailyPlans[i];
+        const mealPlanData = i === 0 ? {
+          ...dailyPlan,
+          shoppingList: mealPlan.shoppingList,
+          weeklyNutrition: mealPlan.weeklyNutrition,
+          weeklyTips: mealPlan.weeklyTips
+        } : dailyPlan;
+
         await storage.upsertShiftSchedule({
           userId,
           shiftDate: dailyPlan.date,
@@ -3001,7 +3010,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customShiftEnd: dailyPlan.shiftEnd || null,
           breakWindows: dailyPlan.breakWindows || null,
           mealPlanGenerated: 1,
-          mealPlanData: dailyPlan as any
+          mealPlanData: mealPlanData as any
         });
       }
 
