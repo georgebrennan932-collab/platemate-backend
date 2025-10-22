@@ -25,8 +25,8 @@ interface ShiftSchedule {
 }
 
 const SHIFT_TYPES = [
-  { value: "none", label: "Day Off", icon: "☀️" },
-  { value: "day_shift", label: "Day Shift (9am-5pm)", icon: "🌅" },
+  { value: "day_off", label: "Day Off", icon: "☀️" },
+  { value: "regular", label: "Day Shift (9am-5pm)", icon: "🌅" },
   { value: "night_shift", label: "Night Shift (10pm-6am)", icon: "🌙" },
   { value: "long_shift", label: "Long Shift (12+ hours)", icon: "⏰" },
   { value: "early_shift", label: "Early Shift (6am start)", icon: "🌄" },
@@ -128,14 +128,9 @@ export default function ShiftPlannerPage() {
   const handleSaveAll = async () => {
     console.log("💾 Save All clicked! Selected shifts:", selectedShifts);
     try {
-      // Save all shifts
+      // Save all shifts (including day_off)
       const promises = Object.entries(selectedShifts).map(([date, shiftType]) => {
         console.log(`📅 Processing shift for ${date}: ${shiftType}`);
-        if (shiftType === "none") {
-          // Delete the shift if it's marked as "none"
-          console.log(`🗑️ Deleting shift for ${date}`);
-          return deleteShiftMutation.mutateAsync(date);
-        }
         console.log(`✅ Saving shift for ${date}`);
         return saveShiftMutation.mutateAsync({ shiftDate: date, shiftType });
       });
@@ -160,7 +155,7 @@ export default function ShiftPlannerPage() {
 
   const handleGenerateMealPlan = () => {
     const scheduledShifts = Object.entries(selectedShifts).filter(
-      ([_, shiftType]) => shiftType !== "none"
+      ([_, shiftType]) => shiftType !== "day_off"
     );
 
     if (scheduledShifts.length === 0) {
@@ -211,7 +206,7 @@ export default function ShiftPlannerPage() {
   });
 
   const scheduledShiftsCount = Object.values(selectedShifts).filter(
-    type => type !== "none"
+    type => type !== "day_off"
   ).length;
 
   const getShiftTypeInfo = (type: string) => {

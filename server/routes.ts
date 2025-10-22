@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
+import { z } from "zod";
 // OAUTH DISABLED: import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema, savedRecipes, insertShoppingListItemSchema, updateShoppingListItemSchema, insertShiftScheduleSchema } from "@shared/schema";
 import multer from "multer";
