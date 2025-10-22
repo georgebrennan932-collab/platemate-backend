@@ -823,7 +823,16 @@ Guidelines:
       
       let providerError: ProviderError;
       
-      if (error?.message?.includes('quota') || error?.message?.includes('rate')) {
+      // Check for 503 service overloaded - this is retryable
+      if (error?.status === 503 || error?.message?.includes('UNAVAILABLE') || error?.message?.includes('overloaded')) {
+        providerError = this.createError(
+          'SERVICE_UNAVAILABLE',
+          'Gemini is temporarily overloaded, retrying...',
+          true, // retryable
+          true, // use fallback
+          30 // retry after 30 seconds
+        );
+      } else if (error?.message?.includes('quota') || error?.message?.includes('rate')) {
         providerError = this.createError(
           'RATE_LIMIT',
           'Gemini rate limit exceeded',

@@ -1210,7 +1210,7 @@ export class AIManager {
 
     // All providers failed, return a helpful fallback response
     console.warn("All AI providers failed for custom question with context, returning fallback response");
-    return "I'm sorry, I'm having trouble accessing my AI services right now. Please try asking your question again in a moment, or consult with a healthcare professional for personalized nutrition advice.";
+    return "I'm currently experiencing high demand on our free AI services (Gemini and HuggingFace are temporarily busy). Your question is important! Please try again in a few moments - the services usually clear up quickly. In the meantime, you can still track your meals, view your progress, and explore your nutrition data. For urgent nutrition advice, please consult with a healthcare professional.";
   }
 
   /**

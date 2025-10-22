@@ -23,14 +23,17 @@ export class HuggingFaceProvider extends AIProvider {
       }
 
       // Simple health check with a text generation model
-      const response = await fetch(`${this.baseUrl}/google/flan-t5-base`, {
+      const response = await fetch(`${this.baseUrl}/mistralai/Mistral-7B-Instruct-v0.2`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          inputs: "Health check"
+          inputs: "Health check",
+          parameters: {
+            max_new_tokens: 10
+          }
         })
       });
 
@@ -46,7 +49,7 @@ export class HuggingFaceProvider extends AIProvider {
         responseTime,
         timestamp: new Date(),
         details: {
-          model: "google/flan-t5-base",
+          model: "mistralai/Mistral-7B-Instruct-v0.2",
           apiVersion: "1.0"
         }
       };
@@ -83,8 +86,8 @@ export class HuggingFaceProvider extends AIProvider {
   }
 
   private async queryTextModel(prompt: string, maxTokens: number = 1000): Promise<string> {
-    // Use Google's Flan-T5 which is free and available
-    const response = await fetch(`${this.baseUrl}/google/flan-t5-large`, {
+    // Use Mistral-7B-Instruct which is free, reliable, and high-quality
+    const response = await fetch(`${this.baseUrl}/mistralai/Mistral-7B-Instruct-v0.2`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${this.apiKey}`,
@@ -95,7 +98,8 @@ export class HuggingFaceProvider extends AIProvider {
         parameters: {
           max_new_tokens: maxTokens,
           temperature: 0.7,
-          top_p: 0.9
+          top_p: 0.9,
+          return_full_text: false
         }
       })
     });
