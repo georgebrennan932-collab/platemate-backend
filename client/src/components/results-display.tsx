@@ -864,6 +864,59 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     }
   };
 
+  // Get food emoji based on food name
+  const getFoodEmoji = (foodName: string): string => {
+    const name = foodName.toLowerCase();
+    
+    // Eggs
+    if (name.includes('egg')) return '🥚';
+    
+    // Meat & Protein
+    if (name.includes('bacon')) return '🥓';
+    if (name.includes('chicken') || name.includes('turkey')) return '🍗';
+    if (name.includes('beef') || name.includes('steak')) return '🥩';
+    if (name.includes('fish') || name.includes('salmon')) return '🐟';
+    if (name.includes('shrimp') || name.includes('prawn')) return '🍤';
+    
+    // Bread & Grains
+    if (name.includes('toast') || name.includes('bread')) return '🍞';
+    if (name.includes('pasta') || name.includes('spaghetti')) return '🍝';
+    if (name.includes('rice')) return '🍚';
+    if (name.includes('pizza')) return '🍕';
+    if (name.includes('sandwich') || name.includes('burger')) return '🍔';
+    
+    // Vegetables
+    if (name.includes('avocado')) return '🥑';
+    if (name.includes('tomato')) return '🍅';
+    if (name.includes('carrot')) return '🥕';
+    if (name.includes('broccoli')) return '🥦';
+    if (name.includes('salad')) return '🥗';
+    if (name.includes('potato')) return '🥔';
+    
+    // Fruits
+    if (name.includes('apple')) return '🍎';
+    if (name.includes('banana')) return '🍌';
+    if (name.includes('berry') || name.includes('berries')) return '🫐';
+    if (name.includes('strawberry')) return '🍓';
+    if (name.includes('orange')) return '🍊';
+    if (name.includes('watermelon')) return '🍉';
+    
+    // Dairy
+    if (name.includes('milk')) return '🥛';
+    if (name.includes('cheese')) return '🧀';
+    if (name.includes('yogurt') || name.includes('yoghurt')) return '🥛';
+    
+    // Misc
+    if (name.includes('coffee')) return '☕';
+    if (name.includes('tea')) return '🍵';
+    if (name.includes('soup')) return '🍲';
+    if (name.includes('cookie') || name.includes('biscuit')) return '🍪';
+    if (name.includes('cake')) return '🍰';
+    
+    // Default
+    return '🍽️';
+  };
+
   // Memoized calculation for macro percentages - only recalculates when data changes
   const macroPercentages = useMemo(() => {
     const totalMacros = data.totalProtein * 4 + data.totalCarbs * 4 + data.totalFat * 9;
@@ -917,113 +970,172 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <strong>💡 Tip:</strong> Click the pencil icon <Edit3 className="h-3 w-3 inline mx-1" /> next to food names or portions to edit them. Nutrition values will update automatically!
         </AlertDescription>
       </Alert>
-      {/* Beautiful Header with Purple Gradient */}
+      {/* Stunning Header with Purple Gradient and AI Brain Icon */}
       <motion.div 
-        className="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-3xl p-6 shadow-2xl border border-purple-400/30"
-        initial={{ scale: 0.9, opacity: 0 }}
+        className="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-purple-800 rounded-3xl p-8 shadow-2xl border border-purple-400/20 overflow-hidden"
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ 
           scale: 1, 
-          opacity: 1,
-          boxShadow: [
-            "0 20px 25px -5px rgba(147, 51, 234, 0.3), 0 10px 10px -5px rgba(147, 51, 234, 0.2)",
-            "0 20px 25px -5px rgba(147, 51, 234, 0.5), 0 10px 10px -5px rgba(147, 51, 234, 0.4)",
-            "0 20px 25px -5px rgba(147, 51, 234, 0.3), 0 10px 10px -5px rgba(147, 51, 234, 0.2)",
-          ]
+          opacity: 1
         }}
         transition={{ 
-          duration: 0.5,
-          delay: 0.2,
-          boxShadow: {
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }
+          duration: 0.6,
+          delay: 0.1,
+          ease: [0.34, 1.56, 0.64, 1]
         }}
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-sm relative ring-2 ring-white/20">
-              {data.imageUrl ? (
-                <img 
-                  src={data.imageUrl.startsWith('/') ? data.imageUrl : `/${data.imageUrl}`}
-                  alt="Analyzed food plate thumbnail" 
-                  className="w-full h-full object-cover"
-                  data-testid="img-thumbnail"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
+        {/* Animated background glow */}
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-transparent"
+          animate={{
+            opacity: [0.3, 0.6, 0.3]
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        
+        {/* Content */}
+        <div className="relative z-10">
+          {/* AI Brain Icon with Sparkles */}
+          <motion.div 
+            className="flex justify-center mb-6"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ 
+              delay: 0.3, 
+              duration: 0.7,
+              type: "spring",
+              stiffness: 200
+            }}
+          >
+            <div className="relative">
+              {/* Glow effect */}
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full blur-2xl"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.5, 0.8, 0.5]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* Brain Icon */}
+              <div className="relative w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl ring-4 ring-white/20">
+                <span className="text-4xl" role="img" aria-label="AI brain">🧠</span>
+              </div>
+              
+              {/* Sparkle particles */}
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1.5 h-1.5 bg-white rounded-full"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                  }}
+                  initial={{ 
+                    x: 0, 
+                    y: 0,
+                    opacity: 0 
+                  }}
+                  animate={{
+                    x: [0, Math.cos(i * 60 * Math.PI / 180) * 40],
+                    y: [0, Math.sin(i * 60 * Math.PI / 180) * 40],
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: 0.5 + i * 0.1,
+                    ease: "easeOut"
                   }}
                 />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-400 flex items-center justify-center">
-                  <Camera className="h-8 w-8 text-white/80" />
-                </div>
-              )}
+              ))}
             </div>
-            <div>
-              <h3 className="font-bold text-xl text-white drop-shadow-md" data-testid="text-meal-title">
-                Analysis Complete
-              </h3>
-              <p className="text-white/80 text-sm" data-testid="text-timestamp">
-                {formatTime(data.createdAt)}
-              </p>
+          </motion.div>
+          
+          {/* Title */}
+          <motion.h2 
+            className="text-3xl font-bold text-center text-white mb-2"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            data-testid="text-analysis-title"
+          >
+            AI Analysis Complete
+          </motion.h2>
+          
+          <motion.p 
+            className="text-center text-purple-200 text-sm mb-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            data-testid="text-analysis-subtitle"
+          >
+            Your meal has been analyzed!
+          </motion.p>
+          
+          {/* Confidence Badge */}
+          <motion.div 
+            className="flex justify-center"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.7, type: "spring" }}
+          >
+            <div 
+              data-testid="text-confidence" 
+              className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full font-semibold shadow-lg ${
+                data.isAITemporarilyUnavailable 
+                  ? 'bg-amber-400 text-amber-900'
+                  : 'bg-white/95 text-purple-700'
+              }`}
+            >
+              <Zap className="h-4 w-4" />
+              <span>
+                {data.isAITemporarilyUnavailable ? 'Estimated values' : `${data.confidence}% confidence`}
+              </span>
             </div>
-          </div>
-          <div className="flex flex-col space-y-2">
-            <button 
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
-              data-testid="button-share"
-              aria-label="Share meal analysis"
-            >
-              <Share2 className="h-5 w-5" aria-hidden="true" />
-            </button>
-            <button 
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
-              data-testid="button-bookmark"
-              aria-label="Bookmark this meal"
-            >
-              <Bookmark className="h-5 w-5" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-        
-        {/* Confidence Badge */}
-        <div 
-          data-testid="text-confidence" 
-          className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full font-semibold shadow-lg ${
-            data.isAITemporarilyUnavailable 
-              ? 'bg-amber-400 text-amber-900'
-              : 'bg-white text-purple-600'
-          }`}
-        >
-          <Zap className="h-4 w-4" />
-          <span>
-            {data.isAITemporarilyUnavailable ? 'Estimated values' : `${data.confidence}% confidence`}
-          </span>
+          </motion.div>
         </div>
       </motion.div>
 
-      {/* Detected Foods - Beautiful Cream/Beige Cards */}
-      <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-900/10 dark:via-amber-900/10 dark:to-yellow-900/10 rounded-3xl shadow-xl p-6 border border-orange-200/30 dark:border-orange-700/30">
-        <h3 className="text-xl font-bold mb-6 flex items-center text-gray-800 dark:text-gray-100">
-          <Utensils className="text-orange-600 dark:text-orange-400 mr-3 h-6 w-6" />
-          Food Items Detected
-        </h3>
+      {/* Detected Foods - Dark Purple Theme with Emojis */}
+      <motion.div 
+        className="relative bg-gradient-to-br from-indigo-950 via-purple-950 to-purple-900 rounded-3xl shadow-2xl p-6 border border-purple-500/20 overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+      >
+        {/* Subtle animated background */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvZz48L3N2Zz4=')] opacity-20" />
         
-        <div className="space-y-3">
+        <div className="relative z-10 space-y-3">
           {editableFoods.map((food, index) => (
-            <div 
+            <motion.div 
               key={index}
-              className={`p-4 rounded-2xl transition-all duration-200 shadow-md hover:shadow-lg ${
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.9 + index * 0.1 }}
+              className={`p-4 rounded-2xl transition-all duration-200 ${
                 editingIndex === index 
-                  ? 'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 border-2 border-blue-400 dark:border-blue-500 scale-[1.02]' 
-                  : 'bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-800 dark:to-orange-900/20 border border-orange-100 dark:border-orange-800/30'
+                  ? 'bg-indigo-800/50 border-2 border-indigo-400 scale-[1.02]' 
+                  : 'bg-indigo-900/30 border border-indigo-800/30 hover:bg-indigo-800/40'
               }`}
               data-testid={`card-food-${index}`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3 flex-1">
-                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                    <i className={`${getFoodIcon(food.icon)} text-primary`}></i>
+                  {/* Food Emoji */}
+                  <div className="w-12 h-12 flex items-center justify-center text-3xl">
+                    {getFoodEmoji(food.name)}
                   </div>
                   <div className="flex-1">
                     {editingIndex === index ? (
@@ -1211,7 +1323,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
@@ -1312,7 +1424,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Nutrition Summary Cards - Now Second */}
       <div className="grid grid-cols-2 gap-4">
