@@ -12,7 +12,10 @@ app.set('etag', false);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// App token validation middleware (starts in PERMISSIVE mode)
+// Serve static files from public directory (before token middleware)
+app.use(express.static('public'));
+
+// App token validation middleware (now in BLOCKING mode)
 app.use(appTokenMiddleware);
 
 app.use((req, res, next) => {

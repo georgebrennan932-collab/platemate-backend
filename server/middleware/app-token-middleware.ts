@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from "express";
+import path from "path";
+import fs from "fs";
 
 export enum TokenValidationMode {
   PERMISSIVE = "permissive",
@@ -6,7 +8,7 @@ export enum TokenValidationMode {
   DISABLED = "disabled"
 }
 
-let currentMode: TokenValidationMode = TokenValidationMode.PERMISSIVE;
+let currentMode: TokenValidationMode = TokenValidationMode.BLOCKING;
 
 export function setTokenValidationMode(mode: TokenValidationMode) {
   currentMode = mode;
@@ -22,34 +24,20 @@ export function appTokenMiddleware(req: Request, res: Response, next: NextFuncti
     return next();
   }
 
-  // In PERMISSIVE and BLOCKING modes, only protect API endpoints
-  // Allow all static assets, pages, and resources to load freely
-  // This ensures Android app works without complex header injection for every resource type
-  
-  const protectedPaths = [
-    '/api/'
-  ];
-
-  // Skip paths that should always be accessible
-  const alwaysAllowPaths = [
+  // Paths that are always accessible (no token required)
+  const publicPaths = [
+    '/blocked-access.html',
+    '/blocked-access',
     '/api/health',
     '/api/token-mode'
   ];
 
-  // Check if this is an always-allowed path
-  if (alwaysAllowPaths.some(path => req.path.startsWith(path))) {
+  // Check if this is a public path
+  if (publicPaths.some(path => req.path.startsWith(path))) {
     return next();
   }
 
-  // Check if this path requires token validation
-  const requiresToken = protectedPaths.some(path => req.path.startsWith(path));
-  
-  if (!requiresToken) {
-    // Not an API endpoint - allow freely
-    return next();
-  }
-
-  // This is a protected API endpoint - check token
+  // Check token for ALL other paths
   const appToken = req.headers['x-app-token'] as string;
   const expectedToken = process.env.APP_ACCESS_TOKEN;
 
@@ -61,7 +49,7 @@ export function appTokenMiddleware(req: Request, res: Response, next: NextFuncti
   const isValidToken = appToken === expectedToken;
 
   if (!isValidToken) {
-    const logMessage = `🔒 Invalid/missing app token - ${req.method} ${req.path}`;
+    const logMessage = `🔒 Access denied: invalid/missing token - ${req.method} ${req.path}`;
     
     if (currentMode === TokenValidationMode.PERMISSIVE) {
       console.log(`${logMessage} (PERMISSIVE MODE - allowing)`);
@@ -69,11 +57,19 @@ export function appTokenMiddleware(req: Request, res: Response, next: NextFuncti
     }
 
     if (currentMode === TokenValidationMode.BLOCKING) {
-      console.warn(`${logMessage} (BLOCKING MODE - rejecting)`);
-      return res.status(403).json({ 
-        message: 'Access denied. This API is only accessible through the official PlateMate app.',
-        code: 'INVALID_APP_TOKEN'
-      });
+      console.warn(`${logMessage} (BLOCKING MODE - blocking)`);
+      
+      // For API endpoints, return JSON error
+      if (req.path.startsWith('/api/')) {
+        return res.status(403).json({ 
+          message: 'Access denied. This service is only accessible through the official PlateMate app.',
+          code: 'INVALID_APP_TOKEN'
+        });
+      }
+      
+      // For all other pages, serve blocked access HTML
+      const htmlPath = path.join(process.cwd(), 'public', 'blocked-access.html');
+      return res.status(403).sendFile(htmlPath);
     }
   }
 
