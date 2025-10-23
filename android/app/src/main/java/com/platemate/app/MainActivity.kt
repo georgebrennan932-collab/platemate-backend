@@ -88,26 +88,42 @@ class MainActivity : BridgeActivity(), PurchasesUpdatedListener {
     
     private fun setupWebViewHeaderInjection() {
         try {
-            // Access Capacitor's WebView
+            // Set up custom WebViewClient to handle all requests
+            val originalWebViewClient = bridge.webView.webViewClient
             bridge.webView.webViewClient = object : WebViewClient() {
-                override fun shouldInterceptRequest(
-                    view: WebView?,
-                    request: WebResourceRequest?
-                ): android.webkit.WebResourceResponse? {
-                    // Add custom header to all requests
-                    request?.let {
-                        val headers = it.requestHeaders.toMutableMap()
+                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                    // Load URLs with custom headers
+                    request?.url?.let { url ->
+                        val headers = mutableMapOf<String, String>()
                         headers["X-App-Token"] = APP_ACCESS_TOKEN
-                        
-                        // Note: We can't modify the original request headers directly
-                        // The token will be added via JavaScript bridge instead
+                        view?.loadUrl(url.toString(), headers)
+                        return true
                     }
-                    return super.shouldInterceptRequest(view, request)
+                    return false
+                }
+                
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    // Inject JavaScript AFTER page loads to intercept future fetch/XHR
+                    injectHeaderScript(view)
                 }
             }
             
-            // Inject JavaScript to add header to all fetch/XHR requests
-            bridge.webView.evaluateJavascript("""
+            // For the very first page load, we need to set headers directly
+            val currentUrl = bridge.webView.url
+            if (currentUrl != null && !currentUrl.startsWith("about:")) {
+                val headers = mutableMapOf<String, String>()
+                headers["X-App-Token"] = APP_ACCESS_TOKEN
+                bridge.webView.loadUrl(currentUrl, headers)
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Failed to setup WebView header injection", e)
+        }
+    }
+    
+    private fun injectHeaderScript(view: WebView?) {
+        view?.evaluateJavascript("""
                 (function() {
                     const token = '$APP_ACCESS_TOKEN';
                     
@@ -142,9 +158,5 @@ class MainActivity : BridgeActivity(), PurchasesUpdatedListener {
                     console.log('🔐 App token injection initialized');
                 })();
             """.trimIndent(), null)
-            
-        } catch (e: Exception) {
-            android.util.Log.e("MainActivity", "Failed to setup WebView header injection", e)
-        }
     }
 }
