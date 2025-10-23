@@ -243,10 +243,24 @@ If you need to change the token:
 
 ## Support
 
-Current mode: **PERMISSIVE** (logging only, not blocking)
+Current mode: **BLOCKING** (actively blocking unauthorized access)
 Token configured: **✅ Yes**
 Middleware active: **✅ Yes**
 Android integration: **✅ Ready**
 Blocked page: **✅ Ready**
+Protection level: **FULL** (All routes protected, not just APIs)
 
-Everything is set up and ready to test! 🎉
+The app is now fully protected! 🔒
+
+### What's Protected:
+- ✅ ALL frontend pages and routes
+- ✅ ALL API endpoints
+- ✅ Static assets (CSS, JS, images, etc.)
+- ✅ Everything except the blocked access page and health checks
+
+### How It Works Now:
+1. Web browser visits site → **Sees blocked access page immediately**
+2. Android app with token → **Full access to everything**
+3. No redirect loops or glitches
+
+Everything is live and protecting your app! 🎉
