@@ -208,6 +208,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // App token validation mode control endpoint
+  const { setTokenValidationMode, getTokenValidationMode, TokenValidationMode } = await import('./middleware/app-token-middleware');
+  
+  app.get('/api/token-mode', async (req, res) => {
+    const currentMode = getTokenValidationMode();
+    res.json({ mode: currentMode });
+  });
+
+  app.post('/api/token-mode', async (req: any, res) => {
+    const userId = req.user?.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const { mode } = req.body;
+    
+    if (!Object.values(TokenValidationMode).includes(mode)) {
+      return res.status(400).json({ error: 'Invalid mode. Must be one of: permissive, blocking, disabled' });
+    }
+
+    setTokenValidationMode(mode);
+    res.json({ mode, message: `Token validation mode changed to ${mode}` });
+  });
+
   // OAUTH DISABLED: Auth routes
   // app.get('/api/auth/user',  async (req: any, res) => {
   //   try {

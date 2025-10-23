@@ -35,6 +35,7 @@ import { ProgressPhotosPage } from "./pages/ProgressPhotosPage";
 import { CoachPersonalityPage } from "./pages/CoachPersonalityPage";
 import { CoachProfilePage } from "./pages/CoachProfilePage";
 import ShiftPlannerPage from "./pages/ShiftPlannerPage";
+import BlockedAccess from "./pages/BlockedAccess";
 import NotFound from "./pages/not-found";
 
 // Scroll to top component - automatically scrolls to top on route change
@@ -190,6 +191,7 @@ function App() {
         <Route path="/camera" component={CameraTestPage} />
         <Route path="/food-camera" component={CameraPage} />
         <Route path="/voice" component={VoicePage} />
+        <Route path="/blocked-access" component={BlockedAccess} />
         <Route component={NotFound} />
       </Switch>
     </>

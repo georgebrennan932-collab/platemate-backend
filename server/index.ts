@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import emailAuthRoutes from "./email-auth";
+import { appTokenMiddleware } from "./middleware/app-token-middleware";
 
 const app = express();
 
@@ -10,6 +11,9 @@ app.set('etag', false);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// App token validation middleware (starts in PERMISSIVE mode)
+app.use(appTokenMiddleware);
 
 app.use((req, res, next) => {
   const start = Date.now();
