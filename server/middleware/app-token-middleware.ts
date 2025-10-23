@@ -8,7 +8,7 @@ export enum TokenValidationMode {
   DISABLED = "disabled"
 }
 
-let currentMode: TokenValidationMode = TokenValidationMode.BLOCKING;
+let currentMode: TokenValidationMode = TokenValidationMode.DISABLED;
 
 export function setTokenValidationMode(mode: TokenValidationMode) {
   currentMode = mode;
