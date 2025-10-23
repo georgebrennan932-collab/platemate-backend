@@ -22,16 +22,34 @@ export function appTokenMiddleware(req: Request, res: Response, next: NextFuncti
     return next();
   }
 
-  const skipPaths = [
+  // In PERMISSIVE and BLOCKING modes, only protect API endpoints
+  // Allow all static assets, pages, and resources to load freely
+  // This ensures Android app works without complex header injection for every resource type
+  
+  const protectedPaths = [
+    '/api/'
+  ];
+
+  // Skip paths that should always be accessible
+  const alwaysAllowPaths = [
     '/api/health',
-    '/blocked-access',
     '/api/token-mode'
   ];
 
-  if (skipPaths.some(path => req.path.startsWith(path))) {
+  // Check if this is an always-allowed path
+  if (alwaysAllowPaths.some(path => req.path.startsWith(path))) {
     return next();
   }
 
+  // Check if this path requires token validation
+  const requiresToken = protectedPaths.some(path => req.path.startsWith(path));
+  
+  if (!requiresToken) {
+    // Not an API endpoint - allow freely
+    return next();
+  }
+
+  // This is a protected API endpoint - check token
   const appToken = req.headers['x-app-token'] as string;
   const expectedToken = process.env.APP_ACCESS_TOKEN;
 
@@ -43,7 +61,7 @@ export function appTokenMiddleware(req: Request, res: Response, next: NextFuncti
   const isValidToken = appToken === expectedToken;
 
   if (!isValidToken) {
-    const logMessage = `🔒 Invalid/missing app token from ${req.ip} - ${req.method} ${req.path}`;
+    const logMessage = `🔒 Invalid/missing app token - ${req.method} ${req.path}`;
     
     if (currentMode === TokenValidationMode.PERMISSIVE) {
       console.log(`${logMessage} (PERMISSIVE MODE - allowing)`);
@@ -52,15 +70,10 @@ export function appTokenMiddleware(req: Request, res: Response, next: NextFuncti
 
     if (currentMode === TokenValidationMode.BLOCKING) {
       console.warn(`${logMessage} (BLOCKING MODE - rejecting)`);
-      
-      if (req.path.startsWith('/api/')) {
-        return res.status(403).json({ 
-          message: 'Access denied. This API is only accessible through the official PlateMate app.',
-          code: 'INVALID_APP_TOKEN'
-        });
-      }
-      
-      return res.redirect('/blocked-access');
+      return res.status(403).json({ 
+        message: 'Access denied. This API is only accessible through the official PlateMate app.',
+        code: 'INVALID_APP_TOKEN'
+      });
     }
   }
 

@@ -13,26 +13,37 @@ This implementation locks down your Replit-hosted web app so it can only be acce
   - Android App: Hardcoded in `MainActivity.kt` companion object
 - **Important:** The token value should be kept secret and never committed to the repository
 
-### 2. Request Flow
+### 2. Request Flow (Backend Exemptions Strategy)
 
 ```
 ┌─────────────────┐
-│  Android App    │
-│  (with token)   │
+│  Request        │
 └────────┬────────┘
-         │ X-App-Token: xxx...
          │
          ▼
-┌─────────────────┐
-│  Middleware     │  ← Checks header
-│  (Backend)      │
-└────────┬────────┘
+┌─────────────────────────────────────┐
+│  Is it static/public?               │
+│  (HTML, CSS, JS, /login, /register) │
+└────────┬────────────────────────────┘
          │
-    Valid? │
-         ├─── YES → Allow request
-         │
-         └─── NO  → Log/Block based on mode
+    YES  │  NO (API endpoint)
+         │            │
+         ▼            ▼
+    ┌────────┐  ┌──────────────┐
+    │ ALLOW  │  │ Check Token  │
+    └────────┘  └──────┬───────┘
+                       │
+                  Valid? │
+                       ├─── YES → Allow
+                       └─── NO  → Block (403)
 ```
+
+**Key Design:**
+- Static assets (HTML/CSS/JS) load for everyone
+- API endpoints require valid token
+- Combined with authentication, this effectively locks down the app
+- Android app works 100% normally (has token)
+- Web browsers can't use features (no API access)
 
 ### 3. Three Protection Modes
 
