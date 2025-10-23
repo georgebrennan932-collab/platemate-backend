@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
@@ -17,6 +18,9 @@ import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.BillingResult
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
 
 class MainActivity : BridgeActivity(), PurchasesUpdatedListener {
 
@@ -88,37 +92,90 @@ class MainActivity : BridgeActivity(), PurchasesUpdatedListener {
     
     private fun setupWebViewHeaderInjection() {
         try {
-            // Set up custom WebViewClient to handle all requests
-            val originalWebViewClient = bridge.webView.webViewClient
             bridge.webView.webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    // Load URLs with custom headers
-                    request?.url?.let { url ->
-                        val headers = mutableMapOf<String, String>()
-                        headers["X-App-Token"] = APP_ACCESS_TOKEN
-                        view?.loadUrl(url.toString(), headers)
-                        return true
-                    }
-                    return false
-                }
                 
+                override fun shouldInterceptRequest(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): WebResourceResponse? {
+                    request?.let {
+                        // Only intercept requests to our own server
+                        val urlString = it.url.toString()
+                        if (shouldAddToken(urlString)) {
+                            return try {
+                                makeRequestWithToken(urlString, it.method, it.requestHeaders)
+                            } catch (e: Exception) {
+                                android.util.Log.e("MainActivity", "Error intercepting request: $urlString", e)
+                                null
+                            }
+                        }
+                    }
+                    return super.shouldInterceptRequest(view, request)
+                }
+
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
-                    // Inject JavaScript AFTER page loads to intercept future fetch/XHR
+                    // Also inject JavaScript as a fallback for fetch/XHR
                     injectHeaderScript(view)
                 }
             }
             
-            // For the very first page load, we need to set headers directly
-            val currentUrl = bridge.webView.url
-            if (currentUrl != null && !currentUrl.startsWith("about:")) {
-                val headers = mutableMapOf<String, String>()
-                headers["X-App-Token"] = APP_ACCESS_TOKEN
-                bridge.webView.loadUrl(currentUrl, headers)
-            }
-            
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Failed to setup WebView header injection", e)
+        }
+    }
+    
+    private fun shouldAddToken(url: String): Boolean {
+        // Only add token to requests to our Replit server
+        // Avoid intercepting third-party resources
+        return url.contains(".replit.dev") || url.contains("replit.app")
+    }
+    
+    private fun makeRequestWithToken(
+        urlString: String,
+        method: String,
+        originalHeaders: Map<String, String>
+    ): WebResourceResponse? {
+        return try {
+            val url = URL(urlString)
+            val connection = url.openConnection() as HttpURLConnection
+            
+            // Set method
+            connection.requestMethod = method
+            
+            // Copy original headers
+            originalHeaders.forEach { (key, value) ->
+                connection.setRequestProperty(key, value)
+            }
+            
+            // Add our custom token header
+            connection.setRequestProperty("X-App-Token", APP_ACCESS_TOKEN)
+            
+            // Connect and get response
+            connection.connect()
+            
+            val responseCode = connection.responseCode
+            val mimeType = connection.contentType?.split(";")?.get(0) ?: "text/html"
+            val encoding = connection.contentEncoding ?: "UTF-8"
+            val inputStream = if (responseCode >= 400) {
+                connection.errorStream
+            } else {
+                connection.inputStream
+            }
+            
+            // Build response headers
+            val responseHeaders = mutableMapOf<String, String>()
+            connection.headerFields.forEach { (key, values) ->
+                key?.let {
+                    responseHeaders[it] = values.joinToString(", ")
+                }
+            }
+            
+            WebResourceResponse(mimeType, encoding, responseCode, "OK", responseHeaders, inputStream)
+            
+        } catch (e: IOException) {
+            android.util.Log.e("MainActivity", "Failed to make request with token: $urlString", e)
+            null
         }
     }
     
