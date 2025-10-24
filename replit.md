@@ -37,6 +37,9 @@ Preferred communication style: Simple, everyday language.
 - **Multi-Provider System**: Supports OpenAI (GPT-4o-mini, GPT-5) and Google Gemini (Flash/Pro) with automatic failover, health monitoring, and load balancing.
 - **Core Functionality**: Food recognition, nutritional analysis, quantity detection, UK-to-US food term mapping.
 - **User Interaction**: Comprehensive food analysis editing with real-time nutrition recalculation.
+  - **Streamlined Save Flow**: Combined "Save Changes" and "Add to Diary" into a single "Save to Diary" action that saves analysis edits and creates diary entry in one click
+  - **Improved UI Contrast**: Food cards redesigned with lighter purple/white gradients for better text readability on mobile devices
+  - **Auto-save on Diary**: Edits to food items are automatically saved when adding to diary, eliminating confusion about unsaved changes
 - **AI Daily Reflections**: AI-powered daily nutrition insights based on user data.
 - **Scan-a-Menu Feature**: QR code scanning for restaurant menus, AI-powered meal recommendations.
 - **AI Coach Personalization**: User profile data used to tailor AI advice, respecting dietary restrictions and allergies.
