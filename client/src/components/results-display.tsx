@@ -1118,15 +1118,15 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         </div>
       </motion.div>
 
-      {/* Detected Foods - Light Purple Theme with Emojis */}
+      {/* Detected Foods - Dark Purple Theme with Emojis */}
       <motion.div 
-        className="relative bg-gradient-to-br from-white via-purple-50 to-pink-50 dark:from-gray-800 dark:via-purple-900/30 dark:to-pink-900/30 rounded-3xl shadow-2xl p-6 border-2 border-purple-200 dark:border-purple-700/30 overflow-hidden"
+        className="relative bg-gradient-to-br from-indigo-950 via-purple-950 to-purple-900 rounded-3xl shadow-2xl p-6 border border-purple-500/20 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
       >
         {/* Subtle animated background */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0icmdiYSgxNDcsMTk3LDI1MywwLjA1KSIvPjwvZz48L3N2Zz4=')] opacity-40" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvZz48L3N2Zz4=')] opacity-20" />
         
         <div className="relative z-10 space-y-3">
           {editableFoods.map((food, index) => (
@@ -1137,8 +1137,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               transition={{ delay: 0.9 + index * 0.1 }}
               className={`p-4 rounded-2xl transition-all duration-200 ${
                 editingIndex === index 
-                  ? 'bg-white dark:bg-gray-800 border-2 border-purple-400 shadow-lg scale-[1.02]' 
-                  : 'bg-white/80 dark:bg-gray-800/80 border-2 border-purple-200 dark:border-purple-700/50 hover:bg-white dark:hover:bg-gray-700 hover:shadow-md'
+                  ? 'bg-indigo-800/50 border-2 border-indigo-400 scale-[1.02]' 
+                  : 'bg-indigo-900/30 border border-indigo-800/30 hover:bg-indigo-800/40'
               }`}
               data-testid={`card-food-${index}`}
             >
@@ -1168,7 +1168,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                       />
                     ) : (
                       <div className="flex items-center space-x-1.5">
-                        <p className="font-medium text-gray-900 dark:text-gray-100" data-testid={`text-food-name-${index}`}>
+                        <p className="font-medium text-white" data-testid={`text-food-name-${index}`}>
                           {food.name}
                         </p>
                         <button
@@ -1188,7 +1188,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                     )}
                     <div className="flex items-start gap-2 mt-3">
                       <div className="flex-1 min-w-0">
-                        <label className="text-sm font-semibold text-orange-700 dark:text-orange-300 mb-2 block">
+                        <label className="text-sm font-semibold text-orange-300 mb-2 block">
                           📏 Portion Size
                         </label>
                         <div className="flex gap-2">
@@ -1258,7 +1258,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                             <option value="item">item</option>
                           </select>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Enter amount and unit to adjust calories</p>
+                        <p className="text-xs text-purple-300 mt-1">Enter amount and unit to adjust calories</p>
                       </div>
                       <button
                         onClick={() => removeFoodItem(index)}
@@ -1273,10 +1273,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-900 dark:text-gray-100" data-testid={`text-food-calories-${index}`}>
+                  <p className="font-semibold text-white" data-testid={`text-food-calories-${index}`}>
                     {food.calories} cal
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <p className="text-xs text-purple-200">
                     {food.protein}g protein
                   </p>
                   {editingIndex === index && (
