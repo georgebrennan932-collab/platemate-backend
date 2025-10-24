@@ -109,6 +109,21 @@ export default function Home() {
   const todayConsumedNutrition = diaryEntries && drinkEntries 
     ? calculateTodayNutrition(diaryEntries, drinkEntries)
     : { calories: 0, protein: 0, carbs: 0, fat: 0, water: 0 };
+  
+  // Use default goals if not set - ensures UI is always visible for all users
+  const defaultGoals: NutritionGoals = {
+    id: 'default',
+    userId: 'default',
+    dailyCalories: 2000,
+    dailyProtein: 150,
+    dailyCarbs: 250,
+    dailyFat: 65,
+    dailyWater: 2000,
+    createdAt: null,
+    updatedAt: null
+  };
+  
+  const activeGoals = nutritionGoals || defaultGoals;
 
   // Initialize speech recognition
   useEffect(() => {
@@ -1056,8 +1071,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Calories Remaining Box - moved above nutritional values */}
-      {currentState === 'camera' && isAuthenticated && nutritionGoals && (
+      {/* Calories Remaining Box - ALWAYS visible for all users */}
+      {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
           <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
             <div className="text-center">
@@ -1079,7 +1094,7 @@ export default function Home() {
                 </motion.div>
               </div>
               <div className="text-gray-900 dark:text-gray-100">
-                <p className="text-3xl font-bold">{Math.max(0, (nutritionGoals?.dailyCalories || 2000) - todayConsumedNutrition.calories)}</p>
+                <p className="text-3xl font-bold">{Math.max(0, (activeGoals.dailyCalories || 2000) - todayConsumedNutrition.calories)}</p>
                 <p className="text-lg font-medium text-gray-600 dark:text-gray-400">calories remaining</p>
               </div>
             </div>
@@ -1087,15 +1102,13 @@ export default function Home() {
         </div>
       )}
 
-      {/* Daily Nutrition Progress - Shows real consumed values from diary */}
-      {isAuthenticated && nutritionGoals && (
-        <div className="max-w-md mx-auto px-6 mb-6">
-          <ProgressIndicators
-            goals={nutritionGoals}
-            consumed={todayConsumedNutrition}
-          />
-        </div>
-      )}
+      {/* Daily Nutrition Progress - ALWAYS visible for all users */}
+      <div className="max-w-md mx-auto px-6 mb-6">
+        <ProgressIndicators
+          goals={activeGoals}
+          consumed={todayConsumedNutrition}
+        />
+      </div>
       
       {/* Weigh In Button */}
       {currentState === 'camera' && (
@@ -1121,7 +1134,7 @@ export default function Home() {
             onAnalysisSuccess={handleAnalysisSuccess}
             onAnalysisError={handleAnalysisError}
             caloriesConsumed={0}
-            caloriesGoal={nutritionGoals?.dailyCalories || 2000}
+            caloriesGoal={activeGoals.dailyCalories || 2000}
           />
         )}
 

@@ -19,7 +19,16 @@ interface ProgressIndicatorsProps {
 export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  if (!goals) return null;
+  // Use default values if goals are not set - ensure UI is always visible
+  const defaultGoals = {
+    dailyCalories: 2000,
+    dailyProtein: 150,
+    dailyCarbs: 250,
+    dailyFat: 65,
+    dailyWater: 2000
+  };
+  
+  const activeGoals = goals || defaultGoals;
 
   // Confetti disabled per user request
   // const previousAchievements = useRef<Record<string, boolean>>({});
@@ -40,7 +49,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
       icon: Flame,
       label: "Calories",
       consumed: consumed.calories,
-      target: goals.dailyCalories || 2000,
+      target: activeGoals.dailyCalories || 2000,
       unit: "",
       testId: "progress-calories"
     },
@@ -48,7 +57,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
       icon: Beef,
       label: "Protein",
       consumed: consumed.protein,
-      target: goals.dailyProtein || 150,
+      target: activeGoals.dailyProtein || 150,
       unit: "g",
       testId: "progress-protein"
     },
@@ -56,7 +65,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
       icon: Wheat,
       label: "Carbs",
       consumed: consumed.carbs,
-      target: goals.dailyCarbs || 250,
+      target: activeGoals.dailyCarbs || 250,
       unit: "g",
       testId: "progress-carbs"
     },
@@ -64,7 +73,7 @@ export function ProgressIndicators({ goals, consumed }: ProgressIndicatorsProps)
       icon: Droplets,
       label: "Fat",
       consumed: consumed.fat,
-      target: goals.dailyFat || 65,
+      target: activeGoals.dailyFat || 65,
       unit: "g",
       testId: "progress-fat"
     }
