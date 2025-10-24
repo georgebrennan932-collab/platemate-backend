@@ -749,8 +749,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   const addToDiaryMutation = useMutation({
     mutationFn: async () => {
-      // Step 1: Save any unsaved changes to the analysis first
-      if (hasChanges()) {
+      const isGuestAnalysis = data.id.startsWith('guest_');
+      
+      // Step 1: Save any unsaved changes to the analysis first (only for persisted analyses)
+      if (hasChanges() && !isGuestAnalysis) {
         const patchResponse = await apiRequest('PATCH', `/api/analyses/${data.id}`, {
           detectedFoods: editableFoods.map(stripBaselineData)
         });
@@ -774,12 +776,25 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       
       // Step 2: Create the diary entry
       const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
-      const requestBody = {
+      const requestBody: any = {
         analysisId: data.id,
         mealType: selectedMealType,
         mealDate: mealDateTime.toISOString(),
         notes: "",
       };
+      
+      // For guest analyses with changes, include the modified analysis
+      if (isGuestAnalysis && hasChanges()) {
+        requestBody.modifiedAnalysis = {
+          imageUrl: data.imageUrl,
+          confidence: data.confidence,
+          detectedFoods: editableFoods.map(stripBaselineData),
+          totalCalories: Math.round(totals.calories),
+          totalProtein: Math.round(totals.protein),
+          totalCarbs: Math.round(totals.carbs),
+          totalFat: Math.round(totals.fat)
+        };
+      }
       
       const response = await apiRequest('POST', '/api/diary', requestBody);
       const result = await response.json();
