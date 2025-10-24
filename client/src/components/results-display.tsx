@@ -1353,12 +1353,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           ))}
         </div>
 
-        {/* Add Missing Foods - Beautiful Light Design */}
-        <div className="mt-4 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-orange-900/20 rounded-3xl p-6 shadow-lg border-2 border-purple-200/50 dark:border-purple-700/50">
+        {/* Add Missing Foods - Dark Purple Theme */}
+        <div className="mt-4 bg-gradient-to-br from-indigo-950 via-purple-950 to-purple-900 rounded-3xl p-6 shadow-lg border border-purple-500/20">
           {/* Header with Instructions */}
           <div className="text-center mb-6">
-            <h3 className="text-purple-700 dark:text-purple-300 text-lg font-bold mb-2">Add Missing Foods</h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
+            <h3 className="text-white text-lg font-bold mb-2">Add Missing Foods</h3>
+            <p className="text-purple-200 text-sm">
               AI might miss some items in your meal
             </p>
           </div>
@@ -1369,12 +1369,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             <button
               onClick={handleVoiceInput}
               disabled={!speechSupported}
-              className={`flex-1 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 border-2 transition-all duration-300 shadow-md hover:scale-105 font-semibold ${
+              className={`flex-1 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 border transition-all duration-300 shadow-md hover:scale-105 font-semibold ${
                 isListening
                   ? 'bg-gradient-to-br from-red-500 to-pink-500 text-white border-red-400 animate-pulse shadow-xl'
                   : speechSupported
-                  ? 'bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-800 dark:to-purple-900 text-purple-700 dark:text-purple-200 border-purple-300 dark:border-purple-600 hover:from-purple-200 hover:to-purple-300 hover:shadow-purple-500/25'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed border-gray-300 dark:border-gray-600'
+                  ? 'bg-indigo-800/50 text-purple-200 border-purple-600/30 hover:bg-indigo-700/50 hover:shadow-purple-500/25'
+                  : 'bg-gray-700/30 text-gray-400 cursor-not-allowed border-gray-600/30'
               }`}
               data-testid="button-add-voice"
             >
@@ -1389,21 +1389,21 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             {/* Type Button */}
             <button
               onClick={() => addNewFoodItem()}
-              className="flex-1 bg-gradient-to-br from-white to-orange-50 dark:from-gray-700 dark:to-orange-900/30 text-gray-800 dark:text-gray-100 py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 shadow-md hover:scale-105 transition-all duration-300 hover:shadow-lg border-2 border-orange-200 dark:border-orange-700"
+              className="flex-1 bg-indigo-800/50 text-white py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 shadow-md hover:scale-105 transition-all duration-300 hover:bg-indigo-700/50 hover:shadow-lg border border-orange-500/30"
               data-testid="button-add-type"
             >
-              <Plus className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <Plus className="h-5 w-5 text-orange-300" />
               <span className="font-semibold">Type</span>
             </button>
           </div>
         </div>
         
         {/* Always show editing tip */}
-        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center space-x-2">
-            <Info className="h-4 w-4 text-blue-600" />
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              <strong>Tip:</strong> AI sometimes misidentifies foods. Click the <Edit3 className="h-3 w-3 inline mx-1" /> icon to edit food names and portions, use the <Trash2 className="h-3 w-3 inline mx-1" /> icon to remove incorrect items, or use "Add Missing Food Item" to add foods the AI missed. Remember to save your changes!
+        <div className="mt-4 p-3 bg-gradient-to-br from-indigo-950 via-purple-950 to-purple-900 rounded-lg border border-purple-500/20">
+          <div className="flex items-start space-x-2">
+            <Info className="h-4 w-4 text-blue-300 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-purple-200">
+              <strong className="text-white">Tip:</strong> AI sometimes misidentifies foods. Click the <Edit3 className="h-3 w-3 inline mx-1" /> icon to edit food names and portions, use the <Trash2 className="h-3 w-3 inline mx-1" /> icon to remove incorrect items, or use "Add Missing Food Item" to add foods the AI missed. Remember to save your changes!
             </p>
           </div>
         </div>
