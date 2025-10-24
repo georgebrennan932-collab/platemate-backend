@@ -749,28 +749,37 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
 
   const addToDiaryMutation = useMutation({
     mutationFn: async () => {
-      const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
+      // Step 1: Save any unsaved changes to the analysis first
+      if (hasChanges()) {
+        const patchResponse = await apiRequest('PATCH', `/api/analyses/${data.id}`, {
+          detectedFoods: editableFoods.map(stripBaselineData)
+        });
+        
+        if (!patchResponse.ok) {
+          throw new Error('Failed to save analysis changes');
+        }
+        
+        const updatedAnalysis = await patchResponse.json();
+        
+        // Update the component state with server-calculated values
+        data.detectedFoods = [...updatedAnalysis.detectedFoods];
+        data.totalCalories = updatedAnalysis.totalCalories;
+        data.totalProtein = updatedAnalysis.totalProtein;
+        data.totalCarbs = updatedAnalysis.totalCarbs;
+        data.totalFat = updatedAnalysis.totalFat;
+        
+        // Update local state to match server response
+        setEditableFoods(updatedAnalysis.detectedFoods.map(initializeEditableFood));
+      }
       
-      // Only send modified analysis if there are unsaved changes
-      const requestBody: any = {
+      // Step 2: Create the diary entry
+      const mealDateTime = new Date(`${selectedDate}T${selectedTime}`);
+      const requestBody = {
         analysisId: data.id,
         mealType: selectedMealType,
         mealDate: mealDateTime.toISOString(),
         notes: "",
       };
-      
-      // If there are unsaved changes, include them as modifiedAnalysis
-      if (hasChanges()) {
-        requestBody.modifiedAnalysis = {
-          imageUrl: data.imageUrl,
-          confidence: data.confidence,
-          detectedFoods: editableFoods.map(stripBaselineData),
-          totalCalories: Math.round(totals.calories),
-          totalProtein: Math.round(totals.protein),
-          totalCarbs: Math.round(totals.carbs),
-          totalFat: Math.round(totals.fat)
-        };
-      }
       
       const response = await apiRequest('POST', '/api/diary', requestBody);
       const result = await response.json();
@@ -782,10 +791,12 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       const streakData = updateStreak();
       
       toast({
-        title: "Added to Diary!",
+        title: "Saved to Diary!",
         description: `Your meal has been saved to your food diary. ${streakData.currentStreak > 0 ? `Streak: ${streakData.currentStreak} days!` : ''}`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/diary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/analyses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/analyses', data.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
@@ -1107,15 +1118,15 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         </div>
       </motion.div>
 
-      {/* Detected Foods - Dark Purple Theme with Emojis */}
+      {/* Detected Foods - Light Purple Theme with Emojis */}
       <motion.div 
-        className="relative bg-gradient-to-br from-indigo-950 via-purple-950 to-purple-900 rounded-3xl shadow-2xl p-6 border border-purple-500/20 overflow-hidden"
+        className="relative bg-gradient-to-br from-white via-purple-50 to-pink-50 dark:from-gray-800 dark:via-purple-900/30 dark:to-pink-900/30 rounded-3xl shadow-2xl p-6 border-2 border-purple-200 dark:border-purple-700/30 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
       >
         {/* Subtle animated background */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvZz48L3N2Zz4=')] opacity-20" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0icmdiYSgxNDcsMTk3LDI1MywwLjA1KSIvPjwvZz48L3N2Zz4=')] opacity-40" />
         
         <div className="relative z-10 space-y-3">
           {editableFoods.map((food, index) => (
@@ -1126,8 +1137,8 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
               transition={{ delay: 0.9 + index * 0.1 }}
               className={`p-4 rounded-2xl transition-all duration-200 ${
                 editingIndex === index 
-                  ? 'bg-indigo-800/50 border-2 border-indigo-400 scale-[1.02]' 
-                  : 'bg-indigo-900/30 border border-indigo-800/30 hover:bg-indigo-800/40'
+                  ? 'bg-white dark:bg-gray-800 border-2 border-purple-400 shadow-lg scale-[1.02]' 
+                  : 'bg-white/80 dark:bg-gray-800/80 border-2 border-purple-200 dark:border-purple-700/50 hover:bg-white dark:hover:bg-gray-700 hover:shadow-md'
               }`}
               data-testid={`card-food-${index}`}
             >
@@ -1157,7 +1168,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                       />
                     ) : (
                       <div className="flex items-center space-x-1.5">
-                        <p className="font-medium" data-testid={`text-food-name-${index}`}>
+                        <p className="font-medium text-gray-900 dark:text-gray-100" data-testid={`text-food-name-${index}`}>
                           {food.name}
                         </p>
                         <button
@@ -1262,10 +1273,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold" data-testid={`text-food-calories-${index}`}>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100" data-testid={`text-food-calories-${index}`}>
                     {food.calories} cal
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
                     {food.protein}g protein
                   </p>
                   {editingIndex === index && (
@@ -1371,38 +1382,6 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
             </button>
           </div>
         </div>
-        
-
-        {/* Save Changes Button - Beautiful Modern Design */}
-        {hasChanges() && (
-          <div className="mt-4 flex space-x-3">
-            <button
-              onClick={() => saveChanges()}
-              disabled={saveChangesMutation.isPending}
-              className="flex-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white py-4 px-6 rounded-2xl font-bold transition-all duration-200 transform hover:scale-105 disabled:transform-none shadow-xl hover:shadow-2xl disabled:shadow-none flex items-center justify-center space-x-2 border-2 border-green-400/30"
-              data-testid="button-save-changes"
-            >
-              {saveChangesMutation.isPending ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <Check className="h-5 w-5" />
-                  <span>Save All Changes</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => resetChanges()}
-              className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-700 dark:text-gray-300 py-4 px-6 rounded-2xl font-bold hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border-2 border-gray-300 dark:border-gray-600"
-              data-testid="button-reset-changes"
-            >
-              Reset
-            </button>
-          </div>
-        )}
         
         {/* Always show editing tip */}
         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -1566,7 +1545,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           data-testid="button-add-diary"
         >
           <Plus className="h-5 w-5" />
-          <span>Add to Diary</span>
+          <span>Save to Diary</span>
         </button>
         <button 
           className="flex-1 modern-card bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 text-gray-700 dark:text-gray-300 py-4 px-6 rounded-xl font-medium hover:scale-[1.02] smooth-transition flex items-center justify-center space-x-2"
@@ -1578,7 +1557,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
         </button>
       </div>
 
-      {/* Add to Diary Dialog */}
+      {/* Save to Diary Dialog */}
       {showDiaryDialog && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
           <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 dark:border-gray-700/50 animate-in slide-in-from-bottom-4 duration-300">
@@ -1589,7 +1568,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                 <Plus className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Add to Food Diary
+                Save to Food Diary
               </h3>
               <p className="text-sm text-muted-foreground mt-1">Track your delicious meal</p>
             </div>
@@ -1681,10 +1660,10 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                 {addToDiaryMutation.isPending ? (
                   <span className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Adding...
+                    Saving...
                   </span>
                 ) : (
-                  'Add to Diary'
+                  'Save to Diary'
                 )}
               </button>
             </div>

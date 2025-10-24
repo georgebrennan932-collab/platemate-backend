@@ -1,48 +1,30 @@
 {
   "entries": [
     [
-      "2876d235728ecf14e3686daaa9dd4684658941500b1d3eb3e854058969da6e30",
-      {
-        "imageHash": "2876d235728ecf14e3686daaa9dd4684658941500b1d3eb3e854058969da6e30",
-        "analysis": {
-          "imageUrl": "/tmp/uploads/processed_0e7688b7b9397551e658f4134133c843.jpg",
-          "confidence": 100,
-          "totalCalories": 0,
-          "totalProtein": 0,
-          "totalCarbs": 0,
-          "totalFat": 0,
-          "detectedFoods": []
-        },
-        "timestamp": 1761051305173,
-        "accessCount": 1,
-        "lastAccessed": 1761051305173
-      }
-    ],
-    [
       "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
       {
         "imageHash": "efd1610704a38e9e060486ab52b79eb9b222975300e84a1337e410f90bd2564f",
         "analysis": {
-          "imageUrl": "/tmp/uploads/processed_953f8c0da3d662dfac9cfe6dc25667b9.jpg",
-          "confidence": 95,
-          "totalCalories": 79,
+          "imageUrl": "/tmp/uploads/processed_49fd71f8eff6e6f57ed87a39bbd2c7c2.jpg",
+          "confidence": 98,
+          "totalCalories": 61,
           "totalProtein": 3,
-          "totalCarbs": 13,
+          "totalCarbs": 9,
           "totalFat": 2,
           "detectedFoods": [
             {
               "name": "Soup, tomato",
-              "portion": "350ml",
-              "calories": 67,
+              "portion": "250ml",
+              "calories": 48,
               "protein": 2,
-              "carbs": 13,
+              "carbs": 9,
               "fat": 1,
               "icon": "🍽️"
             },
             {
               "name": "Basil, fresh",
-              "portion": "5g",
-              "calories": 1,
+              "portion": "10g",
+              "calories": 2,
               "protein": 0,
               "carbs": 0,
               "fat": 0,
@@ -59,9 +41,9 @@
             }
           ]
         },
-        "timestamp": 1761051616863,
+        "timestamp": 1761292405222,
         "accessCount": 1,
-        "lastAccessed": 1761051616863
+        "lastAccessed": 1761292405222
       }
     ]
   ],
@@ -70,11 +52,11 @@
     "cacheHits": 0,
     "cacheMisses": 1,
     "hitRate": 0,
-    "currentSize": 2,
+    "currentSize": 1,
     "maxSize": 1000,
     "totalEvictions": 0,
-    "oldestEntry": 1761051305173,
-    "newestEntry": 1761051616863
+    "oldestEntry": 1761292405222,
+    "newestEntry": 1761292405222
   },
-  "timestamp": 1761051616863
+  "timestamp": 1761292405223
 }
