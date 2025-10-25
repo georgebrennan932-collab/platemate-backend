@@ -25,15 +25,16 @@ class MainActivity : BridgeActivity() {
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
         android.util.Log.e("PLATEMATE", "========================================")
         android.util.Log.e("PLATEMATE", "🚀 PLATEMATE APP STARTING - NATIVE ANDROID")
         android.util.Log.e("PLATEMATE", "📱 Package: com.georgebrennan.platemate3")
         android.util.Log.e("PLATEMATE", "========================================")
         
-        // Register our custom billing plugin
+        // Register our custom billing plugin AFTER super.onCreate()
         registerPlugin(BillingPlugin::class.java)
-        
-        super.onCreate(savedInstanceState)
+        android.util.Log.e("PLATEMATE", "✅ BillingPlugin registered")
         
         // Inject custom header into all WebView requests
         setupWebViewHeaderInjection()
