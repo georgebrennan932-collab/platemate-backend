@@ -2,6 +2,8 @@ import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { SubscriptionGate } from "@/components/SubscriptionGate";
 import App from "./App";
 import "./index.css";
 
@@ -43,7 +45,11 @@ window.addEventListener('error', (event) => {
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <SubscriptionProvider>
+        <SubscriptionGate>
+          <App />
+        </SubscriptionGate>
+      </SubscriptionProvider>
     </QueryClientProvider>
   </ErrorBoundary>
 );
