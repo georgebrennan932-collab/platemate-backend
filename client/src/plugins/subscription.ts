@@ -19,19 +19,19 @@ export interface SubscriptionPlugin {
 
 class SubscriptionService implements SubscriptionPlugin {
   private store: any = null;
-  private initialized = false;
+  private initPromise: Promise<void> | null = null;
   private readonly PRODUCT_ID = 'platemate_pro_monthly';
   
   constructor() {
     if (Capacitor.isNativePlatform()) {
-      this.initializeStore();
+      this.initPromise = this.initializeStore();
     }
   }
   
-  private initializeStore() {
+  private async initializeStore(): Promise<void> {
     if (typeof CdvPurchase === 'undefined') {
       console.warn('⚠️ cordova-plugin-purchase not available');
-      return;
+      throw new Error('cordova-plugin-purchase not available');
     }
     
     this.store = CdvPurchase.store;
@@ -65,13 +65,31 @@ class SubscriptionService implements SubscriptionPlugin {
       console.error('❌ Store error:', error);
     });
     
-    // Initialize the store
-    this.store.initialize().then(() => {
-      this.initialized = true;
+    try {
+      // Initialize the store
+      await this.store.initialize();
       console.log('🚀 Subscription store initialized');
-    }).catch((error: any) => {
-      console.error('❌ Failed to initialize store:', error);
-    });
+      
+      // Refresh to fetch Google Play inventory and owned purchases
+      await this.store.refresh();
+      console.log('✅ Store refreshed - Google Play inventory loaded');
+      
+    } catch (error) {
+      console.error('❌ Failed to initialize/refresh store:', error);
+      throw error;
+    }
+  }
+  
+  private async waitForReady(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+    
+    if (!this.initPromise) {
+      throw new Error('Store initialization was not started');
+    }
+    
+    await this.initPromise;
   }
   
   async checkSubscriptionStatus(): Promise<{
@@ -92,16 +110,10 @@ class SubscriptionService implements SubscriptionPlugin {
       };
     }
     
-    // Check if store is available
-    if (!this.store || !this.initialized) {
-      console.warn('⚠️ Store not initialized yet');
-      return {
-        isSubscribed: false,
-        error: 'Store not initialized'
-      };
-    }
-    
     try {
+      // Wait for store to be ready
+      await this.waitForReady();
+      
       // Get the product
       const product = this.store.get(this.PRODUCT_ID);
       
@@ -151,12 +163,10 @@ class SubscriptionService implements SubscriptionPlugin {
       throw new Error('Subscription is only available in the mobile app. Please download PlateMate from Google Play.');
     }
     
-    // Check if store is available
-    if (!this.store || !this.initialized) {
-      throw new Error('Store not initialized. Please try again in a moment.');
-    }
-    
     try {
+      // Wait for store to be ready
+      await this.waitForReady();
+      
       const product = this.store.get(this.PRODUCT_ID);
       
       if (!product) {
