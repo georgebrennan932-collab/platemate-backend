@@ -92,18 +92,42 @@ Preferred communication style: Simple, everyday language.
 
 # Android App Build & Deployment
 
-## Syncing Web Code to Android
-When you make changes to the web code or native plugins, sync them to the Android project:
+## Development vs Production Mode
+
+**Important:** Native plugins (BillingPlugin, Camera, etc.) ONLY work when the app loads **local bundled files** from `capacitor://localhost`.
+
+### Development Mode (Live Reload)
+- Clicking "Run" (▶️) in Android Studio enables **live reload** which connects to Replit dev server
+- Logs show package: `com.replit.app` and `[vite] connecting`
+- Native plugins return `UNIMPLEMENTED` error
+- **Use for:** UI/frontend development with hot reload
+
+### Production Mode (Local Files)
+- App loads from `capacitor://localhost` using bundled assets
+- Logs show package: `com.georgebrennan.platemate3` and `BillingPlugin loaded`
+- Native plugins work correctly (billing, camera, etc.)
+- **Use for:** Testing native features, building releases
+
+## Building for Production
+
+### 1. Build Production Web Assets
+```bash
+npm run build
+```
+This creates optimized production files in `dist/public/`
+
+### 2. Sync to Android
 ```bash
 npx cap sync android
 ```
 
 This command:
-- Copies the latest web build (`dist/public`) to Android assets
+- Copies production build from `dist/public` to `android/app/src/main/assets/public`
 - Updates native plugin registrations
-- Syncs Capacitor configuration
+- Generates `capacitor.config.json` in Android assets
+- **Ensures app loads local files instead of dev server**
 
-## Building the Android App
+### 3. Build the Android App
 The Android app must be rebuilt using Android Studio to activate native plugins like Google Play Billing:
 
 1. **Open in Android Studio**:
