@@ -20,8 +20,15 @@ class SubscriptionService implements SubscriptionPlugin {
   private readonly ENTITLEMENT_ID = 'pro'; // RevenueCat entitlement
   
   constructor() {
+    console.log('🔍 Platform Detection:', {
+      platform: Capacitor.getPlatform(),
+      isNative: Capacitor.isNativePlatform()
+    });
+    
     if (Capacitor.isNativePlatform()) {
       this.initializeRevenueCat();
+    } else {
+      console.warn('⚠️ Not running on native platform - RevenueCat will not initialize');
     }
   }
   
