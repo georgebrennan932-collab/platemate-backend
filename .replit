@@ -48,12 +48,12 @@ localPort = 37999
 externalPort = 3001
 
 [[ports]]
-localPort = 38751
-externalPort = 3003
-
-[[ports]]
 localPort = 40147
 externalPort = 3002
+
+[[ports]]
+localPort = 42023
+externalPort = 3003
 
 [agent]
 integrations = ["javascript_gemini:1.0.0", "javascript_log_in_with_replit:1.0.0", "javascript_openai:1.0.0", "javascript_database:1.0.0", "javascript_websocket:1.0.0", "javascript_object_storage:1.0.0"]

@@ -23,7 +23,10 @@ class BillingPlugin : Plugin() {
     
     override fun load() {
         super.load()
-        Log.d(TAG, "🚀 Billing Plugin loaded")
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "🚀 BILLING PLUGIN LOADED - NATIVE ANDROID")
+        Log.d(TAG, "📱 This message only appears if running as native app")
+        Log.d(TAG, "========================================")
         initializeBillingClient()
     }
     
