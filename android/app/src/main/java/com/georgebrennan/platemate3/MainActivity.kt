@@ -25,6 +25,11 @@ class MainActivity : BridgeActivity() {
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        android.util.Log.e("PLATEMATE", "========================================")
+        android.util.Log.e("PLATEMATE", "🚀 PLATEMATE APP STARTING - NATIVE ANDROID")
+        android.util.Log.e("PLATEMATE", "📱 Package: com.georgebrennan.platemate3")
+        android.util.Log.e("PLATEMATE", "========================================")
+        
         // Register our custom billing plugin
         registerPlugin(BillingPlugin::class.java)
         
