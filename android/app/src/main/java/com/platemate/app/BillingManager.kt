@@ -16,6 +16,7 @@ class BillingManager(
 
     private var billingClient: BillingClient
     private var isConnected = false
+    private var pendingPurchaseCallback: ((Boolean, String?) -> Unit)? = null
     
     companion object {
         private const val TAG = "BillingManager"
@@ -55,6 +56,9 @@ class BillingManager(
             return
         }
 
+        // Store the callback to be invoked when purchase completes
+        pendingPurchaseCallback = callback
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val productList = listOf(
@@ -93,21 +97,26 @@ class BillingManager(
                             withContext(Dispatchers.Main) {
                                 val result = billingClient.launchBillingFlow(activity, billingFlowParams)
                                 if (result.responseCode != BillingClient.BillingResponseCode.OK) {
-                                    callback(false, "Failed to launch billing flow: ${result.debugMessage}")
+                                    pendingPurchaseCallback?.invoke(false, "Failed to launch billing flow: ${result.debugMessage}")
+                                    pendingPurchaseCallback = null
                                 }
                             }
                         } else {
-                            callback(false, "No subscription offers available")
+                            pendingPurchaseCallback?.invoke(false, "No subscription offers available")
+                            pendingPurchaseCallback = null
                         }
                     } else {
-                        callback(false, "Product not found")
+                        pendingPurchaseCallback?.invoke(false, "Product not found")
+                        pendingPurchaseCallback = null
                     }
                 } else {
-                    callback(false, "Failed to query products: ${productDetailsResult.billingResult.debugMessage}")
+                    pendingPurchaseCallback?.invoke(false, "Failed to query products: ${productDetailsResult.billingResult.debugMessage}")
+                    pendingPurchaseCallback = null
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error launching subscription flow", e)
-                callback(false, "Error: ${e.message}")
+                pendingPurchaseCallback?.invoke(false, "Error: ${e.message}")
+                pendingPurchaseCallback = null
             }
         }
     }
@@ -167,16 +176,23 @@ class BillingManager(
                         if (!purchase.isAcknowledged) {
                             acknowledgePurchase(purchase)
                         }
+                        // Notify both the pending callback and global listener
+                        pendingPurchaseCallback?.invoke(true, null)
+                        pendingPurchaseCallback = null
                         onPurchaseUpdated(true, null)
                     }
                 }
             }
             BillingClient.BillingResponseCode.USER_CANCELED -> {
                 Log.d(TAG, "User canceled the purchase")
+                pendingPurchaseCallback?.invoke(false, "User canceled")
+                pendingPurchaseCallback = null
                 onPurchaseUpdated(false, "User canceled")
             }
             else -> {
                 Log.e(TAG, "Purchase failed: ${billingResult.debugMessage}")
+                pendingPurchaseCallback?.invoke(false, billingResult.debugMessage)
+                pendingPurchaseCallback = null
                 onPurchaseUpdated(false, billingResult.debugMessage)
             }
         }
