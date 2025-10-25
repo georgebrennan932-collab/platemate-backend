@@ -153,10 +153,7 @@ class SubscriptionService implements SubscriptionPlugin {
         aPackage: packageToPurchase
       });
       
-      console.log('✅ Purchase completed:', {
-        productIdentifier: purchaseResult.productIdentifier,
-        customerInfo: purchaseResult.customerInfo
-      });
+      console.log('✅ Purchase completed successfully');
       
     } catch (error: any) {
       // Check if user cancelled
