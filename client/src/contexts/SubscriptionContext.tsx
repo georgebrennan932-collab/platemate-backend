@@ -26,17 +26,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       console.log('📱 Subscription Status Check:', {
         isSubscribed: result.isSubscribed,
         productId: result.productId,
-        hasError: !!result.error,
-        error: result.error,
         platform: navigator.userAgent.includes('Mobile') ? 'mobile' : 'web'
       });
       
       setIsSubscribed(result.isSubscribed);
-      
-      // Show error if subscription check failed
-      if (result.error && !result.isSubscribed) {
-        console.warn('⚠️ Subscription check returned error:', result.error);
-      }
     } catch (error) {
       console.error('❌ Error checking subscription:', error);
       setIsSubscribed(false);
