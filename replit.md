@@ -35,15 +35,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Monetization and Subscription
 - **Model**: Free-to-download app with mandatory subscription via Google Play Billing at £4.99/month.
-- **Subscription System**: Uses RevenueCat (@revenuecat/purchases-capacitor v11.2.8) as middleware for Google Play Billing.
+- **Subscription System**: Custom Capacitor plugin (BillingPlugin) using Google Play Billing Library 8.0.0 directly.
+- **Native Implementation**: BillingPlugin.kt handles billing client initialization, subscription checking, and purchase flows.
 - **Feature Gating**: All major features locked until active subscription confirmed via SubscriptionGate component.
 - **Free Trial**: 7-day free trial enabled through Google Play Console, automatically applied at checkout.
 - **Subscription Flow**: On first launch, users see subscription screen before accessing any features.
-- **Validation**: Subscription status checked via RevenueCat's entitlement system (checking "pro" entitlement).
+- **Validation**: Subscription status checked by querying active purchases via Google Play Billing API.
 - **Frontend Integration**: React SubscriptionContext provides app-wide subscription state with automatic re-validation.
-- **Plugin Integration**: RevenueCat handles Google Play Billing integration, receipt validation, and subscription management.
-- **Product ID**: platemate_pro_monthly (configured in Google Play Console and RevenueCat dashboard).
-- **Entitlement ID**: pro (configured in RevenueCat to unlock app features).
+- **Product ID**: platemate_pro_monthly (configured in Google Play Console).
+- **Purchase Handling**: Plugin properly handles all purchase states (purchased, pending, cancelled, errors) with proper promise resolution.
 
 ## AI Services
 - **Multi-Provider System**: Supports OpenAI (GPT-4o-mini, GPT-5) and Google Gemini (Flash/Pro) with automatic failover, health monitoring, and load balancing.
@@ -88,7 +88,7 @@ Preferred communication style: Simple, everyday language.
 - **Barcode Data**: OpenFoodFacts API
 - **Social Sharing**: `dom-to-image-more` library, Web Share API
 - **Health Tracking**: `capacitor-health` plugin
-- **Billing**: RevenueCat (@revenuecat/purchases-capacitor v11.2.8) for Google Play Billing integration
+- **Billing**: Custom Capacitor plugin using Google Play Billing Library 8.0.0 for subscription management
 
 # Android App Build & Deployment
 
