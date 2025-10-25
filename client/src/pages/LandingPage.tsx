@@ -137,12 +137,12 @@ export default function LandingPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-green-200 dark:border-green-800 hover:shadow-2xl hover:shadow-green-500/25 transition-all duration-500 hover:scale-105 animate-fade-in-right animation-delay-2100 group">
+          <Card className="border-blue-200 dark:border-blue-800 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-500 hover:scale-105 animate-fade-in-right animation-delay-2100 group">
             <CardHeader className="text-center">
-              <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-1000 group-hover:animate-bounce">
-                <Calculator className="h-8 w-8 text-green-600 dark:text-green-400 group-hover:animate-pulse" />
+              <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full w-fit mx-auto mb-4 animate-float animation-delay-1000 group-hover:animate-bounce">
+                <Calculator className="h-8 w-8 text-blue-600 dark:text-blue-400 group-hover:animate-pulse" />
               </div>
-              <CardTitle className="text-xl group-hover:text-green-600 transition-colors">Smart Calculator & Goals</CardTitle>
+              <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">Smart Calculator & Goals</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center">
@@ -233,10 +233,10 @@ export default function LandingPage() {
             </div>
             
             <div className="text-center animate-fade-in-right animation-delay-3600 hover:scale-105 transition-transform duration-300 group">
-              <div className="bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 p-6 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-bounce animation-delay-1000 hover:animate-spin group-hover:shadow-lg">
-                <BookOpen className="h-8 w-8 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform" />
+              <div className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 p-6 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-bounce animation-delay-1000 hover:animate-spin group-hover:shadow-lg">
+                <BookOpen className="h-8 w-8 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-green-600 transition-colors">Auto-Track & Improve</h3>
+              <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-600 transition-colors">Auto-Track & Improve</h3>
               <p className="text-gray-700 dark:text-gray-200">
                 Meals are automatically saved to your diary with beautiful voice thumbnails. Track progress effortlessly.
               </p>
@@ -319,7 +319,7 @@ export default function LandingPage() {
             </div>
             
             <div className="flex items-start space-x-3">
-              <Shield className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
+              <Shield className="h-6 w-6 text-blue-500 mt-1 flex-shrink-0" />
               <div>
                 <h3 className="text-lg font-semibold mb-1">Reliable & Accurate</h3>
                 <p className="text-muted-foreground">Enterprise-grade AI with multiple backup systems ensures consistent results.</p>
