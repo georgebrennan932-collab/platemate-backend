@@ -24,28 +24,31 @@ class BillingManager(
     }
 
     init {
+        Log.d(TAG, "🚀 BillingManager initializing...")
         billingClient = BillingClient.newBuilder(activity)
             .setListener(this)
             .enablePendingPurchases()
             .build()
             
         startConnection()
+        Log.d(TAG, "✅ BillingManager initialized, connecting to Google Play Billing...")
     }
 
     private fun startConnection() {
+        Log.d(TAG, "📡 Connecting to Google Play Billing service...")
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     isConnected = true
-                    Log.d(TAG, "Billing client connected successfully")
+                    Log.d(TAG, "✅ Billing client connected successfully - ready for subscriptions!")
                 } else {
-                    Log.e(TAG, "Billing setup failed: ${billingResult.debugMessage}")
+                    Log.e(TAG, "❌ Billing setup failed: ${billingResult.debugMessage} (Code: ${billingResult.responseCode})")
                 }
             }
 
             override fun onBillingServiceDisconnected() {
                 isConnected = false
-                Log.w(TAG, "Billing service disconnected, will retry")
+                Log.w(TAG, "⚠️ Billing service disconnected, will retry on next action")
             }
         })
     }
