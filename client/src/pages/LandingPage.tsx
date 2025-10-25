@@ -311,7 +311,7 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold text-center mb-8">Why Choose PlateMate?</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="flex items-start space-x-3">
-              <Volume2 className="h-6 w-6 text-blue-500 mt-1 flex-shrink-0" />
+              <Volume2 className="h-6 w-6 text-purple-500 mt-1 flex-shrink-0" />
               <div>
                 <h3 className="text-lg font-semibold mb-1">Voice-Powered Logging</h3>
                 <p className="text-muted-foreground">Speak your meals naturally - "100g salmon" or "one apple" - and watch them appear instantly in your diary.</p>
@@ -319,7 +319,7 @@ export default function LandingPage() {
             </div>
             
             <div className="flex items-start space-x-3">
-              <Shield className="h-6 w-6 text-blue-500 mt-1 flex-shrink-0" />
+              <Shield className="h-6 w-6 text-purple-500 mt-1 flex-shrink-0" />
               <div>
                 <h3 className="text-lg font-semibold mb-1">Reliable & Accurate</h3>
                 <p className="text-muted-foreground">Enterprise-grade AI with multiple backup systems ensures consistent results.</p>
@@ -327,7 +327,7 @@ export default function LandingPage() {
             </div>
             
             <div className="flex items-start space-x-3">
-              <Calculator className="h-6 w-6 text-blue-500 mt-1 flex-shrink-0" />
+              <Calculator className="h-6 w-6 text-purple-500 mt-1 flex-shrink-0" />
               <div>
                 <h3 className="text-lg font-semibold mb-1">Personalized Calculations</h3>
                 <p className="text-muted-foreground">Get precise BMR and TDEE calculations with medication-aware adjustments for safe weight management.</p>
