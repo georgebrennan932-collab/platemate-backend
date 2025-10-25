@@ -24,11 +24,6 @@ class MainActivity : BridgeActivity() {
         private const val APP_ACCESS_TOKEN = "i9wD15teB7oYJLsRzaMBhpAIZG8yUWJnAo0phKwRdn4"
     }
     
-    init {
-        // Register subscription plugin BEFORE bridge initializes
-        registerPlugin(SubscriptionPlugin::class.java)
-    }
-    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
