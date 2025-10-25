@@ -71,6 +71,17 @@ class MainActivity : BridgeActivity() {
         try {
             bridge.webView.webViewClient = object : WebViewClient() {
                 
+                override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                    super.onPageStarted(view, url, favicon)
+                    android.util.Log.e("PLATEMATE", "📄 WebView loading URL: $url")
+                    
+                    if (url?.contains("replit") == true) {
+                        android.util.Log.e("PLATEMATE", "❌ WARNING: Loading from REPLIT SERVER (should be capacitor://localhost)")
+                    } else if (url?.startsWith("capacitor://") == true) {
+                        android.util.Log.e("PLATEMATE", "✅ Loading from LOCAL FILES (correct!)")
+                    }
+                }
+                
                 override fun shouldInterceptRequest(
                     view: WebView?,
                     request: WebResourceRequest?
@@ -92,6 +103,7 @@ class MainActivity : BridgeActivity() {
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+                    android.util.Log.e("PLATEMATE", "✅ WebView finished loading: $url")
                     // Also inject JavaScript as a fallback for fetch/XHR
                     injectHeaderScript(view)
                 }
