@@ -80,7 +80,7 @@ class SubscriptionService implements SubscriptionPlugin {
       console.log('🔍 Checking subscription status...');
       
       // Get customer info from RevenueCat
-      const customerInfo: CustomerInfo = await Purchases.getCustomerInfo();
+      const { customerInfo } = await Purchases.getCustomerInfo();
       
       console.log('📦 Customer info received:', {
         activeSubscriptions: customerInfo.activeSubscriptions,
