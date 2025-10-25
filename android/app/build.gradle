@@ -38,7 +38,7 @@ dependencies {
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
     implementation "com.airbnb.android:lottie:6.1.0"
-    implementation "com.android.billingclient:billing:6.0.1"
+    implementation "com.android.billingclient:billing:8.0.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.20"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
     testImplementation "junit:junit:$junitVersion"

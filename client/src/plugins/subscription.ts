@@ -24,17 +24,42 @@ class SubscriptionService implements SubscriptionPlugin {
   
   constructor() {
     if (Capacitor.isNativePlatform()) {
-      this.initPromise = this.initializeStore();
+      // Wait for Cordova deviceready event before initializing
+      this.initPromise = new Promise((resolve, reject) => {
+        const initStore = async () => {
+          try {
+            await this.initializeStore();
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        };
+        
+        // Listen for deviceready event (Cordova plugin lifecycle)
+        document.addEventListener('deviceready', initStore, false);
+        
+        // Fallback timeout in case deviceready never fires (safety)
+        setTimeout(() => {
+          console.warn('⚠️ deviceready timeout, attempting initialization anyway');
+          initStore();
+        }, 3000);
+      });
     }
   }
   
   private async initializeStore(): Promise<void> {
+    console.log('🚀 Starting store initialization...');
+    
     if (typeof CdvPurchase === 'undefined') {
-      console.warn('⚠️ cordova-plugin-purchase not available');
+      console.error('❌ CdvPurchase is undefined - cordova-plugin-purchase not loaded');
       throw new Error('cordova-plugin-purchase not available');
     }
     
+    console.log('✅ CdvPurchase available');
     this.store = CdvPurchase.store;
+    
+    // Enable verbose logging for debugging
+    this.store.verbosity = CdvPurchase.LogLevel.DEBUG;
     
     // Register the subscription product
     this.store.register([{
@@ -42,6 +67,8 @@ class SubscriptionService implements SubscriptionPlugin {
       type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
       platform: CdvPurchase.Platform.GOOGLE_PLAY
     }]);
+    
+    console.log('✅ Product registered:', this.PRODUCT_ID);
     
     // Handle purchase approvals
     this.store.when()
@@ -67,10 +94,12 @@ class SubscriptionService implements SubscriptionPlugin {
     
     try {
       // Initialize the store
-      await this.store.initialize();
-      console.log('🚀 Subscription store initialized');
+      console.log('🔄 Calling store.initialize()...');
+      await this.store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]);
+      console.log('✅ Subscription store initialized');
       
       // Refresh to fetch Google Play inventory and owned purchases
+      console.log('🔄 Calling store.refresh()...');
       await this.store.refresh();
       console.log('✅ Store refreshed - Google Play inventory loaded');
       
@@ -89,7 +118,9 @@ class SubscriptionService implements SubscriptionPlugin {
       throw new Error('Store initialization was not started');
     }
     
+    console.log('⏳ Waiting for store to be ready...');
     await this.initPromise;
+    console.log('✅ Store is ready');
   }
   
   async checkSubscriptionStatus(): Promise<{
@@ -119,11 +150,19 @@ class SubscriptionService implements SubscriptionPlugin {
       
       if (!product) {
         console.warn('⚠️ Product not found:', this.PRODUCT_ID);
+        console.log('Available products:', this.store.products);
         return {
           isSubscribed: false,
           error: 'Product not found'
         };
       }
+      
+      console.log('📦 Product details:', {
+        id: product.id,
+        owned: product.owned,
+        canPurchase: product.canPurchase,
+        state: product.state
+      });
       
       // Check if user owns the subscription
       const isOwned = product.owned;
@@ -180,6 +219,7 @@ class SubscriptionService implements SubscriptionPlugin {
       }
       
       console.log('🚀 Launching subscription flow for:', this.PRODUCT_ID);
+      console.log('📋 Available offers:', offers);
       
       // Launch the purchase flow
       await this.store.order(offers[0]);
