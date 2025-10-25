@@ -49,7 +49,7 @@ export default function LandingPage() {
                 onClick={launchSignup}
               >
                 <Sparkles className="h-6 w-6 mr-2" />
-                Create Free Account
+                Create Account
               </Button>
               <span className="text-white/60 text-sm">or</span>
               <Button 
@@ -73,7 +73,7 @@ export default function LandingPage() {
         {isAuthenticated && (
           <div className="text-center mb-16 animate-fade-in-up animation-delay-900">
             <div className="space-y-4">
-              <div className="inline-flex items-center px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
+              <div className="inline-flex items-center px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
                 <Shield className="h-4 w-4 mr-2" />
                 ✅ Signed in and ready!
               </div>
@@ -410,7 +410,7 @@ export default function LandingPage() {
                 onClick={launchSignup}
               >
                 <Sparkles className="h-6 w-6 mr-2" />
-                Create Free Account
+                Create Account
               </Button>
             </div>
           )}
