@@ -13,18 +13,11 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.getcapacitor.BridgeActivity
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchasesUpdatedListener
-import com.android.billingclient.api.BillingResult
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
-class MainActivity : BridgeActivity(), PurchasesUpdatedListener {
-
-    private lateinit var billingClient: BillingClient
+class MainActivity : BridgeActivity() {
     
     companion object {
         // This token must match APP_ACCESS_TOKEN in your Replit secrets
@@ -34,23 +27,8 @@ class MainActivity : BridgeActivity(), PurchasesUpdatedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Initialize Google Play Billing
-        billingClient = BillingClient.newBuilder(this)
-            .setListener(this)
-            .enablePendingPurchases()
-            .build()
-
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingResult) {
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    // Billing is ready, purchases can be queried in the future.
-                }
-            }
-
-            override fun onBillingServiceDisconnected() {
-                // Will retry connection automatically
-            }
-        })
+        // Register subscription plugin
+        registerPlugin(SubscriptionPlugin::class.java)
         
         // Inject custom header into all WebView requests
         setupWebViewHeaderInjection()
@@ -81,13 +59,6 @@ class MainActivity : BridgeActivity(), PurchasesUpdatedListener {
             animator.interpolator = LinearInterpolator()
             animator.start()
         }
-    }
-
-    override fun onPurchasesUpdated(
-        billingResult: BillingResult,
-        purchases: MutableList<Purchase>?
-    ) {
-        // Purchase update handling will be implemented later, leave this empty for now.
     }
     
     private fun setupWebViewHeaderInjection() {
