@@ -1,8 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-
-// Import cordova-plugin-purchase types
-import 'cordova-plugin-purchase';
-declare const CdvPurchase: any;
+import { Purchases, CustomerInfo, PurchasesOfferings } from '@revenuecat/purchases-capacitor';
 
 export interface SubscriptionPlugin {
   checkSubscriptionStatus(): Promise<{
@@ -18,109 +15,39 @@ export interface SubscriptionPlugin {
 }
 
 class SubscriptionService implements SubscriptionPlugin {
-  private store: any = null;
-  private initPromise: Promise<void> | null = null;
+  private initialized = false;
   private readonly PRODUCT_ID = 'platemate_pro_monthly';
+  private readonly ENTITLEMENT_ID = 'pro'; // RevenueCat entitlement
   
   constructor() {
     if (Capacitor.isNativePlatform()) {
-      // Wait for Cordova deviceready event before initializing
-      this.initPromise = new Promise((resolve, reject) => {
-        const initStore = async () => {
-          try {
-            await this.initializeStore();
-            resolve();
-          } catch (error) {
-            reject(error);
-          }
-        };
-        
-        // Listen for deviceready event (Cordova plugin lifecycle)
-        document.addEventListener('deviceready', initStore, false);
-        
-        // Fallback timeout in case deviceready never fires (safety)
-        setTimeout(() => {
-          console.warn('⚠️ deviceready timeout, attempting initialization anyway');
-          initStore();
-        }, 3000);
-      });
+      this.initializeRevenueCat();
     }
   }
   
-  private async initializeStore(): Promise<void> {
-    console.log('🚀 Starting store initialization...');
-    
-    if (typeof CdvPurchase === 'undefined') {
-      console.error('❌ CdvPurchase is undefined - cordova-plugin-purchase not loaded');
-      throw new Error('cordova-plugin-purchase not available');
-    }
-    
-    console.log('✅ CdvPurchase available');
-    this.store = CdvPurchase.store;
-    
-    // Enable verbose logging for debugging
-    this.store.verbosity = CdvPurchase.LogLevel.DEBUG;
-    
-    // Register the subscription product
-    this.store.register([{
-      id: this.PRODUCT_ID,
-      type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
-      platform: CdvPurchase.Platform.GOOGLE_PLAY
-    }]);
-    
-    console.log('✅ Product registered:', this.PRODUCT_ID);
-    
-    // Handle purchase approvals
-    this.store.when()
-      .approved((transaction: any) => {
-        console.log('✅ Purchase approved:', transaction);
-        return transaction.verify();
-      })
-      .verified((receipt: any) => {
-        console.log('✅ Receipt verified:', receipt);
-        receipt.finish();
-      })
-      .finished((transaction: any) => {
-        console.log('✅ Transaction finished:', transaction);
-      })
-      .receiptUpdated((receipt: any) => {
-        console.log('📝 Receipt updated:', receipt);
-      });
-    
-    // Handle errors
-    this.store.error((error: any) => {
-      console.error('❌ Store error:', error);
-    });
-    
+  private async initializeRevenueCat(): Promise<void> {
     try {
-      // Initialize the store
-      console.log('🔄 Calling store.initialize()...');
-      await this.store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]);
-      console.log('✅ Subscription store initialized');
+      console.log('🚀 Initializing RevenueCat...');
       
-      // Refresh to fetch Google Play inventory and owned purchases
-      console.log('🔄 Calling store.refresh()...');
-      await this.store.refresh();
-      console.log('✅ Store refreshed - Google Play inventory loaded');
+      // Get API key from environment
+      const apiKey = import.meta.env.VITE_REVENUECAT_ANDROID_API_KEY;
+      
+      if (!apiKey) {
+        console.error('❌ VITE_REVENUECAT_ANDROID_API_KEY not set');
+        return;
+      }
+      
+      // Configure RevenueCat
+      await Purchases.configure({
+        apiKey: apiKey,
+      });
+      
+      console.log('✅ RevenueCat initialized');
+      this.initialized = true;
       
     } catch (error) {
-      console.error('❌ Failed to initialize/refresh store:', error);
-      throw error;
+      console.error('❌ Failed to initialize RevenueCat:', error);
     }
-  }
-  
-  private async waitForReady(): Promise<void> {
-    if (!Capacitor.isNativePlatform()) {
-      return;
-    }
-    
-    if (!this.initPromise) {
-      throw new Error('Store initialization was not started');
-    }
-    
-    console.log('⏳ Waiting for store to be ready...');
-    await this.initPromise;
-    console.log('✅ Store is ready');
   }
   
   async checkSubscriptionStatus(): Promise<{
@@ -141,44 +68,37 @@ class SubscriptionService implements SubscriptionPlugin {
       };
     }
     
+    if (!this.initialized) {
+      console.warn('⚠️ RevenueCat not initialized yet');
+      return {
+        isSubscribed: false,
+        error: 'RevenueCat not initialized'
+      };
+    }
+    
     try {
-      // Wait for store to be ready
-      await this.waitForReady();
+      console.log('🔍 Checking subscription status...');
       
-      // Get the product
-      const product = this.store.get(this.PRODUCT_ID);
+      // Get customer info from RevenueCat
+      const customerInfo: CustomerInfo = await Purchases.getCustomerInfo();
       
-      if (!product) {
-        console.warn('⚠️ Product not found:', this.PRODUCT_ID);
-        console.log('Available products:', this.store.products);
-        return {
-          isSubscribed: false,
-          error: 'Product not found'
-        };
-      }
-      
-      console.log('📦 Product details:', {
-        id: product.id,
-        owned: product.owned,
-        canPurchase: product.canPurchase,
-        state: product.state
+      console.log('📦 Customer info received:', {
+        activeSubscriptions: customerInfo.activeSubscriptions,
+        entitlements: Object.keys(customerInfo.entitlements.active)
       });
       
-      // Check if user owns the subscription
-      const isOwned = product.owned;
+      // Check if user has the "pro" entitlement
+      const hasProEntitlement = customerInfo.entitlements.active[this.ENTITLEMENT_ID] !== undefined;
       
-      if (isOwned) {
+      if (hasProEntitlement) {
+        const entitlement = customerInfo.entitlements.active[this.ENTITLEMENT_ID];
         console.log('✅ User has active subscription');
-        
-        // Get transaction details
-        const transaction = product.transaction;
         
         return {
           isSubscribed: true,
-          productId: this.PRODUCT_ID,
-          purchaseToken: transaction?.id,
-          purchaseTime: transaction?.purchaseDate ? new Date(transaction.purchaseDate).getTime() : undefined,
-          isAutoRenewing: true
+          productId: entitlement.productIdentifier,
+          purchaseTime: entitlement.latestPurchaseDate ? new Date(entitlement.latestPurchaseDate).getTime() : undefined,
+          isAutoRenewing: entitlement.willRenew
         };
       } else {
         console.log('ℹ️ No active subscription found');
@@ -202,29 +122,49 @@ class SubscriptionService implements SubscriptionPlugin {
       throw new Error('Subscription is only available in the mobile app. Please download PlateMate from Google Play.');
     }
     
+    if (!this.initialized) {
+      throw new Error('RevenueCat not initialized. Please try again in a moment.');
+    }
+    
     try {
-      // Wait for store to be ready
-      await this.waitForReady();
+      console.log('🔄 Fetching offerings...');
       
-      const product = this.store.get(this.PRODUCT_ID);
+      // Get available offerings from RevenueCat
+      const offerings: PurchasesOfferings = await Purchases.getOfferings();
       
-      if (!product) {
-        throw new Error('Subscription product not available');
+      if (!offerings.current) {
+        throw new Error('No subscription offerings available');
       }
       
-      // Get the first offer
-      const offers = product.offers;
-      if (!offers || offers.length === 0) {
-        throw new Error('No subscription offers available');
+      console.log('📋 Current offering:', offerings.current.identifier);
+      console.log('📦 Available packages:', offerings.current.availablePackages.length);
+      
+      // Get the first package (should be our monthly subscription)
+      const packageToPurchase = offerings.current.availablePackages[0];
+      
+      if (!packageToPurchase) {
+        throw new Error('No subscription packages available');
       }
       
-      console.log('🚀 Launching subscription flow for:', this.PRODUCT_ID);
-      console.log('📋 Available offers:', offers);
+      console.log('🚀 Launching purchase flow for:', packageToPurchase.identifier);
       
       // Launch the purchase flow
-      await this.store.order(offers[0]);
+      const purchaseResult = await Purchases.purchasePackage({
+        aPackage: packageToPurchase
+      });
       
-    } catch (error) {
+      console.log('✅ Purchase completed:', {
+        productIdentifier: purchaseResult.productIdentifier,
+        customerInfo: purchaseResult.customerInfo
+      });
+      
+    } catch (error: any) {
+      // Check if user cancelled
+      if (error.code === '1' || error.message?.includes('cancel')) {
+        console.log('ℹ️ User cancelled purchase');
+        throw new Error('Purchase cancelled');
+      }
+      
       console.error('❌ Error launching subscription flow:', error);
       throw error instanceof Error ? error : new Error('Failed to launch subscription flow');
     }
