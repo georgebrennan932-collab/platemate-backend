@@ -25,6 +25,9 @@ class MainActivity : BridgeActivity() {
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Register our custom billing plugin
+        registerPlugin(BillingPlugin::class.java)
+        
         super.onCreate(savedInstanceState)
         
         // Inject custom header into all WebView requests
