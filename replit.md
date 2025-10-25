@@ -35,14 +35,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Monetization and Subscription
 - **Model**: Free-to-download app with mandatory subscription via Google Play Billing at £4.99/month.
-- **Subscription System**: Native Google Play Billing integration with BillingManager class for Android.
+- **Subscription System**: Uses cordova-plugin-purchase (v13.12.1) with Google Billing Library 7 support.
 - **Feature Gating**: All major features locked until active subscription confirmed via SubscriptionGate component.
 - **Free Trial**: 7-day free trial enabled through Google Play Console, automatically applied at checkout.
 - **Subscription Flow**: On first launch, users see subscription screen before accessing any features.
-- **Validation**: Subscription status checked on app launch and when resuming via BillingClient.queryPurchasesAsync().
+- **Validation**: Subscription status checked on app launch via CdvPurchase.store product ownership verification.
 - **Frontend Integration**: React SubscriptionContext provides app-wide subscription state with automatic re-validation.
-- **Capacitor Plugin**: Custom SubscriptionPlugin bridges Android billing to React with TypeScript definitions.
-- **Product ID**: platemate_pro_monthly (configured in Google Play Console).
+- **Plugin Integration**: cordova-plugin-purchase handles all billing operations (initialization, purchase flow, receipt verification).
+- **Product ID**: platemate_pro_monthly (configured in Google Play Console and registered in SubscriptionService).
 
 ## AI Services
 - **Multi-Provider System**: Supports OpenAI (GPT-4o-mini, GPT-5) and Google Gemini (Flash/Pro) with automatic failover, health monitoring, and load balancing.
@@ -87,7 +87,7 @@ Preferred communication style: Simple, everyday language.
 - **Barcode Data**: OpenFoodFacts API
 - **Social Sharing**: `dom-to-image-more` library, Web Share API
 - **Health Tracking**: `capacitor-health` plugin
-- **Billing**: Google Play Billing Library 6.0.1 for subscription management
+- **Billing**: cordova-plugin-purchase v13.12.1 (includes Google Play Billing Library 7)
 
 # Android App Build & Deployment
 
@@ -124,8 +124,8 @@ The Android app must be rebuilt using Android Studio to activate native plugins 
 
 ## Debugging Native Plugins
 View native Android logs using Android Studio's Logcat:
-- Filter by tag: `SubscriptionPlugin` or `BillingManager`
-- Look for emoji markers: 🚀 (loading), ✅ (success), ❌ (error)
+- Filter by tag: `CdvPurchase` for billing-related logs
+- JavaScript logs visible in browser console with emoji markers: 🚀 (loading), ✅ (success), ❌ (error)
 
 ## Google Play Console Setup Required
 For billing to work, the app must be:
