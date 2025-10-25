@@ -33,6 +33,17 @@ Preferred communication style: Simple, everyday language.
 - **User Isolation**: Strict data isolation for all user-specific data.
 - **Mobile OAuth**: Capacitor-compatible flow using system browser with deep-link callbacks and secure bridge tokens.
 
+## Monetization and Subscription
+- **Model**: Free-to-download app with mandatory subscription via Google Play Billing at £4.99/month.
+- **Subscription System**: Native Google Play Billing integration with BillingManager class for Android.
+- **Feature Gating**: All major features locked until active subscription confirmed via SubscriptionGate component.
+- **Free Trial**: 7-day free trial enabled through Google Play Console, automatically applied at checkout.
+- **Subscription Flow**: On first launch, users see subscription screen before accessing any features.
+- **Validation**: Subscription status checked on app launch and when resuming via BillingClient.queryPurchasesAsync().
+- **Frontend Integration**: React SubscriptionContext provides app-wide subscription state with automatic re-validation.
+- **Capacitor Plugin**: Custom SubscriptionPlugin bridges Android billing to React with TypeScript definitions.
+- **Product ID**: platemate_pro_monthly (configured in Google Play Console).
+
 ## AI Services
 - **Multi-Provider System**: Supports OpenAI (GPT-4o-mini, GPT-5) and Google Gemini (Flash/Pro) with automatic failover, health monitoring, and load balancing.
 - **Core Functionality**: Food recognition, nutritional analysis, quantity detection, UK-to-US food term mapping.
@@ -76,3 +87,4 @@ Preferred communication style: Simple, everyday language.
 - **Barcode Data**: OpenFoodFacts API
 - **Social Sharing**: `dom-to-image-more` library, Web Share API
 - **Health Tracking**: `capacitor-health` plugin
+- **Billing**: Google Play Billing Library 6.0.1 for subscription management
