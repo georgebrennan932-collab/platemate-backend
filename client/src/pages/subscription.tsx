@@ -1,11 +1,15 @@
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Check, Sparkles, Camera, BarChart3, Trophy, Brain } from 'lucide-react';
+import { Check, Sparkles, Camera, BarChart3, Trophy, Brain, Smartphone, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Capacitor } from '@capacitor/core';
+import { useState } from 'react';
 
 export default function SubscriptionPage() {
   const { launchSubscription, isLoading } = useSubscription();
+  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
+  const isNativePlatform = Capacitor.isNativePlatform();
 
   const features = [
     {
@@ -112,15 +116,46 @@ export default function SubscriptionPage() {
             ))}
           </div>
 
+          {/* Mobile-Only Warning (Web) */}
+          {!isNativePlatform && (
+            <div className="mb-4 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg" data-testid="warning-mobile-only">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-300 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-yellow-100 font-semibold text-sm mb-1">Mobile App Required</p>
+                  <p className="text-yellow-200 text-xs">
+                    Subscriptions can only be purchased through the PlateMate mobile app on Google Play. 
+                    Download the app to subscribe and access all premium features.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* CTA Button */}
           <Button
-            onClick={launchSubscription}
-            disabled={isLoading}
-            className="w-full h-14 text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all"
+            onClick={() => {
+              if (!isNativePlatform) {
+                setShowMobileOnlyMessage(true);
+              } else {
+                launchSubscription();
+              }
+            }}
+            disabled={isLoading || !isNativePlatform}
+            className="w-full h-14 text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="button-start-trial"
           >
-            {isLoading ? 'Loading...' : 'Start My Free Trial'}
+            {isLoading ? 'Loading...' : isNativePlatform ? 'Start My Free Trial' : 'Download Mobile App to Subscribe'}
           </Button>
+
+          {showMobileOnlyMessage && !isNativePlatform && (
+            <div className="mt-4 p-3 bg-blue-500/20 border border-blue-500/50 rounded-lg" data-testid="info-download-app">
+              <div className="flex items-center gap-2 text-blue-200 text-sm">
+                <Smartphone className="w-4 h-4" />
+                <p>Please download PlateMate from Google Play Store to subscribe</p>
+              </div>
+            </div>
+          )}
 
           {/* Fine Print */}
           <p className="text-purple-300 text-xs text-center mt-4" data-testid="text-terms">

@@ -15,18 +15,19 @@ export interface SubscriptionPlugin {
 
 const Subscription = registerPlugin<SubscriptionPlugin>('Subscription', {
   web: () => ({
-    // Web implementation - for development/testing
+    // Web implementation - requires mobile app for subscription
     async checkSubscriptionStatus() {
-      // In web/development mode, treat as subscribed for testing
-      // In production web, you'd implement your own subscription logic
+      // Web version requires users to download the mobile app to subscribe
+      console.warn('⚠️ Subscription check on web - user must use mobile app to subscribe');
       return { 
-        isSubscribed: true,
-        productId: 'platemate_pro_monthly_web'
+        isSubscribed: false,
+        productId: 'platemate_pro_monthly_web',
+        error: 'Subscription only available on mobile app'
       };
     },
     async launchSubscriptionFlow() {
       console.log('Subscription flow not available on web');
-      throw new Error('Subscription flow only available on mobile');
+      throw new Error('Subscription is only available in the mobile app. Please download PlateMate from Google Play.');
     }
   }),
 });
