@@ -10,12 +10,19 @@ export function SubscriptionGate({ children }: SubscriptionGateProps) {
   const { isSubscribed, isLoading } = useSubscription();
   const [location, setLocation] = useLocation();
 
+  // 🚧 TEMPORARY: Bypass subscription check for development/web use
+  // TODO: Re-enable once Android billing is working
+  const BYPASS_SUBSCRIPTION = true;
+
   // Paths that don't require subscription
   const publicPaths = ['/subscription', '/login', '/register', '/forgot-password', '/landing', '/blocked-access'];
 
   useEffect(() => {
     // Wait for loading to complete
     if (isLoading) return;
+
+    // Bypass subscription check if enabled
+    if (BYPASS_SUBSCRIPTION) return;
 
     // Check if current path is public
     const isPublicPath = publicPaths.some(path => location.startsWith(path));
