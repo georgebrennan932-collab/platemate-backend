@@ -1,0 +1,100 @@
+
+Add the Google Play Billing Library dependency
+Note: If you've followed the Getting ready guide, then you've already added the necessary dependencies and can move on to the next section.
+Add the Google Play Billing Library dependency to your app's build.gradle file as shown:
+
+Groovy
+Kotlin
+
+dependencies {
+    def billing_version = "8.0.0"
+
+    implementation "com.android.billingclient:billing:$billing_version"
+}
+If you're using Kotlin, the Google Play Billing Library KTX module contains Kotlin extensions and coroutines support that enable you to write idiomatic Kotlin when using the Google Play Billing Library. To include these extensions in your project, add the following dependency to your app's build.gradle file as shown:
+
+Groovy
+Kotlin
+
+dependencies {
+    def billing_version = "8.0.0"
+
+    implementation "com.android.billingclient:billing-ktx:$billing_version"
+}
+Initialize a BillingClient
+Once you've added a dependency on the Google Play Billing Library, you need to initialize a BillingClient instance. BillingClient is the main interface for communication between the Google Play Billing Library and the rest of your app. BillingClient provides convenience methods, both synchronous and asynchronous, for many common billing operations. Make note of the following:
+
+It's recommended that you have one active BillingClient connection open at one time to avoid multiple PurchasesUpdatedListener callbacks for a single event.
+It's recommended to initiate a connection for the BillingClient when your app is launched or comes to the foreground to ensure your app processes purchases in a timely manner. This can be accomplished by using ActivityLifecycleCallbacks registered by registerActivityLifecycleCallbacks and listening for onActivityResumed to initialize a connection when you first detect an activity being resumed. Refer to the section on processing purchases for more details on why this best practice should be followed. Also remember to end the connection when your app is closed.
+To create a BillingClient, use newBuilder. You can pass any context to newBuilder(), and BillingClient uses it to get an application context. That means you don't need to worry about memory leaks. To receive updates on purchases, you must also call setListener, passing a reference to a PurchasesUpdatedListener. This listener receives updates for all purchases in your app.
+
+Kotlin
+Java
+
+private val purchasesUpdatedListener =
+   PurchasesUpdatedListener { billingResult, purchases ->
+       // To be implemented in a later section.
+   }
+
+private var billingClient = BillingClient.newBuilder(context)
+   .setListener(purchasesUpdatedListener)
+   // Configure other settings.
+   .build()
+Note: The Google Play Billing Library returns errors in the form of BillingResult. A BillingResult contains a BillingResponseCode, which categorizes possible billing-related errors that your app can encounter. For example, if you receive a SERVICE_DISCONNECTED error code, your app should reinitialize the connection with Google Play. Additionally, a BillingResult contains a debug message, which is useful during development to diagnose errors.
+Connect to Google Play
+After you have created a BillingClient, you need to establish a connection to Google Play.
+
+To connect to Google Play, call startConnection. The connection process is asynchronous, and you must implement a BillingClientStateListener to receive a callback once the setup of the client is complete and it's ready to make further requests.
+
+You must also implement retry logic to handle lost connections to Google Play. To implement retry logic, override the onBillingServiceDisconnected() callback method, and make sure that the BillingClient calls the startConnection() method to reconnect to Google Play before making further requests.
+
+The following example demonstrates how to start a connection and test that it's ready to use:
+
+Kotlin
+Java
+
+billingClient.startConnection(object : BillingClientStateListener {
+    override fun onBillingSetupFinished(billingResult: BillingResult) {
+        if (billingResult.responseCode ==  BillingResponseCode.OK) {
+            // The BillingClient is ready. You can query purchases here.
+        }
+    }
+    override fun onBillingServiceDisconnected() {
+        // Try to restart the connection on the next request to
+        // Google Play by calling the startConnection() method.
+    }
+})
+Note: It's strongly recommended that you use the automatic service reconnection feature, as described in the following section. If you choose not to use this feature, it's strongly recommended that you implement your own connection retry logic and override the onBillingServiceDisconnected() method. In either case, make sure you maintain the BillingClient connection when executing any methods.
+Automatically Re-establish a Connection
+With the introduction of the enableAutoServiceReconnection() method in BillingClient.Builder in version 8.0.0, the Play Billing Library can now automatically re-establish the service connection if an API call is made while the service is disconnected. This can lead to a reduction in SERVICE_DISCONNECTED responses since the reconnection is handled internally before the API call is made.
+
+How to enable automatic reconnection
+When building a BillingClient instance, use the enableAutoServiceReconnection() method in the BillingClient.Builder to enable automatic reconnection.
+
+Kotlin
+Java
+
+val billingClient = BillingClient.newBuilder(context)
+    .setListener(listener)
+    .enablePendingPurchases()
+    .enableAutoServiceReconnection() // Add this line to enable reconnection
+    .build()
+Show products available to buy
+After you have established a connection to Google Play, you are ready to query for your available products and display them to your users.
+
+Querying for product details is an important step before displaying your products to your users, as it returns localized product information. For subscriptions, verify your product display follows all Play policies.
+
+To query for one-time product details, call the queryProductDetailsAsync method. This method can return multiple offers based on your one-time product configuration. For more information, see Multiple purchase options and offers for one-time products.
+
+To handle the result of the asynchronous operation, you must also specify a listener which implements the ProductDetailsResponseListener interface. You can then override onProductDetailsResponse, which notifies the listener when the query finishes, as shown in the following example:
+
+Kotlin
+Java
+
+val queryProductDetailsParams =
+    QueryProductDetailsParams.newBuilder()
+        .setProductList(
+            ImmutableList.of(
+                Product.newBuilder()
+                    .setProductId("product_id_example")
+                    .
