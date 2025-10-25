@@ -88,3 +88,50 @@ Preferred communication style: Simple, everyday language.
 - **Social Sharing**: `dom-to-image-more` library, Web Share API
 - **Health Tracking**: `capacitor-health` plugin
 - **Billing**: Google Play Billing Library 6.0.1 for subscription management
+
+# Android App Build & Deployment
+
+## Syncing Web Code to Android
+When you make changes to the web code or native plugins, sync them to the Android project:
+```bash
+npx cap sync android
+```
+
+This command:
+- Copies the latest web build (`dist/public`) to Android assets
+- Updates native plugin registrations
+- Syncs Capacitor configuration
+
+## Building the Android App
+The Android app must be rebuilt using Android Studio to activate native plugins like Google Play Billing:
+
+1. **Open in Android Studio**:
+   - Open the `android/` folder in Android Studio
+   - Wait for Gradle sync to complete
+
+2. **Build APK** (for testing):
+   - Build → Build Bundle(s) / APK(s) → Build APK(s)
+   - APK will be in `android/app/build/outputs/apk/`
+
+3. **Build AAB** (for Google Play):
+   - Build → Build Bundle(s) / APK(s) → Build Bundle(s)
+   - AAB will be in `android/app/build/outputs/bundle/`
+
+4. **Run on Device**:
+   - Connect Android device via USB with debugging enabled
+   - Click Run (green play button) in Android Studio
+   - App will install and launch on device
+
+## Debugging Native Plugins
+View native Android logs using Android Studio's Logcat:
+- Filter by tag: `SubscriptionPlugin` or `BillingManager`
+- Look for emoji markers: 🚀 (loading), ✅ (success), ❌ (error)
+
+## Google Play Console Setup Required
+For billing to work, the app must be:
+1. Uploaded to Google Play Console (Internal Testing or Production)
+2. Subscription product `platemate_pro_monthly` created with 7-day free trial
+3. Installed from Google Play (not sideloaded APK)
+4. Signed with the release keystore configured in Google Play
+
+**Note**: Billing will NOT work in development APKs or when sideloaded. Testing requires Google Play Internal Testing track.
