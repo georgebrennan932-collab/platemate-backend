@@ -18,7 +18,6 @@ dependencies {
     implementation project(':capacitor-local-notifications')
     implementation project(':capacitor-splash-screen')
     implementation project(':capacitor-status-bar')
-    implementation project(':revenuecat-purchases-capacitor')
     implementation project(':capacitor-health')
 
 }

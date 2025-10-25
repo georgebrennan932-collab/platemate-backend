@@ -54,13 +54,14 @@ class SubscriptionService implements SubscriptionPlugin {
       
       await Billing.launchSubscriptionFlow();
       
-      console.log('✅ Subscription flow completed');
+      console.log('✅ Subscription flow completed - purchase successful');
     } catch (error: any) {
       console.error('❌ Error launching subscription flow:', error);
       
       // Check if user cancelled
-      if (error.message?.includes('cancel')) {
-        throw new Error('Purchase cancelled');
+      if (error.message?.includes('cancel') || error.message?.includes('cancelled')) {
+        console.log('ℹ️ User cancelled purchase');
+        throw new Error('User cancelled');
       }
       
       throw error instanceof Error ? error : new Error('Failed to launch subscription flow');

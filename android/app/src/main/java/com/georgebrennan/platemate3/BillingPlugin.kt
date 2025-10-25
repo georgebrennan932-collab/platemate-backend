@@ -19,6 +19,7 @@ class BillingPlugin : Plugin() {
     
     private var billingClient: BillingClient? = null
     private var isServiceConnected = false
+    private var purchaseFlowCall: PluginCall? = null
     
     override fun load() {
         super.load()
@@ -172,28 +173,75 @@ class BillingPlugin : Plugin() {
         
         if (billingResult?.responseCode == BillingClient.BillingResponseCode.OK) {
             Log.d(TAG, "✅ Purchase flow launched successfully")
-            // Don't resolve yet - wait for purchase update callback
-            call.resolve()
+            // Cache the call to resolve it when purchase completes
+            purchaseFlowCall = call
         } else {
             Log.e(TAG, "❌ Failed to launch purchase flow: ${billingResult?.debugMessage}")
-            call.reject("Failed to launch purchase flow")
+            call.reject("Failed to launch purchase flow: ${billingResult?.debugMessage}")
         }
     }
     
     private fun handlePurchasesUpdate(billingResult: BillingResult, purchases: List<Purchase>?) {
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            for (purchase in purchases) {
-                if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-                    if (!purchase.isAcknowledged) {
-                        acknowledgePurchase(purchase)
+        val call = purchaseFlowCall
+        
+        when (billingResult.responseCode) {
+            BillingClient.BillingResponseCode.OK -> {
+                if (purchases.isNullOrEmpty()) {
+                    Log.w(TAG, "⚠️ Purchase update returned OK but with no purchases")
+                    call?.reject("No purchase data received")
+                    purchaseFlowCall = null
+                    return
+                }
+                
+                var hasPurchased = false
+                var hasPending = false
+                
+                for (purchase in purchases) {
+                    when (purchase.purchaseState) {
+                        Purchase.PurchaseState.PURCHASED -> {
+                            if (!purchase.isAcknowledged) {
+                                acknowledgePurchase(purchase)
+                            }
+                            Log.d(TAG, "✅ Purchase successful: ${purchase.products}")
+                            hasPurchased = true
+                        }
+                        Purchase.PurchaseState.PENDING -> {
+                            Log.d(TAG, "⏳ Purchase pending: ${purchase.products}")
+                            hasPending = true
+                        }
+                        else -> {
+                            Log.w(TAG, "⚠️ Unknown purchase state: ${purchase.purchaseState}")
+                        }
                     }
-                    Log.d(TAG, "✅ Purchase successful: ${purchase.products}")
+                }
+                
+                // Always clear the cached call
+                if (call != null) {
+                    if (hasPurchased) {
+                        val result = JSObject()
+                        result.put("success", true)
+                        result.put("message", "Purchase completed successfully")
+                        call.resolve(result)
+                    } else if (hasPending) {
+                        call.reject("Purchase is pending. Please check back later.")
+                    } else {
+                        call.reject("Purchase completed but not in purchased state")
+                    }
+                    purchaseFlowCall = null
                 }
             }
-        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
-            Log.d(TAG, "ℹ️ User cancelled purchase")
-        } else {
-            Log.e(TAG, "❌ Purchase failed: ${billingResult.debugMessage}")
+            
+            BillingClient.BillingResponseCode.USER_CANCELED -> {
+                Log.d(TAG, "ℹ️ User cancelled purchase")
+                call?.reject("User cancelled purchase")
+                purchaseFlowCall = null
+            }
+            
+            else -> {
+                Log.e(TAG, "❌ Purchase failed: ${billingResult.debugMessage}")
+                call?.reject("Purchase failed: ${billingResult.debugMessage}")
+                purchaseFlowCall = null
+            }
         }
     }
     
