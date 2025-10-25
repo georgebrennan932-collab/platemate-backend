@@ -87,7 +87,7 @@ Preferred communication style: Simple, everyday language.
 - **Barcode Data**: OpenFoodFacts API
 - **Social Sharing**: `dom-to-image-more` library, Web Share API
 - **Health Tracking**: `capacitor-health` plugin
-- **Billing**: cordova-plugin-purchase v13.12.1 (includes Google Play Billing Library 7)
+- **Billing**: cordova-plugin-purchase v13.12.1 (configured with Google Play Billing Library 8.0.0)
 
 # Android App Build & Deployment
 
