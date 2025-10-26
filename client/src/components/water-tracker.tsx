@@ -93,14 +93,15 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/water/${dateStr}`] });
       setCustomAmount("");
       toast({
-        title: "Water logged",
-        description: "Your water intake has been recorded.",
+        title: "Fluid logged",
+        description: "Your fluid intake has been recorded.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Failed to log water:", error);
       toast({
         title: "Error",
-        description: "Failed to log water intake.",
+        description: "Failed to log fluid intake.",
         variant: "destructive",
       });
     },
@@ -116,7 +117,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/water/${dateStr}`] });
       toast({
         title: "Entry deleted",
-        description: "Water entry has been removed.",
+        description: "Fluid entry has been removed.",
       });
     },
     onError: () => {
@@ -197,7 +198,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
           <div className="flex items-center gap-2">
             <Droplets className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Water Intake
+              Fluid Intake
             </h3>
           </div>
           {selectedDate.toDateString() === new Date().toDateString() && (
@@ -389,7 +390,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
 
         {isLoading && (
           <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-            Loading water intake...
+            Loading fluid intake...
           </p>
         )}
       </div>
