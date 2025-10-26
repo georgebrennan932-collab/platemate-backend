@@ -217,7 +217,20 @@ export function CameraPage() {
 
   // Step 2: Save to diary after user reviews and confirms
   const saveToDiaryMutation = useMutation({
-    mutationFn: async ({ analysisId, mealType, notes }: { analysisId: string, mealType: string, notes: string }) => {
+    mutationFn: async ({ analysisId, mealType, notes, updatedFoods }: { 
+      analysisId: string, 
+      mealType: string, 
+      notes: string,
+      updatedFoods?: any[]
+    }) => {
+      // If foods were edited, update the analysis first
+      if (updatedFoods) {
+        await apiRequest('PATCH', `/api/analyses/${analysisId}`, {
+          detectedFoods: updatedFoods
+        });
+      }
+      
+      // Then create diary entry with updated analysis
       const now = new Date();
       const diaryResponse = await apiRequest('POST', '/api/diary', {
         analysisId,
@@ -534,9 +547,12 @@ export function CameraPage() {
                             type="text"
                             value={food.name}
                             onChange={(e) => {
-                              const updated = { ...reviewAnalysis };
-                              updated.detectedFoods[index].name = e.target.value;
-                              setReviewAnalysis(updated);
+                              setReviewAnalysis(prev => prev ? {
+                                ...prev,
+                                detectedFoods: prev.detectedFoods.map((f, i) => 
+                                  i === index ? { ...f, name: e.target.value } : f
+                                )
+                              } : null);
                             }}
                             className="font-bold text-sm w-full px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600"
                             placeholder="Food name"
@@ -549,9 +565,12 @@ export function CameraPage() {
                             type="text"
                             value={food.portion}
                             onChange={(e) => {
-                              const updated = { ...reviewAnalysis };
-                              updated.detectedFoods[index].portion = e.target.value;
-                              setReviewAnalysis(updated);
+                              setReviewAnalysis(prev => prev ? {
+                                ...prev,
+                                detectedFoods: prev.detectedFoods.map((f, i) => 
+                                  i === index ? { ...f, portion: e.target.value } : f
+                                )
+                              } : null);
                             }}
                             className="text-xs w-full px-2 py-1 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"
                             placeholder="Portion size"
@@ -563,13 +582,15 @@ export function CameraPage() {
                       {isEditing ? (
                         <button
                           onClick={() => {
-                            // Recalculate totals
-                            const updated = { ...reviewAnalysis };
-                            updated.totalCalories = updated.detectedFoods.reduce((sum, f) => sum + f.calories, 0);
-                            updated.totalProtein = updated.detectedFoods.reduce((sum, f) => sum + f.protein, 0);
-                            updated.totalCarbs = updated.detectedFoods.reduce((sum, f) => sum + f.carbs, 0);
-                            updated.totalFat = updated.detectedFoods.reduce((sum, f) => sum + f.fat, 0);
-                            setReviewAnalysis(updated);
+                            if (!reviewAnalysis) return;
+                            // Recalculate totals immutably
+                            setReviewAnalysis({
+                              ...reviewAnalysis,
+                              totalCalories: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.calories, 0),
+                              totalProtein: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.protein, 0),
+                              totalCarbs: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.carbs, 0),
+                              totalFat: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.fat, 0)
+                            });
                             setEditingFoodIndex(null);
                           }}
                           className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50"
@@ -595,9 +616,12 @@ export function CameraPage() {
                             type="number"
                             value={food.calories}
                             onChange={(e) => {
-                              const updated = { ...reviewAnalysis };
-                              updated.detectedFoods[index].calories = parseInt(e.target.value) || 0;
-                              setReviewAnalysis(updated);
+                              setReviewAnalysis(prev => prev ? {
+                                ...prev,
+                                detectedFoods: prev.detectedFoods.map((f, i) => 
+                                  i === index ? { ...f, calories: parseInt(e.target.value) || 0 } : f
+                                )
+                              } : null);
                             }}
                             className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
                           />
@@ -608,9 +632,12 @@ export function CameraPage() {
                             type="number"
                             value={food.protein}
                             onChange={(e) => {
-                              const updated = { ...reviewAnalysis };
-                              updated.detectedFoods[index].protein = parseInt(e.target.value) || 0;
-                              setReviewAnalysis(updated);
+                              setReviewAnalysis(prev => prev ? {
+                                ...prev,
+                                detectedFoods: prev.detectedFoods.map((f, i) => 
+                                  i === index ? { ...f, protein: parseInt(e.target.value) || 0 } : f
+                                )
+                              } : null);
                             }}
                             className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
                           />
@@ -621,9 +648,12 @@ export function CameraPage() {
                             type="number"
                             value={food.carbs}
                             onChange={(e) => {
-                              const updated = { ...reviewAnalysis };
-                              updated.detectedFoods[index].carbs = parseInt(e.target.value) || 0;
-                              setReviewAnalysis(updated);
+                              setReviewAnalysis(prev => prev ? {
+                                ...prev,
+                                detectedFoods: prev.detectedFoods.map((f, i) => 
+                                  i === index ? { ...f, carbs: parseInt(e.target.value) || 0 } : f
+                                )
+                              } : null);
                             }}
                             className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
                           />
@@ -634,9 +664,12 @@ export function CameraPage() {
                             type="number"
                             value={food.fat}
                             onChange={(e) => {
-                              const updated = { ...reviewAnalysis };
-                              updated.detectedFoods[index].fat = parseInt(e.target.value) || 0;
-                              setReviewAnalysis(updated);
+                              setReviewAnalysis(prev => prev ? {
+                                ...prev,
+                                detectedFoods: prev.detectedFoods.map((f, i) => 
+                                  i === index ? { ...f, fat: parseInt(e.target.value) || 0 } : f
+                                )
+                              } : null);
                             }}
                             className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
                           />
@@ -725,21 +758,12 @@ export function CameraPage() {
                 Cancel
               </button>
               <button
-                onClick={async () => {
-                  // First update the analysis with any edited values
-                  try {
-                    await apiRequest('PATCH', `/api/analyses/${reviewAnalysis.id}`, {
-                      detectedFoods: reviewAnalysis.detectedFoods
-                    });
-                  } catch (error) {
-                    console.error("Failed to update analysis:", error);
-                  }
-                  
-                  // Then save to diary
+                onClick={() => {
                   saveToDiaryMutation.mutate({
                     analysisId: reviewAnalysis.id,
                     mealType: selectedMealType,
-                    notes: `Added via text/voice: "${reviewDescription}"`
+                    notes: `Added via text/voice: "${reviewDescription}"`,
+                    updatedFoods: reviewAnalysis.detectedFoods
                   });
                 }}
                 disabled={saveToDiaryMutation.isPending}
