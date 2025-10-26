@@ -84,6 +84,12 @@ CRITICAL UK FOOD PORTIONS:
 - If you see a crisp packet, bag, or single-serve portion, estimate as "25g" unless it's clearly a sharing size.
 - Common UK crisp flavors (Ready Salted, Cheese & Onion, Salt & Vinegar, Prawn Cocktail) are typically 25g packets.
 
+PROTEIN SHAKES & SUPPLEMENTS (CRITICAL):
+- Protein shakes, Herbalife, protein powder, BCAAs, pre-workout drinks are made with WATER (not milk) unless milk is explicitly visible
+- If you see protein powder/shake but no milk carton/bottle in the image, assume it's made with water
+- Examples: "Herbalife shake made with water", "protein powder with water", "BCAA drink"
+- Only specify "made with milk" if you can actually see milk being used in the image
+
 Guidelines for accurate food identification:
 - Focus on identifying actual food items, not random objects
 - Look for typical breakfast, lunch, dinner, or snack foods

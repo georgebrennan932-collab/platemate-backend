@@ -117,6 +117,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     data.detectedFoods.map(initializeEditableFood)
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingField, setEditingField] = useState<{ index: number; field: string; value: string } | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [voiceInput, setVoiceInput] = useState('');
@@ -665,6 +666,34 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       [field]: value,
     };
     setEditableFoods(updatedFoods);
+  };
+
+  const startEditingField = (index: number, field: string, currentValue: number) => {
+    setEditingField({ index, field, value: currentValue.toString() });
+  };
+
+  const saveEditingField = () => {
+    if (!editingField) return;
+    
+    const numValue = parseFloat(editingField.value);
+    if (!isNaN(numValue) && numValue >= 0) {
+      updateFoodNutrition(editingField.index, editingField.field, numValue);
+    }
+    setEditingField(null);
+  };
+
+  const cancelEditingField = () => {
+    setEditingField(null);
+  };
+
+  const handleFieldKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveEditingField();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEditingField();
+    }
   };
 
   // Memoized calculation of total nutrition from editable foods - only recalculates when foods change
@@ -1288,65 +1317,96 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-white" data-testid={`text-food-calories-${index}`}>
-                    {food.calories} cal
-                  </p>
-                  <p className="text-xs text-purple-200">
-                    {food.protein}g protein
-                  </p>
-                  {editingIndex === index && (
-                    <div className="text-xs text-blue-600 mt-1 space-y-2">
-                      <div>{food.carbs}g carbs • {food.fat}g fat</div>
-                      {food.name === "New Food Item" && (
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          <div>
-                            <label className="text-xs text-gray-600 dark:text-gray-400">Calories</label>
-                            <input
-                              type="number"
-                              value={food.calories}
-                              onChange={(e) => updateFoodNutrition(index, 'calories', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-xs border rounded bg-background"
-                              placeholder="0"
-                              data-testid={`input-calories-${index}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-600 dark:text-gray-400">Protein (g)</label>
-                            <input
-                              type="number"
-                              value={food.protein}
-                              onChange={(e) => updateFoodNutrition(index, 'protein', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-xs border rounded bg-background"
-                              placeholder="0"
-                              data-testid={`input-protein-${index}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-600 dark:text-gray-400">Carbs (g)</label>
-                            <input
-                              type="number"
-                              value={food.carbs}
-                              onChange={(e) => updateFoodNutrition(index, 'carbs', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-xs border rounded bg-background"
-                              placeholder="0"
-                              data-testid={`input-carbs-${index}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-600 dark:text-gray-400">Fat (g)</label>
-                            <input
-                              type="number"
-                              value={food.fat}
-                              onChange={(e) => updateFoodNutrition(index, 'fat', parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 text-xs border rounded bg-background"
-                              placeholder="0"
-                              data-testid={`input-fat-${index}`}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  {/* Calories - Click to Edit */}
+                  {editingField?.index === index && editingField?.field === 'calories' ? (
+                    <input
+                      type="number"
+                      value={editingField.value}
+                      onChange={(e) => setEditingField(prev => prev ? { ...prev, value: e.target.value } : null)}
+                      onBlur={saveEditingField}
+                      onKeyDown={handleFieldKeyDown}
+                      autoFocus
+                      className="w-20 px-2 py-1 text-sm font-semibold text-center border-2 border-orange-400 rounded bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      data-testid={`input-calories-${index}`}
+                    />
+                  ) : (
+                    <p 
+                      className="font-semibold text-white cursor-pointer hover:bg-white/10 rounded px-2 py-1 transition-colors" 
+                      onClick={() => startEditingField(index, 'calories', food.calories)}
+                      data-testid={`text-food-calories-${index}`}
+                      title="Click to edit calories"
+                    >
+                      {food.calories} cal
+                    </p>
                   )}
+                  
+                  {/* Protein - Click to Edit */}
+                  {editingField?.index === index && editingField?.field === 'protein' ? (
+                    <input
+                      type="number"
+                      value={editingField.value}
+                      onChange={(e) => setEditingField(prev => prev ? { ...prev, value: e.target.value } : null)}
+                      onBlur={saveEditingField}
+                      onKeyDown={handleFieldKeyDown}
+                      autoFocus
+                      className="w-16 px-2 py-1 text-xs text-center border-2 border-orange-400 rounded bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      data-testid={`input-protein-${index}`}
+                    />
+                  ) : (
+                    <p 
+                      className="text-xs text-purple-200 cursor-pointer hover:bg-white/10 rounded px-2 py-0.5 transition-colors" 
+                      onClick={() => startEditingField(index, 'protein', food.protein)}
+                      title="Click to edit protein"
+                    >
+                      {food.protein}g protein
+                    </p>
+                  )}
+                  
+                  {/* Carbs - Click to Edit */}
+                  <div className="text-xs text-purple-200/80 mt-0.5">
+                    {editingField?.index === index && editingField?.field === 'carbs' ? (
+                      <input
+                        type="number"
+                        value={editingField.value}
+                        onChange={(e) => setEditingField(prev => prev ? { ...prev, value: e.target.value } : null)}
+                        onBlur={saveEditingField}
+                        onKeyDown={handleFieldKeyDown}
+                        autoFocus
+                        className="w-16 px-2 py-1 text-xs text-center border-2 border-orange-400 rounded bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        data-testid={`input-carbs-${index}`}
+                      />
+                    ) : (
+                      <span 
+                        className="cursor-pointer hover:bg-white/10 rounded px-2 py-0.5 transition-colors inline-block" 
+                        onClick={() => startEditingField(index, 'carbs', food.carbs)}
+                        title="Click to edit carbs"
+                      >
+                        {food.carbs}g carbs
+                      </span>
+                    )}
+                    {' • '}
+                    {/* Fat - Click to Edit */}
+                    {editingField?.index === index && editingField?.field === 'fat' ? (
+                      <input
+                        type="number"
+                        value={editingField.value}
+                        onChange={(e) => setEditingField(prev => prev ? { ...prev, value: e.target.value } : null)}
+                        onBlur={saveEditingField}
+                        onKeyDown={handleFieldKeyDown}
+                        autoFocus
+                        className="w-16 px-2 py-1 text-xs text-center border-2 border-orange-400 rounded bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        data-testid={`input-fat-${index}`}
+                      />
+                    ) : (
+                      <span 
+                        className="cursor-pointer hover:bg-white/10 rounded px-2 py-0.5 transition-colors inline-block" 
+                        onClick={() => startEditingField(index, 'fat', food.fat)}
+                        title="Click to edit fat"
+                      >
+                        {food.fat}g fat
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -1403,7 +1463,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <div className="flex items-start space-x-2">
             <Info className="h-4 w-4 text-blue-300 mt-0.5 flex-shrink-0" />
             <p className="text-sm text-purple-200">
-              <strong className="text-white">Tip:</strong> AI sometimes misidentifies foods. Click the <Edit3 className="h-3 w-3 inline mx-1" /> icon to edit food names and portions, use the <Trash2 className="h-3 w-3 inline mx-1" /> icon to remove incorrect items, or use "Add Missing Food Item" to add foods the AI missed. Remember to save your changes!
+              <strong className="text-white">Quick Edit:</strong> Click any nutrition value (calories, protein, carbs, fat) to edit it directly. Click the <Edit3 className="h-3 w-3 inline mx-1" /> icon to edit food names and portions, or use the <Trash2 className="h-3 w-3 inline mx-1" /> icon to remove items. Remember to save your changes!
             </p>
           </div>
         </div>
