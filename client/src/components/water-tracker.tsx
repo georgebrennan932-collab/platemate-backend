@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Droplets, Plus, Trash2, Edit } from "lucide-react";
+import { Droplets, Plus, Trash2, Edit, Coffee, Wine, Beer, GlassWater } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { WaterIntake, InsertWaterIntake, NutritionGoals, UserProfile } from "@shared/schema";
@@ -79,10 +79,12 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
 
   // Add water mutation
   const addWaterMutation = useMutation({
-    mutationFn: async (amountMl: number) => {
+    mutationFn: async (data: { amountMl: number; drinkType: string; drinkName: string }) => {
       const entry: InsertWaterIntake = {
         userId: "", // Will be set by backend
-        amountMl,
+        amountMl: data.amountMl,
+        drinkType: data.drinkType,
+        drinkName: data.drinkName,
         loggedAt: new Date().toISOString(),
         loggedDate: dateStr,
       };
@@ -156,14 +158,14 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
     },
   });
 
-  const handleQuickAdd = (amount: number) => {
-    addWaterMutation.mutate(amount);
+  const handleQuickAdd = (amount: number, drinkType: string, drinkName: string) => {
+    addWaterMutation.mutate({ amountMl: amount, drinkType, drinkName });
   };
 
   const handleCustomAdd = () => {
     const amount = parseInt(customAmount);
     if (amount && amount > 0 && amount <= 5000) {
-      addWaterMutation.mutate(amount);
+      addWaterMutation.mutate({ amountMl: amount, drinkType: "custom", drinkName: "Custom" });
     } else {
       toast({
         title: "Invalid amount",
@@ -277,49 +279,59 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
           </p>
         </div>
 
-        {/* Quick Add Buttons */}
+        {/* Drink Type Buttons */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Quick Add</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Quick Add Drinks</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <Button
-              onClick={() => handleQuickAdd(250)}
+              onClick={() => handleQuickAdd(250, "water", "Water")}
               variant="outline"
-              className="bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 hover:from-blue-100 hover:to-cyan-100 dark:hover:from-blue-900/30 dark:hover:to-cyan-900/30 border-blue-200 dark:border-blue-800"
               disabled={addWaterMutation.isPending}
               data-testid="button-add-water-250"
             >
-              <Plus className="h-4 w-4 mr-1" />
-              250ml
+              <GlassWater className="h-4 w-4 mr-1 text-blue-600 dark:text-blue-400" />
+              Water 250ml
             </Button>
             <Button
-              onClick={() => handleQuickAdd(500)}
+              onClick={() => handleQuickAdd(240, "coffee", "Coffee")}
               variant="outline"
-              className="bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 hover:from-amber-100 hover:to-yellow-100 dark:hover:from-amber-900/30 dark:hover:to-yellow-900/30 border-amber-200 dark:border-amber-800"
               disabled={addWaterMutation.isPending}
-              data-testid="button-add-water-500"
+              data-testid="button-add-coffee-240"
             >
-              <Plus className="h-4 w-4 mr-1" />
-              500ml
+              <Coffee className="h-4 w-4 mr-1 text-amber-700 dark:text-amber-400" />
+              Coffee 240ml
             </Button>
             <Button
-              onClick={() => handleQuickAdd(750)}
+              onClick={() => handleQuickAdd(200, "tea", "Tea")}
               variant="outline"
-              className="bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 border-green-200 dark:border-green-800"
               disabled={addWaterMutation.isPending}
-              data-testid="button-add-water-750"
+              data-testid="button-add-tea-200"
             >
-              <Plus className="h-4 w-4 mr-1" />
-              750ml
+              <Coffee className="h-4 w-4 mr-1 text-green-700 dark:text-green-400" />
+              Tea 200ml
             </Button>
             <Button
-              onClick={() => handleQuickAdd(1000)}
+              onClick={() => handleQuickAdd(150, "wine", "Wine")}
               variant="outline"
-              className="bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 border-purple-200 dark:border-purple-800"
               disabled={addWaterMutation.isPending}
-              data-testid="button-add-water-1000"
+              data-testid="button-add-wine-150"
             >
-              <Plus className="h-4 w-4 mr-1" />
-              1L
+              <Wine className="h-4 w-4 mr-1 text-purple-700 dark:text-purple-400" />
+              Wine 150ml
+            </Button>
+            <Button
+              onClick={() => handleQuickAdd(355, "beer", "Beer")}
+              variant="outline"
+              className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 hover:from-orange-100 hover:to-amber-100 dark:hover:from-orange-900/30 dark:hover:to-amber-900/30 border-orange-200 dark:border-orange-800"
+              disabled={addWaterMutation.isPending}
+              data-testid="button-add-beer-355"
+            >
+              <Beer className="h-4 w-4 mr-1 text-orange-700 dark:text-orange-400" />
+              Beer 355ml
             </Button>
           </div>
         </div>
@@ -357,33 +369,50 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
           <div className="space-y-2 pt-2 border-t border-blue-200 dark:border-blue-800">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Today's Log</p>
             <div className="space-y-1 max-h-48 overflow-y-auto">
-              {waterEntries.map((entry, index) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-2 text-sm"
-                  data-testid={`water-entry-${index}`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Droplets className="h-4 w-4 text-blue-500" />
-                    <span className="font-medium text-gray-900 dark:text-white" data-testid={`text-water-amount-${index}`}>
-                      {entry.amountMl}ml
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {format(new Date(entry.loggedAt), "HH:mm")}
-                    </span>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDelete(entry.id)}
-                    disabled={deleteWaterMutation.isPending}
-                    className="h-7 w-7 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
-                    data-testid={`button-delete-water-${index}`}
+              {waterEntries.map((entry, index) => {
+                // Get icon and color based on drink type
+                const getDrinkIcon = () => {
+                  switch (entry.drinkType) {
+                    case "water": return <GlassWater className="h-4 w-4 text-blue-500" />;
+                    case "coffee": return <Coffee className="h-4 w-4 text-amber-600" />;
+                    case "tea": return <Coffee className="h-4 w-4 text-green-600" />;
+                    case "wine": return <Wine className="h-4 w-4 text-purple-600" />;
+                    case "beer": return <Beer className="h-4 w-4 text-orange-600" />;
+                    default: return <Droplets className="h-4 w-4 text-gray-500" />;
+                  }
+                };
+                
+                return (
+                  <div
+                    key={entry.id}
+                    className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-2 text-sm"
+                    data-testid={`water-entry-${index}`}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                    <div className="flex items-center gap-2">
+                      {getDrinkIcon()}
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                        {entry.drinkName}
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white" data-testid={`text-water-amount-${index}`}>
+                        {entry.amountMl}ml
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {format(new Date(entry.loggedAt), "HH:mm")}
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(entry.id)}
+                      disabled={deleteWaterMutation.isPending}
+                      className="h-7 w-7 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                      data-testid={`button-delete-water-${index}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

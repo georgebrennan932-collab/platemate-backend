@@ -1626,7 +1626,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validatedEntry = insertWaterIntakeSchema.parse({
         ...req.body,
-        userId
+        userId,
+        drinkType: req.body.drinkType || "water",
+        drinkName: req.body.drinkName || "Water"
       });
       
       const waterEntry = await storage.createWaterIntake(validatedEntry);
@@ -1699,6 +1701,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const waterIntake = await storage.createWaterIntake({
           userId,
           amountMl: drinkEntry.amount,
+          drinkType: drinkEntry.drinkType,
+          drinkName: drinkEntry.drinkName,
           loggedAt: loggedAt instanceof Date ? loggedAt.toISOString() : loggedAt,
           loggedDate
         });
