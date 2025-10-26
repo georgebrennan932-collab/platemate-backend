@@ -295,17 +295,36 @@ If you can't clearly identify something, don't include it. Be as accurate as pos
     }
   }
 
-  async analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
+  async analyzeFoodText(foodDescription: string, clientTimeInfo?: { timeString: string, timeOfDay: string, hours: number, minutes: number }): Promise<FoodAnalysisResult> {
     try {
       // Apply UK to US food term mapping BEFORE sending to AI
       const mappedDescription = mapUKFoodTerms(foodDescription);
+      
+      // Add time context for better analysis (use client's local time if provided, otherwise server time)
+      let timeString: string;
+      let timeOfDay: string;
+      
+      if (clientTimeInfo) {
+        // Use pre-calculated client local time (no timezone conversion needed)
+        timeString = clientTimeInfo.timeString;
+        timeOfDay = clientTimeInfo.timeOfDay;
+      } else {
+        // Fallback to server time
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        timeOfDay = hours < 12 ? 'morning' : hours < 17 ? 'afternoon' : 'evening';
+      }
       
       const response = await this.client.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {
             role: "user",
-            content: `Analyze this food description and extract nutritional information. Parse the quantity, unit, and food name from: "${mappedDescription}"
+            content: `Current time: ${timeString} (${timeOfDay})
+
+Analyze this food description and extract nutritional information. Parse the quantity, unit, and food name from: "${mappedDescription}"
 
 CRITICAL FOOD INTERPRETATION RULES:
 - "rice" = cooked white/brown rice (NOT rice paper, rice cakes, or rice noodles)

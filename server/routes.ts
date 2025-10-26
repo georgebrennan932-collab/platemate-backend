@@ -639,14 +639,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Text-based food analysis for voice input - bypass auth in deployment like image analysis
   app.post("/api/analyze-text", async (req: any, res) => {
     try {
-      const { foodDescription } = req.body;
+      const { foodDescription, clientTimeInfo } = req.body;
       
       if (!foodDescription || typeof foodDescription !== 'string') {
         return res.status(400).json({ error: "Food description is required" });
       }
 
-      // Use AI manager to analyze text-based food description
-      const foodAnalysisData = await aiManager.analyzeFoodText(foodDescription.trim());
+      // Use AI manager to analyze text-based food description (with client time for timezone-aware context)
+      const foodAnalysisData = await aiManager.analyzeFoodText(foodDescription.trim(), clientTimeInfo);
 
       // CONFIDENCE THRESHOLD CHECK: If confidence < 90%, create confirmation workflow
       if (foodAnalysisData.confidence < 90) {

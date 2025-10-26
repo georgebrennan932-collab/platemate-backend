@@ -119,7 +119,7 @@ export abstract class AIProvider {
   protected lastSuccess?: Date;
 
   abstract analyzeFoodImage(imagePath: string): Promise<FoodAnalysisResult>;
-  abstract analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult>;
+  abstract analyzeFoodText(foodDescription: string, clientTimeInfo?: { timeString: string, timeOfDay: string, hours: number, minutes: number }): Promise<FoodAnalysisResult>;
   // New method for food detection only (no nutrition calculation)
   abstract detectFoodNames(imagePath: string): Promise<FoodDetectionResult>;
   abstract generateDietAdvice(entries: DiaryEntry[], userProfile?: any): Promise<DietAdviceResult>;

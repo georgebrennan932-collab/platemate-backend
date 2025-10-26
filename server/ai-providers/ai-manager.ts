@@ -798,8 +798,10 @@ export class AIManager {
 
   /**
    * Enhanced text analysis workflow: AI parsing + USDA nutrition lookup
+   * @param foodDescription The food description from user
+   * @param clientTimeInfo Optional client time info for timezone-aware analysis
    */
-  async analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
+  async analyzeFoodText(foodDescription: string, clientTimeInfo?: { timeString: string, timeOfDay: string, hours: number, minutes: number }): Promise<FoodAnalysisResult> {
     try {
       // Step 1: Parse food items with portions from text description
       const foodItems = await this.parseFoodNamesFromText(foodDescription);
@@ -813,7 +815,7 @@ export class AIManager {
       
     } catch (error: any) {
       console.warn('Enhanced text analysis failed, falling back to legacy method:', error.message);
-      return this.legacyAnalyzeFoodText(foodDescription);
+      return this.legacyAnalyzeFoodText(foodDescription, clientTimeInfo);
     }
   }
 
@@ -1014,7 +1016,7 @@ export class AIManager {
   /**
    * Legacy text analysis method (fallback when enhanced method fails)
    */
-  async legacyAnalyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
+  async legacyAnalyzeFoodText(foodDescription: string, clientTimeInfo?: { timeString: string, timeOfDay: string, hours: number, minutes: number }): Promise<FoodAnalysisResult> {
     const availableProviders = this.getAvailableProviders();
     
     // Try each available provider in priority order
@@ -1022,7 +1024,7 @@ export class AIManager {
       for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
         try {
           
-          const result = await provider.analyzeFoodText(foodDescription);
+          const result = await provider.analyzeFoodText(foodDescription, clientTimeInfo);
           
           return {
             ...result,

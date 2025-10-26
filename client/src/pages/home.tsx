@@ -31,6 +31,23 @@ import { ProfileReminderBanner } from "@/components/profile-reminder-banner";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
+// Helper function to determine meal type based on current time
+function getMealTypeFromTime(): 'breakfast' | 'lunch' | 'dinner' | 'snack' {
+  const hour = new Date().getHours();
+  
+  if (hour >= 5 && hour < 11) {
+    return 'breakfast';
+  } else if (hour >= 11 && hour < 15) {
+    return 'lunch';
+  } else if (hour >= 15 && hour < 18) {
+    return 'snack';
+  } else if (hour >= 18 && hour < 23) {
+    return 'dinner';
+  } else {
+    return 'snack'; // Late night/early morning
+  }
+}
+
 export default function Home() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -51,7 +68,7 @@ export default function Home() {
   const [showVoiceMealDialog, setShowVoiceMealDialog] = useState(false);
   const [textInput, setTextInput] = useState('');
   const [showTextMealDialog, setShowTextMealDialog] = useState(false);
-  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
+  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>(getMealTypeFromTime());
   const [textMealInput, setTextMealInput] = useState('');
   const [nutritionUpdateTimer, setNutritionUpdateTimer] = useState<NodeJS.Timeout | null>(null);
   const [nutritionUpdateController, setNutritionUpdateController] = useState<AbortController | null>(null);
@@ -537,6 +554,7 @@ export default function Home() {
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setVoiceInput(transcript);
+        setSelectedMealType(getMealTypeFromTime()); // Recalculate based on current time
         setShowVoiceMealDialog(true);
         toast({
           title: "Voice captured!",
@@ -586,8 +604,20 @@ export default function Home() {
   // Step 1: Analyze text (voice or typed) - doesn't save to diary yet
   const analyzeTextMutation = useMutation({
     mutationFn: async ({ foodDescription }: { foodDescription: string }) => {
-      // Analyze the text-based food description
-      const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
+      // Analyze the text-based food description (send client's local time for timezone-aware analysis)
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const clientTimeInfo = {
+        hours,
+        minutes,
+        timeString: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
+        timeOfDay: hours < 12 ? 'morning' : hours < 17 ? 'afternoon' : 'evening'
+      };
+      const analysisResponse = await apiRequest('POST', '/api/analyze-text', { 
+        foodDescription,
+        clientTimeInfo 
+      });
       const analysis = await analysisResponse.json();
       return { analysis, foodDescription };
     },
@@ -599,6 +629,7 @@ export default function Home() {
       // Show review dialog with analysis
       setReviewAnalysis(analysis);
       setReviewDescription(foodDescription);
+      setSelectedMealType(getMealTypeFromTime()); // Recalculate based on current time
       setShowReviewDialog(true);
     },
     onError: (error: Error) => {
@@ -1014,7 +1045,10 @@ export default function Home() {
             </button>
             
             <button
-              onClick={() => setShowTextMealDialog(true)}
+              onClick={() => {
+                setSelectedMealType(getMealTypeFromTime()); // Recalculate based on current time
+                setShowTextMealDialog(true);
+              }}
               className="py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 transition-all duration-200 bg-blue-600 text-white hover:bg-blue-500"
               data-testid="button-add-type"
               aria-label="Add meal by typing description"

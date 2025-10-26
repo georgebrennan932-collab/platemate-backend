@@ -241,13 +241,32 @@ Only return the JSON object, nothing else.`;
     }
   }
 
-  async analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
+  async analyzeFoodText(foodDescription: string, clientTimeInfo?: { timeString: string, timeOfDay: string, hours: number, minutes: number }): Promise<FoodAnalysisResult> {
     try {
       if (!this.apiKey) {
         throw new Error("HUGGINGFACE_API_KEY not configured");
       }
 
-      const prompt = `Analyze this food description: "${foodDescription}"
+      // Add time context for better analysis (use client's local time if provided, otherwise server time)
+      let timeString: string;
+      let timeOfDay: string;
+      
+      if (clientTimeInfo) {
+        // Use pre-calculated client local time (no timezone conversion needed)
+        timeString = clientTimeInfo.timeString;
+        timeOfDay = clientTimeInfo.timeOfDay;
+      } else {
+        // Fallback to server time
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        timeOfDay = hours < 12 ? 'morning' : hours < 17 ? 'afternoon' : 'evening';
+      }
+
+      const prompt = `Current time: ${timeString} (${timeOfDay})
+
+Analyze this food description: "${foodDescription}"
 
 Identify the food items and provide nutritional estimates.
 
