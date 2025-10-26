@@ -126,12 +126,12 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="flex items-center space-x-2 text-base">
+        <DialogHeader className="pb-1">
+          <DialogTitle className="flex items-center space-x-2 text-sm">
             <Utensils className="h-4 w-4" />
-            <span>Edit Meal Entry</span>
+            <span>Meal Entry</span>
           </DialogTitle>
-          <DialogDescription className="text-xs">
+          <DialogDescription className="text-[10px]">
             Adjust portion size, meal type, or add notes
           </DialogDescription>
         </DialogHeader>
@@ -146,12 +146,12 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
               description: "Please check all fields and try again.",
             });
           }
-        )} className="space-y-3">
+        )} className="space-y-2">
           {/* Compact Portion Size */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <Label className="text-sm">Portion Size</Label>
-              <div className="flex items-center gap-1.5">
+              <Label className="text-xs">Size</Label>
+              <div className="flex items-center gap-1">
                 <input
                   type="number"
                   value={portionInput}
@@ -167,10 +167,10 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
                   min={10}
                   max={500}
                   step={10}
-                  className="w-16 px-2 py-0.5 text-sm border rounded text-center dark:bg-gray-800 dark:border-gray-700"
+                  className="w-14 px-1 py-0.5 text-xs border rounded text-center dark:bg-gray-800 dark:border-gray-700"
                   data-testid="input-portion-value"
                 />
-                <span className="text-sm font-bold text-primary">{portionDisplay}x</span>
+                <span className="text-xs font-bold text-primary">{portionDisplay}x</span>
               </div>
             </div>
             <Slider
@@ -182,11 +182,10 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
               min={10}
               max={500}
               step={10}
-              className="w-full h-6"
+              className="w-full h-2"
               data-testid="slider-portion"
             />
-            <div className="flex justify-between text-[10px] text-muted-foreground -mt-1">
-              <span>0.1x (10%)</span>
+            <div className="flex justify-between text-[9px] text-muted-foreground -mt-0.5">
               <span>1.0x (100%)</span>
               <span>5.0x (500%)</span>
             </div>
@@ -194,9 +193,8 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
 
           {/* Inline Nutrition Preview */}
           {previewNutrition && (
-            <div className="bg-muted/30 rounded-lg p-2">
-              <p className="text-xs font-medium mb-1.5">Adjusted Nutrition:</p>
-              <div className="grid grid-cols-4 gap-1.5 text-center">
+            <div className="bg-muted/30 rounded-lg p-1.5">
+              <div className="grid grid-cols-4 gap-1 text-center">
                 <div>
                   <div className="text-sm font-bold text-orange-600">{previewNutrition.calories}</div>
                   <div className="text-[10px] text-muted-foreground">cal</div>
@@ -218,21 +216,21 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
           )}
 
           {/* Compact Meal Type */}
-          <div className="space-y-1">
-            <Label className="text-sm">Meal Type</Label>
+          <div className="space-y-0.5">
+            <Label className="text-xs">Type</Label>
             <Select
               value={form.watch("mealType")}
               onValueChange={(value) => form.setValue("mealType", value as any)}
             >
-              <SelectTrigger className="h-8 text-sm" data-testid="select-meal-type">
+              <SelectTrigger className="h-7 text-xs" data-testid="select-meal-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="breakfast">🌅 Breakfast</SelectItem>
-                <SelectItem value="lunch">☀️ Lunch</SelectItem>
-                <SelectItem value="dinner">🌙 Dinner</SelectItem>
-                <SelectItem value="snack">🍎 Snack</SelectItem>
-                <SelectItem value="custom">✨ Custom</SelectItem>
+                <SelectItem value="breakfast">Breakfast</SelectItem>
+                <SelectItem value="lunch">Lunch</SelectItem>
+                <SelectItem value="dinner">Dinner</SelectItem>
+                <SelectItem value="snack">Snack</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
               </SelectContent>
             </Select>
           </div>
