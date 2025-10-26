@@ -206,37 +206,37 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 p-6 sm:p-8 text-white">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 p-4 text-white">
       {/* Floating particles effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-2 h-2 bg-white/30 rounded-full top-[10%] left-[15%] animate-float-slow"></div>
-        <div className="absolute w-1.5 h-1.5 bg-white/20 rounded-full top-[25%] right-[20%] animate-float-medium"></div>
-        <div className="absolute w-2.5 h-2.5 bg-white/25 rounded-full top-[60%] left-[25%] animate-float-fast"></div>
+        <div className="absolute w-1.5 h-1.5 bg-white/30 rounded-full top-[10%] left-[15%] animate-float-slow"></div>
+        <div className="absolute w-1 h-1 bg-white/20 rounded-full top-[25%] right-[20%] animate-float-medium"></div>
+        <div className="absolute w-2 h-2 bg-white/25 rounded-full top-[60%] left-[25%] animate-float-fast"></div>
         <div className="absolute w-1 h-1 bg-white/30 rounded-full top-[80%] right-[30%] animate-float-slow"></div>
-        <div className="absolute w-2 h-2 bg-white/20 rounded-full top-[40%] right-[10%] animate-float-medium"></div>
-        <div className="absolute w-1.5 h-1.5 bg-white/25 rounded-full bottom-[15%] left-[40%] animate-float-fast"></div>
+        <div className="absolute w-1.5 h-1.5 bg-white/20 rounded-full top-[40%] right-[10%] animate-float-medium"></div>
+        <div className="absolute w-1 h-1 bg-white/25 rounded-full bottom-[15%] left-[40%] animate-float-fast"></div>
       </div>
 
-      <div className="relative z-10 space-y-6">
+      <div className="relative z-10 space-y-3">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold">Fluid Intake</h2>
+          <h2 className="text-2xl font-bold">Fluid Intake</h2>
           {selectedDate.toDateString() === new Date().toDateString() && (
-            <span className="bg-cyan-400 text-blue-900 px-4 py-2 rounded-full text-sm font-semibold">
+            <span className="bg-cyan-400 text-blue-900 px-3 py-1 rounded-full text-xs font-semibold">
               Today
             </span>
           )}
         </div>
 
         {/* Main Display Area */}
-        <div className="flex items-center justify-between gap-8">
-          {/* Large Water Droplet */}
+        <div className="flex items-center justify-between gap-4">
+          {/* Water Droplet */}
           <div className="relative">
-            <div className="w-32 h-32 sm:w-40 sm:h-40 relative">
+            <div className="w-24 h-24 relative">
               {/* Glossy water droplet effect */}
               <div className="absolute inset-0 rounded-[50%] bg-gradient-to-br from-cyan-300 via-blue-400 to-blue-500 opacity-90"
                    style={{ borderRadius: '50% 50% 50% 0%', transform: 'rotate(45deg)' }}>
-                <div className="absolute top-4 left-4 w-8 h-8 bg-white/40 rounded-full blur-sm"></div>
+                <div className="absolute top-3 left-3 w-6 h-6 bg-white/40 rounded-full blur-sm"></div>
               </div>
               {/* Water level inside droplet */}
               <div className="absolute inset-0 overflow-hidden"
@@ -250,13 +250,13 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
           </div>
 
           {/* Percentage and Progress */}
-          <div className="flex-1 space-y-3">
-            <div className="text-7xl sm:text-8xl font-black" data-testid="text-water-percentage">
+          <div className="flex-1 space-y-2">
+            <div className="text-5xl font-black" data-testid="text-water-percentage">
               {Math.round(percentComplete)}%
             </div>
             
             {/* Gradient Progress Bar */}
-            <div className="relative h-4 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+            <div className="relative h-3 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
               <div 
                 className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 via-pink-500 to-pink-400 rounded-full transition-all duration-500"
                 style={{ width: `${percentComplete}%` }}
@@ -265,7 +265,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
             </div>
 
             {/* Stats Row */}
-            <div className="flex justify-between text-lg sm:text-xl">
+            <div className="flex justify-between text-base">
               <div>
                 <p className="font-bold" data-testid="text-water-consumed">{totalConsumed}ml</p>
                 <p className="text-sm text-white/80">
@@ -312,23 +312,23 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
         </div>
 
         {/* Motivational Text */}
-        <div className="text-center text-white/90 text-sm sm:text-base">
+        <div className="text-center text-white/90 text-xs">
           Let's get started! Your cells are waiting 💧
         </div>
 
         {/* Quick Add Buttons - 2x2 Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {/* Water - Blue */}
           <button
             onClick={() => handleQuickAdd(250, "water", "Water")}
             disabled={addWaterMutation.isPending}
-            className="bg-gradient-to-br from-blue-400 to-cyan-400 hover:from-blue-500 hover:to-cyan-500 rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:scale-105 disabled:opacity-50"
+            className="bg-gradient-to-br from-blue-400 to-cyan-400 hover:from-blue-500 hover:to-cyan-500 rounded-xl p-3 flex items-center gap-2 transition-all duration-200 hover:scale-105 disabled:opacity-50"
             data-testid="button-add-water-250"
           >
-            <GlassWater className="h-10 w-10" />
+            <GlassWater className="h-7 w-7" />
             <div className="text-left">
-              <p className="font-bold text-lg">Water</p>
-              <p className="text-sm opacity-90">250ml</p>
+              <p className="font-bold text-base">Water</p>
+              <p className="text-xs opacity-90">250ml</p>
             </div>
           </button>
 
@@ -336,13 +336,13 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
           <button
             onClick={() => handleQuickAdd(240, "coffee", "Coffee")}
             disabled={addWaterMutation.isPending}
-            className="bg-gradient-to-br from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500 rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:scale-105 disabled:opacity-50"
+            className="bg-gradient-to-br from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500 rounded-xl p-3 flex items-center gap-2 transition-all duration-200 hover:scale-105 disabled:opacity-50"
             data-testid="button-add-coffee-240"
           >
-            <Coffee className="h-10 w-10" />
+            <Coffee className="h-7 w-7" />
             <div className="text-left">
-              <p className="font-bold text-lg">Coffee</p>
-              <p className="text-sm opacity-90">240ml</p>
+              <p className="font-bold text-base">Coffee</p>
+              <p className="text-xs opacity-90">240ml</p>
             </div>
           </button>
 
@@ -350,13 +350,13 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
           <button
             onClick={() => handleQuickAdd(200, "tea", "Tea")}
             disabled={addWaterMutation.isPending}
-            className="bg-gradient-to-br from-emerald-400 to-green-400 hover:from-emerald-500 hover:to-green-500 rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:scale-105 disabled:opacity-50"
+            className="bg-gradient-to-br from-emerald-400 to-green-400 hover:from-emerald-500 hover:to-green-500 rounded-xl p-3 flex items-center gap-2 transition-all duration-200 hover:scale-105 disabled:opacity-50"
             data-testid="button-add-tea-200"
           >
-            <Coffee className="h-10 w-10" />
+            <Coffee className="h-7 w-7" />
             <div className="text-left">
-              <p className="font-bold text-lg">Tea</p>
-              <p className="text-sm opacity-90">200ml</p>
+              <p className="font-bold text-base">Tea</p>
+              <p className="text-xs opacity-90">200ml</p>
             </div>
           </button>
 
@@ -364,23 +364,23 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
           <button
             onClick={() => handleQuickAdd(150, "wine", "Wine")}
             disabled={addWaterMutation.isPending}
-            className="bg-gradient-to-br from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 rounded-2xl p-4 flex items-center gap-3 transition-all duration-200 hover:scale-105 disabled:opacity-50"
+            className="bg-gradient-to-br from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 rounded-xl p-3 flex items-center gap-2 transition-all duration-200 hover:scale-105 disabled:opacity-50"
             data-testid="button-add-wine-150"
           >
-            <Wine className="h-10 w-10" />
+            <Wine className="h-7 w-7" />
             <div className="text-left">
-              <p className="font-bold text-lg">Wine</p>
-              <p className="text-sm opacity-90">150ml</p>
+              <p className="font-bold text-base">Wine</p>
+              <p className="text-xs opacity-90">150ml</p>
             </div>
           </button>
         </div>
 
         {/* Custom Amount Section */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 flex items-center gap-3">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2.5 flex items-center gap-2">
           <div className="flex-1">
-            <p className="text-lg font-semibold mb-2">Custom amount</p>
+            <p className="text-sm font-semibold mb-1.5">Custom amount</p>
             <Select value={customDrinkType} onValueChange={(value: any) => setCustomDrinkType(value)}>
-              <SelectTrigger className="bg-white/20 border-white/30 text-white w-full" data-testid="select-custom-drink-type">
+              <SelectTrigger className="bg-white/20 border-white/30 text-white text-sm h-8" data-testid="select-custom-drink-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -393,7 +393,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             <Input
               type="number"
               placeholder="ml"
@@ -404,13 +404,13 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
                   handleCustomAdd();
                 }
               }}
-              className="w-24 bg-white/20 border-white/30 text-white placeholder:text-white/50"
+              className="w-20 h-8 text-sm bg-white/20 border-white/30 text-white placeholder:text-white/50"
               data-testid="input-custom-water"
             />
             <Button
               onClick={handleCustomAdd}
               disabled={addWaterMutation.isPending || !customAmount}
-              className="bg-cyan-400 hover:bg-cyan-500 text-blue-900 font-bold px-6"
+              className="bg-cyan-400 hover:bg-cyan-500 text-blue-900 font-bold text-sm h-8 px-4"
               data-testid="button-add-custom-water"
             >
               Enter
