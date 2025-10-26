@@ -33,9 +33,12 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
   });
 
   // Fetch water entries for selected date
-  const { data: waterEntries = [], isLoading } = useQuery<WaterIntake[]>({
+  const { data: waterEntriesData, isLoading } = useQuery<WaterIntake[]>({
     queryKey: [`/api/water/${dateStr}`],
   });
+
+  // Ensure waterEntries is always an array
+  const waterEntries = Array.isArray(waterEntriesData) ? waterEntriesData : [];
 
   // Calculate total consumed
   const totalConsumed = waterEntries.reduce((sum, entry) => sum + entry.amountMl, 0);
