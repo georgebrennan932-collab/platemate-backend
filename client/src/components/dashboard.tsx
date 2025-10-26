@@ -118,7 +118,7 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
     : 0;
 
   return (
-    <div className="space-y-6 max-w-md mx-auto">
+    <div className="space-y-6 max-w-md mx-auto px-4">
       {/* Fluid Intake Tracker */}
       <WaterTracker />
 
