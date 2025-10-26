@@ -27,6 +27,7 @@ import { StreakCounter } from "@/components/streak-counter";
 import { StepCounterWidget } from "@/components/step-counter-widget";
 import { updateStreak } from "@/lib/streak-tracker";
 import { ShiftCheckInModal } from "@/components/shift-checkin-modal";
+import { ProfileReminderBanner } from "@/components/profile-reminder-banner";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
@@ -835,6 +836,9 @@ export default function Home() {
     <div className="min-h-screen text-foreground" style={{background: 'var(--bg-gradient)'}}>
       {/* Offline Status Indicator */}
       <OfflineIndicator />
+      
+      {/* Profile Reminder Banner */}
+      {isAuthenticated && userProfile && <ProfileReminderBanner userProfile={userProfile} />}
       
       {/* Custom Header for New Design */}
       <div className="px-4 pt-8 pb-6 text-center relative">

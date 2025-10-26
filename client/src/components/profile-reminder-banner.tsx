@@ -12,21 +12,29 @@ export function ProfileReminderBanner({ userProfile }: ProfileReminderBannerProp
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Check if user has already dismissed the reminder
-    const dismissed = localStorage.getItem('profile-reminder-dismissed');
-    if (dismissed === 'true') {
-      setIsDismissed(true);
-      return;
-    }
-
     // Check if profile is incomplete
     const isIncomplete = !userProfile?.name || 
                         !userProfile?.nickname || 
                         (!userProfile?.dietaryRequirements || userProfile.dietaryRequirements.length === 0);
 
+    // Check if user has already dismissed the reminder
+    const dismissed = localStorage.getItem('profile-reminder-dismissed');
+    
+    // If profile becomes complete, clear the dismissal so it shows again if profile becomes incomplete later
+    if (!isIncomplete) {
+      localStorage.removeItem('profile-reminder-dismissed');
+      setIsDismissed(false);
+      setIsVisible(false);
+      return;
+    }
+
     // Show banner if profile is incomplete and not dismissed
-    if (isIncomplete) {
+    if (isIncomplete && dismissed !== 'true') {
       setIsVisible(true);
+      setIsDismissed(false);
+    } else if (dismissed === 'true') {
+      setIsDismissed(true);
+      setIsVisible(false);
     }
   }, [userProfile]);
 
