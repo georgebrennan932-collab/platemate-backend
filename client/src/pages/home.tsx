@@ -1550,8 +1550,9 @@ export default function Home() {
 
       {/* Review Dialog - New Design */}
       {showReviewDialog && reviewAnalysis && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-purple-500/30 my-8">
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 overflow-y-auto backdrop-blur-sm">
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-purple-500/30 my-8">
             
             {/* Header */}
             <div className="flex items-start gap-3 mb-6">
@@ -1828,6 +1829,7 @@ export default function Home() {
             >
               Cancel
             </button>
+            </div>
           </div>
         </div>
       )}
