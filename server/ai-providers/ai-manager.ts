@@ -824,9 +824,10 @@ export class AIManager {
     console.log(`📝 Parsing food items from text: "${foodDescription}"`);
     
     // STEP 1: Split on common separators (and, with, comma)
-    // Examples: "2 slices of bacon and 2 eggs" → ["2 slices of bacon", "2 eggs"]
+    // Examples: "2 slices of bacon, 2 sausages and 2 eggs" → ["2 slices of bacon", "2 sausages", "2 eggs"]
     //           "chicken with rice" → ["chicken", "rice"]
-    const separatorRegex = /\s+(?:and|with|,)\s+/i;
+    // Allow comma with no space before it (e.g., "bacon, sausages") but require space after
+    const separatorRegex = /\s*(?:,|and|with)\s+/i;
     const rawParts = foodDescription.split(separatorRegex).map(p => p.trim()).filter(p => p.length > 0);
     
     console.log(`🔪 Split into ${rawParts.length} parts:`, rawParts);
