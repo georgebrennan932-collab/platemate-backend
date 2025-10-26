@@ -7,6 +7,7 @@ import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { apiRequest } from "@/lib/queryClient";
+import { WaterTracker } from "@/components/water-tracker";
 
 interface DashboardProps {
   onViewMeals?: () => void;
@@ -287,6 +288,9 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
           </p>
         </Card>
       </div>
+
+      {/* Fluid Intake Tracker */}
+      <WaterTracker />
 
       {/* View All Meals Button */}
       {onViewMeals && todayEntries.length > 0 && (
