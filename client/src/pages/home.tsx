@@ -12,7 +12,7 @@ import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
 import { Dashboard } from "@/components/dashboard";
 import { Link, useLocation } from "wouter";
-import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Flame, Camera, QrCode, Images } from "lucide-react";
+import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Flame, Camera, QrCode, Images, Menu } from "lucide-react";
 // Confetti disabled: import { ConfettiCelebration } from "@/components/confetti-celebration";
 import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
@@ -1548,116 +1548,97 @@ export default function Home() {
         </div>
       )}
 
-      {/* Review Dialog - Shows AI analysis before saving to diary */}
+      {/* Review Dialog - New Design */}
       {showReviewDialog && reviewAnalysis && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-card rounded-2xl p-5 w-full max-w-md shadow-2xl border border-border/20 my-8">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-              <Utensils className="h-5 w-5 text-primary" />
-              Review & Edit
-            </h3>
-            <p className="text-xs text-muted-foreground mb-4">
-              "{reviewDescription}"
-            </p>
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-purple-500/30 my-8">
             
-            {/* Detected Foods - Editable */}
-            <div className="space-y-3 mb-5">
+            {/* Header with fork icon, food name, and menu icon */}
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start gap-3">
+                <Utensils className="h-8 w-8 text-white mt-1" />
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    {reviewAnalysis.detectedFoods[0]?.name || 'Meal'}
+                  </h2>
+                  <p className="text-sm text-purple-200">
+                    ({reviewAnalysis.detectedFoods[0]?.portion || 'Serving'})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingFoodIndex(editingFoodIndex === null ? 0 : null)}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all"
+                data-testid="button-toggle-edit-mode"
+              >
+                <Menu className="h-6 w-6 text-white" />
+              </button>
+            </div>
+
+            {/* Individual Food Cards */}
+            <div className="space-y-4 mb-6">
               {reviewAnalysis.detectedFoods.map((food, index) => {
                 const isEditing = editingFoodIndex === index;
+                const totalMacros = food.protein + food.carbs + food.fat;
+                const proteinPercent = totalMacros > 0 ? (food.protein / totalMacros) * 100 : 0;
+                const carbsPercent = totalMacros > 0 ? (food.carbs / totalMacros) * 100 : 0;
+                const fatPercent = totalMacros > 0 ? (food.fat / totalMacros) * 100 : 0;
                 
                 return (
                   <div 
                     key={index}
-                    className="bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/20 dark:to-gray-800 rounded-xl p-3 border border-purple-200/50 dark:border-purple-700/30"
+                    className="bg-gradient-to-br from-indigo-800/60 to-blue-800/60 rounded-2xl p-4 border border-blue-400/30 backdrop-blur-sm"
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={food.name}
-                            onChange={(e) => {
-                              setReviewAnalysis(prev => prev ? {
-                                ...prev,
-                                detectedFoods: prev.detectedFoods.map((f, i) => 
-                                  i === index ? { ...f, name: e.target.value } : f
-                                )
-                              } : null);
-                            }}
-                            className="font-bold text-sm w-full px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600"
-                            placeholder="Food name"
-                          />
-                        ) : (
-                          <p className="font-bold text-sm text-gray-900 dark:text-white">{food.name}</p>
-                        )}
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={food.portion}
-                            onChange={(e) => {
-                              setReviewAnalysis(prev => prev ? {
-                                ...prev,
-                                detectedFoods: prev.detectedFoods.map((f, i) => 
-                                  i === index ? { ...f, portion: e.target.value } : f
-                                )
-                              } : null);
-                            }}
-                            className="text-xs w-full px-2 py-1 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"
-                            placeholder="Portion size"
-                          />
-                        ) : (
-                          <p className="text-xs text-gray-600 dark:text-gray-400">{food.portion}</p>
-                        )}
-                      </div>
-                      {isEditing ? (
-                        <button
-                          onClick={() => {
-                            if (!reviewAnalysis) return;
-                            // Recalculate totals immutably
-                            setReviewAnalysis({
-                              ...reviewAnalysis,
-                              totalCalories: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.calories, 0),
-                              totalProtein: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.protein, 0),
-                              totalCarbs: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.carbs, 0),
-                              totalFat: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.fat, 0)
-                            });
-                            setEditingFoodIndex(null);
-                          }}
-                          className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50"
-                        >
-                          Done
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setEditingFoodIndex(index)}
-                          className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50"
-                        >
-                          Edit
-                        </button>
-                      )}
-                    </div>
-                    
-                    {/* Nutrition Values - Editable when editing */}
+                    {/* Food Name */}
                     {isEditing ? (
-                      <div className="grid grid-cols-4 gap-2">
-                        <div>
-                          <label className="text-[10px] text-muted-foreground block mb-1">cal</label>
-                          <input
-                            type="number"
-                            value={food.calories}
-                            onChange={(e) => {
-                              setReviewAnalysis(prev => prev ? {
-                                ...prev,
-                                detectedFoods: prev.detectedFoods.map((f, i) => 
-                                  i === index ? { ...f, calories: parseInt(e.target.value) || 0 } : f
-                                )
-                              } : null);
-                            }}
-                            className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
-                          />
+                      <input
+                        type="text"
+                        value={food.name}
+                        onChange={(e) => {
+                          setReviewAnalysis(prev => prev ? {
+                            ...prev,
+                            detectedFoods: prev.detectedFoods.map((f, i) => 
+                              i === index ? { ...f, name: e.target.value } : f
+                            )
+                          } : null);
+                        }}
+                        className="text-xl font-bold text-white w-full bg-white/10 px-3 py-2 rounded-lg mb-2 border border-white/20"
+                        placeholder="Food name"
+                      />
+                    ) : (
+                      <h3 className="text-xl font-bold text-white mb-4">{food.name}</h3>
+                    )}
+                    
+                    {/* Nutrition Row */}
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      {/* Calories Box */}
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={food.calories}
+                          onChange={(e) => {
+                            setReviewAnalysis(prev => prev ? {
+                              ...prev,
+                              detectedFoods: prev.detectedFoods.map((f, i) => 
+                                i === index ? { ...f, calories: parseInt(e.target.value) || 0 } : f
+                              )
+                            } : null);
+                          }}
+                          className="w-24 bg-purple-800/50 rounded-xl px-3 py-3 text-center border border-purple-400/30"
+                        >
+                          <div className="text-3xl font-bold text-orange-400">{food.calories}</div>
+                          <div className="text-xs text-purple-200">cal</div>
+                        </input>
+                      ) : (
+                        <div className="bg-purple-800/50 rounded-xl px-3 py-3 border border-purple-400/30">
+                          <div className="text-3xl font-bold text-orange-400">{food.calories}</div>
+                          <div className="text-xs text-purple-200">cal</div>
                         </div>
-                        <div>
-                          <label className="text-[10px] text-muted-foreground block mb-1">protein</label>
+                      )}
+                      
+                      {/* Protein */}
+                      <div className="flex-1 text-center">
+                        {isEditing ? (
                           <input
                             type="number"
                             value={food.protein}
@@ -1669,11 +1650,17 @@ export default function Home() {
                                 )
                               } : null);
                             }}
-                            className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
+                            className="w-full bg-white/10 rounded px-2 py-1 text-center text-2xl font-bold text-blue-400 border border-white/20"
                           />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-muted-foreground block mb-1">carbs</label>
+                        ) : (
+                          <div className="text-2xl font-bold text-blue-400">{food.protein}g</div>
+                        )}
+                        <div className="text-xs text-purple-200">protein</div>
+                      </div>
+                      
+                      {/* Carbs */}
+                      <div className="flex-1 text-center">
+                        {isEditing ? (
                           <input
                             type="number"
                             value={food.carbs}
@@ -1685,11 +1672,17 @@ export default function Home() {
                                 )
                               } : null);
                             }}
-                            className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
+                            className="w-full bg-white/10 rounded px-2 py-1 text-center text-2xl font-bold text-yellow-400 border border-white/20"
                           />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-muted-foreground block mb-1">fat</label>
+                        ) : (
+                          <div className="text-2xl font-bold text-yellow-400">{food.carbs}g</div>
+                        )}
+                        <div className="text-xs text-purple-200">carbs</div>
+                      </div>
+                      
+                      {/* Fat */}
+                      <div className="flex-1 text-center">
+                        {isEditing ? (
                           <input
                             type="number"
                             value={food.fat}
@@ -1701,91 +1694,123 @@ export default function Home() {
                                 )
                               } : null);
                             }}
-                            className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
+                            className="w-full bg-white/10 rounded px-2 py-1 text-center text-2xl font-bold text-green-400 border border-white/20"
                           />
-                        </div>
+                        ) : (
+                          <div className="text-2xl font-bold text-green-400">{food.fat}g</div>
+                        )}
+                        <div className="text-xs text-purple-200">fat</div>
                       </div>
-                    ) : (
-                      <div className="grid grid-cols-4 gap-2 text-center">
-                        <div>
-                          <div className="text-sm font-bold text-orange-600">{food.calories}</div>
-                          <div className="text-[10px] text-muted-foreground">cal</div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-blue-600">{food.protein}g</div>
-                          <div className="text-[10px] text-muted-foreground">protein</div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-yellow-600">{food.carbs}g</div>
-                          <div className="text-[10px] text-muted-foreground">carbs</div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-green-600">{food.fat}g</div>
-                          <div className="text-[10px] text-muted-foreground">fat</div>
-                        </div>
+                    </div>
+                    
+                    {/* Macro Bar Chart */}
+                    {!isEditing && (
+                      <div className="flex h-2 rounded-full overflow-hidden bg-purple-950/50">
+                        <div 
+                          className="bg-blue-500" 
+                          style={{ width: `${proteinPercent}%` }}
+                        />
+                        <div 
+                          className="bg-yellow-500" 
+                          style={{ width: `${carbsPercent}%` }}
+                        />
+                        <div 
+                          className="bg-green-500" 
+                          style={{ width: `${fatPercent}%` }}
+                        />
                       </div>
+                    )}
+                    
+                    {isEditing && (
+                      <button
+                        onClick={() => {
+                          if (!reviewAnalysis) return;
+                          setReviewAnalysis({
+                            ...reviewAnalysis,
+                            totalCalories: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.calories, 0),
+                            totalProtein: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.protein, 0),
+                            totalCarbs: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.carbs, 0),
+                            totalFat: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.fat, 0)
+                          });
+                          setEditingFoodIndex(null);
+                        }}
+                        className="mt-3 w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                      >
+                        Done Editing
+                      </button>
                     )}
                   </div>
                 );
               })}
             </div>
 
-            {/* Total Nutrition Summary */}
-            <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/40 dark:to-pink-900/40 rounded-xl p-3 mb-4">
-              <p className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">Total Nutrition:</p>
-              <div className="grid grid-cols-4 gap-2 text-center">
-                <div>
-                  <div className="text-base font-bold text-orange-600">{reviewAnalysis.totalCalories}</div>
-                  <div className="text-[10px] text-muted-foreground">cal</div>
+            {/* Total Nutrition */}
+            <div className="bg-gradient-to-br from-indigo-800/60 to-blue-800/60 rounded-2xl p-4 border border-blue-400/30 backdrop-blur-sm mb-6">
+              <h3 className="text-lg font-semibold text-white mb-3">Total Nutrition</h3>
+              <div className="flex items-center justify-between gap-3">
+                {/* Total Calories Pill */}
+                <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-full px-4 py-2 flex items-center gap-2">
+                  <span className="text-2xl">🔥</span>
+                  <div>
+                    <div className="text-2xl font-bold text-white">{reviewAnalysis.totalCalories}</div>
+                    <div className="text-xs text-white/90">cal</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-base font-bold text-blue-600">{reviewAnalysis.totalProtein}g</div>
-                  <div className="text-[10px] text-muted-foreground">protein</div>
+                
+                {/* Protein */}
+                <div className="flex-1 text-center">
+                  <div className="text-2xl font-bold text-blue-400">{reviewAnalysis.totalProtein}g</div>
+                  <div className="text-xs text-purple-200">protein</div>
                 </div>
-                <div>
-                  <div className="text-base font-bold text-yellow-600">{reviewAnalysis.totalCarbs}g</div>
-                  <div className="text-[10px] text-muted-foreground">carbs</div>
+                
+                {/* Carbs */}
+                <div className="flex-1 text-center">
+                  <div className="text-2xl font-bold text-yellow-400">{reviewAnalysis.totalCarbs}g</div>
+                  <div className="text-xs text-purple-200">carbs</div>
                 </div>
-                <div>
-                  <div className="text-base font-bold text-green-600">{reviewAnalysis.totalFat}g</div>
-                  <div className="text-[10px] text-muted-foreground">fat</div>
+                
+                {/* Fat */}
+                <div className="flex-1 text-center">
+                  <div className="text-2xl font-bold text-green-400">{reviewAnalysis.totalFat}g</div>
+                  <div className="text-xs text-purple-200">fat</div>
                 </div>
               </div>
             </div>
 
-            {/* Meal Type Selection */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Meal Type</label>
-              <div className="grid grid-cols-2 gap-2">
-                {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => (
-                  <button
-                    key={meal}
-                    onClick={() => setSelectedMealType(meal)}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all duration-200 ${
-                      selectedMealType === meal
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md transform scale-105'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                    data-testid={`button-review-meal-${meal}`}
-                  >
-                    {meal.charAt(0).toUpperCase() + meal.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex space-x-3">
+            {/* Meal Type and Save Buttons - 2x2 Grid */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <button
-                onClick={() => {
-                  setShowReviewDialog(false);
-                  setReviewAnalysis(null);
-                }}
-                disabled={saveToDiaryMutation.isPending}
-                className="flex-1 py-2.5 px-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 disabled:opacity-50"
-                data-testid="button-cancel-review"
+                onClick={() => setSelectedMealType('breakfast')}
+                className={`py-4 rounded-2xl font-bold text-base transition-all ${
+                  selectedMealType === 'breakfast'
+                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg scale-105'
+                    : 'bg-indigo-800/40 text-purple-200 hover:bg-indigo-800/60 border border-purple-500/30'
+                }`}
+                data-testid="button-review-meal-breakfast"
               >
-                Cancel
+                Breakfast
+              </button>
+              <button
+                onClick={() => setSelectedMealType('lunch')}
+                className={`py-4 rounded-2xl font-bold text-base transition-all ${
+                  selectedMealType === 'lunch'
+                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg scale-105'
+                    : 'bg-indigo-800/40 text-purple-200 hover:bg-indigo-800/60 border border-purple-500/30'
+                }`}
+                data-testid="button-review-meal-lunch"
+              >
+                Lunch
+              </button>
+              <button
+                onClick={() => setSelectedMealType('dinner')}
+                className={`py-4 rounded-2xl font-bold text-base transition-all ${
+                  selectedMealType === 'dinner'
+                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg scale-105'
+                    : 'bg-indigo-800/40 text-purple-200 hover:bg-indigo-800/60 border border-purple-500/30'
+                }`}
+                data-testid="button-review-meal-dinner"
+              >
+                Dinner
               </button>
               <button
                 onClick={() => {
@@ -1797,12 +1822,26 @@ export default function Home() {
                   });
                 }}
                 disabled={saveToDiaryMutation.isPending}
-                className="flex-1 py-2.5 px-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-xl font-bold text-sm hover:from-purple-700 hover:to-pink-600 disabled:opacity-50 transition-all duration-200 shadow-lg"
+                className="py-4 rounded-2xl font-bold text-base bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg hover:from-pink-600 hover:to-pink-700 transition-all disabled:opacity-50"
                 data-testid="button-save-to-diary"
               >
                 {saveToDiaryMutation.isPending ? 'Saving...' : 'Save to Diary'}
               </button>
             </div>
+
+            {/* Cancel Button */}
+            <button
+              onClick={() => {
+                setShowReviewDialog(false);
+                setReviewAnalysis(null);
+                setEditingFoodIndex(null);
+              }}
+              disabled={saveToDiaryMutation.isPending}
+              className="w-full py-4 rounded-2xl font-bold text-base bg-indigo-800/40 text-purple-200 hover:bg-indigo-800/60 border border-purple-500/30 transition-all disabled:opacity-50"
+              data-testid="button-cancel-review"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
