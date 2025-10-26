@@ -10,7 +10,7 @@ import { CameraInterface } from "@/components/camera-interface";
 import { ProcessingState } from "@/components/processing-state";
 import { ResultsDisplay } from "@/components/results-display";
 import { ErrorState } from "@/components/error-state";
-import { DrinksBar } from "@/components/drinks-bar";
+import { Dashboard } from "@/components/dashboard";
 import { Link, useLocation } from "wouter";
 import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap, TrendingUp, Mic, MicOff, Plus, Keyboard, Scale, User, History, LogOut, ChevronDown, ChevronUp, AlertTriangle, Check, X, Info, Flame, Camera, QrCode, Images } from "lucide-react";
 // Confetti disabled: import { ConfettiCelebration } from "@/components/confetti-celebration";
@@ -1366,11 +1366,9 @@ export default function Home() {
         )}
       </div>
 
-      {/* Drinks Bar - Moved to bottom */}
+      {/* Dashboard with Fluid Tracker - Moved to bottom */}
       {currentState === 'camera' && (
-        <div className="max-w-md mx-auto">
-          <DrinksBar />
-        </div>
+        <Dashboard />
       )}
       
       {/* Voice Meal Confirmation Dialog */}
