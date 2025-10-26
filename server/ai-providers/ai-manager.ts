@@ -623,9 +623,16 @@ export class AIManager {
       return num * 55; // Default hash brown patty size
     }
     
+    // Bacon-specific slice handling (must be before general slice handling)
+    if (portionLower.includes('slice') && 
+        (foodLower.includes('bacon') || portionLower.includes('bacon'))) {
+      // Bacon slices are much lighter than general slices
+      return num * 12; // Bacon slice ≈ 12g
+    }
+    
     // Common portion conversions (estimates)
     if (portionLower.includes('slice')) {
-      return num * 30; // Average slice ≈ 30g
+      return num * 30; // Average slice ≈ 30g (bread, cheese, etc.)
     }
     if (portionLower.includes('piece') || portionLower.includes('item')) {
       return num * 50; // Average piece ≈ 50g
@@ -794,14 +801,15 @@ export class AIManager {
    */
   async analyzeFoodText(foodDescription: string): Promise<FoodAnalysisResult> {
     try {
-      // Step 1: Parse food names from text description
-      const foodNames = await this.parseFoodNamesFromText(foodDescription);
+      // Step 1: Parse food items with portions from text description
+      const foodItems = await this.parseFoodNamesFromText(foodDescription);
       
       // Step 2: Get accurate nutrition from USDA for parsed foods
+      const foodNames = foodItems.map(item => item.name);
       const nutritionData = await this.getNutritionFromUSDA(foodNames);
       
       // Step 3: Combine results into comprehensive analysis
-      return this.combineTextWithNutrition(foodDescription, foodNames, nutritionData);
+      return this.combineTextWithNutrition(foodDescription, foodItems, nutritionData);
       
     } catch (error: any) {
       console.warn('Enhanced text analysis failed, falling back to legacy method:', error.message);
@@ -810,43 +818,45 @@ export class AIManager {
   }
 
   /**
-   * Parse food names from text description using AI providers
+   * Parse food items with individual portions from text description
    */
-  async parseFoodNamesFromText(foodDescription: string): Promise<string[]> {
-    console.log(`📝 Parsing food names from text: "${foodDescription}"`);
+  async parseFoodNamesFromText(foodDescription: string): Promise<Array<{name: string, portion: string}>> {
+    console.log(`📝 Parsing food items from text: "${foodDescription}"`);
     
     // STEP 1: Split on common separators (and, with, comma)
-    // Examples: "bacon and eggs" → ["bacon", "eggs"]
+    // Examples: "2 slices of bacon and 2 eggs" → ["2 slices of bacon", "2 eggs"]
     //           "chicken with rice" → ["chicken", "rice"]
-    //           "apple, banana" → ["apple", "banana"]
     const separatorRegex = /\s+(?:and|with|,)\s+/i;
     const rawParts = foodDescription.split(separatorRegex).map(p => p.trim()).filter(p => p.length > 0);
     
     console.log(`🔪 Split into ${rawParts.length} parts:`, rawParts);
     
-    // STEP 2: For each part, extract the main food item
-    const foodNames: string[] = [];
+    // STEP 2: For each part, extract the food name AND keep the portion info
+    const foodItems: Array<{name: string, portion: string}> = [];
     
     for (const part of rawParts) {
-      // Remove quantity descriptors (e.g., "2 eggs" → "eggs", "large chicken" → "chicken")
-      let cleanedPart = part
+      // Keep the original part as the portion (includes quantity like "2 slices of bacon")
+      const portionText = part;
+      
+      // Clean up the food name for USDA lookup (e.g., "2 slices of bacon" → "bacon")
+      let cleanedName = part
         .replace(/^\d+\s+/, '') // Remove leading numbers
         .replace(/^(one|two|three|four|five|six|seven|eight|nine|ten)\s+/i, '') // Remove word numbers
         .replace(/\b(small|medium|large|extra\s+large|jumbo)\s+/gi, '') // Remove size descriptors
-        .replace(/\b(slice|slices|piece|pieces|serving|servings|cup|cups|bowl|bowls)\b/gi, '') // Remove portion words
+        .replace(/\b(slice|slices|piece|pieces|serving|servings|cup|cups|bowl|bowls|of|the)\b/gi, '') // Remove portion words
         .trim();
       
       // If we cleaned too much, use the original part
-      if (cleanedPart.length < 2) {
-        cleanedPart = part;
+      if (cleanedName.length < 2) {
+        cleanedName = part;
       }
       
-      console.log(`  🧹 Cleaned "${part}" → "${cleanedPart}"`);
-      foodNames.push(cleanedPart);
+      console.log(`  🧹 Extracted from "${part}" → name: "${cleanedName}", portion: "${portionText}"`);
+      foodItems.push({ name: cleanedName, portion: portionText });
     }
     
-    console.log(`✅ Final parsed food names:`, foodNames);
-    return foodNames.length > 0 ? foodNames : [foodDescription.trim()];
+    console.log(`✅ Final parsed food items:`, foodItems);
+    return foodItems.length > 0 ? foodItems : [{ name: foodDescription.trim(), portion: foodDescription.trim() }];
   }
 
   /**
@@ -854,7 +864,7 @@ export class AIManager {
    */
   async combineTextWithNutrition(
     originalText: string,
-    foodNames: string[], 
+    foodItems: Array<{name: string, portion: string}>, 
     nutritionMap: Map<string, any>
   ): Promise<FoodAnalysisResult> {
     const detectedFoods = [];
@@ -863,25 +873,27 @@ export class AIManager {
     let totalCarbs = 0;
     let totalFat = 0;
 
-    // Process each parsed food
-    for (const foodName of foodNames) {
-      const usdaData = nutritionMap.get(foodName);
+    // Process each parsed food item with its individual portion
+    for (const foodItem of foodItems) {
+      const usdaData = nutritionMap.get(foodItem.name);
       
       if (usdaData) {
-        // Convert the original text portion to grams for scaling
-        const portionGrams = this.convertPortionToGrams(originalText, foodName);
+        // Convert the INDIVIDUAL portion text to grams for scaling
+        // e.g., for bacon: "2 slices of bacon" → 24g
+        // e.g., for eggs: "2 eggs" → 100g
+        const portionGrams = this.convertPortionToGrams(foodItem.portion, foodItem.name);
         const scaleFactor = portionGrams / 100; // USDA data is per 100g
         
         
-        // Use accurate USDA nutrition data scaled by the portion
+        // Use accurate USDA nutrition data scaled by the individual portion
         const food = {
           name: usdaData.usdaFood.description,
-          portion: originalText, // PRESERVE original user input (e.g., "2 large eggs", "3 Weetabix")
+          portion: foodItem.portion, // Use individual portion (e.g., "2 slices of bacon")
           calories: Math.round(usdaData.nutrition.calories * scaleFactor),
           protein: Math.round(usdaData.nutrition.protein * scaleFactor),
           carbs: Math.round(usdaData.nutrition.carbs * scaleFactor),
           fat: Math.round(usdaData.nutrition.fat * scaleFactor),
-          icon: this.getFoodIcon(foodName)
+          icon: this.getFoodIcon(foodItem.name)
         };
         
         detectedFoods.push(food);
@@ -892,21 +904,21 @@ export class AIManager {
         
       } else {
         // Try OpenFoodFacts as fallback
-        const offData = await this.tryOpenFoodFactsFallback(foodName);
+        const offData = await this.tryOpenFoodFactsFallback(foodItem.name);
         
         if (offData) {
-          // Convert text portion to grams for scaling
-          const portionGrams = this.convertPortionToGrams(originalText, foodName);
+          // Convert individual portion text to grams for scaling
+          const portionGrams = this.convertPortionToGrams(foodItem.portion, foodItem.name);
           const scaleFactor = portionGrams / 100; // OpenFoodFacts data is per 100g
           
           const food = {
             name: offData.name,
-            portion: originalText,
+            portion: foodItem.portion, // Use individual portion
             calories: Math.round(offData.nutrition.calories * scaleFactor),
             protein: Math.round(offData.nutrition.protein * scaleFactor),
             carbs: Math.round(offData.nutrition.carbs * scaleFactor),
             fat: Math.round(offData.nutrition.fat * scaleFactor),
-            icon: this.getFoodIcon(foodName)
+            icon: this.getFoodIcon(foodItem.name)
           };
           
           detectedFoods.push(food);
@@ -918,13 +930,13 @@ export class AIManager {
         } else {
           // Final hardcoded fallback
           const fallbackFood = {
-            name: foodName,
-            portion: '1 serving',
+            name: foodItem.name,
+            portion: foodItem.portion || '1 serving',
             calories: 150, // Conservative estimate
             protein: 8,
             carbs: 15,
             fat: 6,
-            icon: this.getFoodIcon(foodName)
+            icon: this.getFoodIcon(foodItem.name)
           };
           
           detectedFoods.push(fallbackFood);
