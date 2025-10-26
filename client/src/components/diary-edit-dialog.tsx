@@ -125,13 +125,13 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Utensils className="h-5 w-5" />
+      <DialogContent className="max-w-sm">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center space-x-2 text-base">
+            <Utensils className="h-4 w-4" />
             <span>Edit Meal Entry</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs">
             Adjust portion size, meal type, or add notes
           </DialogDescription>
         </DialogHeader>
@@ -146,21 +146,19 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
               description: "Please check all fields and try again.",
             });
           }
-        )} className="space-y-6">
-          {/* Portion Size Slider and Input */}
-          <div className="space-y-3">
+        )} className="space-y-3">
+          {/* Compact Portion Size */}
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label>Portion Size</Label>
-              <div className="flex items-center gap-2">
+              <Label className="text-sm">Portion Size</Label>
+              <div className="flex items-center gap-1.5">
                 <input
                   type="number"
                   value={portionInput}
                   onChange={(e) => {
-                    // Allow typing freely
                     setPortionInput(e.target.value);
                   }}
                   onBlur={(e) => {
-                    // Validate and clamp on blur
                     const value = parseInt(e.target.value) || 100;
                     const clampedValue = Math.max(10, Math.min(500, value));
                     form.setValue("portionMultiplier", clampedValue);
@@ -169,10 +167,10 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
                   min={10}
                   max={500}
                   step={10}
-                  className="w-20 px-2 py-1 text-sm border rounded-md text-center dark:bg-gray-800 dark:border-gray-700"
+                  className="w-16 px-2 py-0.5 text-sm border rounded text-center dark:bg-gray-800 dark:border-gray-700"
                   data-testid="input-portion-value"
                 />
-                <span className="text-lg font-bold text-primary">{portionDisplay}x</span>
+                <span className="text-sm font-bold text-primary">{portionDisplay}x</span>
               </div>
             </div>
             <Slider
@@ -184,49 +182,49 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
               min={10}
               max={500}
               step={10}
-              className="w-full"
+              className="w-full h-6"
               data-testid="slider-portion"
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
+            <div className="flex justify-between text-[10px] text-muted-foreground -mt-1">
               <span>0.1x (10%)</span>
               <span>1.0x (100%)</span>
               <span>5.0x (500%)</span>
             </div>
           </div>
 
-          {/* Nutrition Preview */}
+          {/* Inline Nutrition Preview */}
           {previewNutrition && (
-            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-              <p className="text-sm font-medium">Adjusted Nutrition:</p>
-              <div className="grid grid-cols-4 gap-2 text-center text-sm">
+            <div className="bg-muted/30 rounded-lg p-2">
+              <p className="text-xs font-medium mb-1.5">Adjusted Nutrition:</p>
+              <div className="grid grid-cols-4 gap-1.5 text-center">
                 <div>
-                  <div className="font-bold text-orange-600">{previewNutrition.calories}</div>
-                  <div className="text-xs text-muted-foreground">cal</div>
+                  <div className="text-sm font-bold text-orange-600">{previewNutrition.calories}</div>
+                  <div className="text-[10px] text-muted-foreground">cal</div>
                 </div>
                 <div>
-                  <div className="font-bold text-blue-600">{previewNutrition.protein}g</div>
-                  <div className="text-xs text-muted-foreground">protein</div>
+                  <div className="text-sm font-bold text-blue-600">{previewNutrition.protein}g</div>
+                  <div className="text-[10px] text-muted-foreground">protein</div>
                 </div>
                 <div>
-                  <div className="font-bold text-yellow-600">{previewNutrition.carbs}g</div>
-                  <div className="text-xs text-muted-foreground">carbs</div>
+                  <div className="text-sm font-bold text-yellow-600">{previewNutrition.carbs}g</div>
+                  <div className="text-[10px] text-muted-foreground">carbs</div>
                 </div>
                 <div>
-                  <div className="font-bold text-green-600">{previewNutrition.fat}g</div>
-                  <div className="text-xs text-muted-foreground">fat</div>
+                  <div className="text-sm font-bold text-green-600">{previewNutrition.fat}g</div>
+                  <div className="text-[10px] text-muted-foreground">fat</div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Meal Type */}
-          <div className="space-y-2">
-            <Label>Meal Type</Label>
+          {/* Compact Meal Type */}
+          <div className="space-y-1">
+            <Label className="text-sm">Meal Type</Label>
             <Select
               value={form.watch("mealType")}
               onValueChange={(value) => form.setValue("mealType", value as any)}
             >
-              <SelectTrigger data-testid="select-meal-type">
+              <SelectTrigger className="h-8 text-sm" data-testid="select-meal-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -241,35 +239,36 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
 
           {/* Custom Meal Name (if custom type selected) */}
           {form.watch("mealType") === "custom" && (
-            <div className="space-y-2">
-              <Label>Custom Meal Name</Label>
+            <div className="space-y-1">
+              <Label className="text-sm">Custom Meal Name</Label>
               <input
                 {...form.register("customMealName")}
-                placeholder="e.g., Brunch, Late Night Snack"
-                className="w-full px-3 py-2 border rounded-md"
+                placeholder="e.g., Brunch"
+                className="w-full px-2 py-1 text-sm border rounded-md dark:bg-gray-800 dark:border-gray-700"
                 data-testid="input-custom-meal-name"
               />
             </div>
           )}
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label>Notes (Optional)</Label>
+          {/* Compact Notes */}
+          <div className="space-y-1">
+            <Label className="text-sm">Notes (Optional)</Label>
             <Textarea
               {...form.register("notes")}
-              placeholder="Add any notes about this meal..."
-              rows={3}
+              placeholder="Add notes..."
+              rows={2}
+              className="text-sm resize-none"
               data-testid="textarea-notes"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex space-x-3">
+          <div className="flex space-x-2 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="flex-1 h-8 text-sm"
               data-testid="button-cancel-edit"
             >
               Cancel
@@ -277,12 +276,12 @@ export function DiaryEditDialog({ entry, open, onOpenChange, onSuccess }: DiaryE
             <Button
               type="submit"
               disabled={updateDiaryMutation.isPending}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600"
+              className="flex-1 h-8 text-sm bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600"
               data-testid="button-save-edit"
             >
               {updateDiaryMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                   Saving...
                 </>
               ) : (

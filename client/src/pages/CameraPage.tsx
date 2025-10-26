@@ -37,6 +37,11 @@ export function CameraPage() {
   const [showTextMealDialog, setShowTextMealDialog] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   
+  // Review state for voice/type entries
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [reviewAnalysis, setReviewAnalysis] = useState<FoodAnalysis | null>(null);
+  const [reviewDescription, setReviewDescription] = useState('');
+  
   
   // Confetti disabled per user request
   // const [showPersistentConfetti, setShowPersistentConfetti] = useState(false);
@@ -163,37 +168,61 @@ export function CameraPage() {
 
   const handleConfirmVoiceMeal = () => {
     if (!voiceInput.trim()) return;
-    addVoiceMealMutation.mutate({
+    analyzeTextMutation.mutate({
       foodDescription: voiceInput.trim(),
-      mealType: selectedMealType
+      source: 'voice'
     });
   };
 
   const handleConfirmTextMeal = () => {
     if (!textInput.trim()) return;
-    addVoiceMealMutation.mutate({
+    analyzeTextMutation.mutate({
       foodDescription: textInput.trim(),
-      mealType: selectedMealType
+      source: 'text'
     });
   };
 
-  const addVoiceMealMutation = useMutation({
-    mutationFn: async ({ foodDescription, mealType }: { foodDescription: string, mealType: string }) => {
+  // Step 1: Analyze text (voice or typed) - doesn't save to diary yet
+  const analyzeTextMutation = useMutation({
+    mutationFn: async ({ foodDescription }: { foodDescription: string, source: string }) => {
       if (!isAuthenticated) {
         throw new Error("Please log in to add meals to your diary");
       }
       
-      // First analyze the text-based food description
+      // Analyze the text-based food description
       const analysisResponse = await apiRequest('POST', '/api/analyze-text', { foodDescription });
       const analysis = await analysisResponse.json();
+      return { analysis, foodDescription };
+    },
+    onSuccess: ({ analysis, foodDescription }) => {
+      // Close input dialogs
+      setShowVoiceMealDialog(false);
+      setShowTextMealDialog(false);
       
-      // Then create the diary entry with current date/time
+      // Show review dialog with analysis
+      setReviewAnalysis(analysis);
+      setReviewDescription(foodDescription);
+      setShowReviewDialog(true);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Analysis Error",
+        description: error.message || "Failed to analyze food. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error analyzing text:", error);
+    },
+  });
+
+  // Step 2: Save to diary after user reviews and confirms
+  const saveToDiaryMutation = useMutation({
+    mutationFn: async ({ analysisId, mealType, notes }: { analysisId: string, mealType: string, notes: string }) => {
       const now = new Date();
       const diaryResponse = await apiRequest('POST', '/api/diary', {
-        analysisId: analysis.id,
+        analysisId,
         mealType,
         mealDate: now.toISOString(),
-        notes: `Added via text input: "${foodDescription}"`
+        notes
       });
       return await diaryResponse.json();
     },
@@ -206,18 +235,18 @@ export function CameraPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/points'] });
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/streak'] });
-      setShowVoiceMealDialog(false);
-      setShowTextMealDialog(false);
+      setShowReviewDialog(false);
+      setReviewAnalysis(null);
       setVoiceInput('');
       setTextInput('');
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add meal from voice. Please try again.",
+        description: error.message || "Failed to add meal to diary. Please try again.",
         variant: "destructive",
       });
-      console.error("Error adding voice meal:", error);
+      console.error("Error saving to diary:", error);
     },
   });
 
@@ -387,7 +416,7 @@ export function CameraPage() {
             <div className="flex space-x-4 mt-6">
               <button
                 onClick={() => setShowVoiceMealDialog(false)}
-                disabled={addVoiceMealMutation.isPending}
+                disabled={analyzeTextMutation.isPending}
                 className="flex-1 py-3 px-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 disabled:opacity-50"
                 data-testid="button-cancel-voice-meal"
               >
@@ -395,11 +424,11 @@ export function CameraPage() {
               </button>
               <button
                 onClick={handleConfirmVoiceMeal}
-                disabled={addVoiceMealMutation.isPending}
+                disabled={analyzeTextMutation.isPending}
                 className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg"
                 data-testid="button-confirm-voice-meal"
               >
-                {addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
+                {analyzeTextMutation.isPending ? 'Analyzing...' : 'Analyze Meal'}
               </button>
             </div>
           </div>
@@ -456,7 +485,7 @@ export function CameraPage() {
             <div className="flex space-x-4 mt-6">
               <button
                 onClick={() => setShowTextMealDialog(false)}
-                disabled={addVoiceMealMutation.isPending}
+                disabled={analyzeTextMutation.isPending}
                 className="flex-1 py-3 px-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 disabled:opacity-50"
                 data-testid="button-cancel-text-meal"
               >
@@ -464,11 +493,148 @@ export function CameraPage() {
               </button>
               <button
                 onClick={handleConfirmTextMeal}
-                disabled={addVoiceMealMutation.isPending || !textInput.trim()}
+                disabled={analyzeTextMutation.isPending || !textInput.trim()}
                 className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all duration-200 shadow-lg"
                 data-testid="button-confirm-text-meal"
               >
-                {addVoiceMealMutation.isPending ? 'Adding...' : 'Add Meal'}
+                {analyzeTextMutation.isPending ? 'Analyzing...' : 'Analyze Meal'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Dialog - Shows AI analysis before saving to diary */}
+      {showReviewDialog && reviewAnalysis && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-card rounded-2xl p-5 w-full max-w-md shadow-2xl border border-border/20 my-8">
+            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <Utensils className="h-5 w-5 text-primary" />
+              Review & Edit
+            </h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              "{reviewDescription}"
+            </p>
+            
+            {/* Detected Foods - Editable */}
+            <div className="space-y-3 mb-5">
+              {reviewAnalysis.detectedFoods.map((food, index) => (
+                <div 
+                  key={index}
+                  className="bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/20 dark:to-gray-800 rounded-xl p-3 border border-purple-200/50 dark:border-purple-700/30"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-gray-900 dark:text-white">{food.name}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">{food.portion}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        // TODO: Add edit functionality
+                        toast({
+                          title: "Coming Soon",
+                          description: "Individual food editing will be available soon!",
+                        });
+                      }}
+                      className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  
+                  {/* Nutrition Values - Inline */}
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    <div>
+                      <div className="text-sm font-bold text-orange-600">{food.calories}</div>
+                      <div className="text-[10px] text-muted-foreground">cal</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-blue-600">{food.protein}g</div>
+                      <div className="text-[10px] text-muted-foreground">protein</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-yellow-600">{food.carbs}g</div>
+                      <div className="text-[10px] text-muted-foreground">carbs</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-green-600">{food.fat}g</div>
+                      <div className="text-[10px] text-muted-foreground">fat</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Total Nutrition Summary */}
+            <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/40 dark:to-pink-900/40 rounded-xl p-3 mb-4">
+              <p className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">Total Nutrition:</p>
+              <div className="grid grid-cols-4 gap-2 text-center">
+                <div>
+                  <div className="text-base font-bold text-orange-600">{reviewAnalysis.totalCalories}</div>
+                  <div className="text-[10px] text-muted-foreground">cal</div>
+                </div>
+                <div>
+                  <div className="text-base font-bold text-blue-600">{reviewAnalysis.totalProtein}g</div>
+                  <div className="text-[10px] text-muted-foreground">protein</div>
+                </div>
+                <div>
+                  <div className="text-base font-bold text-yellow-600">{reviewAnalysis.totalCarbs}g</div>
+                  <div className="text-[10px] text-muted-foreground">carbs</div>
+                </div>
+                <div>
+                  <div className="text-base font-bold text-green-600">{reviewAnalysis.totalFat}g</div>
+                  <div className="text-[10px] text-muted-foreground">fat</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Meal Type Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Meal Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => (
+                  <button
+                    key={meal}
+                    onClick={() => setSelectedMealType(meal)}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all duration-200 ${
+                      selectedMealType === meal
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md transform scale-105'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                    data-testid={`button-review-meal-${meal}`}
+                  >
+                    {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowReviewDialog(false);
+                  setReviewAnalysis(null);
+                }}
+                disabled={saveToDiaryMutation.isPending}
+                className="flex-1 py-2.5 px-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 disabled:opacity-50"
+                data-testid="button-cancel-review"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  saveToDiaryMutation.mutate({
+                    analysisId: reviewAnalysis.id,
+                    mealType: selectedMealType,
+                    notes: `Added via text/voice: "${reviewDescription}"`
+                  });
+                }}
+                disabled={saveToDiaryMutation.isPending}
+                className="flex-1 py-2.5 px-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-xl font-bold text-sm hover:from-purple-700 hover:to-pink-600 disabled:opacity-50 transition-all duration-200 shadow-lg"
+                data-testid="button-save-to-diary"
+              >
+                {saveToDiaryMutation.isPending ? 'Saving...' : 'Save to Diary'}
               </button>
             </div>
           </div>
