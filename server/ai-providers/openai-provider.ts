@@ -306,6 +306,7 @@ If you can't clearly identify something, don't include it. Be as accurate as pos
       
       if (clientTimeInfo) {
         // Use pre-calculated client local time (no timezone conversion needed)
+        console.log('🕐 OpenAI provider received clientTimeInfo:', clientTimeInfo);
         timeString = clientTimeInfo.timeString;
         timeOfDay = clientTimeInfo.timeOfDay;
       } else {
@@ -315,7 +316,10 @@ If you can't clearly identify something, don't include it. Be as accurate as pos
         const minutes = now.getMinutes();
         timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         timeOfDay = hours < 12 ? 'morning' : hours < 17 ? 'afternoon' : 'evening';
+        console.log('⚠️ OpenAI provider using server time (no clientTimeInfo provided):', { timeString, timeOfDay });
       }
+      
+      console.log('🕐 Sending to OpenAI - Time:', timeString, 'Time of day:', timeOfDay);
       
       const response = await this.client.chat.completions.create({
         model: "gpt-4o-mini",

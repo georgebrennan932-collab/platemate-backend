@@ -645,6 +645,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Food description is required" });
       }
 
+      console.log('🕐 Server received clientTimeInfo:', clientTimeInfo);
+      
       // Use AI manager to analyze text-based food description (with client time for timezone-aware context)
       const foodAnalysisData = await aiManager.analyzeFoodText(foodDescription.trim(), clientTimeInfo);
 

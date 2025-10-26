@@ -614,6 +614,7 @@ export default function Home() {
         timeString: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
         timeOfDay: hours < 12 ? 'morning' : hours < 17 ? 'afternoon' : 'evening'
       };
+      console.log('🕐 Sending time to AI:', clientTimeInfo);
       const analysisResponse = await apiRequest('POST', '/api/analyze-text', { 
         foodDescription,
         clientTimeInfo 
