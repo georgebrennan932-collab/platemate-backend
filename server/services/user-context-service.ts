@@ -1,5 +1,5 @@
 import { storage } from "../storage";
-import type { UserProfile, DiaryEntry, WeightEntry, DrinkEntry, ShiftSchedule } from "@shared/schema";
+import type { UserProfile, DiaryEntry, WeightEntry, DrinkEntry, ShiftSchedule, WaterIntake } from "@shared/schema";
 
 /**
  * User Context Service
@@ -35,7 +35,8 @@ export interface UserContext {
   // Recent activity (last 7 days)
   recentDiary: DiaryEntryWithAnalysis[];
   recentWeights: WeightEntry[];
-  recentDrinks: DrinkEntry[];
+  recentDrinks: DrinkEntry[]; // Legacy - kept for backwards compatibility
+  recentWaterIntake: WaterIntake[]; // New water tracking system
   todaySteps: number;
   
   // Patterns and trends
@@ -74,6 +75,9 @@ class UserContextService {
       const startDate = startOfWeek.toLocaleDateString('en-CA', { timeZone: 'UTC' });
       const endDate = endOfWeek.toLocaleDateString('en-CA', { timeZone: 'UTC' });
       
+      // Get today's date for water intake
+      const todayDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      
       // Fetch all data in parallel for better performance
       const [
         profile,
@@ -81,6 +85,7 @@ class UserContextService {
         recentDiary,
         recentWeights,
         recentDrinks,
+        recentWaterIntake,
         shoppingList,
         stepsData,
         challengeData,
@@ -90,7 +95,8 @@ class UserContextService {
         storage.getNutritionGoals(userId),
         storage.getDiaryEntries(userId, 30), // Last 30 entries
         storage.getWeightEntries(userId), // Get all weights
-        storage.getDrinkEntries(userId, 50), // Last 50 drink entries
+        storage.getDrinkEntries(userId, 50), // Last 50 drink entries (legacy)
+        storage.getWaterIntakeByDate(userId, todayDate), // Today's water intake (new system)
         this.getShoppingList(userId),
         this.getStepsToday(userId),
         this.getChallengeData(userId),
@@ -116,7 +122,8 @@ class UserContextService {
         } : null,
         recentDiary: enrichedDiary.slice(0, 20), // Only include most recent 20 for context
         recentWeights: recentWeights.slice(0, 10), // Last 10 weigh-ins
-        recentDrinks: recentDrinks.slice(0, 20), // Last 20 drink entries
+        recentDrinks: recentDrinks.slice(0, 20), // Last 20 drink entries (legacy)
+        recentWaterIntake: recentWaterIntake || [], // Today's water intake (new system)
         todaySteps: stepsData.stepCount,
         weeklyMealCount,
         averageDailyCalories,
@@ -136,6 +143,7 @@ class UserContextService {
         recentDiary: [],
         recentWeights: [],
         recentDrinks: [],
+        recentWaterIntake: [],
         todaySteps: 0,
         weeklyMealCount: 0,
         averageDailyCalories: 0,
@@ -281,17 +289,25 @@ ${weekSchedule.join('\n')}
 - Most Recent Meals: ${recentMeals || 'None'}`);
     }
 
-    // Hydration
-    if (context.recentDrinks.length > 0) {
-      const todayDrinks = context.recentDrinks.filter(d => {
-        const drinkDate = new Date(d.loggedAt).toDateString();
-        const today = new Date().toDateString();
-        return drinkDate === today;
-      });
-      const todayWater = todayDrinks.reduce((sum, d) => sum + d.amount, 0);
+    // Hydration - Use new water tracking system
+    if (context.recentWaterIntake && context.recentWaterIntake.length > 0) {
+      const todayWater = context.recentWaterIntake.reduce((sum, entry) => sum + entry.amountMl, 0);
+      const waterGoal = context.nutritionGoals?.dailyWater || 2500;
+      const percentOfGoal = Math.round((todayWater / waterGoal) * 100);
+      
       sections.push(`HYDRATION:
-- Today's Water Intake: ${todayWater}ml
-- Recent Drinks Logged: ${context.recentDrinks.length}`);
+- Today's Fluid Intake: ${todayWater}ml
+- Daily Goal: ${waterGoal}ml
+- Progress: ${percentOfGoal}% of daily goal
+- Drinks Logged Today: ${context.recentWaterIntake.length}`);
+    } else {
+      // No water logged today
+      const waterGoal = context.nutritionGoals?.dailyWater || 2500;
+      sections.push(`HYDRATION:
+- Today's Fluid Intake: 0ml
+- Daily Goal: ${waterGoal}ml
+- Progress: 0% of daily goal
+- No fluid logged yet today`);
     }
 
     // Activity
