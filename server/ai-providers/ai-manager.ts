@@ -1228,7 +1228,8 @@ export class AIManager {
     question: string,
     userContext: any,
     coachMemory?: any,
-    personality?: any
+    personality?: any,
+    clientTimeInfo?: { timeString: string, timeOfDay: string, hours: number, minutes: number }
   ): Promise<string> {
     const availableProviders = this.getAvailableProviders();
     
@@ -1257,7 +1258,8 @@ export class AIManager {
             userContext.profile || undefined,
             userContext.nutritionGoals || undefined,
             coachMemory,
-            personality
+            personality,
+            clientTimeInfo
           );
           
           return response;

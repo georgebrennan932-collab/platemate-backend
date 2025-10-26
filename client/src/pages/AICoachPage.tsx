@@ -125,10 +125,22 @@ export default function AICoachPage() {
 
   const chatMutation = useMutation({
     mutationFn: async ({ prompt, history, personality }: { prompt: string; history: Message[]; personality: PersonalityType }) => {
+      // Send client's local time so AI knows what time it is for the user
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const clientTimeInfo = {
+        hours,
+        minutes,
+        timeString: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
+        timeOfDay: hours < 12 ? 'morning' : hours < 17 ? 'afternoon' : 'evening'
+      };
+      
       const response = await apiRequest('POST', '/api/ai-coach', { 
         prompt,
         conversationHistory: history.map(m => ({ role: m.role, content: m.content })),
-        personality
+        personality,
+        clientTimeInfo
       });
       if (!response.ok) {
         throw new Error('Failed to get AI response');

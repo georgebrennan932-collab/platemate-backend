@@ -1513,7 +1513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = req.user.claims.sub;
-      const { prompt, conversationHistory, personality: selectedPersonality } = req.body;
+      const { prompt, conversationHistory, personality: selectedPersonality, clientTimeInfo } = req.body;
       
       if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
         return res.status(400).json({ error: "Prompt is required" });
@@ -1545,12 +1545,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contextualPrompt = `Previous conversation:\n${historyText}\n\nCurrent question: ${prompt.trim()}`;
       }
       
-      // Generate conversational response with full user context, coach memory, and personality
+      // Generate conversational response with full user context, coach memory, personality, and time awareness
       const response = await aiManager.answerNutritionQuestionWithContext(
         contextualPrompt, 
         userContext,
         coachMemory, 
-        personality
+        personality,
+        clientTimeInfo
       );
       
       res.json({ 

@@ -413,14 +413,21 @@ Return ONLY a JSON object:
     userProfile?: any,
     nutritionGoals?: any,
     coachMemory?: any,
-    personality?: any
+    personality?: any,
+    clientTimeInfo?: { timeString: string, timeOfDay: string, hours: number, minutes: number }
   ): Promise<string> {
     try {
       if (!this.apiKey) {
         throw new Error("HUGGINGFACE_API_KEY not configured");
       }
 
-      const prompt = `You are a nutrition coach. Answer this question: "${question}"
+      // Add time context if provided
+      let timeInfo = "";
+      if (clientTimeInfo) {
+        timeInfo = `\nCurrent time for the user: ${clientTimeInfo.timeString} (${clientTimeInfo.timeOfDay})`;
+      }
+
+      const prompt = `You are a nutrition coach. Answer this question: "${question}"${timeInfo}
 
 User context:
 - Profile: ${JSON.stringify(userProfile || {})}

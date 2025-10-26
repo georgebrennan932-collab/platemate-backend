@@ -668,7 +668,8 @@ ${JSON.stringify(analysisData, null, 2)}`;
     userProfile?: any,
     nutritionGoals?: any,
     coachMemory?: any,
-    personality?: any
+    personality?: any,
+    clientTimeInfo?: { timeString: string, timeOfDay: string, hours: number, minutes: number }
   ): Promise<string> {
     try {
       // Prepare context from user's nutrition data
@@ -817,10 +818,16 @@ ${userProfile.customBreakWindows && userProfile.customBreakWindows.length > 0 ? 
         }
       }
 
+      // Get current time context (use client's local time if provided)
+      let timeContext = "";
+      if (clientTimeInfo) {
+        timeContext = `\n\nCurrent time for the user: ${clientTimeInfo.timeString} (${clientTimeInfo.timeOfDay})`;
+      }
+      
       // Build system prompt with personality as PRIMARY identity
       const systemPrompt = `${personalitySettings.systemPrompt}
 
-You are a personal AI companion and coach. Stay in character with your unique personality style at all times.
+You are a personal AI companion and coach. Stay in character with your unique personality style at all times.${timeContext}
 
 Your communication style:
 - Tone: ${personalitySettings.responseStyle.tone}

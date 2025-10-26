@@ -129,7 +129,8 @@ export abstract class AIProvider {
     userProfile?: any, 
     nutritionGoals?: any,
     coachMemory?: any,
-    personality?: any
+    personality?: any,
+    clientTimeInfo?: { timeString: string, timeOfDay: string, hours: number, minutes: number }
   ): Promise<string>;
   abstract generateDailyCoaching(entries: DiaryEntry[], userProfile?: any): Promise<DailyCoaching>;
   abstract generateEducationalTips(category: 'all' | 'nutrition' | 'medication' | 'motivation'): Promise<EducationalTip[]>;
