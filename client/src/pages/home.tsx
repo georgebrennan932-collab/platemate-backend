@@ -1602,15 +1602,103 @@ export default function Home() {
                           type="text"
                           value={food.portion || '100g'}
                           onChange={(e) => {
-                            setReviewAnalysis(prev => prev ? {
-                              ...prev,
-                              detectedFoods: prev.detectedFoods.map((f, i) => 
-                                i === index ? { ...f, portion: e.target.value } : f
-                              )
-                            } : null);
+                            const newPortion = e.target.value;
+                            
+                            // Smart portion parsing: convert portions to grams
+                            const parsePortionToGrams = (portion: string, foodName: string): number => {
+                              const lower = portion.toLowerCase();
+                              
+                              // Extract number from portion (e.g., "2 slices" → 2)
+                              const numMatch = lower.match(/(\d+(?:\.\d+)?)/);
+                              const quantity = numMatch ? parseFloat(numMatch[1]) : 1;
+                              
+                              // Common portion sizes (in grams)
+                              const portionSizes: { [key: string]: number } = {
+                                // Bacon
+                                'slice': 12,  // 1 slice of bacon ≈ 12g
+                                'slices': 12,
+                                'rasher': 12,
+                                'rashers': 12,
+                                'strip': 12,
+                                'strips': 12,
+                                
+                                // Eggs
+                                'egg': 50,    // 1 large egg ≈ 50g
+                                'eggs': 50,
+                                
+                                // Bread
+                                'bread': 30,  // 1 slice bread ≈ 30g
+                                'toast': 30,
+                                
+                                // General
+                                'cup': 200,   // 1 cup ≈ 200g (varies by food)
+                                'cups': 200,
+                                'tbsp': 15,   // 1 tablespoon ≈ 15g
+                                'tablespoon': 15,
+                                'tablespoons': 15,
+                                'tsp': 5,     // 1 teaspoon ≈ 5g
+                                'teaspoon': 5,
+                                'teaspoons': 5,
+                              };
+                              
+                              // Check if portion contains a known unit
+                              for (const [unit, gramsPerUnit] of Object.entries(portionSizes)) {
+                                if (lower.includes(unit)) {
+                                  return quantity * gramsPerUnit;
+                                }
+                              }
+                              
+                              // Try to extract grams directly (e.g., "150g" or "150")
+                              const gramsMatch = lower.match(/(\d+(?:\.\d+)?)\s*g/);
+                              if (gramsMatch) {
+                                return parseFloat(gramsMatch[1]);
+                              }
+                              
+                              // If just a number, treat as grams
+                              if (numMatch && !isNaN(quantity)) {
+                                return quantity;
+                              }
+                              
+                              // Default to 100g
+                              return 100;
+                            };
+                            
+                            // Get current nutrition (per 100g)
+                            const currentGrams = parsePortionToGrams(food.portion || '100g', food.name);
+                            const newGrams = parsePortionToGrams(newPortion, food.name);
+                            const multiplier = newGrams / currentGrams;
+                            
+                            // Update with new portion and scaled nutrition
+                            setReviewAnalysis(prev => {
+                              if (!prev) return null;
+                              
+                              const updatedFoods = prev.detectedFoods.map((f, i) => {
+                                if (i === index) {
+                                  return {
+                                    ...f,
+                                    portion: newPortion,
+                                    calories: Math.round(f.calories * multiplier),
+                                    protein: Math.round(f.protein * multiplier),
+                                    carbs: Math.round(f.carbs * multiplier),
+                                    fat: Math.round(f.fat * multiplier)
+                                  };
+                                }
+                                return f;
+                              });
+                              
+                              // Recalculate totals
+                              return {
+                                ...prev,
+                                detectedFoods: updatedFoods,
+                                totalCalories: updatedFoods.reduce((sum, f) => sum + f.calories, 0),
+                                totalProtein: updatedFoods.reduce((sum, f) => sum + f.protein, 0),
+                                totalCarbs: updatedFoods.reduce((sum, f) => sum + f.carbs, 0),
+                                totalFat: updatedFoods.reduce((sum, f) => sum + f.fat, 0)
+                              };
+                            });
                           }}
                           className="text-sm text-white w-full bg-white/10 px-3 py-1.5 rounded-lg border border-white/20"
-                          placeholder="100g"
+                          placeholder="e.g., 2 slices, 2 eggs, 150g"
                           data-testid={`input-food-portion-${index}`}
                         />
                       </div>
