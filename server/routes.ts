@@ -1515,6 +1515,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { prompt, conversationHistory, personality: selectedPersonality, clientTimeInfo } = req.body;
       
+      console.log('🕐🕐🕐 AI COACH - Received time info:', clientTimeInfo);
+      
       if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
         return res.status(400).json({ error: "Prompt is required" });
       }

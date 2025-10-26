@@ -136,6 +136,8 @@ export default function AICoachPage() {
         timeOfDay: hours < 12 ? 'morning' : hours < 17 ? 'afternoon' : 'evening'
       };
       
+      console.log('🕐🕐🕐 SENDING TIME TO AI:', clientTimeInfo);
+      
       const response = await apiRequest('POST', '/api/ai-coach', { 
         prompt,
         conversationHistory: history.map(m => ({ role: m.role, content: m.content })),
