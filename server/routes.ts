@@ -1698,10 +1698,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log(`💧 Creating water intake: ${drinkEntry.amount}ml for user ${userId} on ${loggedDate}`);
         
+        // Normalize drink type to supported values
+        const supportedTypes = ["water", "coffee", "tea", "wine", "beer"];
+        const normalizedDrinkType = supportedTypes.includes(drinkEntry.drinkType) 
+          ? drinkEntry.drinkType as "water" | "coffee" | "tea" | "wine" | "beer" | "custom"
+          : "custom";
+        
         const waterIntake = await storage.createWaterIntake({
           userId,
           amountMl: drinkEntry.amount,
-          drinkType: drinkEntry.drinkType,
+          drinkType: normalizedDrinkType,
           drinkName: drinkEntry.drinkName,
           loggedAt: loggedAt instanceof Date ? loggedAt.toISOString() : loggedAt,
           loggedDate

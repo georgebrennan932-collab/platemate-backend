@@ -76,14 +76,15 @@ Preferred communication style: Simple, everyday language.
   - Comprehensive meal cards with nutrition breakdown, ingredients, benefits, and shift-specific tips
   - Database persistence using PostgreSQL (shiftSchedules table)
   - Full test coverage with data-testid attributes on all interactive and dynamic elements
-- **Water Tracking**: Dedicated hydration monitoring system integrated into the diary page. Features include:
+- **Unified Fluid Tracking**: Comprehensive hydration monitoring system with drink-type tracking integrated into the diary page. Features include:
   - Progress bar displaying consumed vs. daily goal (ml and percentage)
-  - Quick-add buttons for common amounts (250ml, 500ml, 750ml, 1L)
+  - Drink-type quick-add buttons: Water (250ml), Coffee (240ml), Tea (200ml), Wine (150ml), Beer (355ml) with color-coded icons
   - Custom amount input with validation (1-5000ml range)
-  - Daily log showing all entries with timestamps and delete functionality
-  - Editable daily water goal (1-10000ml range)
+  - Daily log showing all entries with drink type icons, names, amounts, timestamps, and delete functionality
+  - Editable daily fluid goal (1-10000ml range)
   - Smart goal calculation: Default 2500ml, auto-adjusts to 1500ml for users with fluid-restricting medical conditions (kidney disease, heart failure, fluid retention)
-  - Separate database table (waterIntake) for dedicated water tracking
+  - Drink type normalization: Legacy drink types (juice, soda, etc.) automatically mapped to "custom" for consistency
+  - Database table (waterIntake) with drinkType and drinkName fields for unified fluid tracking
   - Complete authentication and user data isolation
   - Full test coverage with data-testid attributes
 

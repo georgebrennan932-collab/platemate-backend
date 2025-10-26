@@ -79,7 +79,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
 
   // Add water mutation
   const addWaterMutation = useMutation({
-    mutationFn: async (data: { amountMl: number; drinkType: string; drinkName: string }) => {
+    mutationFn: async (data: { amountMl: number; drinkType: "water" | "coffee" | "tea" | "wine" | "beer" | "custom"; drinkName: string }) => {
       const entry: InsertWaterIntake = {
         userId: "", // Will be set by backend
         amountMl: data.amountMl,
@@ -158,7 +158,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
     },
   });
 
-  const handleQuickAdd = (amount: number, drinkType: string, drinkName: string) => {
+  const handleQuickAdd = (amount: number, drinkType: "water" | "coffee" | "tea" | "wine" | "beer" | "custom", drinkName: string) => {
     addWaterMutation.mutate({ amountMl: amount, drinkType, drinkName });
   };
 
@@ -370,15 +370,17 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Today's Log</p>
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {waterEntries.map((entry, index) => {
-                // Get icon and color based on drink type
+                // Get icon and color based on drink type (with defensive fallback for legacy types)
                 const getDrinkIcon = () => {
-                  switch (entry.drinkType) {
+                  const drinkType = entry.drinkType || "water";
+                  switch (drinkType) {
                     case "water": return <GlassWater className="h-4 w-4 text-blue-500" />;
                     case "coffee": return <Coffee className="h-4 w-4 text-amber-600" />;
                     case "tea": return <Coffee className="h-4 w-4 text-green-600" />;
                     case "wine": return <Wine className="h-4 w-4 text-purple-600" />;
                     case "beer": return <Beer className="h-4 w-4 text-orange-600" />;
-                    default: return <Droplets className="h-4 w-4 text-gray-500" />;
+                    case "custom": return <Droplets className="h-4 w-4 text-gray-500" />;
+                    default: return <Droplets className="h-4 w-4 text-gray-500" />; // Fallback for legacy types
                   }
                 };
                 
@@ -391,7 +393,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
                     <div className="flex items-center gap-2">
                       {getDrinkIcon()}
                       <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {entry.drinkName}
+                        {entry.drinkName || "Drink"}
                       </span>
                       <span className="font-medium text-gray-900 dark:text-white" data-testid={`text-water-amount-${index}`}>
                         {entry.amountMl}ml
