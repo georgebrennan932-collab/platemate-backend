@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Droplets, Plus, Trash2, Edit, Coffee, Wine, Beer, GlassWater } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +18,7 @@ interface WaterTrackerProps {
 export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
   const { toast } = useToast();
   const [customAmount, setCustomAmount] = useState("");
+  const [customDrinkType, setCustomDrinkType] = useState<"water" | "coffee" | "tea" | "wine" | "beer" | "custom">("water");
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [editedGoal, setEditedGoal] = useState("");
 
@@ -165,7 +167,20 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
   const handleCustomAdd = () => {
     const amount = parseInt(customAmount);
     if (amount && amount > 0 && amount <= 5000) {
-      addWaterMutation.mutate({ amountMl: amount, drinkType: "custom", drinkName: "Custom" });
+      const drinkNames = {
+        water: "Water",
+        coffee: "Coffee",
+        tea: "Tea",
+        wine: "Wine",
+        beer: "Beer",
+        custom: "Custom Drink"
+      };
+      
+      addWaterMutation.mutate({ 
+        amountMl: amount, 
+        drinkType: customDrinkType, 
+        drinkName: drinkNames[customDrinkType] 
+      });
     } else {
       toast({
         title: "Invalid amount",
@@ -193,18 +208,18 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
   };
 
   return (
-    <Card className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-blue-200 dark:border-blue-800">
+    <Card className="p-4 sm:p-6 bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950/20 dark:to-teal-950/20 border-green-200 dark:border-green-800">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Droplets className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <Droplets className="h-6 w-6 text-teal-600 dark:text-teal-400" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Fluid Intake
             </h3>
           </div>
           {selectedDate.toDateString() === new Date().toDateString() && (
-            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
+            <span className="text-xs text-teal-600 dark:text-teal-400 font-medium bg-teal-100 dark:bg-teal-900/30 px-2 py-1 rounded-full">
               Today
             </span>
           )}
@@ -214,7 +229,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
         <div className="space-y-2">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400" data-testid="text-water-consumed">
+              <p className="text-2xl sm:text-3xl font-bold text-teal-600 dark:text-teal-400" data-testid="text-water-consumed">
                 {totalConsumed}ml
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -253,7 +268,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
                   </span>
                 ) : (
                   <span
-                    className="inline-flex items-center gap-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                    className="inline-flex items-center gap-1 cursor-pointer hover:text-teal-600 dark:hover:text-teal-400"
                     onClick={() => {
                       setIsEditingGoal(true);
                       setEditedGoal(dailyGoal.toString());
@@ -286,11 +301,11 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
             <Button
               onClick={() => handleQuickAdd(250, "water", "Water")}
               variant="outline"
-              className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 hover:from-blue-100 hover:to-cyan-100 dark:hover:from-blue-900/30 dark:hover:to-cyan-900/30 border-blue-200 dark:border-blue-800"
+              className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 hover:from-teal-100 hover:to-cyan-100 dark:hover:from-teal-900/30 dark:hover:to-cyan-900/30 border-teal-200 dark:border-teal-800"
               disabled={addWaterMutation.isPending}
               data-testid="button-add-water-250"
             >
-              <GlassWater className="h-4 w-4 mr-1 text-blue-600 dark:text-blue-400" />
+              <GlassWater className="h-4 w-4 mr-1 text-teal-600 dark:text-teal-400" />
               Water 250ml
             </Button>
             <Button
@@ -340,6 +355,19 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
         <div className="space-y-2">
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Custom Amount</p>
           <div className="flex gap-2">
+            <Select value={customDrinkType} onValueChange={(value: any) => setCustomDrinkType(value)}>
+              <SelectTrigger className="w-32" data-testid="select-custom-drink-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="water">Water</SelectItem>
+                <SelectItem value="coffee">Coffee</SelectItem>
+                <SelectItem value="tea">Tea</SelectItem>
+                <SelectItem value="wine">Wine</SelectItem>
+                <SelectItem value="beer">Beer</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
             <Input
               type="number"
               placeholder="Enter ml..."
@@ -366,7 +394,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
 
         {/* Today's Log */}
         {waterEntries.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-blue-200 dark:border-blue-800">
+          <div className="space-y-2 pt-2 border-t border-green-200 dark:border-green-800">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Today's Log</p>
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {waterEntries.map((entry, index) => {
@@ -374,7 +402,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
                 const getDrinkIcon = () => {
                   const drinkType = entry.drinkType || "water";
                   switch (drinkType) {
-                    case "water": return <GlassWater className="h-4 w-4 text-blue-500" />;
+                    case "water": return <GlassWater className="h-4 w-4 text-teal-500" />;
                     case "coffee": return <Coffee className="h-4 w-4 text-amber-600" />;
                     case "tea": return <Coffee className="h-4 w-4 text-green-600" />;
                     case "wine": return <Wine className="h-4 w-4 text-purple-600" />;
