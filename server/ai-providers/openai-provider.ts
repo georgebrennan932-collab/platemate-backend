@@ -307,23 +307,38 @@ If you can't clearly identify something, don't include it. Be as accurate as pos
             role: "user",
             content: `Analyze this food description and extract nutritional information. Parse the quantity, unit, and food name from: "${mappedDescription}"
 
+CRITICAL FOOD INTERPRETATION RULES:
+- "rice" = cooked white/brown rice (NOT rice paper, rice cakes, or rice noodles)
+- "chicken" = grilled/baked chicken breast unless specified otherwise
+- "beef" = lean beef/ground beef
+- "pasta" = cooked pasta (NOT raw weight)
+- "bread" = sliced bread
+- When user says "X and Y" (e.g., "chicken and rice"), create TWO separate food items
+
+COMMON MEAL EXAMPLES:
+- "chicken and rice" → [{"name": "Grilled chicken breast", "portion": "150g"}, {"name": "Cooked white rice", "portion": "200g"}]
+- "salmon and broccoli" → [{"name": "Baked salmon fillet", "portion": "150g"}, {"name": "Steamed broccoli", "portion": "100g"}]
+- "eggs and toast" → [{"name": "Scrambled eggs", "portion": "2 large eggs"}, {"name": "Whole wheat bread", "portion": "2 slices"}]
+- "steak and potatoes" → [{"name": "Grilled sirloin steak", "portion": "200g"}, {"name": "Roasted potatoes", "portion": "150g"}]
+
+DEFAULT PORTION SIZES (use when not specified):
+- Chicken breast: 150g cooked
+- Fish fillet: 150g cooked
+- Rice (cooked): 200g (1 cup)
+- Pasta (cooked): 200g (1 cup)
+- Vegetables: 100g
+- Eggs: 2 large
+- Bread: 2 slices
+
 CRITICAL QUANTITY HANDLING:
-- If the user specifies a quantity (e.g., "4 Weetabix", "2 eggs", "three bananas"), you MUST:
-  1. Extract the quantity number
-  2. Multiply ALL nutrition values (calories, protein, carbs, fat) by that quantity
-  3. Preserve the original portion description including the quantity
+- If user specifies quantity (e.g., "4 Weetabix", "2 eggs"), multiply nutrition by that quantity
+- Preserve original portion description with quantity
 
-Examples with quantities:
-- "4 Weetabix" → quantity=4, multiply nutrition by 4, portion="4 Weetabix"
-- "2 large eggs" → quantity=2, multiply nutrition by 2, portion="2 large eggs"
-- "three bananas" → quantity=3, multiply nutrition by 3, portion="3 bananas"
-
-FOOD NAME RULES:
-- Use simple, basic food names (raw/fresh unless cooking method specified)
-- For eggs: "Eggs, raw, large" unless cooking method mentioned
-- For meat: assume raw, skinless unless specified
-- For Weetabix: "Weetabix cereal biscuit"
-- Do NOT use complex preparations unless explicitly stated
+SANITY CHECKS - Flag if values seem wrong:
+- Simple meal >800 calories is suspicious
+- Chicken breast >250 cal per 100g is wrong
+- Rice >150 cal per 100g cooked is wrong
+- Single egg >80 calories is wrong
 
 Provide accurate nutritional information based on standard USDA values. Return the response as a JSON object with this exact structure:
 
@@ -331,19 +346,19 @@ Provide accurate nutritional information based on standard USDA values. Return t
   "confidence": number (0-100),
   "detectedFoods": [
     {
-      "name": "Simple, basic food name",
-      "portion": "PRESERVE original portion with quantity (e.g., '4 Weetabix', '2 large eggs')",
-      "quantity": number (extract from portion text, default 1),
-      "calories": number (ALREADY MULTIPLIED by quantity),
-      "protein": number (ALREADY MULTIPLIED by quantity),
-      "carbs": number (ALREADY MULTIPLIED by quantity),
-      "fat": number (ALREADY MULTIPLIED by quantity),
+      "name": "Simple, basic food name (e.g., 'Grilled chicken breast', 'Cooked white rice')",
+      "portion": "Specific amount with unit (e.g., '150g', '2 large eggs', '1 cup')",
+      "quantity": number (default 1),
+      "calories": number (per 100g: chicken ~165, rice ~130, egg ~72 each),
+      "protein": number,
+      "carbs": number,
+      "fat": number,
       "icon": "🍽️"
     }
   ]
 }
 
-IMPORTANT: All nutrition values should be TOTAL amounts including the quantity multiplier.`
+IMPORTANT: Create SEPARATE items for "X and Y" patterns. Use realistic portions and accurate nutrition values.`
           }
         ],
         max_tokens: 1000,
