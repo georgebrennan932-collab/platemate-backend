@@ -1106,6 +1106,14 @@ export default function Home() {
         </div>
       )}
 
+      {/* Daily Nutrition Progress - ALWAYS visible for all users */}
+      <div className="max-w-md mx-auto px-6 mb-6">
+        <ProgressIndicators
+          goals={activeGoals}
+          consumed={todayConsumedNutrition}
+        />
+      </div>
+      
       {/* Weigh In Button */}
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
