@@ -1591,22 +1591,59 @@ export default function Home() {
                   >
                     {/* Food Name */}
                     {isEditing ? (
-                      <input
-                        type="text"
-                        value={food.name}
-                        onChange={(e) => {
-                          setReviewAnalysis(prev => prev ? {
-                            ...prev,
-                            detectedFoods: prev.detectedFoods.map((f, i) => 
-                              i === index ? { ...f, name: e.target.value } : f
-                            )
-                          } : null);
-                        }}
-                        className="text-xl font-bold text-white w-full bg-white/10 px-3 py-2 rounded-lg mb-2 border border-white/20"
-                        placeholder="Food name"
-                      />
+                      <div className="mb-3 space-y-2">
+                        <input
+                          type="text"
+                          value={food.name}
+                          onChange={(e) => {
+                            setReviewAnalysis(prev => prev ? {
+                              ...prev,
+                              detectedFoods: prev.detectedFoods.map((f, i) => 
+                                i === index ? { ...f, name: e.target.value } : f
+                              )
+                            } : null);
+                          }}
+                          className="text-xl font-bold text-white w-full bg-white/10 px-3 py-2 rounded-lg border border-white/20"
+                          placeholder="Food name"
+                          data-testid={`input-food-name-${index}`}
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm text-purple-200">Portion:</label>
+                          <input
+                            type="text"
+                            value={food.portion || '100g'}
+                            onChange={(e) => {
+                              const newPortion = e.target.value;
+                              // Extract numbers from both old and new portions
+                              const oldAmount = parseFloat(food.portion?.match(/[\d.]+/)?.[0] || '100');
+                              const newAmount = parseFloat(newPortion.match(/[\d.]+/)?.[0] || oldAmount.toString());
+                              const multiplier = newAmount / oldAmount;
+                              
+                              setReviewAnalysis(prev => prev ? {
+                                ...prev,
+                                detectedFoods: prev.detectedFoods.map((f, i) => 
+                                  i === index ? {
+                                    ...f,
+                                    portion: newPortion,
+                                    calories: Math.round(f.calories * multiplier),
+                                    protein: Math.round(f.protein * multiplier),
+                                    carbs: Math.round(f.carbs * multiplier),
+                                    fat: Math.round(f.fat * multiplier)
+                                  } : f
+                                )
+                              } : null);
+                            }}
+                            className="text-sm text-white bg-white/10 px-3 py-1.5 rounded-lg border border-white/20 flex-1"
+                            placeholder="100g"
+                            data-testid={`input-food-portion-${index}`}
+                          />
+                        </div>
+                      </div>
                     ) : (
-                      <h3 className="text-xl font-bold text-white mb-4">{food.name}</h3>
+                      <div className="mb-4">
+                        <h3 className="text-xl font-bold text-white">{food.name}</h3>
+                        <p className="text-sm text-purple-200">{food.portion || '100g'}</p>
+                      </div>
                     )}
                     
                     {/* Nutrition Row */}
