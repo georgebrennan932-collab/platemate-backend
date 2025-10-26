@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import type { DiaryEntryWithAnalysis, NutritionGoals, DrinkEntry } from "@shared/schema";
+import type { DiaryEntryWithAnalysis, NutritionGoals } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Flame, Dumbbell, Wheat, Droplet, TrendingUp, Award, Target, Utensils } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
@@ -22,10 +22,6 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
     queryKey: ['/api/nutrition-goals'],
   });
 
-  const { data: drinkEntries } = useQuery<DrinkEntry[]>({
-    queryKey: ['/api/drinks'],
-  });
-
   const [motivationalQuote, setMotivationalQuote] = useState("");
   const lastCheckRef = useRef<string>('');
 
@@ -36,16 +32,15 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
     return entryDate === today;
   }) || [];
 
-  // Calculate today's totals (including water from drinks)
-  const totals = calculateDailyNutrition(todayEntries, drinkEntries || []);
+  // Calculate today's totals from food diary only
+  const totals = calculateDailyNutrition(todayEntries, []);
 
   // Mutation to check goal challenges
   const checkGoalsMutation = useMutation({
     mutationFn: async (data: {
-      totalWater: number;
       totalCalories: number;
       totalProtein: number;
-      dailyGoals: { water: number; calories: number; protein: number };
+      dailyGoals: { calories: number; protein: number };
     }) => {
       return apiRequest('POST', '/api/challenges/check-goals', data);
     },
@@ -54,7 +49,7 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
   // Check goals whenever totals or goals change
   useEffect(() => {
     if (nutritionGoals && totals.calories > 0) {
-      const checkKey = `${totals.calories}-${totals.water}-${totals.protein}`;
+      const checkKey = `${totals.calories}-${totals.protein}`;
       
       // Only check if values have changed
       if (checkKey !== lastCheckRef.current) {
@@ -62,11 +57,9 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
         
         // Call the API to check goal-based challenges
         apiRequest('POST', '/api/challenges/check-goals', {
-          totalWater: totals.water,
           totalCalories: totals.calories,
           totalProtein: totals.protein,
           dailyGoals: {
-            water: nutritionGoals.dailyWater || 2000,
             calories: nutritionGoals.dailyCalories || 2000,
             protein: nutritionGoals.dailyProtein || 150,
           },
@@ -75,7 +68,7 @@ export function Dashboard({ onViewMeals }: DashboardProps = {}) {
         });
       }
     }
-  }, [totals.calories, totals.water, totals.protein, nutritionGoals]);
+  }, [totals.calories, totals.protein, nutritionGoals]);
 
   // AI motivational quotes
   const quotes = [
