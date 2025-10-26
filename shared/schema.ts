@@ -128,8 +128,10 @@ export const diaryEntries = pgTable("diary_entries", {
 export const waterIntake = pgTable("water_intake", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  amountMl: integer("amount_ml").notNull(), // water amount in ml
-  loggedAt: timestamp("logged_at").notNull(), // when the water was consumed
+  amountMl: integer("amount_ml").notNull(), // fluid amount in ml
+  drinkType: varchar("drink_type").notNull().default("water"), // water, coffee, tea, wine, beer, custom
+  drinkName: varchar("drink_name").notNull().default("Water"), // display name for the drink
+  loggedAt: timestamp("logged_at").notNull(), // when the fluid was consumed
   loggedDate: varchar("logged_date").notNull(), // YYYY-MM-DD format for easy querying
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -356,6 +358,8 @@ export const insertWaterIntakeSchema = createInsertSchema(waterIntake).omit({
 }).extend({
   loggedAt: z.string().or(z.date()), // Accept string or Date
   loggedDate: z.string(), // YYYY-MM-DD format
+  drinkType: z.enum(["water", "coffee", "tea", "wine", "beer", "custom"]).default("water"),
+  drinkName: z.string().default("Water"),
 });
 
 export const insertDrinkEntrySchema = createInsertSchema(drinkEntries).omit({
