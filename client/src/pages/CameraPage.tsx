@@ -41,6 +41,7 @@ export function CameraPage() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewAnalysis, setReviewAnalysis] = useState<FoodAnalysis | null>(null);
   const [reviewDescription, setReviewDescription] = useState('');
+  const [editingFoodIndex, setEditingFoodIndex] = useState<number | null>(null);
   
   
   // Confetti disabled per user request
@@ -518,51 +519,152 @@ export function CameraPage() {
             
             {/* Detected Foods - Editable */}
             <div className="space-y-3 mb-5">
-              {reviewAnalysis.detectedFoods.map((food, index) => (
-                <div 
-                  key={index}
-                  className="bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/20 dark:to-gray-800 rounded-xl p-3 border border-purple-200/50 dark:border-purple-700/30"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <p className="font-bold text-sm text-gray-900 dark:text-white">{food.name}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">{food.portion}</p>
+              {reviewAnalysis.detectedFoods.map((food, index) => {
+                const isEditing = editingFoodIndex === index;
+                
+                return (
+                  <div 
+                    key={index}
+                    className="bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/20 dark:to-gray-800 rounded-xl p-3 border border-purple-200/50 dark:border-purple-700/30"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={food.name}
+                            onChange={(e) => {
+                              const updated = { ...reviewAnalysis };
+                              updated.detectedFoods[index].name = e.target.value;
+                              setReviewAnalysis(updated);
+                            }}
+                            className="font-bold text-sm w-full px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600"
+                            placeholder="Food name"
+                          />
+                        ) : (
+                          <p className="font-bold text-sm text-gray-900 dark:text-white">{food.name}</p>
+                        )}
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={food.portion}
+                            onChange={(e) => {
+                              const updated = { ...reviewAnalysis };
+                              updated.detectedFoods[index].portion = e.target.value;
+                              setReviewAnalysis(updated);
+                            }}
+                            className="text-xs w-full px-2 py-1 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"
+                            placeholder="Portion size"
+                          />
+                        ) : (
+                          <p className="text-xs text-gray-600 dark:text-gray-400">{food.portion}</p>
+                        )}
+                      </div>
+                      {isEditing ? (
+                        <button
+                          onClick={() => {
+                            // Recalculate totals
+                            const updated = { ...reviewAnalysis };
+                            updated.totalCalories = updated.detectedFoods.reduce((sum, f) => sum + f.calories, 0);
+                            updated.totalProtein = updated.detectedFoods.reduce((sum, f) => sum + f.protein, 0);
+                            updated.totalCarbs = updated.detectedFoods.reduce((sum, f) => sum + f.carbs, 0);
+                            updated.totalFat = updated.detectedFoods.reduce((sum, f) => sum + f.fat, 0);
+                            setReviewAnalysis(updated);
+                            setEditingFoodIndex(null);
+                          }}
+                          className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50"
+                        >
+                          Done
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setEditingFoodIndex(index)}
+                          className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                        >
+                          Edit
+                        </button>
+                      )}
                     </div>
-                    <button
-                      onClick={() => {
-                        // TODO: Add edit functionality
-                        toast({
-                          title: "Coming Soon",
-                          description: "Individual food editing will be available soon!",
-                        });
-                      }}
-                      className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50"
-                    >
-                      Edit
-                    </button>
+                    
+                    {/* Nutrition Values - Editable when editing */}
+                    {isEditing ? (
+                      <div className="grid grid-cols-4 gap-2">
+                        <div>
+                          <label className="text-[10px] text-muted-foreground block mb-1">cal</label>
+                          <input
+                            type="number"
+                            value={food.calories}
+                            onChange={(e) => {
+                              const updated = { ...reviewAnalysis };
+                              updated.detectedFoods[index].calories = parseInt(e.target.value) || 0;
+                              setReviewAnalysis(updated);
+                            }}
+                            className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-muted-foreground block mb-1">protein</label>
+                          <input
+                            type="number"
+                            value={food.protein}
+                            onChange={(e) => {
+                              const updated = { ...reviewAnalysis };
+                              updated.detectedFoods[index].protein = parseInt(e.target.value) || 0;
+                              setReviewAnalysis(updated);
+                            }}
+                            className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-muted-foreground block mb-1">carbs</label>
+                          <input
+                            type="number"
+                            value={food.carbs}
+                            onChange={(e) => {
+                              const updated = { ...reviewAnalysis };
+                              updated.detectedFoods[index].carbs = parseInt(e.target.value) || 0;
+                              setReviewAnalysis(updated);
+                            }}
+                            className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-muted-foreground block mb-1">fat</label>
+                          <input
+                            type="number"
+                            value={food.fat}
+                            onChange={(e) => {
+                              const updated = { ...reviewAnalysis };
+                              updated.detectedFoods[index].fat = parseInt(e.target.value) || 0;
+                              setReviewAnalysis(updated);
+                            }}
+                            className="w-full px-1 py-1 text-xs border rounded text-center dark:bg-gray-700 dark:border-gray-600"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-4 gap-2 text-center">
+                        <div>
+                          <div className="text-sm font-bold text-orange-600">{food.calories}</div>
+                          <div className="text-[10px] text-muted-foreground">cal</div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-blue-600">{food.protein}g</div>
+                          <div className="text-[10px] text-muted-foreground">protein</div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-yellow-600">{food.carbs}g</div>
+                          <div className="text-[10px] text-muted-foreground">carbs</div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-green-600">{food.fat}g</div>
+                          <div className="text-[10px] text-muted-foreground">fat</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Nutrition Values - Inline */}
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    <div>
-                      <div className="text-sm font-bold text-orange-600">{food.calories}</div>
-                      <div className="text-[10px] text-muted-foreground">cal</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-blue-600">{food.protein}g</div>
-                      <div className="text-[10px] text-muted-foreground">protein</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-yellow-600">{food.carbs}g</div>
-                      <div className="text-[10px] text-muted-foreground">carbs</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-green-600">{food.fat}g</div>
-                      <div className="text-[10px] text-muted-foreground">fat</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Total Nutrition Summary */}
@@ -623,7 +725,17 @@ export function CameraPage() {
                 Cancel
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
+                  // First update the analysis with any edited values
+                  try {
+                    await apiRequest('PATCH', `/api/analyses/${reviewAnalysis.id}`, {
+                      detectedFoods: reviewAnalysis.detectedFoods
+                    });
+                  } catch (error) {
+                    console.error("Failed to update analysis:", error);
+                  }
+                  
+                  // Then save to diary
                   saveToDiaryMutation.mutate({
                     analysisId: reviewAnalysis.id,
                     mealType: selectedMealType,
