@@ -21,7 +21,6 @@ import { WeightForm } from "@/components/weight-form";
 import { WeightList } from "@/components/weight-list";
 import { WeightEditDialog } from "@/components/weight-edit-dialog";
 import { WeightChart } from "@/components/weight-chart";
-import { DrinksBar } from "@/components/drinks-bar";
 import type { WeightEntry } from "@shared/schema";
 import { calculateDailyNutrition } from "@/lib/nutrition-calculator";
 import { Dashboard } from "@/components/dashboard";
@@ -834,9 +833,6 @@ export function DiaryPage() {
                 ))}
               </div>
             )}
-            
-            {/* Drinks Bar */}
-            <DrinksBar />
             
             {/* Today's Summary */}
             <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl p-6 shadow-lg">
