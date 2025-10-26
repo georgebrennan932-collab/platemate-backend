@@ -80,14 +80,18 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
   // Add water mutation
   const addWaterMutation = useMutation({
     mutationFn: async (amountMl: number) => {
+      console.log("🚰 Mutation started:", amountMl, "for date:", dateStr);
       const entry: InsertWaterIntake = {
         userId: "", // Will be set by backend
         amountMl,
         loggedAt: new Date().toISOString(),
         loggedDate: dateStr,
       };
+      console.log("🚰 Sending entry:", entry);
       const res = await apiRequest("POST", "/api/water", entry);
-      return res.json();
+      const data = await res.json();
+      console.log("🚰 Response:", data);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/water/${dateStr}`] });
@@ -157,6 +161,7 @@ export function WaterTracker({ selectedDate = new Date() }: WaterTrackerProps) {
   });
 
   const handleQuickAdd = (amount: number) => {
+    console.log("🚰 Quick add clicked:", amount);
     addWaterMutation.mutate(amount);
   };
 
