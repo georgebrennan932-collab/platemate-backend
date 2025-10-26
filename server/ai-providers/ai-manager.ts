@@ -813,32 +813,40 @@ export class AIManager {
    * Parse food names from text description using AI providers
    */
   async parseFoodNamesFromText(foodDescription: string): Promise<string[]> {
-    // Simple text parsing - extract food names from description
-    // This could be enhanced with AI providers in the future
-    const lowerDesc = foodDescription.toLowerCase();
-    const foodKeywords = [];
+    console.log(`📝 Parsing food names from text: "${foodDescription}"`);
     
-    // Basic keyword extraction
-    const commonFoods = [
-      'apple', 'banana', 'orange', 'chicken', 'beef', 'salmon', 'fish', 
-      'rice', 'bread', 'pasta', 'egg', 'milk', 'cheese', 'broccoli', 
-      'carrot', 'potato', 'tomato', 'lettuce', 'avocado', 'spinach'
-    ];
+    // STEP 1: Split on common separators (and, with, comma)
+    // Examples: "bacon and eggs" → ["bacon", "eggs"]
+    //           "chicken with rice" → ["chicken", "rice"]
+    //           "apple, banana" → ["apple", "banana"]
+    const separatorRegex = /\s+(?:and|with|,)\s+/i;
+    const rawParts = foodDescription.split(separatorRegex).map(p => p.trim()).filter(p => p.length > 0);
     
-    for (const food of commonFoods) {
-      // Use word boundaries to avoid partial matches (e.g., "apple" in "pineapple")
-      const regex = new RegExp(`\\b${food}\\b`, 'i');
-      if (regex.test(lowerDesc)) {
-        foodKeywords.push(food);
+    console.log(`🔪 Split into ${rawParts.length} parts:`, rawParts);
+    
+    // STEP 2: For each part, extract the main food item
+    const foodNames: string[] = [];
+    
+    for (const part of rawParts) {
+      // Remove quantity descriptors (e.g., "2 eggs" → "eggs", "large chicken" → "chicken")
+      let cleanedPart = part
+        .replace(/^\d+\s+/, '') // Remove leading numbers
+        .replace(/^(one|two|three|four|five|six|seven|eight|nine|ten)\s+/i, '') // Remove word numbers
+        .replace(/\b(small|medium|large|extra\s+large|jumbo)\s+/gi, '') // Remove size descriptors
+        .replace(/\b(slice|slices|piece|pieces|serving|servings|cup|cups|bowl|bowls)\b/gi, '') // Remove portion words
+        .trim();
+      
+      // If we cleaned too much, use the original part
+      if (cleanedPart.length < 2) {
+        cleanedPart = part;
       }
+      
+      console.log(`  🧹 Cleaned "${part}" → "${cleanedPart}"`);
+      foodNames.push(cleanedPart);
     }
     
-    // If no keywords found, use the whole description as a search term
-    if (foodKeywords.length === 0) {
-      foodKeywords.push(foodDescription.trim());
-    }
-    
-    return foodKeywords;
+    console.log(`✅ Final parsed food names:`, foodNames);
+    return foodNames.length > 0 ? foodNames : [foodDescription.trim()];
   }
 
   /**
