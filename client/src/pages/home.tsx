@@ -1553,32 +1553,18 @@ export default function Home() {
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm overflow-y-auto">
           <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-purple-500/30 my-8">
             
-            {/* Header with fork icon, food name, and menu icon */}
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-start gap-3">
-                <Utensils className="h-8 w-8 text-white mt-1" />
-                <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    {reviewAnalysis.detectedFoods[0]?.name || 'Meal'}
-                  </h2>
-                  <p className="text-sm text-purple-200">
-                    ({reviewAnalysis.detectedFoods[0]?.portion || 'Serving'})
-                  </p>
-                </div>
+            {/* Header */}
+            <div className="flex items-start gap-3 mb-6">
+              <Utensils className="h-8 w-8 text-white mt-1" />
+              <div>
+                <h2 className="text-2xl font-bold text-white">Review Your Meal</h2>
+                <p className="text-sm text-purple-200">Adjust portions and values before saving</p>
               </div>
-              <button
-                onClick={() => setEditingFoodIndex(editingFoodIndex === null ? 0 : null)}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all"
-                data-testid="button-toggle-edit-mode"
-              >
-                <Menu className="h-6 w-6 text-white" />
-              </button>
             </div>
 
             {/* Individual Food Cards */}
             <div className="space-y-4 mb-6">
               {reviewAnalysis.detectedFoods.map((food, index) => {
-                const isEditing = editingFoodIndex === index;
                 const totalMacros = food.protein + food.carbs + food.fat;
                 const proteinPercent = totalMacros > 0 ? (food.protein / totalMacros) * 100 : 0;
                 const carbsPercent = totalMacros > 0 ? (food.carbs / totalMacros) * 100 : 0;
@@ -1589,9 +1575,10 @@ export default function Home() {
                     key={index}
                     className="bg-gradient-to-br from-indigo-800/60 to-blue-800/60 rounded-2xl p-4 border border-blue-400/30 backdrop-blur-sm"
                   >
-                    {/* Food Name */}
-                    {isEditing ? (
-                      <div className="mb-3 space-y-2">
+                    {/* Food Name & Portion - Always Editable */}
+                    <div className="mb-3 space-y-2">
+                      <div>
+                        <label className="text-xs text-purple-200 mb-1 block">Food Name:</label>
                         <input
                           type="text"
                           value={food.name}
@@ -1603,179 +1590,141 @@ export default function Home() {
                               )
                             } : null);
                           }}
-                          className="text-xl font-bold text-white w-full bg-white/10 px-3 py-2 rounded-lg border border-white/20"
+                          className="text-lg font-bold text-white w-full bg-white/10 px-3 py-2 rounded-lg border border-white/20"
                           placeholder="Food name"
                           data-testid={`input-food-name-${index}`}
                         />
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm text-purple-200">Portion:</label>
-                          <input
-                            type="text"
-                            value={food.portion || '100g'}
-                            onChange={(e) => {
-                              const newPortion = e.target.value;
-                              // Extract numbers from both old and new portions
-                              const oldAmount = parseFloat(food.portion?.match(/[\d.]+/)?.[0] || '100');
-                              const newAmount = parseFloat(newPortion.match(/[\d.]+/)?.[0] || oldAmount.toString());
-                              const multiplier = newAmount / oldAmount;
-                              
-                              setReviewAnalysis(prev => prev ? {
-                                ...prev,
-                                detectedFoods: prev.detectedFoods.map((f, i) => 
-                                  i === index ? {
-                                    ...f,
-                                    portion: newPortion,
-                                    calories: Math.round(f.calories * multiplier),
-                                    protein: Math.round(f.protein * multiplier),
-                                    carbs: Math.round(f.carbs * multiplier),
-                                    fat: Math.round(f.fat * multiplier)
-                                  } : f
-                                )
-                              } : null);
-                            }}
-                            className="text-sm text-white bg-white/10 px-3 py-1.5 rounded-lg border border-white/20 flex-1"
-                            placeholder="100g"
-                            data-testid={`input-food-portion-${index}`}
-                          />
-                        </div>
                       </div>
-                    ) : (
-                      <div className="mb-4">
-                        <h3 className="text-xl font-bold text-white">{food.name}</h3>
-                        <p className="text-sm text-purple-200">{food.portion || '100g'}</p>
-                      </div>
-                    )}
-                    
-                    {/* Nutrition Row */}
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                      {/* Calories Box */}
-                      {isEditing ? (
+                      <div>
+                        <label className="text-xs text-purple-200 mb-1 block">Portion:</label>
                         <input
-                          type="number"
-                          value={food.calories}
+                          type="text"
+                          value={food.portion || '100g'}
                           onChange={(e) => {
                             setReviewAnalysis(prev => prev ? {
                               ...prev,
                               detectedFoods: prev.detectedFoods.map((f, i) => 
-                                i === index ? { ...f, calories: parseInt(e.target.value) || 0 } : f
+                                i === index ? { ...f, portion: e.target.value } : f
                               )
                             } : null);
                           }}
-                          className="w-24 bg-purple-800/50 rounded-xl px-3 py-3 text-center border border-purple-400/30"
-                        >
-                          <div className="text-3xl font-bold text-orange-400">{food.calories}</div>
-                          <div className="text-xs text-purple-200">cal</div>
-                        </input>
-                      ) : (
-                        <div className="bg-purple-800/50 rounded-xl px-3 py-3 border border-purple-400/30">
-                          <div className="text-3xl font-bold text-orange-400">{food.calories}</div>
-                          <div className="text-xs text-purple-200">cal</div>
-                        </div>
-                      )}
+                          className="text-sm text-white w-full bg-white/10 px-3 py-1.5 rounded-lg border border-white/20"
+                          placeholder="100g"
+                          data-testid={`input-food-portion-${index}`}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Nutrition Values - Always Editable */}
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      {/* Calories */}
+                      <div>
+                        <label className="text-xs text-purple-200 mb-1 block">Calories:</label>
+                        <input
+                          type="number"
+                          value={food.calories}
+                          onChange={(e) => {
+                            const newCalories = parseInt(e.target.value) || 0;
+                            setReviewAnalysis(prev => prev ? {
+                              ...prev,
+                              detectedFoods: prev.detectedFoods.map((f, i) => 
+                                i === index ? { ...f, calories: newCalories } : f
+                              ),
+                              totalCalories: prev.detectedFoods.reduce((sum, f, i) => 
+                                sum + (i === index ? newCalories : f.calories), 0
+                              )
+                            } : null);
+                          }}
+                          className="w-full bg-white/10 rounded-lg px-3 py-2 text-center text-2xl font-bold text-orange-400 border border-white/20"
+                          data-testid={`input-food-calories-${index}`}
+                        />
+                      </div>
                       
                       {/* Protein */}
-                      <div className="flex-1 text-center">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            value={food.protein}
-                            onChange={(e) => {
-                              setReviewAnalysis(prev => prev ? {
-                                ...prev,
-                                detectedFoods: prev.detectedFoods.map((f, i) => 
-                                  i === index ? { ...f, protein: parseInt(e.target.value) || 0 } : f
-                                )
-                              } : null);
-                            }}
-                            className="w-full bg-white/10 rounded px-2 py-1 text-center text-2xl font-bold text-blue-400 border border-white/20"
-                          />
-                        ) : (
-                          <div className="text-2xl font-bold text-blue-400">{food.protein}g</div>
-                        )}
-                        <div className="text-xs text-purple-200">protein</div>
+                      <div>
+                        <label className="text-xs text-purple-200 mb-1 block">Protein (g):</label>
+                        <input
+                          type="number"
+                          value={food.protein}
+                          onChange={(e) => {
+                            const newProtein = parseInt(e.target.value) || 0;
+                            setReviewAnalysis(prev => prev ? {
+                              ...prev,
+                              detectedFoods: prev.detectedFoods.map((f, i) => 
+                                i === index ? { ...f, protein: newProtein } : f
+                              ),
+                              totalProtein: prev.detectedFoods.reduce((sum, f, i) => 
+                                sum + (i === index ? newProtein : f.protein), 0
+                              )
+                            } : null);
+                          }}
+                          className="w-full bg-white/10 rounded-lg px-3 py-2 text-center text-2xl font-bold text-blue-400 border border-white/20"
+                          data-testid={`input-food-protein-${index}`}
+                        />
                       </div>
                       
                       {/* Carbs */}
-                      <div className="flex-1 text-center">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            value={food.carbs}
-                            onChange={(e) => {
-                              setReviewAnalysis(prev => prev ? {
-                                ...prev,
-                                detectedFoods: prev.detectedFoods.map((f, i) => 
-                                  i === index ? { ...f, carbs: parseInt(e.target.value) || 0 } : f
-                                )
-                              } : null);
-                            }}
-                            className="w-full bg-white/10 rounded px-2 py-1 text-center text-2xl font-bold text-yellow-400 border border-white/20"
-                          />
-                        ) : (
-                          <div className="text-2xl font-bold text-yellow-400">{food.carbs}g</div>
-                        )}
-                        <div className="text-xs text-purple-200">carbs</div>
+                      <div>
+                        <label className="text-xs text-purple-200 mb-1 block">Carbs (g):</label>
+                        <input
+                          type="number"
+                          value={food.carbs}
+                          onChange={(e) => {
+                            const newCarbs = parseInt(e.target.value) || 0;
+                            setReviewAnalysis(prev => prev ? {
+                              ...prev,
+                              detectedFoods: prev.detectedFoods.map((f, i) => 
+                                i === index ? { ...f, carbs: newCarbs } : f
+                              ),
+                              totalCarbs: prev.detectedFoods.reduce((sum, f, i) => 
+                                sum + (i === index ? newCarbs : f.carbs), 0
+                              )
+                            } : null);
+                          }}
+                          className="w-full bg-white/10 rounded-lg px-3 py-2 text-center text-2xl font-bold text-yellow-400 border border-white/20"
+                          data-testid={`input-food-carbs-${index}`}
+                        />
                       </div>
                       
                       {/* Fat */}
-                      <div className="flex-1 text-center">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            value={food.fat}
-                            onChange={(e) => {
-                              setReviewAnalysis(prev => prev ? {
-                                ...prev,
-                                detectedFoods: prev.detectedFoods.map((f, i) => 
-                                  i === index ? { ...f, fat: parseInt(e.target.value) || 0 } : f
-                                )
-                              } : null);
-                            }}
-                            className="w-full bg-white/10 rounded px-2 py-1 text-center text-2xl font-bold text-green-400 border border-white/20"
-                          />
-                        ) : (
-                          <div className="text-2xl font-bold text-green-400">{food.fat}g</div>
-                        )}
-                        <div className="text-xs text-purple-200">fat</div>
+                      <div>
+                        <label className="text-xs text-purple-200 mb-1 block">Fat (g):</label>
+                        <input
+                          type="number"
+                          value={food.fat}
+                          onChange={(e) => {
+                            const newFat = parseInt(e.target.value) || 0;
+                            setReviewAnalysis(prev => prev ? {
+                              ...prev,
+                              detectedFoods: prev.detectedFoods.map((f, i) => 
+                                i === index ? { ...f, fat: newFat } : f
+                              ),
+                              totalFat: prev.detectedFoods.reduce((sum, f, i) => 
+                                sum + (i === index ? newFat : f.fat), 0
+                              )
+                            } : null);
+                          }}
+                          className="w-full bg-white/10 rounded-lg px-3 py-2 text-center text-2xl font-bold text-green-400 border border-white/20"
+                          data-testid={`input-food-fat-${index}`}
+                        />
                       </div>
                     </div>
                     
                     {/* Macro Bar Chart */}
-                    {!isEditing && (
-                      <div className="flex h-2 rounded-full overflow-hidden bg-purple-950/50">
-                        <div 
-                          className="bg-blue-500" 
-                          style={{ width: `${proteinPercent}%` }}
-                        />
-                        <div 
-                          className="bg-yellow-500" 
-                          style={{ width: `${carbsPercent}%` }}
-                        />
-                        <div 
-                          className="bg-green-500" 
-                          style={{ width: `${fatPercent}%` }}
-                        />
-                      </div>
-                    )}
-                    
-                    {isEditing && (
-                      <button
-                        onClick={() => {
-                          if (!reviewAnalysis) return;
-                          setReviewAnalysis({
-                            ...reviewAnalysis,
-                            totalCalories: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.calories, 0),
-                            totalProtein: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.protein, 0),
-                            totalCarbs: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.carbs, 0),
-                            totalFat: reviewAnalysis.detectedFoods.reduce((sum, f) => sum + f.fat, 0)
-                          });
-                          setEditingFoodIndex(null);
-                        }}
-                        className="mt-3 w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
-                      >
-                        Done Editing
-                      </button>
-                    )}
+                    <div className="flex h-2 rounded-full overflow-hidden bg-purple-950/50">
+                      <div 
+                        className="bg-blue-500" 
+                        style={{ width: `${proteinPercent}%` }}
+                      />
+                      <div 
+                        className="bg-yellow-500" 
+                        style={{ width: `${carbsPercent}%` }}
+                      />
+                      <div 
+                        className="bg-green-500" 
+                        style={{ width: `${fatPercent}%` }}
+                      />
+                    </div>
                   </div>
                 );
               })}
