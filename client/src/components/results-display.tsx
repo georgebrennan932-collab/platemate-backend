@@ -118,6 +118,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingField, setEditingField] = useState<{ index: number; field: string; value: string } | null>(null);
+  const [editingSummary, setEditingSummary] = useState<{ field: 'calories' | 'protein' | 'carbs' | 'fat'; value: string } | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [voiceInput, setVoiceInput] = useState('');
@@ -693,6 +694,115 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
     } else if (e.key === 'Escape') {
       e.preventDefault();
       cancelEditingField();
+    }
+  };
+
+  const startEditingSummary = (field: 'calories' | 'protein' | 'carbs' | 'fat', currentValue: number) => {
+    setEditingSummary({ field, value: currentValue.toString() });
+  };
+
+  const saveSummaryEdit = () => {
+    if (!editingSummary) return;
+    
+    const newValue = parseFloat(editingSummary.value);
+    if (isNaN(newValue) || newValue < 0) {
+      setEditingSummary(null);
+      return;
+    }
+
+    const field = editingSummary.field;
+    const currentTotal = totals[field];
+
+    if (editableFoods.length === 0) {
+      // No foods to edit
+      setEditingSummary(null);
+      return;
+    }
+
+    if (currentTotal === 0) {
+      // If current total is 0, distribute the new value evenly across all food items
+      const perFood = newValue / editableFoods.length;
+      
+      // Build all items except the last
+      const updatedFoods: EditableFood[] = [];
+      let sumOfOthers = 0;
+      
+      editableFoods.forEach((food, index) => {
+        if (index < editableFoods.length - 1) {
+          const roundedValue = Math.round(perFood * 100) / 100;
+          updatedFoods.push({
+            ...food,
+            [field]: roundedValue
+          });
+          sumOfOthers += roundedValue;
+        } else {
+          // Last item gets exactly the remainder, but never negative
+          const remainder = newValue - sumOfOthers;
+          updatedFoods.push({
+            ...food,
+            [field]: Math.max(0, Math.round(remainder * 100) / 100)
+          });
+        }
+      });
+      
+      // Update baselines
+      const finalFoods = updatedFoods.map(food => ({
+        ...food,
+        [`baseline${field.charAt(0).toUpperCase() + field.slice(1)}`]: food[field]
+      }));
+      
+      setEditableFoods(finalFoods);
+      setEditingSummary(null);
+      return;
+    }
+
+    // Calculate the adjustment ratio
+    const ratio = newValue / currentTotal;
+
+    // Build all items except the last
+    const updatedFoods: EditableFood[] = [];
+    let sumOfOthers = 0;
+    
+    editableFoods.forEach((food, index) => {
+      if (index < editableFoods.length - 1) {
+        const scaledValue = food[field] * ratio;
+        const roundedValue = Math.round(scaledValue * 100) / 100;
+        updatedFoods.push({
+          ...food,
+          [field]: roundedValue
+        });
+        sumOfOthers += roundedValue;
+      } else {
+        // Last item gets exactly the remainder, but never negative
+        const remainder = newValue - sumOfOthers;
+        updatedFoods.push({
+          ...food,
+          [field]: Math.max(0, Math.round(remainder * 100) / 100)
+        });
+      }
+    });
+
+    // Update baseline values to new values
+    const finalFoods = updatedFoods.map(food => ({
+      ...food,
+      [`baseline${field.charAt(0).toUpperCase() + field.slice(1)}`]: food[field]
+    }));
+
+    setEditableFoods(finalFoods);
+    setEditingSummary(null);
+  };
+
+  const cancelSummaryEdit = () => {
+    setEditingSummary(null);
+  };
+
+  const handleSummaryKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveSummaryEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelSummaryEdit();
     }
   };
 
@@ -1487,13 +1597,36 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <div className="absolute -top-2 -right-2 w-16 h-16 bg-red-200/20 dark:bg-red-800/20 rounded-full"></div>
           <div className="flex items-center justify-between mb-3 relative z-10">
             <span className="text-sm font-semibold text-red-700 dark:text-red-400">Calories</span>
-            <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
-              <i className="fas fa-fire text-red-500 dark:text-red-400"></i>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => startEditingSummary('calories', totals.calories)}
+                className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                aria-label="Edit calories"
+                data-testid="button-edit-calories"
+              >
+                <Edit3 className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+              </button>
+              <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                <i className="fas fa-fire text-red-500 dark:text-red-400"></i>
+              </div>
             </div>
           </div>
-          <p className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1" data-testid="text-calories">
-            {totals.calories}
-          </p>
+          {editingSummary?.field === 'calories' ? (
+            <input
+              type="number"
+              value={editingSummary.value}
+              onChange={(e) => setEditingSummary(prev => prev ? { ...prev, value: e.target.value } : null)}
+              onBlur={saveSummaryEdit}
+              onKeyDown={handleSummaryKeyDown}
+              autoFocus
+              className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1 w-full bg-white dark:bg-gray-800 border-2 border-red-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-500"
+              data-testid="input-edit-calories"
+            />
+          ) : (
+            <p className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1" data-testid="text-calories">
+              {totals.calories}
+            </p>
+          )}
           <p className="text-xs text-red-600/70 dark:text-red-400/70 font-medium">
             {Math.round((totals.calories / 2000) * 100)}% daily value
           </p>
@@ -1504,13 +1637,36 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <div className="absolute -top-2 -right-2 w-16 h-16 bg-blue-200/20 dark:bg-blue-800/20 rounded-full"></div>
           <div className="flex items-center justify-between mb-3 relative z-10">
             <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">Protein</span>
-            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-              <i className="fas fa-dumbbell text-blue-500 dark:text-blue-400"></i>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => startEditingSummary('protein', totals.protein)}
+                className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                aria-label="Edit protein"
+                data-testid="button-edit-protein"
+              >
+                <Edit3 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              </button>
+              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <i className="fas fa-dumbbell text-blue-500 dark:text-blue-400"></i>
+              </div>
             </div>
           </div>
-          <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1" data-testid="text-protein">
-            {totals.protein}g
-          </p>
+          {editingSummary?.field === 'protein' ? (
+            <input
+              type="number"
+              value={editingSummary.value}
+              onChange={(e) => setEditingSummary(prev => prev ? { ...prev, value: e.target.value } : null)}
+              onBlur={saveSummaryEdit}
+              onKeyDown={handleSummaryKeyDown}
+              autoFocus
+              className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1 w-full bg-white dark:bg-gray-800 border-2 border-blue-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              data-testid="input-edit-protein"
+            />
+          ) : (
+            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1" data-testid="text-protein">
+              {totals.protein}g
+            </p>
+          )}
           <p className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium">
             {Math.round((totals.protein / 50) * 100)}% daily value
           </p>
@@ -1521,13 +1677,36 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <div className="absolute -top-2 -right-2 w-16 h-16 bg-orange-200/20 dark:bg-orange-800/20 rounded-full"></div>
           <div className="flex items-center justify-between mb-3 relative z-10">
             <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">Carbs</span>
-            <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-              <i className="fas fa-bread-slice text-orange-500 dark:text-orange-400"></i>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => startEditingSummary('carbs', totals.carbs)}
+                className="p-1.5 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg transition-colors"
+                aria-label="Edit carbs"
+                data-testid="button-edit-carbs"
+              >
+                <Edit3 className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+              </button>
+              <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                <i className="fas fa-bread-slice text-orange-500 dark:text-orange-400"></i>
+              </div>
             </div>
           </div>
-          <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1" data-testid="text-carbs">
-            {totals.carbs}g
-          </p>
+          {editingSummary?.field === 'carbs' ? (
+            <input
+              type="number"
+              value={editingSummary.value}
+              onChange={(e) => setEditingSummary(prev => prev ? { ...prev, value: e.target.value } : null)}
+              onBlur={saveSummaryEdit}
+              onKeyDown={handleSummaryKeyDown}
+              autoFocus
+              className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1 w-full bg-white dark:bg-gray-800 border-2 border-orange-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              data-testid="input-edit-carbs"
+            />
+          ) : (
+            <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1" data-testid="text-carbs">
+              {totals.carbs}g
+            </p>
+          )}
           <p className="text-xs text-orange-600/70 dark:text-orange-400/70 font-medium">
             {Math.round((totals.carbs / 300) * 100)}% daily value
           </p>
@@ -1538,13 +1717,36 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
           <div className="absolute -top-2 -right-2 w-16 h-16 bg-yellow-200/20 dark:bg-yellow-800/20 rounded-full"></div>
           <div className="flex items-center justify-between mb-3 relative z-10">
             <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">Fat</span>
-            <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
-              <i className="fas fa-tint text-yellow-500 dark:text-yellow-400"></i>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => startEditingSummary('fat', totals.fat)}
+                className="p-1.5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-lg transition-colors"
+                aria-label="Edit fat"
+                data-testid="button-edit-fat"
+              >
+                <Edit3 className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-400" />
+              </button>
+              <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
+                <i className="fas fa-tint text-yellow-500 dark:text-yellow-400"></i>
+              </div>
             </div>
           </div>
-          <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1" data-testid="text-fat">
-            {totals.fat}g
-          </p>
+          {editingSummary?.field === 'fat' ? (
+            <input
+              type="number"
+              value={editingSummary.value}
+              onChange={(e) => setEditingSummary(prev => prev ? { ...prev, value: e.target.value } : null)}
+              onBlur={saveSummaryEdit}
+              onKeyDown={handleSummaryKeyDown}
+              autoFocus
+              className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1 w-full bg-white dark:bg-gray-800 border-2 border-yellow-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              data-testid="input-edit-fat"
+            />
+          ) : (
+            <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1" data-testid="text-fat">
+              {totals.fat}g
+            </p>
+          )}
           <p className="text-xs text-yellow-600/70 dark:text-yellow-400/70 font-medium">
             {Math.round((totals.fat / 65) * 100)}% daily value
           </p>
