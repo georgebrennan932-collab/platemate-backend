@@ -823,13 +823,62 @@ export class AIManager {
   async parseFoodNamesFromText(foodDescription: string): Promise<Array<{name: string, portion: string}>> {
     console.log(`📝 Parsing food items from text: "${foodDescription}"`);
     
-    // STEP 1: Split on common separators (and, with, comma)
+    // STEP 1: First split on common separators (and, with, comma)
     // Examples: "2 slices of bacon, 2 sausages and 2 eggs" → ["2 slices of bacon", "2 sausages", "2 eggs"]
     //           "chicken with rice" → ["chicken", "rice"]
-    // Allow comma with no space before it (e.g., "bacon, sausages") but require space after
     const separatorRegex = /\s*(?:,|and|with)\s+/i;
-    const rawParts = foodDescription.split(separatorRegex).map(p => p.trim()).filter(p => p.length > 0);
+    let rawParts = foodDescription.split(separatorRegex).map(p => p.trim()).filter(p => p.length > 0);
     
+    // STEP 1.5: Further split parts that contain multiple food items indicated by quantity words
+    // Examples: "two slices of Bacon two sausages" → ["two slices of Bacon", "two sausages"]
+    // BUT preserve: "two 100 gram chicken breasts", "two large eight ounce steaks"
+    const furtherSplitParts: string[] = [];
+    for (const part of rawParts) {
+      // Look for quantity words that start a new food item
+      const quantityWords = /\b(one|two|three|four|five|six|seven|eight|nine|ten)\s+/gi;
+      const matches = Array.from(part.matchAll(quantityWords));
+      
+      if (matches.length > 1) {
+        const splits: string[] = [];
+        let lastIndex = 0;
+        
+        for (let i = 1; i < matches.length; i++) {
+          const match = matches[i];
+          if (match.index !== undefined) {
+            // Get the word(s) immediately before this quantity word
+            const textBefore = part.substring(lastIndex, match.index).trim();
+            const lastWords = textBefore.split(/\s+/).slice(-3).join(' ').toLowerCase();
+            
+            // Words that indicate we're still in a measurement/size description for the same food
+            const portionDescriptors = /\b(slice|slices|piece|pieces|serving|servings|cup|cups|bowl|bowls|plate|plates|of|the|a|an|large|medium|small|jumbo|extra|gram|grams|g|oz|ounce|ounces|ml|milliliter|milliliters|liter|liters|l|inch|inches|thick|cut|bone|boneless|in)\b/i;
+            
+            // If the last word(s) before this number are ALL portion descriptors, it's likely still the same food
+            // Otherwise, if there's a food noun (non-descriptor word), split here
+            const wordsBeforeArray = lastWords.split(/\s+/);
+            const hasNonDescriptor = wordsBeforeArray.some(word => 
+              word.length > 2 && !portionDescriptors.test(word) && !/^\d+$/.test(word)
+            );
+            
+            if (hasNonDescriptor) {
+              // Found a food word before this number, so this is a new food item
+              splits.push(part.substring(lastIndex, match.index).trim());
+              lastIndex = match.index;
+            }
+          }
+        }
+        
+        if (splits.length > 0) {
+          splits.push(part.substring(lastIndex).trim());
+          furtherSplitParts.push(...splits.filter(s => s.length > 0));
+        } else {
+          furtherSplitParts.push(part);
+        }
+      } else {
+        furtherSplitParts.push(part);
+      }
+    }
+    
+    rawParts = furtherSplitParts;
     console.log(`🔪 Split into ${rawParts.length} parts:`, rawParts);
     
     // STEP 2: For each part, extract the food name AND keep the portion info
