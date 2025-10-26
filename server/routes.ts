@@ -1686,6 +1686,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId
       });
       const drinkEntry = await storage.createDrinkEntry(validatedEntry);
+      
+      // Also create a water intake entry for this drink (all drinks count as fluid intake)
+      try {
+        const loggedAt = drinkEntry.loggedAt || new Date();
+        const loggedDate = loggedAt instanceof Date 
+          ? loggedAt.toISOString().split('T')[0] 
+          : new Date(loggedAt).toISOString().split('T')[0];
+        
+        await storage.createWaterIntake({
+          userId,
+          amountMl: drinkEntry.amount,
+          loggedAt: loggedAt instanceof Date ? loggedAt.toISOString() : loggedAt,
+          loggedDate
+        });
+      } catch (waterError) {
+        console.error("Failed to create water intake entry:", waterError);
+        // Continue even if water intake creation fails
+      }
+      
       res.json(drinkEntry);
     } catch (error) {
       console.error("Create drink entry error:", error);
