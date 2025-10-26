@@ -66,7 +66,7 @@ export const nutritionGoals = pgTable("nutrition_goals", {
   dailyProtein: integer("daily_protein").default(150), // in grams
   dailyCarbs: integer("daily_carbs").default(250), // in grams
   dailyFat: integer("daily_fat").default(65), // in grams
-  dailyWater: integer("daily_water").default(2000), // in ml
+  dailyWater: integer("daily_water").default(2500), // in ml (default 2500, adjusted based on health conditions)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -122,6 +122,15 @@ export const diaryEntries = pgTable("diary_entries", {
   mealDate: timestamp("meal_date").notNull(), // when the meal was eaten
   notes: text("notes"), // optional user notes
   portionMultiplier: integer("portion_multiplier").default(100), // 100 = 1.0x serving (stored as integer percentage)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const waterIntake = pgTable("water_intake", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  amountMl: integer("amount_ml").notNull(), // water amount in ml
+  loggedAt: timestamp("logged_at").notNull(), // when the water was consumed
+  loggedDate: varchar("logged_date").notNull(), // YYYY-MM-DD format for easy querying
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -341,6 +350,14 @@ export const updateDiaryEntrySchema = insertDiaryEntrySchema.partial().extend({
   portionMultiplier: z.number().int().min(10).max(1000).optional(), // 100 = 1.0x serving (10% to 10x)
 });
 
+export const insertWaterIntakeSchema = createInsertSchema(waterIntake).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  loggedAt: z.string().or(z.date()), // Accept string or Date
+  loggedDate: z.string(), // YYYY-MM-DD format
+});
+
 export const insertDrinkEntrySchema = createInsertSchema(drinkEntries).omit({
   id: true,
   createdAt: true,
@@ -403,6 +420,8 @@ export type User = typeof users.$inferSelect;
 export type InsertDiaryEntry = z.infer<typeof insertDiaryEntrySchema>;
 export type UpdateDiaryEntry = z.infer<typeof updateDiaryEntrySchema>;
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
+export type InsertWaterIntake = z.infer<typeof insertWaterIntakeSchema>;
+export type WaterIntake = typeof waterIntake.$inferSelect;
 export type InsertDrinkEntry = z.infer<typeof insertDrinkEntrySchema>;
 export type DrinkEntry = typeof drinkEntries.$inferSelect;
 export type InsertNutritionGoals = z.infer<typeof insertNutritionGoalsSchema>;

@@ -1,4 +1,4 @@
-import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type StepEntry, type InsertStepEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, type Challenge, type InsertChallenge, type UserChallengeProgress, type InsertUserChallengeProgress, type ChallengeWithProgress, type ShoppingListItem, type InsertShoppingListItem, type UpdateShoppingListItem, type ShiftSchedule, type InsertShiftSchedule, foodAnalyses, diaryEntries, drinkEntries, weightEntries, stepEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections, challenges, userChallengeProgress, shoppingListItems, shiftSchedules } from "@shared/schema";
+import { type FoodAnalysis, type InsertFoodAnalysis, type DetectedFood, type DiaryEntry, type DiaryEntryWithAnalysis, type InsertDiaryEntry, type WaterIntake, type InsertWaterIntake, type DrinkEntry, type InsertDrinkEntry, type WeightEntry, type InsertWeightEntry, type StepEntry, type InsertStepEntry, type User, type UpsertUser, type NutritionGoals, type InsertNutritionGoals, type UserProfile, type InsertUserProfile, type SimpleFoodEntry, type InsertSimpleFoodEntry, type FoodConfirmation, type InsertFoodConfirmation, type UpdateFoodConfirmation, type Reflection, type InsertReflection, type Challenge, type InsertChallenge, type UserChallengeProgress, type InsertUserChallengeProgress, type ChallengeWithProgress, type ShoppingListItem, type InsertShoppingListItem, type UpdateShoppingListItem, type ShiftSchedule, type InsertShiftSchedule, foodAnalyses, diaryEntries, waterIntake, drinkEntries, weightEntries, stepEntries, users, nutritionGoals, userProfiles, simpleFoodEntries, foodConfirmations, reflections, challenges, userChallengeProgress, shoppingListItems, shiftSchedules } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, lt } from "drizzle-orm";
 
@@ -22,6 +22,11 @@ export interface IStorage {
   // Enhanced diary methods
   searchDiaryEntries(userId: string, query: string): Promise<DiaryEntryWithAnalysis[]>;
   getDiaryEntriesByDateRange(userId: string, startDate: Date, endDate: Date): Promise<DiaryEntryWithAnalysis[]>;
+  
+  // Water intake methods
+  createWaterIntake(entry: InsertWaterIntake): Promise<WaterIntake>;
+  getWaterIntakeByDate(userId: string, date: string): Promise<WaterIntake[]>;
+  deleteWaterIntake(id: string, userId: string): Promise<boolean>;
   
   // Drink methods
   createDrinkEntry(entry: InsertDrinkEntry): Promise<DrinkEntry>;
@@ -263,6 +268,43 @@ export class DatabaseStorage implements IStorage {
       },
     });
     // Note: Date range filtering would be implemented with proper where clauses
+  }
+
+  // Water intake methods
+  async createWaterIntake(entry: InsertWaterIntake): Promise<WaterIntake> {
+    const [waterEntry] = await db
+      .insert(waterIntake)
+      .values({
+        ...entry,
+        loggedAt: typeof entry.loggedAt === 'string' ? new Date(entry.loggedAt) : entry.loggedAt
+      })
+      .returning();
+    return waterEntry;
+  }
+
+  async getWaterIntakeByDate(userId: string, date: string): Promise<WaterIntake[]> {
+    return await db
+      .select()
+      .from(waterIntake)
+      .where(
+        and(
+          eq(waterIntake.userId, userId),
+          eq(waterIntake.loggedDate, date)
+        )
+      )
+      .orderBy(desc(waterIntake.loggedAt));
+  }
+
+  async deleteWaterIntake(id: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(waterIntake)
+      .where(
+        and(
+          eq(waterIntake.id, id),
+          eq(waterIntake.userId, userId)
+        )
+      );
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   async createDrinkEntry(entry: InsertDrinkEntry): Promise<DrinkEntry> {

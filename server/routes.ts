@@ -5,7 +5,7 @@ import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 // OAUTH DISABLED: import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema, savedRecipes, insertShoppingListItemSchema, updateShoppingListItemSchema, insertShiftScheduleSchema } from "@shared/schema";
+import { insertFoodAnalysisSchema, insertDiaryEntrySchema, updateDiaryEntrySchema, insertWaterIntakeSchema, insertDrinkEntrySchema, insertWeightEntrySchema, updateWeightEntrySchema, insertNutritionGoalsSchema, insertUserProfileSchema, updateFoodAnalysisSchema, insertSimpleFoodEntrySchema, insertFoodConfirmationSchema, updateFoodConfirmationSchema, insertReflectionSchema, savedRecipes, insertShoppingListItemSchema, updateShoppingListItemSchema, insertShiftScheduleSchema } from "@shared/schema";
 import multer from "multer";
 import sharp from "sharp";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -1612,6 +1612,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get personalities error:", error);
       res.status(500).json({ error: "Failed to retrieve personalities" });
+    }
+  });
+
+  // Water intake routes - require authentication
+  app.post("/api/water", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const validatedEntry = insertWaterIntakeSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const waterEntry = await storage.createWaterIntake(validatedEntry);
+      res.json(waterEntry);
+    } catch (error) {
+      console.error("Create water intake error:", error);
+      res.status(400).json({ error: "Invalid water intake data" });
+    }
+  });
+
+  app.get("/api/water/:date", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const date = req.params.date; // YYYY-MM-DD format
+      const entries = await storage.getWaterIntakeByDate(userId, date);
+      res.json(entries);
+    } catch (error) {
+      console.error("Get water intake error:", error);
+      res.status(500).json({ error: "Failed to retrieve water intake" });
+    }
+  });
+
+  app.delete("/api/water/:id", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const deleted = await storage.deleteWaterIntake(req.params.id, userId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Water entry not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete water intake error:", error);
+      res.status(500).json({ error: "Failed to delete water intake" });
     }
   });
 

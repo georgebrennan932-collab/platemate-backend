@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Utensils, Calendar, Clock, Trash2, ArrowLeft, Droplets, Wine, Flame, Target, TrendingUp, HelpCircle, Mic, MicOff, Plus } from "lucide-react";
+import { WaterTracker } from "@/components/water-tracker";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { ProgressIndicators } from "@/components/progress-indicators";
@@ -900,6 +901,9 @@ export function DiaryPage() {
                 </div>
               )}
             </div>
+            
+            {/* Water Tracker - Separate section for water intake tracking */}
+            <WaterTracker selectedDate={new Date()} />
             
             {/* View All Meals Button - Placed under Today's Intake */}
             <button
