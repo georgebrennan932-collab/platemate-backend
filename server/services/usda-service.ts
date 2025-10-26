@@ -447,6 +447,35 @@ export class USDAService {
           }
         }
         
+        // ===== CRITICAL: PREVENT COMMON MISMATCHES =====
+        // When searching for "rice", prefer cooked rice over rice paper, rice cakes, etc.
+        if (searchName === 'rice' || searchName === 'white rice' || searchName === 'brown rice') {
+          if (description.includes('rice paper') || description.includes('rice cake') || description.includes('rice noodle')) {
+            score -= 500; // Heavy penalty for rice derivatives
+            console.log(`🚫 Rice derivative penalty (-500): ${food.description}`);
+          }
+          if (description.includes('cooked') || description.includes('boiled')) {
+            score += 400; // Strong boost for cooked rice
+            console.log(`📈 Cooked rice boost (+400): ${food.description}`);
+          }
+          if (description.includes('white rice, cooked') || description.includes('brown rice, cooked')) {
+            score += 500; // Extra boost for exact cooked rice match
+            console.log(`📈 Exact cooked rice boost (+500): ${food.description}`);
+          }
+        }
+        
+        // When searching for "chicken", prefer chicken breast over chicken back/tail/etc.
+        if (searchName === 'chicken' || searchName === 'grilled chicken' || searchName === 'baked chicken') {
+          if (description.includes('chicken breast') || description.includes('breast, meat only')) {
+            score += 400; // Strong boost for chicken breast
+            console.log(`📈 Chicken breast boost (+400): ${food.description}`);
+          }
+          if (description.includes('back') || description.includes('tail') || description.includes('neck') || description.includes('giblet')) {
+            score -= 300; // Penalty for uncommon chicken parts
+            console.log(`📉 Uncommon chicken part penalty (-300): ${food.description}`);
+          }
+        }
+        
         // Boost whole foods
         if (description.includes('raw') || description.includes('fresh')) score += 50;
         if (description.split(',').length <= 2) score += 30; // Prefer simple descriptions
