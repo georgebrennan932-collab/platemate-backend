@@ -1694,14 +1694,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? loggedAt.toISOString().split('T')[0] 
           : new Date(loggedAt).toISOString().split('T')[0];
         
-        await storage.createWaterIntake({
+        console.log(`💧 Creating water intake: ${drinkEntry.amount}ml for user ${userId} on ${loggedDate}`);
+        
+        const waterIntake = await storage.createWaterIntake({
           userId,
           amountMl: drinkEntry.amount,
           loggedAt: loggedAt instanceof Date ? loggedAt.toISOString() : loggedAt,
           loggedDate
         });
+        
+        console.log(`✅ Water intake created:`, waterIntake);
       } catch (waterError) {
-        console.error("Failed to create water intake entry:", waterError);
+        console.error("❌ Failed to create water intake entry:", waterError);
         // Continue even if water intake creation fails
       }
       
