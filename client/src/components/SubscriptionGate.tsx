@@ -10,9 +10,10 @@ export function SubscriptionGate({ children }: SubscriptionGateProps) {
   const { isSubscribed, isLoading } = useSubscription();
   const [location, setLocation] = useLocation();
 
-  // 🚧 TEMPORARY: Bypass subscription check for development/web use
-  // TODO: Re-enable once Android billing is working
-  const BYPASS_SUBSCRIPTION = true;
+  // Development bypass: Allow access on web/desktop browsers for testing
+  // But still enforce on mobile devices where billing is available
+  const isLikelyMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  const BYPASS_FOR_WEB_TESTING = !isLikelyMobile;
 
   // Paths that don't require subscription
   const publicPaths = ['/subscription', '/login', '/register', '/forgot-password', '/landing', '/blocked-access'];
@@ -21,14 +22,18 @@ export function SubscriptionGate({ children }: SubscriptionGateProps) {
     // Wait for loading to complete
     if (isLoading) return;
 
-    // Bypass subscription check if enabled
-    if (BYPASS_SUBSCRIPTION) return;
+    // Allow web testing but enforce on mobile
+    if (BYPASS_FOR_WEB_TESTING) {
+      console.log('🌐 Bypassing subscription check for web testing');
+      return;
+    }
 
     // Check if current path is public
     const isPublicPath = publicPaths.some(path => location.startsWith(path));
 
     // If not subscribed and trying to access protected content, redirect to subscription
     if (!isSubscribed && !isPublicPath) {
+      console.log('🔒 Redirecting to subscription - not subscribed');
       setLocation('/subscription');
     }
   }, [isSubscribed, isLoading, location]);

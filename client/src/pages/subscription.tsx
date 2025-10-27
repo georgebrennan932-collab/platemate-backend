@@ -7,9 +7,17 @@ import { Capacitor } from '@capacitor/core';
 import { useState } from 'react';
 
 export default function SubscriptionPage() {
-  const { launchSubscription, isLoading } = useSubscription();
+  const { launchSubscription, isLoading, isSubscribed } = useSubscription();
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  
+  // Check if we're on a native platform
   const isNativePlatform = Capacitor.isNativePlatform();
+  const platform = Capacitor.getPlatform();
+  
+  // Additional check: Android user agent detection for dev mode
+  const isLikelyAndroid = /android/i.test(navigator.userAgent);
+  const shouldShowNativeButton = isNativePlatform || isLikelyAndroid;
 
   const features = [
     {
@@ -116,8 +124,36 @@ export default function SubscriptionPage() {
             ))}
           </div>
 
-          {/* Mobile-Only Warning (Web) */}
-          {!isNativePlatform && (
+          {/* Already Subscribed Message */}
+          {isSubscribed && (
+            <div className="mb-4 p-4 bg-green-500/20 border border-green-500/50 rounded-lg" data-testid="info-already-subscribed">
+              <div className="flex items-start gap-3">
+                <Check className="w-5 h-5 text-green-300 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-green-100 font-semibold text-sm mb-1">You're Already Subscribed!</p>
+                  <p className="text-green-200 text-xs">
+                    You have full access to all PlateMate Pro features. Manage your subscription in Google Play Store.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Purchase Error Message */}
+          {purchaseError && (
+            <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg" data-testid="error-purchase">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-300 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-100 font-semibold text-sm mb-1">Purchase Failed</p>
+                  <p className="text-red-200 text-xs">{purchaseError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Mobile-Only Warning (Web Desktop) */}
+          {!shouldShowNativeButton && (
             <div className="mb-4 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg" data-testid="warning-mobile-only">
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-yellow-300 flex-shrink-0 mt-0.5" />
@@ -131,21 +167,63 @@ export default function SubscriptionPage() {
               </div>
             </div>
           )}
+          
+          {/* Dev Mode Warning (Android in development) */}
+          {shouldShowNativeButton && !isNativePlatform && (
+            <div className="mb-4 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg" data-testid="warning-dev-mode">
+              <div className="flex items-start gap-3">
+                <Smartphone className="w-5 h-5 text-blue-300 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-blue-100 font-semibold text-sm mb-1">Development Mode Detected</p>
+                  <p className="text-blue-200 text-xs">
+                    You're running in development mode. For billing to work, build a production APK using 
+                    "npm run build" and "npx cap sync android", then install via Android Studio without live reload.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* CTA Button */}
           <Button
-            onClick={() => {
-              if (!isNativePlatform) {
+            onClick={async () => {
+              if (isSubscribed) {
+                // Already subscribed, nothing to do
+                return;
+              }
+              
+              if (!shouldShowNativeButton) {
                 setShowMobileOnlyMessage(true);
-              } else {
-                launchSubscription();
+                return;
+              }
+              
+              try {
+                setPurchaseError(null);
+                await launchSubscription();
+              } catch (error: any) {
+                console.error('Purchase error:', error);
+                
+                // Don't show error if user cancelled
+                if (error?.message?.includes('cancel')) {
+                  return;
+                }
+                
+                // Show helpful error message
+                if (error?.code === 'UNIMPLEMENTED') {
+                  setPurchaseError('Native billing plugin not available. Make sure you\'re running a production build installed from Google Play.');
+                } else {
+                  setPurchaseError(error?.message || 'An error occurred. Please try again.');
+                }
               }
             }}
-            disabled={isLoading || !isNativePlatform}
+            disabled={isLoading || isSubscribed || (!shouldShowNativeButton)}
             className="w-full h-14 text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="button-start-trial"
           >
-            {isLoading ? 'Loading...' : isNativePlatform ? 'Start My Free Trial' : 'Download Mobile App to Subscribe'}
+            {isLoading ? 'Loading...' : 
+             isSubscribed ? 'Already Subscribed ✓' :
+             shouldShowNativeButton ? 'Start My Free Trial' : 
+             'Download Mobile App to Subscribe'}
           </Button>
 
           {showMobileOnlyMessage && !isNativePlatform && (
