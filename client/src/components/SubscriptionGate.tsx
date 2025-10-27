@@ -10,10 +10,9 @@ export function SubscriptionGate({ children }: SubscriptionGateProps) {
   const { isSubscribed, isLoading } = useSubscription();
   const [location, setLocation] = useLocation();
 
-  // Development bypass: Allow access on web/desktop browsers for testing
-  // But still enforce on mobile devices where billing is available
-  const isLikelyMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
-  const BYPASS_FOR_WEB_TESTING = !isLikelyMobile;
+  // TEMPORARY: Bypass subscription for all users until production build is ready
+  // TODO: Re-enable once production APK with working billing is tested
+  const BYPASS_SUBSCRIPTION = true;
 
   // Paths that don't require subscription
   const publicPaths = ['/subscription', '/login', '/register', '/forgot-password', '/landing', '/blocked-access'];
@@ -22,9 +21,9 @@ export function SubscriptionGate({ children }: SubscriptionGateProps) {
     // Wait for loading to complete
     if (isLoading) return;
 
-    // Allow web testing but enforce on mobile
-    if (BYPASS_FOR_WEB_TESTING) {
-      console.log('🌐 Bypassing subscription check for web testing');
+    // Bypass subscription check until production build is ready
+    if (BYPASS_SUBSCRIPTION) {
+      console.log('🚧 Bypassing subscription check - using free access mode');
       return;
     }
 
