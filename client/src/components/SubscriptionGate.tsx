@@ -10,9 +10,8 @@ export function SubscriptionGate({ children }: SubscriptionGateProps) {
   const { isSubscribed, isLoading } = useSubscription();
   const [location, setLocation] = useLocation();
 
-  // TEMPORARY: Bypass subscription for all users until production build is ready
-  // TODO: Re-enable once production APK with working billing is tested
-  const BYPASS_SUBSCRIPTION = true;
+  // Subscription check is now ENABLED - users must subscribe to access app features
+  const BYPASS_SUBSCRIPTION = false;
 
   // Paths that don't require subscription
   const publicPaths = ['/subscription', '/login', '/register', '/forgot-password', '/landing', '/blocked-access'];
