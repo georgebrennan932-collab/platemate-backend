@@ -76,10 +76,21 @@ IMPORTANT: Look for reference objects in the image to help estimate scale and po
 - Hand or fingers for scale
 - Common objects like coins, phones, etc.
 
-CRITICAL UK FOOD PORTIONS:
-- UK crisps/chips: Single-serve packets are typically 25g (NOT 30g). Use "25g" for standard crisp packets.
-- If you see a crisp packet, bag, or single-serve portion, estimate as "25g" unless it's clearly a sharing size.
-- Common UK crisp flavors (Ready Salted, Cheese & Onion, Salt & Vinegar, Prawn Cocktail) are typically 25g packets.
+PORTION ESTIMATION GUIDELINES - BE CONSERVATIVE AND REALISTIC:
+- Default to MEDIUM portions unless the image clearly shows otherwise
+- Don't over-estimate portion sizes or assume extra toppings you can't see
+- Explicitly state what toppings/ingredients you can actually see in the image
+- If in doubt about portion size, choose the smaller estimate
+
+CRITICAL UK FOOD PORTIONS WITH TYPICAL CALORIE RANGES:
+- Jacket potato (plain): Medium (200g) = ~150-180 cal | with butter (10g) add ~70 cal | with cheese (30g) add ~100 cal
+  * Only add toppings you can CLEARLY SEE in the image
+  * Jacket potato >600 cal is almost certainly wrong unless it's massive with lots of visible toppings
+- UK crisps/chips: Single-serve packet = 25g (~130 cal) | sharing bag = 150g (~780 cal)
+- Fish & chips: Medium portion = ~600-700 cal total (fish 250g = 450 cal, chips 200g = 300 cal)
+- Full English breakfast: Standard = ~800-1000 cal (2 eggs, 2 bacon, 2 sausages, beans, toast, mushrooms, tomato)
+- Sandwich: Standard = 250-400 cal depending on fillings
+- Pasta dish (cooked): Medium portion 300g = 400-600 cal depending on sauce
 
 PROTEIN SHAKES & SUPPLEMENTS (CRITICAL):
 - Protein shakes, Herbalife, protein powder, BCAAs, pre-workout drinks are made with WATER (not milk) unless milk is explicitly visible
@@ -89,6 +100,8 @@ PROTEIN SHAKES & SUPPLEMENTS (CRITICAL):
 
 For each food item detected, provide ONLY the food name and estimated portion - DO NOT include nutritional information as we will look that up from the USDA database for accuracy.
 
+EXPLICITLY STATE VISIBLE TOPPINGS in the food name (e.g., "jacket potato with visible cheese and beans" vs "plain jacket potato").
+
 Return the response as a JSON object with this exact structure:
 
 {
@@ -96,14 +109,14 @@ Return the response as a JSON object with this exact structure:
   "referenceObjects": ["list of reference objects spotted for scale estimation"],
   "detectedFoods": [
     {
-      "name": "Food Name",
-      "portion": "estimated portion size with weight/volume",
+      "name": "Food Name with visible toppings/ingredients clearly stated",
+      "portion": "estimated portion size with weight/volume (be conservative)",
       "icon": "appropriate icon name from: egg, bacon, bread-slice, apple-alt"
     }
   ]
 }
 
-Focus on accurate food identification and portion estimation using any reference objects you can see. Be specific with portions (e.g., "100g", "1 medium slice", "150ml", "25g" for UK crisps).`
+Focus on accurate food identification and CONSERVATIVE portion estimation using any reference objects you can see. Be specific with portions (e.g., "100g", "1 medium slice", "150ml", "25g" for UK crisps).`
               },
               {
                 type: "image_url",

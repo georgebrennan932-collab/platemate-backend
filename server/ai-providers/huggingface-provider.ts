@@ -141,10 +141,22 @@ export class HuggingFaceProvider extends AIProvider {
       // Then use text model to analyze the food
       const prompt = `Based on this food image description: "${caption}"
 
-Analyze this food and identify all visible food items with their nutritional information.
+Analyze this food and identify all visible food items.
 
-CRITICAL UK FOOD PORTIONS:
-- UK crisps/chips: Single-serve packets are typically 25g (NOT 30g). Use "25g" for standard crisp packets.
+PORTION ESTIMATION GUIDELINES - BE CONSERVATIVE AND REALISTIC:
+- Default to MEDIUM portions unless clearly otherwise
+- Don't over-estimate portion sizes or assume extra toppings not mentioned in the description
+- Explicitly state what toppings/ingredients are visible
+- If in doubt about portion size, choose the smaller estimate
+
+CRITICAL UK FOOD PORTIONS WITH TYPICAL CALORIE RANGES:
+- Jacket potato (plain): Medium (200g) = ~150-180 cal | with butter add ~70 cal | with cheese add ~100 cal
+  * Only add toppings you can clearly identify from the description
+  * Jacket potato >600 cal is almost certainly wrong unless massive with lots of toppings
+- UK crisps/chips: Single-serve packet = 25g (~130 cal) | sharing bag = 150g (~780 cal)
+- Fish & chips: Medium portion = ~600-700 cal total
+- Full English breakfast: Standard = ~800-1000 cal
+- Sandwich: Standard = 250-400 cal depending on fillings
 
 Return ONLY a JSON object with this exact structure (no additional text):
 
@@ -152,8 +164,8 @@ Return ONLY a JSON object with this exact structure (no additional text):
   "confidence": number (0-100),
   "detectedFoods": [
     {
-      "name": "Food Name",
-      "portion": "estimated portion size with weight/volume",
+      "name": "Food Name with visible toppings/ingredients clearly stated",
+      "portion": "estimated portion size with weight/volume (be conservative)",
       "icon": "appropriate icon name from: egg, bacon, bread-slice, apple-alt"
     }
   ]
