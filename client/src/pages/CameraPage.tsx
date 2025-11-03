@@ -16,6 +16,8 @@ import { Book, Utensils, Lightbulb, Target, HelpCircle, Calculator, Syringe, Zap
 import type { FoodAnalysis, NutritionGoals, DiaryEntry, DiaryEntryWithAnalysis } from "@shared/schema";
 import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { BottomHelpSection } from "@/components/bottom-help-section";
+import { getPortionOptions, portionToGrams } from "@/lib/portionHelpers";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error';
 
@@ -561,20 +563,43 @@ export function CameraPage() {
                           <p className="font-bold text-sm text-gray-900 dark:text-white">{food.name}</p>
                         )}
                         {isEditing ? (
-                          <input
-                            type="text"
+                          <Select
                             value={food.portion}
-                            onChange={(e) => {
-                              setReviewAnalysis(prev => prev ? {
-                                ...prev,
-                                detectedFoods: prev.detectedFoods.map((f, i) => 
-                                  i === index ? { ...f, portion: e.target.value } : f
-                                )
-                              } : null);
+                            onValueChange={(newPortion) => {
+                              if (!reviewAnalysis) return;
+                              
+                              const currentFood = reviewAnalysis.detectedFoods[index];
+                              const oldGrams = portionToGrams(currentFood.portion);
+                              const newGrams = portionToGrams(newPortion);
+                              const scaleFactor = newGrams / oldGrams;
+                              
+                              setReviewAnalysis({
+                                ...reviewAnalysis,
+                                detectedFoods: reviewAnalysis.detectedFoods.map((f, i) => {
+                                  if (i !== index) return f;
+                                  return {
+                                    ...f,
+                                    portion: newPortion,
+                                    calories: Math.round(f.calories * scaleFactor),
+                                    protein: Math.round(f.protein * scaleFactor),
+                                    carbs: Math.round(f.carbs * scaleFactor),
+                                    fat: Math.round(f.fat * scaleFactor)
+                                  };
+                                })
+                              });
                             }}
-                            className="text-xs w-full px-2 py-1 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"
-                            placeholder="Portion size"
-                          />
+                          >
+                            <SelectTrigger className="w-full mt-1 text-xs" data-testid={`select-portion-${index}`}>
+                              <SelectValue placeholder="Select portion" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getPortionOptions(food.name, food.portion).map((option) => (
+                                <SelectItem key={option} value={option} data-testid={`option-portion-${option}`}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         ) : (
                           <p className="text-xs text-gray-600 dark:text-gray-400">{food.portion}</p>
                         )}
