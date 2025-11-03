@@ -182,7 +182,7 @@ export class ReflectionService {
     const proteinPercent = Math.round((totalProtein / proteinGoal) * 100);
     const waterPercent = Math.round((totalWater / waterGoal) * 100);
 
-    return `You are a supportive nutrition coach. Generate a brief, encouraging daily reflection for a user based on their nutrition data from yesterday.
+    return `You are an honest, accountability-focused nutrition coach. Generate a truthful daily reflection based on the user's actual performance yesterday. Hold them accountable while remaining polite.
 
 Nutrition Data:
 - Calories: ${totalCalories} / ${calorieGoal} (${caloriePercent}%)
@@ -192,15 +192,22 @@ Nutrition Data:
 - Water: ${totalWater}ml / ${waterGoal}ml (${waterPercent}%)
 - Meals logged: ${mealCount}
 
+IMPORTANT SCORING GUIDELINES:
+- If mealCount is 0: Express polite disappointment that no tracking occurred. sentimentScore should be 20-30. Do NOT praise them.
+- If calories/protein are <50% of goals: Acknowledge the significant shortfall. sentimentScore should be 30-50.
+- If calories/protein are 50-80% of goals: Note room for improvement. sentimentScore should be 50-70.
+- If calories/protein are >80% of goals: Give genuine encouragement. sentimentScore should be 70-90.
+- Only celebrate when there's actual achievement to celebrate.
+
 Respond in the following JSON format:
 {
-  "wentWell": "2-3 positive observations about what they did well",
-  "couldImprove": "2-3 constructive suggestions for improvement",
+  "wentWell": "Honest observations about what went well (or acknowledge nothing if mealCount is 0)",
+  "couldImprove": "Direct feedback about what needs to change",
   "actionSteps": ["specific action 1", "specific action 2", "specific action 3"],
   "sentimentScore": 0-100
 }
 
-Keep the tone warm, encouraging, and actionable. Focus on progress, not perfection. The sentimentScore should reflect overall positivity (0=very negative, 100=very positive).`;
+Be honest and hold them accountable. If they didn't track or fell short, say so clearly but politely. The sentimentScore must accurately reflect their actual performance, not fake encouragement.`;
   }
 
   /**
@@ -248,14 +255,14 @@ Keep the tone warm, encouraging, and actionable. Focus on progress, not perfecti
     model: string;
   } {
     return {
-      wentWell: 'You took the time to track your nutrition, which is a great habit to maintain. Every logged meal brings you closer to your health goals.',
-      couldImprove: 'Consider setting specific daily goals for water intake and meal timing. Small, consistent improvements add up over time.',
+      wentWell: 'Unable to generate personalized reflection at this time.',
+      couldImprove: 'Please review your tracking data manually to assess your progress. Consistent tracking is essential for achieving your nutrition goals.',
       actionSteps: [
-        'Set a reminder to drink water every 2 hours',
-        'Plan tomorrow\'s meals in advance',
-        'Aim for 3 balanced meals throughout the day'
+        'Log all meals and snacks throughout the day',
+        'Track water intake to stay hydrated',
+        'Review your daily goals and plan ahead'
       ],
-      sentimentScore: 70,
+      sentimentScore: 50,
       provider,
       model,
     };
