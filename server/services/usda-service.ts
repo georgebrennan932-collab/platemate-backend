@@ -458,15 +458,23 @@ export class USDAService {
             score -= 1000; // Massive penalty for potato bread when user wants potatoes
             console.log(`🚫 Potato bread penalty (-1000): ${food.description}`);
           }
-          // Boost actual potato dishes
+          
+          // CRITICAL: "Potato chips" are NOT a baked potato!
+          // Heavily penalize chips/crisps when user wants an actual potato
+          if (/(chips?|crisps?|fries|tots|wedges)/i.test(description) && !searchName.includes('chips') && !searchName.includes('fries') && !searchName.includes('crisps')) {
+            score -= 1500; // Massive penalty for chips when user wants whole potato
+            console.log(`🚫 Potato chips penalty (-1500): ${food.description}`);
+          }
+          
+          // Boost actual potato dishes (whole potatoes, not processed)
           if (description.match(/potato(es)?(?!.*bread)/i) && (description.includes('baked') || description.includes('plain') || description.includes('white') || description.includes('nfs'))) {
             score += 600; // Strong boost for actual potatoes
             console.log(`📈 Real potato boost (+600): ${food.description}`);
           }
           // Extra boost for baked/jacket potato specific matches
           if (searchName.includes('jacket') || searchName.includes('baked potato')) {
-            if ((description.includes('baked') || description.includes('jacket')) && description.includes('potato')) {
-              score += 700; // Huge boost for exact match
+            if ((description.includes('baked') || description.includes('jacket')) && description.includes('potato') && !/(chips?|crisps?|fries)/i.test(description)) {
+              score += 700; // Huge boost for exact match (but not chips!)
               console.log(`📈 Baked/jacket potato exact match boost (+700): ${food.description}`);
             }
           }

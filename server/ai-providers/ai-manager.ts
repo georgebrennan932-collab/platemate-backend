@@ -500,6 +500,68 @@ export class AIManager {
   }
 
   /**
+   * Format portion text to be more user-friendly and informative
+   * Examples: "Jacket potato" → "1 medium (200g)", "2 jacket potatoes" → "2 medium (400g)"
+   * Explicit weights: "200g potato" → "200g" (honors explicit weight)
+   */
+  private formatPortionText(portion: string, foodName: string, portionGrams: number): string {
+    const portionLower = portion.toLowerCase().trim();
+    const foodLower = foodName.toLowerCase();
+    
+    // CRITICAL: If portion already contains explicit weight units, honor them and return as-is
+    if (/\d+\s*(g|kg|oz|ml)\b/.test(portionLower)) {
+      return portion; // Honor explicit weights like "200g potato"
+    }
+    
+    // CRITICAL: If portion has volume/serving units, honor them (don't convert cups to potato sizes)
+    if (/\b(cup|serving|tbsp|tsp|piece)\b/i.test(portionLower)) {
+      if (!portionLower.includes('g') && !portionLower.includes('gram')) {
+        return `${portion} (${portionGrams}g)`;
+      }
+      return portion;
+    }
+    
+    // For WHOLE potatoes only (jacket potato, baked potato, or plain "potato")
+    // NOT processed potato dishes (mashed, salad, etc.)
+    const isWholePotato = portionLower.includes('potato') && 
+                          !foodLower.includes('chip') && 
+                          !foodLower.includes('fries') && 
+                          !foodLower.includes('sweet') &&
+                          !foodLower.includes('mashed') &&
+                          !foodLower.includes('salad') &&
+                          !foodLower.includes('soup');
+    
+    if (isWholePotato) {
+      
+      // Extract count from the portion text
+      const numMatch = portionLower.match(/(\d+(?:\.\d+)?)/);
+      const num = numMatch ? parseFloat(numMatch[1]) : 1;
+      
+      // If size is already specified, keep it
+      if (portionLower.includes('small') || portionLower.includes('medium') || portionLower.includes('large')) {
+        return `${portion} (${portionGrams}g)`;
+      }
+      
+      // Otherwise, add the size based on grams PER potato
+      const gramsPerPotato = num > 1 ? portionGrams / num : portionGrams;
+      let size = 'medium';
+      if (gramsPerPotato < 175) size = 'small';
+      else if (gramsPerPotato > 250) size = 'large';
+      
+      // Format with count
+      const countText = num > 1 ? `${num}` : '1';
+      return `${countText} ${size} (${portionGrams}g)`;
+    }
+    
+    // For other foods, just add grams if not already present
+    if (!portionLower.includes('g') && !portionLower.includes('gram')) {
+      return `${portion} (${portionGrams}g)`;
+    }
+    
+    return portion;
+  }
+
+  /**
    * Enhanced portion normalization: Convert all portion descriptions to grams
    * This ensures consistent 100g baseline scaling for all nutrition data
    */
@@ -524,7 +586,7 @@ export class AIManager {
       return num * 50; // Default to large egg ≈ 50g
     }
     
-    // STEP 1: Handle explicit weight/volume measurements
+    // STEP 1: Handle explicit weight/volume measurements FIRST (before special food handling)
     const kgMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*kg(?:\s|$)/);
     if (kgMatch) {
       const result = parseFloat(kgMatch[1]) * 1000;
@@ -640,6 +702,20 @@ export class AIManager {
     if (portionLower.includes('serving')) {
       return num * 150; // Average serving ≈ 150g
     }
+    
+    // Potato handling (jacket potato, baked potato, etc.) - AFTER explicit measurements
+    // Use word boundaries to avoid matching "potato chips", "sweet potato", etc.
+    const potatoPattern = /\b(jacket|baked)\s+potato\b|\bpotato(es)?\b/i;
+    const isPotato = potatoPattern.test(foodLower) || potatoPattern.test(portionLower);
+    if (isPotato && !foodLower.includes('chip') && !foodLower.includes('fries') && !foodLower.includes('sweet')) {
+      if (portionLower.includes('large')) return num * 300; // Large potato ≈ 300g
+      if (portionLower.includes('medium')) return num * 200; // Medium potato ≈ 200g
+      if (portionLower.includes('small')) return num * 150; // Small potato ≈ 150g
+      // Default to medium if no size specified
+      return num * 200; // Default medium potato ≈ 200g
+    }
+    
+    // Generic small/medium/large (after food-specific handlers)
     if (portionLower.includes('small')) {
       return 75; // Small portion ≈ 75g
     }
@@ -981,11 +1057,13 @@ export class AIManager {
         const portionGrams = this.convertPortionToGrams(foodItem.portion, foodItem.name);
         const scaleFactor = portionGrams / 100; // USDA data is per 100g
         
+        // Create human-readable portion text with grams
+        const portionText = this.formatPortionText(foodItem.portion, foodItem.name, portionGrams);
         
         // Use accurate USDA nutrition data scaled by the individual portion
         const food = {
           name: usdaData.usdaFood.description,
-          portion: foodItem.portion, // Use individual portion (e.g., "2 slices of bacon")
+          portion: portionText, // Use formatted portion (e.g., "1 medium (200g)")
           calories: Math.round(usdaData.nutrition.calories * scaleFactor),
           protein: Math.round(usdaData.nutrition.protein * scaleFactor),
           carbs: Math.round(usdaData.nutrition.carbs * scaleFactor),
@@ -1008,9 +1086,12 @@ export class AIManager {
           const portionGrams = this.convertPortionToGrams(foodItem.portion, foodItem.name);
           const scaleFactor = portionGrams / 100; // OpenFoodFacts data is per 100g
           
+          // Create human-readable portion text with grams
+          const portionText = this.formatPortionText(foodItem.portion, foodItem.name, portionGrams);
+          
           const food = {
             name: offData.name,
-            portion: foodItem.portion, // Use individual portion
+            portion: portionText, // Use formatted portion
             calories: Math.round(offData.nutrition.calories * scaleFactor),
             protein: Math.round(offData.nutrition.protein * scaleFactor),
             carbs: Math.round(offData.nutrition.carbs * scaleFactor),
