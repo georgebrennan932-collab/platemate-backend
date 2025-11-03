@@ -28,6 +28,8 @@ import { StepCounterWidget } from "@/components/step-counter-widget";
 import { updateStreak } from "@/lib/streak-tracker";
 import { ShiftCheckInModal } from "@/components/shift-checkin-modal";
 import { ProfileReminderBanner } from "@/components/profile-reminder-banner";
+import { getPortionOptions, portionToGrams } from "@/lib/portionHelpers";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
 
@@ -1633,109 +1635,46 @@ export default function Home() {
                       </div>
                       <div>
                         <label className="text-xs text-purple-200 mb-1 block">Portion:</label>
-                        <input
-                          type="text"
+                        <Select
                           value={food.portion || '100g'}
-                          onChange={(e) => {
-                            const newPortion = e.target.value;
+                          onValueChange={(newPortion) => {
+                            const currentGrams = portionToGrams(food.portion || '100g');
+                            const newGrams = portionToGrams(newPortion);
+                            const scaleFactor = newGrams / currentGrams;
                             
-                            // Smart portion parsing: convert portions to grams
-                            const parsePortionToGrams = (portion: string, foodName: string): number => {
-                              const lower = portion.toLowerCase();
-                              
-                              // Extract number from portion (e.g., "2 slices" → 2)
-                              const numMatch = lower.match(/(\d+(?:\.\d+)?)/);
-                              const quantity = numMatch ? parseFloat(numMatch[1]) : 1;
-                              
-                              // Common portion sizes (in grams)
-                              const portionSizes: { [key: string]: number } = {
-                                // Bacon
-                                'slice': 12,  // 1 slice of bacon ≈ 12g
-                                'slices': 12,
-                                'rasher': 12,
-                                'rashers': 12,
-                                'strip': 12,
-                                'strips': 12,
-                                
-                                // Eggs
-                                'egg': 50,    // 1 large egg ≈ 50g
-                                'eggs': 50,
-                                
-                                // Bread
-                                'bread': 30,  // 1 slice bread ≈ 30g
-                                'toast': 30,
-                                
-                                // General
-                                'cup': 200,   // 1 cup ≈ 200g (varies by food)
-                                'cups': 200,
-                                'tbsp': 15,   // 1 tablespoon ≈ 15g
-                                'tablespoon': 15,
-                                'tablespoons': 15,
-                                'tsp': 5,     // 1 teaspoon ≈ 5g
-                                'teaspoon': 5,
-                                'teaspoons': 5,
-                              };
-                              
-                              // Check if portion contains a known unit
-                              for (const [unit, gramsPerUnit] of Object.entries(portionSizes)) {
-                                if (lower.includes(unit)) {
-                                  return quantity * gramsPerUnit;
-                                }
-                              }
-                              
-                              // Try to extract grams directly (e.g., "150g" or "150")
-                              const gramsMatch = lower.match(/(\d+(?:\.\d+)?)\s*g/);
-                              if (gramsMatch) {
-                                return parseFloat(gramsMatch[1]);
-                              }
-                              
-                              // If just a number, treat as grams
-                              if (numMatch && !isNaN(quantity)) {
-                                return quantity;
-                              }
-                              
-                              // Default to 100g
-                              return 100;
-                            };
-                            
-                            // Get current nutrition (per 100g)
-                            const currentGrams = parsePortionToGrams(food.portion || '100g', food.name);
-                            const newGrams = parsePortionToGrams(newPortion, food.name);
-                            const multiplier = newGrams / currentGrams;
-                            
-                            // Update with new portion and scaled nutrition
-                            setReviewAnalysis(prev => {
-                              if (!prev) return null;
-                              
-                              const updatedFoods = prev.detectedFoods.map((f, i) => {
-                                if (i === index) {
-                                  return {
-                                    ...f,
-                                    portion: newPortion,
-                                    calories: Math.round(f.calories * multiplier),
-                                    protein: Math.round(f.protein * multiplier),
-                                    carbs: Math.round(f.carbs * multiplier),
-                                    fat: Math.round(f.fat * multiplier)
-                                  };
-                                }
-                                return f;
-                              });
-                              
-                              // Recalculate totals
+                            const updatedFoods = reviewAnalysis.detectedFoods.map((f, i) => {
+                              if (i !== index) return f;
                               return {
-                                ...prev,
-                                detectedFoods: updatedFoods,
-                                totalCalories: updatedFoods.reduce((sum, f) => sum + f.calories, 0),
-                                totalProtein: updatedFoods.reduce((sum, f) => sum + f.protein, 0),
-                                totalCarbs: updatedFoods.reduce((sum, f) => sum + f.carbs, 0),
-                                totalFat: updatedFoods.reduce((sum, f) => sum + f.fat, 0)
+                                ...f,
+                                portion: newPortion,
+                                calories: Math.round(f.calories * scaleFactor),
+                                protein: Math.round(f.protein * scaleFactor),
+                                carbs: Math.round(f.carbs * scaleFactor),
+                                fat: Math.round(f.fat * scaleFactor)
                               };
                             });
+                            
+                            setReviewAnalysis({
+                              ...reviewAnalysis,
+                              detectedFoods: updatedFoods,
+                              totalCalories: updatedFoods.reduce((sum, f) => sum + f.calories, 0),
+                              totalProtein: updatedFoods.reduce((sum, f) => sum + f.protein, 0),
+                              totalCarbs: updatedFoods.reduce((sum, f) => sum + f.carbs, 0),
+                              totalFat: updatedFoods.reduce((sum, f) => sum + f.fat, 0)
+                            });
                           }}
-                          className="text-sm text-white w-full bg-white/10 px-3 py-1.5 rounded-lg border border-white/20"
-                          placeholder="e.g., 2 slices, 2 eggs, 150g"
-                          data-testid={`input-food-portion-${index}`}
-                        />
+                        >
+                          <SelectTrigger className="text-sm text-white w-full bg-white/10 px-3 py-1.5 rounded-lg border border-white/20" data-testid={`select-food-portion-${index}`}>
+                            <SelectValue placeholder="Select portion" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getPortionOptions(food.name, food.portion || '100g').map((option) => (
+                              <SelectItem key={option} value={option} data-testid={`option-portion-${option}`}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     
