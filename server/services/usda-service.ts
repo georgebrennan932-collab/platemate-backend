@@ -448,6 +448,30 @@ export class USDAService {
         }
         
         // ===== CRITICAL: PREVENT COMMON MISMATCHES =====
+        
+        // When searching for potato dishes, penalize bread and prefer actual potatoes
+        // Only trigger for actual potato queries (not just any "baked" item)
+        if (searchName.includes('potato') || searchName.includes('jacket')) {
+          // CRITICAL: "Bread, potato" is NOT a potato - it's potato bread!
+          // Use word boundary to avoid matching "breaded" or "breadcrumb"
+          if (/\bbread\b/i.test(description)) {
+            score -= 1000; // Massive penalty for potato bread when user wants potatoes
+            console.log(`🚫 Potato bread penalty (-1000): ${food.description}`);
+          }
+          // Boost actual potato dishes
+          if (description.match(/potato(es)?(?!.*bread)/i) && (description.includes('baked') || description.includes('plain') || description.includes('white') || description.includes('nfs'))) {
+            score += 600; // Strong boost for actual potatoes
+            console.log(`📈 Real potato boost (+600): ${food.description}`);
+          }
+          // Extra boost for baked/jacket potato specific matches
+          if (searchName.includes('jacket') || searchName.includes('baked potato')) {
+            if ((description.includes('baked') || description.includes('jacket')) && description.includes('potato')) {
+              score += 700; // Huge boost for exact match
+              console.log(`📈 Baked/jacket potato exact match boost (+700): ${food.description}`);
+            }
+          }
+        }
+        
         // When searching for "rice", prefer cooked rice over rice paper, rice cakes, etc.
         if (searchName === 'rice' || searchName === 'white rice' || searchName === 'brown rice') {
           if (description.includes('rice paper') || description.includes('rice cake') || description.includes('rice noodle')) {
