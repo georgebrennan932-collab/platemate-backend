@@ -562,53 +562,49 @@ export function CameraPage() {
                         ) : (
                           <p className="font-bold text-sm text-gray-900 dark:text-white">{food.name}</p>
                         )}
-                        {isEditing ? (
-                          <Select
-                            value={food.portion}
-                            onValueChange={(newPortion) => {
-                              if (!reviewAnalysis) return;
-                              
-                              const currentFood = reviewAnalysis.detectedFoods[index];
-                              const oldGrams = portionToGrams(currentFood.portion);
-                              const newGrams = portionToGrams(newPortion);
-                              const scaleFactor = newGrams / oldGrams;
-                              
-                              const updatedFoods = reviewAnalysis.detectedFoods.map((f, i) => {
-                                if (i !== index) return f;
-                                return {
-                                  ...f,
-                                  portion: newPortion,
-                                  calories: Math.round(f.calories * scaleFactor),
-                                  protein: Math.round(f.protein * scaleFactor),
-                                  carbs: Math.round(f.carbs * scaleFactor),
-                                  fat: Math.round(f.fat * scaleFactor)
-                                };
-                              });
-                              
-                              setReviewAnalysis({
-                                ...reviewAnalysis,
-                                detectedFoods: updatedFoods,
-                                totalCalories: updatedFoods.reduce((sum, f) => sum + f.calories, 0),
-                                totalProtein: updatedFoods.reduce((sum, f) => sum + f.protein, 0),
-                                totalCarbs: updatedFoods.reduce((sum, f) => sum + f.carbs, 0),
-                                totalFat: updatedFoods.reduce((sum, f) => sum + f.fat, 0)
-                              });
-                            }}
-                          >
-                            <SelectTrigger className="w-full mt-1 text-xs" data-testid={`select-portion-${index}`}>
-                              <SelectValue placeholder="Select portion" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getPortionOptions(food.name, food.portion).map((option) => (
-                                <SelectItem key={option} value={option} data-testid={`option-portion-${option}`}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <p className="text-xs text-gray-600 dark:text-gray-400">{food.portion}</p>
-                        )}
+                        <Select
+                          value={food.portion}
+                          onValueChange={(newPortion) => {
+                            if (!reviewAnalysis) return;
+                            
+                            const currentFood = reviewAnalysis.detectedFoods[index];
+                            const oldGrams = portionToGrams(currentFood.portion);
+                            const newGrams = portionToGrams(newPortion);
+                            const scaleFactor = newGrams / oldGrams;
+                            
+                            const updatedFoods = reviewAnalysis.detectedFoods.map((f, i) => {
+                              if (i !== index) return f;
+                              return {
+                                ...f,
+                                portion: newPortion,
+                                calories: Math.round(f.calories * scaleFactor),
+                                protein: Math.round(f.protein * scaleFactor),
+                                carbs: Math.round(f.carbs * scaleFactor),
+                                fat: Math.round(f.fat * scaleFactor)
+                              };
+                            });
+                            
+                            setReviewAnalysis({
+                              ...reviewAnalysis,
+                              detectedFoods: updatedFoods,
+                              totalCalories: updatedFoods.reduce((sum, f) => sum + f.calories, 0),
+                              totalProtein: updatedFoods.reduce((sum, f) => sum + f.protein, 0),
+                              totalCarbs: updatedFoods.reduce((sum, f) => sum + f.carbs, 0),
+                              totalFat: updatedFoods.reduce((sum, f) => sum + f.fat, 0)
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="w-full mt-1 text-xs" data-testid={`select-portion-${index}`}>
+                            <SelectValue placeholder="Select portion" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getPortionOptions(food.name, food.portion).map((option) => (
+                              <SelectItem key={option} value={option} data-testid={`option-portion-${option}`}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       {isEditing ? (
                         <button
