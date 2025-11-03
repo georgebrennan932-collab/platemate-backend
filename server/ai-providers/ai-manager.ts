@@ -825,11 +825,56 @@ export class AIManager {
   async parseFoodNamesFromText(foodDescription: string): Promise<Array<{name: string, portion: string}>> {
     console.log(`📝 Parsing food items from text: "${foodDescription}"`);
     
+    // UK FOOD PROTECTION: These are compound names that should NEVER be split
+    // Sort by length (longest first) to avoid partial matches
+    const UK_COMPOUND_FOODS = [
+      'full english breakfast',
+      'toad in the hole',
+      'bubble and squeak',
+      'bangers and mash',
+      'fish and chips',
+      'sausage and chips',
+      'beans on toast',
+      'jacket potato',
+      'baked potato',
+      'egg and chips',
+      'bread and butter',
+      'full english'
+    ];
+    
+    // STEP 0: Protect UK compound foods by temporarily replacing them with placeholders
+    let protectedText = foodDescription;
+    const replacements: Array<{placeholder: string, original: string}> = [];
+    
+    UK_COMPOUND_FOODS.forEach((ukFood, index) => {
+      // Case-insensitive search with word boundaries
+      const regex = new RegExp(`\\b${ukFood}\\b`, 'gi');
+      const matches = protectedText.match(regex);
+      
+      if (matches) {
+        matches.forEach(match => {
+          const placeholder = `__UK_FOOD_${index}__`;
+          protectedText = protectedText.replace(match, placeholder);
+          replacements.push({ placeholder, original: match });
+          console.log(`🇬🇧 Protected UK food: "${match}" → "${placeholder}"`);
+        });
+      }
+    });
+    
     // STEP 1: First split on common separators (and, with, comma)
     // Examples: "2 slices of bacon, 2 sausages and 2 eggs" → ["2 slices of bacon", "2 sausages", "2 eggs"]
     //           "chicken with rice" → ["chicken", "rice"]
     const separatorRegex = /\s*(?:,|and|with)\s+/i;
-    let rawParts = foodDescription.split(separatorRegex).map(p => p.trim()).filter(p => p.length > 0);
+    let rawParts = protectedText.split(separatorRegex).map(p => p.trim()).filter(p => p.length > 0);
+    
+    // STEP 1.1: Restore UK compound foods from placeholders
+    rawParts = rawParts.map(part => {
+      let restoredPart = part;
+      replacements.forEach(({placeholder, original}) => {
+        restoredPart = restoredPart.replace(placeholder, original);
+      });
+      return restoredPart;
+    });
     
     // STEP 1.5: Further split parts that contain multiple food items indicated by quantity words
     // Examples: "two slices of Bacon two sausages" → ["two slices of Bacon", "two sausages"]
