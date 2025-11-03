@@ -18,7 +18,6 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import Home from "./pages/home";
 import DiaryPage from "./pages/DiaryPage";
 import DietAdvicePage from "./pages/DietAdvicePage";
-import CalculatorPage from "./pages/calculator";
 import CalculatorTestPage from "./pages/CalculatorTestPage";
 import { ActivityPage } from "./pages/ActivityPage";
 import RecipesPage from "./pages/RecipesPage";
@@ -174,7 +173,6 @@ function App() {
         <Route path="/scan" component={CameraPage} />
         <Route path="/home" component={Home} />
         <Route path="/diary" component={DiaryPage} />
-        <Route path="/calculator" component={CalculatorPage} />
         <Route path="/calculator-test" component={CalculatorTestPage} />
         <Route path="/activity" component={ActivityPage} />
         <Route path="/advice" component={DietAdvicePage} />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, User, Save, Loader2, Clock, Briefcase } from "lucide-react";
+import { ArrowLeft, User, Save, Loader2, Clock, Briefcase, Calculator, Scale, Target, Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -10,18 +10,32 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownNavigation } from "@/components/dropdown-navigation";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { motion } from "framer-motion";
+import { calculateNutritionTargets, calculateMacroTargets, type UserData } from "@/lib/nutrition-calculator";
 
 const profileFormSchema = z.object({
+  // Personal info
   name: z.string().optional(),
   nickname: z.string().optional(),
+  // Physical stats & goals
+  age: z.number().min(10).max(120).optional(),
+  sex: z.enum(["male", "female"]).optional(),
+  heightCm: z.number().min(100).max(250).optional(),
+  currentWeightKg: z.number().min(30).max(300).optional(),
+  goalWeightKg: z.number().min(30).max(300).optional(),
+  activityLevel: z.enum(["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"]).optional(),
+  weightGoal: z.enum(["lose_weight", "maintain_weight", "gain_weight"]).optional(),
+  medication: z.enum(["none", "ozempic", "wegovy", "mounjaro", "other_glp1"]).optional(),
+  // Dietary & health
   dietaryRequirements: z.string().optional(),
   allergies: z.string().optional(),
   foodDislikes: z.string().optional(),
   healthConditions: z.string().optional(),
+  // Work schedule
   defaultShiftType: z.string().optional(),
   customShiftStart: z.string().optional(),
   customShiftEnd: z.string().optional(),
@@ -37,6 +51,8 @@ export function ProfilePage() {
   const [selectedShiftType, setSelectedShiftType] = useState<string>("regular");
   const [breakTimes, setBreakTimes] = useState<string[]>([]);
   const [dailyCheckInEnabled, setDailyCheckInEnabled] = useState(false);
+  const [calculatedData, setCalculatedData] = useState<any>(null);
+  const [showCalculations, setShowCalculations] = useState(false);
 
   // Fetch user profile
   const { data: profile, isLoading } = useQuery<any>({
@@ -48,6 +64,14 @@ export function ProfilePage() {
     defaultValues: {
       name: "",
       nickname: "",
+      age: undefined,
+      sex: undefined,
+      heightCm: undefined,
+      currentWeightKg: undefined,
+      goalWeightKg: undefined,
+      activityLevel: undefined,
+      weightGoal: undefined,
+      medication: "none",
       dietaryRequirements: "",
       allergies: "",
       foodDislikes: "",
@@ -81,6 +105,14 @@ export function ProfilePage() {
       form.reset({
         name: profile.name || "",
         nickname: profile.nickname || "",
+        age: profile.age || undefined,
+        sex: profile.sex as any || undefined,
+        heightCm: profile.heightCm || undefined,
+        currentWeightKg: profile.currentWeightKg || undefined,
+        goalWeightKg: profile.goalWeightKg || undefined,
+        activityLevel: profile.activityLevel as any || undefined,
+        weightGoal: profile.weightGoal as any || undefined,
+        medication: profile.medication as any || "none",
         dietaryRequirements: "",
         allergies: "",
         foodDislikes: profile.foodDislikes || "",
@@ -93,16 +125,61 @@ export function ProfilePage() {
     }
   }, [profile, form]);
 
+  // Auto-calculate nutrition targets when physical stats change
+  useEffect(() => {
+    const subscription = form.watch((data) => {
+      const { age, sex, heightCm, currentWeightKg, goalWeightKg, activityLevel, weightGoal, medication } = data;
+      
+      // Only calculate if all required fields are present
+      if (age && sex && heightCm && currentWeightKg && goalWeightKg && activityLevel && weightGoal) {
+        const userData: UserData = {
+          age: age as number,
+          sex: sex as "male" | "female",
+          heightCm: heightCm as number,
+          currentWeightKg: currentWeightKg as number,
+          goalWeightKg: goalWeightKg as number,
+          activityLevel: activityLevel as any,
+          weightGoal: weightGoal as any,
+          medication: medication as any,
+        };
+        
+        const results = calculateNutritionTargets(userData);
+        const macros = calculateMacroTargets(results.targetCalories, weightGoal as string);
+        
+        setCalculatedData({ ...results, macros });
+        setShowCalculations(true);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   // Save profile mutation
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       return await apiRequest('POST', '/api/user-profile', data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Save nutrition goals if we have calculated data
+      if (calculatedData && calculatedData.macros) {
+        try {
+          await apiRequest('POST', '/api/nutrition-goals', calculatedData.macros);
+          queryClient.invalidateQueries({ queryKey: ["/api/nutrition-goals"] });
+        } catch (error) {
+          console.error("Failed to save nutrition goals:", error);
+          toast({
+            title: "Warning",
+            description: "Profile saved but nutrition targets failed to update. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["/api/user-profile"] });
       toast({
         title: "Profile saved!",
-        description: "Your dietary preferences have been updated.",
+        description: calculatedData ? "Your profile and nutrition targets have been updated." : "Your profile has been updated.",
       });
     },
     onError: () => {
@@ -118,6 +195,14 @@ export function ProfilePage() {
     saveMutation.mutate({
       name: data.name || null,
       nickname: data.nickname || null,
+      age: data.age || null,
+      sex: data.sex || null,
+      heightCm: data.heightCm || null,
+      currentWeightKg: data.currentWeightKg || null,
+      goalWeightKg: data.goalWeightKg || null,
+      activityLevel: data.activityLevel || null,
+      weightGoal: data.weightGoal || null,
+      medication: data.medication || null,
       dietaryRequirements: dietaryTags,
       allergies: allergyTags,
       foodDislikes: data.foodDislikes || null,
@@ -262,6 +347,193 @@ export function ProfilePage() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Physical Stats & Goals Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Calculator className="h-5 w-5 text-purple-600" />
+              <h2 className="text-lg font-semibold">Physical Stats & Goals</h2>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Enter your physical information to calculate your nutrition targets
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Age */}
+              <div>
+                <Label htmlFor="age" className="block mb-2">Age (years)</Label>
+                <Input
+                  id="age"
+                  type="number"
+                  {...form.register("age", { valueAsNumber: true })}
+                  placeholder="e.g., 30"
+                  className="w-full"
+                  data-testid="input-age"
+                />
+              </div>
+
+              {/* Sex */}
+              <div>
+                <Label htmlFor="sex" className="block mb-2">Sex</Label>
+                <Select onValueChange={(value) => form.setValue("sex", value as any)} value={form.watch("sex")}>
+                  <SelectTrigger data-testid="select-sex" className="w-full">
+                    <SelectValue placeholder="Select sex" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Height */}
+              <div>
+                <Label htmlFor="heightCm" className="block mb-2">Height (cm)</Label>
+                <Input
+                  id="heightCm"
+                  type="number"
+                  {...form.register("heightCm", { valueAsNumber: true })}
+                  placeholder="e.g., 170"
+                  className="w-full"
+                  data-testid="input-height"
+                />
+              </div>
+
+              {/* Current Weight */}
+              <div>
+                <Label htmlFor="currentWeightKg" className="block mb-2">Current Weight (kg)</Label>
+                <Input
+                  id="currentWeightKg"
+                  type="number"
+                  {...form.register("currentWeightKg", { valueAsNumber: true })}
+                  placeholder="e.g., 75"
+                  className="w-full"
+                  data-testid="input-current-weight"
+                />
+              </div>
+
+              {/* Goal Weight */}
+              <div>
+                <Label htmlFor="goalWeightKg" className="block mb-2">Goal Weight (kg)</Label>
+                <Input
+                  id="goalWeightKg"
+                  type="number"
+                  {...form.register("goalWeightKg", { valueAsNumber: true })}
+                  placeholder="e.g., 70"
+                  className="w-full"
+                  data-testid="input-goal-weight"
+                />
+              </div>
+
+              {/* Activity Level */}
+              <div>
+                <Label htmlFor="activityLevel" className="block mb-2">Activity Level</Label>
+                <Select onValueChange={(value) => form.setValue("activityLevel", value as any)} value={form.watch("activityLevel")}>
+                  <SelectTrigger data-testid="select-activity" className="w-full">
+                    <SelectValue placeholder="Select activity level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sedentary">Sedentary (desk job, no exercise)</SelectItem>
+                    <SelectItem value="lightly_active">Lightly Active (light exercise 1-3 days/week)</SelectItem>
+                    <SelectItem value="moderately_active">Moderately Active (moderate exercise 3-5 days/week)</SelectItem>
+                    <SelectItem value="very_active">Very Active (heavy exercise 6-7 days/week)</SelectItem>
+                    <SelectItem value="extra_active">Extra Active (very heavy exercise, physical job)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Weight Goal */}
+              <div>
+                <Label htmlFor="weightGoal" className="block mb-2">Weight Goal</Label>
+                <Select onValueChange={(value) => form.setValue("weightGoal", value as any)} value={form.watch("weightGoal")}>
+                  <SelectTrigger data-testid="select-weight-goal" className="w-full">
+                    <SelectValue placeholder="Select weight goal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lose_weight">Lose Weight</SelectItem>
+                    <SelectItem value="maintain_weight">Maintain Weight</SelectItem>
+                    <SelectItem value="gain_weight">Gain Weight</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Medication */}
+              <div>
+                <Label htmlFor="medication" className="block mb-2">Weight Loss Medication (Optional)</Label>
+                <Select onValueChange={(value) => form.setValue("medication", value as any)} value={form.watch("medication")}>
+                  <SelectTrigger data-testid="select-medication" className="w-full">
+                    <SelectValue placeholder="Select medication" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="ozempic">Ozempic</SelectItem>
+                    <SelectItem value="wegovy">Wegovy</SelectItem>
+                    <SelectItem value="mounjaro">Mounjaro</SelectItem>
+                    <SelectItem value="other_glp1">Other GLP-1</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Calculated Targets */}
+            {calculatedData && showCalculations && (
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setShowCalculations(!showCalculations)}
+                  className="flex items-center justify-between w-full mb-4 text-left"
+                  data-testid="button-toggle-calculations"
+                >
+                  <h3 className="text-md font-semibold text-purple-600 dark:text-purple-400">
+                    Your Calculated Nutrition Targets
+                  </h3>
+                  {showCalculations ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </button>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">BMR</div>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{calculatedData.bmr}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">cal/day</div>
+                  </div>
+
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">TDEE</div>
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{calculatedData.tdee}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">cal/day</div>
+                  </div>
+
+                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Target</div>
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{calculatedData.targetCalories}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">cal/day</div>
+                  </div>
+
+                  <div className="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-xl">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Protein</div>
+                    <div className="text-2xl font-bold text-pink-600 dark:text-pink-400">{calculatedData.macros.dailyProtein}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">grams/day</div>
+                  </div>
+
+                  <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Carbs</div>
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{calculatedData.macros.dailyCarbs}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">grams/day</div>
+                  </div>
+
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Fat</div>
+                    <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{calculatedData.macros.dailyFat}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">grams/day</div>
+                  </div>
+                </div>
+
+                <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                  These targets will be saved to your Goals page when you save your profile.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Dietary Requirements Section */}
