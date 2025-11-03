@@ -376,7 +376,7 @@ export function ProfilePage() {
               {/* Sex */}
               <div>
                 <Label htmlFor="sex" className="block mb-2">Sex</Label>
-                <Select onValueChange={(value) => form.setValue("sex", value as any)} value={form.watch("sex")}>
+                <Select onValueChange={(value) => form.setValue("sex", value as any)} value={form.watch("sex") || ""}>
                   <SelectTrigger data-testid="select-sex" className="w-full">
                     <SelectValue placeholder="Select sex" />
                   </SelectTrigger>
@@ -429,7 +429,7 @@ export function ProfilePage() {
               {/* Activity Level */}
               <div>
                 <Label htmlFor="activityLevel" className="block mb-2">Activity Level</Label>
-                <Select onValueChange={(value) => form.setValue("activityLevel", value as any)} value={form.watch("activityLevel")}>
+                <Select onValueChange={(value) => form.setValue("activityLevel", value as any)} value={form.watch("activityLevel") || ""}>
                   <SelectTrigger data-testid="select-activity" className="w-full">
                     <SelectValue placeholder="Select activity level" />
                   </SelectTrigger>
@@ -446,7 +446,7 @@ export function ProfilePage() {
               {/* Weight Goal */}
               <div>
                 <Label htmlFor="weightGoal" className="block mb-2">Weight Goal</Label>
-                <Select onValueChange={(value) => form.setValue("weightGoal", value as any)} value={form.watch("weightGoal")}>
+                <Select onValueChange={(value) => form.setValue("weightGoal", value as any)} value={form.watch("weightGoal") || ""}>
                   <SelectTrigger data-testid="select-weight-goal" className="w-full">
                     <SelectValue placeholder="Select weight goal" />
                   </SelectTrigger>
@@ -461,7 +461,7 @@ export function ProfilePage() {
               {/* Medication */}
               <div>
                 <Label htmlFor="medication" className="block mb-2">Weight Loss Medication (Optional)</Label>
-                <Select onValueChange={(value) => form.setValue("medication", value as any)} value={form.watch("medication")}>
+                <Select onValueChange={(value) => form.setValue("medication", value as any)} value={form.watch("medication") || "none"}>
                   <SelectTrigger data-testid="select-medication" className="w-full">
                     <SelectValue placeholder="Select medication" />
                   </SelectTrigger>
