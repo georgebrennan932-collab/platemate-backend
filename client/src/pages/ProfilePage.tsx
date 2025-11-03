@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, User, Save, Loader2, Clock, Briefcase, Calculator, Scale, Target, Activity, ChevronDown, ChevronUp } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,6 +46,7 @@ type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export function ProfilePage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [dietaryTags, setDietaryTags] = useState<string[]>([]);
   const [allergyTags, setAllergyTags] = useState<string[]>([]);
   const [selectedShiftType, setSelectedShiftType] = useState<string>("regular");
@@ -181,6 +182,11 @@ export function ProfilePage() {
         title: "Profile saved!",
         description: calculatedData ? "Your profile and nutrition targets have been updated." : "Your profile has been updated.",
       });
+      
+      // Redirect to Goals page
+      setTimeout(() => {
+        setLocation('/goals');
+      }, 1000);
     },
     onError: () => {
       toast({
