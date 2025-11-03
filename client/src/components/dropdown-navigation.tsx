@@ -201,12 +201,6 @@ export function DropdownNavigation() {
       isActive: location === "/insights"
     },
     {
-      href: "/calculator",
-      icon: Calculator,
-      label: "Calculator",
-      isActive: location === "/calculator"
-    },
-    {
       href: "/ai-coach",
       icon: Lightbulb,
       label: "AI Coach",
