@@ -343,6 +343,15 @@ If you can't clearly identify something, don't include it. Be as accurate as pos
 
 Analyze this food description and extract nutritional information. Parse the quantity, unit, and food name from: "${mappedDescription}"
 
+UK FOOD VOCABULARY - THESE ARE SINGLE ITEMS (DO NOT SPLIT):
+- "jacket potato" = baked potato (ONE item, not "bread" and "potato")
+- "fish and chips" = ONE dish (battered fish + chips together)
+- "full English" = ONE breakfast (eggs, bacon, sausages, beans, toast, etc.)
+- "beans on toast" = ONE item
+- Examples:
+  * "jacket potato" → [{"name": "Baked potato (jacket potato)", "portion": "1 medium (200g)"}] ✓ CORRECT
+  * "jacket potato" → [{"name": "Bread, potato"}] ✗ WRONG - Do NOT split!
+
 CRITICAL FOOD INTERPRETATION RULES:
 - "rice" = cooked white/brown rice (NOT rice paper, rice cakes, or rice noodles)
 - "chicken" = grilled/baked chicken breast unless specified otherwise
@@ -350,14 +359,21 @@ CRITICAL FOOD INTERPRETATION RULES:
 - "pasta" = cooked pasta (NOT raw weight)
 - "bread" = sliced bread
 - When user says "X and Y" (e.g., "chicken and rice"), create TWO separate food items
+- BUT: UK food names like "jacket potato" are SINGLE items even if they contain multiple words
 
 COMMON MEAL EXAMPLES:
 - "chicken and rice" → [{"name": "Grilled chicken breast", "portion": "150g"}, {"name": "Cooked white rice", "portion": "200g"}]
 - "salmon and broccoli" → [{"name": "Baked salmon fillet", "portion": "150g"}, {"name": "Steamed broccoli", "portion": "100g"}]
 - "eggs and toast" → [{"name": "Scrambled eggs", "portion": "2 large eggs"}, {"name": "Whole wheat bread", "portion": "2 slices"}]
-- "steak and potatoes" → [{"name": "Grilled sirloin steak", "portion": "200g"}, {"name": "Roasted potatoes", "portion": "150g"}]
+- "jacket potato" → [{"name": "Baked potato (jacket potato)", "portion": "1 medium (200g)"}]
+
+PORTION ESTIMATION - BE CONSERVATIVE AND REALISTIC:
+- Default to MEDIUM portions unless specified
+- Don't over-estimate or assume extra toppings not mentioned
+- If in doubt, choose the smaller estimate
 
 DEFAULT PORTION SIZES (use when not specified):
+- Jacket potato: 1 medium (200g) plain = ~150-180 cal
 - Chicken breast: 150g cooked
 - Fish fillet: 150g cooked
 - Rice (cooked): 200g (1 cup)
@@ -366,11 +382,20 @@ DEFAULT PORTION SIZES (use when not specified):
 - Eggs: 2 large
 - Bread: 2 slices
 
+CRITICAL UK FOOD PORTIONS WITH TYPICAL CALORIE RANGES:
+- Jacket potato (plain): Medium (200g) = ~150-180 cal | with butter add ~70 cal | with cheese add ~100 cal
+  * Jacket potato >600 cal is almost certainly wrong unless massive with lots of toppings
+- UK crisps: Single-serve packet = 25g (~130 cal)
+- Fish & chips: Medium portion = ~600-700 cal total
+- Full English breakfast: Standard = ~800-1000 cal
+- Sandwich: Standard = 250-400 cal depending on fillings
+
 CRITICAL QUANTITY HANDLING:
 - If user specifies quantity (e.g., "4 Weetabix", "2 eggs"), multiply nutrition by that quantity
 - Preserve original portion description with quantity
 
 SANITY CHECKS - Flag if values seem wrong:
+- Jacket potato >600 cal is suspicious
 - Simple meal >800 calories is suspicious
 - Chicken breast >250 cal per 100g is wrong
 - Rice >150 cal per 100g cooked is wrong
@@ -382,10 +407,10 @@ Provide accurate nutritional information based on standard USDA values. Return t
   "confidence": number (0-100),
   "detectedFoods": [
     {
-      "name": "Simple, basic food name (e.g., 'Grilled chicken breast', 'Cooked white rice')",
-      "portion": "Specific amount with unit (e.g., '150g', '2 large eggs', '1 cup')",
+      "name": "Simple, basic food name (e.g., 'Grilled chicken breast', 'Baked potato (jacket potato)')",
+      "portion": "Specific amount with unit (e.g., '150g', '2 large eggs', '1 medium (200g)')",
       "quantity": number (default 1),
-      "calories": number (per 100g: chicken ~165, rice ~130, egg ~72 each),
+      "calories": number (per 100g: chicken ~165, rice ~130, egg ~72 each, potato plain ~80),
       "protein": number,
       "carbs": number,
       "fat": number,
@@ -394,7 +419,7 @@ Provide accurate nutritional information based on standard USDA values. Return t
   ]
 }
 
-IMPORTANT: Create SEPARATE items for "X and Y" patterns. Use realistic portions and accurate nutrition values.`
+IMPORTANT: UK food names like "jacket potato" are SINGLE items - do NOT split them! Use realistic portions and accurate nutrition values.`
           }
         ],
         max_tokens: 1000,

@@ -280,6 +280,35 @@ Only return the JSON object, nothing else.`;
 
 Analyze this food description: "${foodDescription}"
 
+UK FOOD VOCABULARY - THESE ARE SINGLE ITEMS (DO NOT SPLIT):
+- "jacket potato" = baked potato (ONE item, not "bread" and "potato")
+- "fish and chips" = ONE dish
+- "full English" = ONE breakfast
+- "beans on toast" = ONE item
+- Examples:
+  * "jacket potato" → [{"name": "Baked potato (jacket potato)", "portion": "1 medium (200g)"}] ✓ CORRECT
+  * "jacket potato" → [{"name": "Bread, potato"}] ✗ WRONG - Do NOT split!
+
+PORTION ESTIMATION - BE CONSERVATIVE:
+- Default to MEDIUM portions unless specified
+- Don't over-estimate or assume extra toppings not mentioned
+- If in doubt, choose the smaller estimate
+
+DEFAULT PORTION SIZES:
+- Jacket potato: 1 medium (200g) plain = ~150-180 cal
+- Chicken breast: 150g cooked
+- Rice (cooked): 200g
+- Vegetables: 100g
+- Eggs: 2 large
+- Bread: 2 slices
+
+CRITICAL UK FOOD PORTIONS WITH TYPICAL CALORIE RANGES:
+- Jacket potato (plain): Medium (200g) = ~150-180 cal | with butter add ~70 cal | with cheese add ~100 cal
+  * Jacket potato >600 cal is almost certainly wrong unless massive with lots of toppings
+- UK crisps: Single-serve packet = 25g (~130 cal)
+- Fish & chips: Medium portion = ~600-700 cal total
+- Sandwich: Standard = 250-400 cal depending on fillings
+
 Identify the food items and provide nutritional estimates.
 
 Return ONLY a JSON object with this exact structure (no additional text):
@@ -288,12 +317,14 @@ Return ONLY a JSON object with this exact structure (no additional text):
   "confidence": number (0-100),
   "detectedFoods": [
     {
-      "name": "Food Name",
+      "name": "Food Name (e.g., 'Baked potato (jacket potato)')",
       "portion": "estimated portion size",
       "icon": "appropriate icon name from: egg, bacon, bread-slice, apple-alt"
     }
   ]
-}`;
+}
+
+IMPORTANT: UK food names like "jacket potato" are SINGLE items - do NOT split them!`;
 
       const responseText = await this.queryTextModel(prompt, 500);
       
