@@ -899,6 +899,34 @@ export class AIManager {
   }
 
   /**
+   * Check if two words are similar (handles common typos)
+   * Uses simple character difference counting
+   */
+  private isSimilarWord(word1: string, word2: string): boolean {
+    // Same word
+    if (word1 === word2) return true;
+    
+    // Too different in length
+    if (Math.abs(word1.length - word2.length) > 2) return false;
+    
+    // Count matching characters
+    const shorter = word1.length < word2.length ? word1 : word2;
+    const longer = word1.length >= word2.length ? word1 : word2;
+    
+    let matchCount = 0;
+    for (let i = 0; i < shorter.length; i++) {
+      if (shorter[i] === longer[i] || 
+          (i < longer.length - 1 && shorter[i] === longer[i + 1]) || // transposition
+          (i > 0 && shorter[i] === longer[i - 1])) { // transposition
+        matchCount++;
+      }
+    }
+    
+    // Words are similar if 70%+ characters match
+    return matchCount >= shorter.length * 0.7;
+  }
+
+  /**
    * Expand UK compound meals into USDA-friendly components
    * Uses precise USDA search terms to ensure accurate nutrition data
    * e.g., "fish and chips" → ["fish battered fried", "french fries"]
@@ -974,7 +1002,38 @@ export class AIManager {
       }
       
       // Check if this is a compound meal that needs expansion
-      const components = MEAL_COMPONENTS[lowerName];
+      // Use fuzzy matching to handle typos
+      let components = MEAL_COMPONENTS[lowerName];
+      
+      // If no exact match, try fuzzy matching for common typos
+      if (!components) {
+        // Check each compound meal pattern
+        for (const [mealName, mealComponents] of Object.entries(MEAL_COMPONENTS)) {
+          // Extract key words from both strings
+          const mealWords = mealName.split(/\s+/);
+          const nameWords = lowerName.split(/\s+/);
+          
+          // Count how many words are similar (allowing for minor typos)
+          let matches = 0;
+          for (const mealWord of mealWords) {
+            for (const nameWord of nameWords) {
+              // Check if words are similar (either exact match or close typo)
+              if (mealWord === nameWord || 
+                  this.isSimilarWord(mealWord, nameWord)) {
+                matches++;
+                break;
+              }
+            }
+          }
+          
+          // If most words match, consider it the same meal
+          if (matches >= mealWords.length - 1 && matches >= mealWords.length * 0.6) {
+            console.log(`🔍 Fuzzy matched "${lowerName}" → "${mealName}" (${matches}/${mealWords.length} words matched)`);
+            components = mealComponents;
+            break;
+          }
+        }
+      }
       
       if (components) {
         console.log(`🍽️ Expanding "${item.name}" into ${components.length} USDA-friendly components (size multiplier: ${sizeMultiplier}x)`);
