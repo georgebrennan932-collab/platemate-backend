@@ -594,8 +594,8 @@ export class AIManager {
       return result;
     }
     
-    // Match grams - allow both "100g chicken" and "100 g chicken"
-    const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*(?:grams?|g)(?:\s|$)/);
+    // Match grams - allow "100g chicken", "100 g chicken", and "(225g)"
+    const gramsMatch = portionLower.match(/(\d+(?:\.\d+)?)\s*(?:grams?|g)(?:\s|$|\))/);
     if (gramsMatch) {
       const result = parseFloat(gramsMatch[1]);
 
@@ -882,12 +882,15 @@ export class AIManager {
       // Step 1: Parse food items with portions from text description
       const foodItems = await this.parseFoodNamesFromText(foodDescription);
       
+      // Step 1.5: Expand UK compound meals into components for accurate nutrition
+      const expandedFoodItems = this.expandCompoundMeals(foodItems);
+      
       // Step 2: Get accurate nutrition from USDA for parsed foods
-      const foodNames = foodItems.map(item => item.name);
+      const foodNames = expandedFoodItems.map(item => item.name);
       const nutritionData = await this.getNutritionFromUSDA(foodNames);
       
       // Step 3: Combine results into comprehensive analysis
-      return this.combineTextWithNutrition(foodDescription, foodItems, nutritionData);
+      return this.combineTextWithNutrition(foodDescription, expandedFoodItems, nutritionData);
       
     } catch (error: any) {
       console.warn('Enhanced text analysis failed, falling back to legacy method:', error.message);
@@ -896,25 +899,130 @@ export class AIManager {
   }
 
   /**
+   * Expand UK compound meals into USDA-friendly components
+   * Uses precise USDA search terms to ensure accurate nutrition data
+   * e.g., "fish and chips" → ["fish battered fried", "french fries"]
+   */
+  expandCompoundMeals(foodItems: Array<{name: string, portion: string}>): Array<{name: string, portion: string}> {
+    const expandedItems: Array<{name: string, portion: string}> = [];
+    
+    // Map UK compound meals to USDA-friendly component names
+    // Use terms that will match well in USDA database
+    const MEAL_COMPONENTS: { [key: string]: Array<{name: string, portion: string}> } = {
+      'fish and chips': [
+        { name: 'fish battered fried cod', portion: '1 fillet (180g)' },
+        { name: 'french fries fried', portion: '1 serving (200g)' }
+      ],
+      'sausage and chips': [
+        { name: 'pork sausage cooked', portion: '2 sausages (100g)' },
+        { name: 'french fries fried', portion: '1 serving (200g)' }
+      ],
+      'egg and chips': [
+        { name: 'egg fried', portion: '2 eggs (100g)' },
+        { name: 'french fries fried', portion: '1 serving (200g)' }
+      ],
+      'bangers and mash': [
+        { name: 'pork sausage cooked', portion: '2 sausages (100g)' },
+        { name: 'mashed potato', portion: '1 cup (200g)' }
+      ],
+      'beans on toast': [
+        { name: 'baked beans canned', portion: '1 cup (200g)' },
+        { name: 'bread white toasted', portion: '2 slices (60g)' }
+      ],
+      'bread and butter': [
+        { name: 'bread white', portion: '2 slices (60g)' },
+        { name: 'butter salted', portion: '2 tbsp (30g)' }
+      ],
+      'full english breakfast': [
+        { name: 'egg fried', portion: '2 eggs (100g)' },
+        { name: 'bacon cooked', portion: '2 rashers (24g)' },
+        { name: 'pork sausage cooked', portion: '2 sausages (100g)' },
+        { name: 'baked beans canned', portion: '1/2 cup (100g)' },
+        { name: 'bread white toasted', portion: '1 slice (30g)' },
+        { name: 'mushrooms cooked', portion: '1/2 cup (50g)' }
+      ],
+      'full english': [
+        { name: 'egg fried', portion: '2 eggs (100g)' },
+        { name: 'bacon cooked', portion: '2 rashers (24g)' },
+        { name: 'pork sausage cooked', portion: '2 sausages (100g)' },
+        { name: 'baked beans canned', portion: '1/2 cup (100g)' },
+        { name: 'bread white toasted', portion: '1 slice (30g)' },
+        { name: 'mushrooms cooked', portion: '1/2 cup (50g)' }
+      ],
+      'jacket potato': [
+        { name: 'potato baked', portion: '1 medium (200g)' }
+      ],
+      'baked potato': [
+        { name: 'potato baked', portion: '1 medium (200g)' }
+      ]
+    };
+    
+    for (const item of foodItems) {
+      const lowerName = item.name.toLowerCase().trim();
+      const lowerPortion = item.portion.toLowerCase();
+      
+      // Detect portion size modifiers
+      let sizeMultiplier = 1.0;
+      if (lowerPortion.includes('half') || lowerPortion.includes('1/2')) {
+        sizeMultiplier = 0.5;
+      } else if (lowerPortion.includes('small')) {
+        sizeMultiplier = 0.75;
+      } else if (lowerPortion.includes('large') || lowerPortion.includes('big')) {
+        sizeMultiplier = 1.25;
+      } else if (lowerPortion.includes('extra large') || lowerPortion.includes('xl')) {
+        sizeMultiplier = 1.5;
+      }
+      
+      // Check if this is a compound meal that needs expansion
+      const components = MEAL_COMPONENTS[lowerName];
+      
+      if (components) {
+        console.log(`🍽️ Expanding "${item.name}" into ${components.length} USDA-friendly components (size multiplier: ${sizeMultiplier}x)`);
+        
+        // Scale component portions based on detected size
+        const scaledComponents = components.map(comp => {
+          // Extract grams from portion (e.g., "1 fillet (180g)" → 180)
+          const gramsMatch = comp.portion.match(/\((\d+)g\)/);
+          if (gramsMatch) {
+            const baseGrams = parseInt(gramsMatch[1]);
+            const scaledGrams = Math.round(baseGrams * sizeMultiplier);
+            const scaledPortion = comp.portion.replace(/\(\d+g\)/, `(${scaledGrams}g)`);
+            return {
+              ...comp,
+              portion: scaledPortion
+            };
+          }
+          return comp;
+        });
+        
+        expandedItems.push(...scaledComponents);
+      } else {
+        // Not a compound meal, keep as is
+        expandedItems.push(item);
+      }
+    }
+    
+    return expandedItems;
+  }
+
+  /**
    * Parse food items with individual portions from text description
    */
   async parseFoodNamesFromText(foodDescription: string): Promise<Array<{name: string, portion: string}>> {
     console.log(`📝 Parsing food items from text: "${foodDescription}"`);
     
-    // UK FOOD PROTECTION: These are compound names that should NEVER be split
-    // Sort by length (longest first) to avoid partial matches
+    // UK FOOD PROTECTION: These are compound names that should NEVER be split during parsing
+    // They will be expanded into USDA-friendly components later
     const UK_COMPOUND_FOODS = [
-      'full english breakfast',
-      'toad in the hole',
-      'bubble and squeak',
-      'bangers and mash',
       'fish and chips',
       'sausage and chips',
-      'beans on toast',
+      'egg and chips',
+      'bangers and mash',
       'jacket potato',
       'baked potato',
-      'egg and chips',
+      'beans on toast',
       'bread and butter',
+      'full english breakfast',
       'full english'
     ];
     
