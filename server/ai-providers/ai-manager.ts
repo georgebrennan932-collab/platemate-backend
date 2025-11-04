@@ -1295,6 +1295,9 @@ export class AIManager {
       }
     }
 
+    console.log(`📊 combineTextWithNutrition returning ${detectedFoods.length} foods:`, 
+      detectedFoods.map(f => `${f.name} (${f.calories} cal)`));
+    
     return {
       imageUrl: `voice-input-${Date.now()}.txt`,
       confidence: nutritionMap.size > 0 ? 90 : 50, // Higher confidence if USDA data found

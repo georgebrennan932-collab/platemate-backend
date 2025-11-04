@@ -696,6 +696,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // High confidence (≥90%) - proceed with immediate analysis
       const analysis = await storage.createFoodAnalysis(foodAnalysisData);
+      
+      console.log(`📤 Returning analysis with ${analysis.detectedFoods.length} foods:`, 
+        analysis.detectedFoods.map((f: any) => `${f.name} (${f.calories} cal)`));
 
       res.json(analysis);
     } catch (error) {
