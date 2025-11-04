@@ -692,6 +692,18 @@ export class AIManager {
       return num * 12; // Bacon slice ≈ 12g
     }
     
+    // Toast/Bread specific slice handling (UK standard)
+    // Use word boundaries to avoid matching "breaded", "breadcrumbs", "gingerbread", etc.
+    const toastBreadPattern = /\b(toast|bread)\b/i;
+    const isBreadOrToast = toastBreadPattern.test(foodLower);
+    const isNotBreadVariant = !/(breaded|breadcrumbs|gingerbread|cornbread|shortbread)/i.test(foodLower);
+    
+    if (isBreadOrToast && isNotBreadVariant) {
+      // Toast and bread default to slices, even without "slice" in portion text
+      // UK standard: 1 slice of toast ≈ 30g, 1 slice of bread ≈ 30g
+      return num * 30; // Slice of toast/bread ≈ 30g
+    }
+    
     // Common portion conversions (estimates)
     if (portionLower.includes('slice')) {
       return num * 30; // Average slice ≈ 30g (bread, cheese, etc.)
@@ -982,6 +994,26 @@ export class AIManager {
       ],
       'baked potato': [
         { name: 'potato baked', portion: '1 medium (200g)' }
+      ],
+      'jam toast': [
+        { name: 'bread white toasted', portion: '2 slices (60g)' },
+        { name: 'jam strawberry', portion: '2 tbsp (40g)' }
+      ],
+      'marmalade toast': [
+        { name: 'bread white toasted', portion: '2 slices (60g)' },
+        { name: 'marmalade orange', portion: '2 tbsp (40g)' }
+      ],
+      'butter toast': [
+        { name: 'bread white toasted', portion: '2 slices (60g)' },
+        { name: 'butter salted', portion: '2 tbsp (30g)' }
+      ],
+      'honey toast': [
+        { name: 'bread white toasted', portion: '2 slices (60g)' },
+        { name: 'honey', portion: '2 tbsp (40g)' }
+      ],
+      'peanut butter toast': [
+        { name: 'bread white toasted', portion: '2 slices (60g)' },
+        { name: 'peanut butter', portion: '2 tbsp (32g)' }
       ]
     };
     
@@ -1082,7 +1114,12 @@ export class AIManager {
       'beans on toast',
       'bread and butter',
       'full english breakfast',
-      'full english'
+      'full english',
+      'jam toast',
+      'marmalade toast',
+      'butter toast',
+      'honey toast',
+      'peanut butter toast'
     ];
     
     // STEP 0: Protect UK compound foods by temporarily replacing them with placeholders

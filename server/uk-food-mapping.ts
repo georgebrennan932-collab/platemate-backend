@@ -41,6 +41,20 @@ export const UK_TO_US_FOOD_MAP: Record<string, string> = {
   "bag of crisps": "bag of potato chips",
   "walkers crisps": "potato chips",
   "ready salted crisps": "ready salted potato chips",
+  
+  // Bread and toast (UK to USDA search terms)
+  // Order matters: more specific terms MUST come before general terms
+  "sliced white bread": "bread white",
+  "sliced brown bread": "bread wheat",
+  "sliced wholemeal bread": "bread whole wheat",
+  "wholemeal toast": "bread whole wheat toasted",
+  "granary toast": "bread multigrain toasted",
+  "white toast": "bread white toasted",
+  "brown toast": "bread wheat toasted",
+  "wholemeal bread": "bread whole wheat",
+  "granary bread": "bread multigrain",
+  "white bread": "bread white",
+  "brown bread": "bread wheat",
 };
 
 /**
@@ -54,8 +68,13 @@ export const UK_TO_US_FOOD_MAP: Record<string, string> = {
 export function mapUKFoodTerms(text: string): string {
   let mappedText = text;
   
+  // Sort mappings by length descending to process longer phrases first
+  // This prevents "sliced white bread" from becoming "bread white wheat" 
+  // (by applying "sliced bread" → "bread white" then "white bread" → "bread wheat")
+  const sortedMappings = Object.entries(UK_TO_US_FOOD_MAP).sort((a, b) => b[0].length - a[0].length);
+  
   // Apply each mapping with word boundaries for precise matching
-  for (const [ukTerm, usTerm] of Object.entries(UK_TO_US_FOOD_MAP)) {
+  for (const [ukTerm, usTerm] of sortedMappings) {
     // Case-insensitive replacement with word boundaries
     const regex = new RegExp(`\\b${ukTerm}\\b`, 'gi');
     mappedText = mappedText.replace(regex, usTerm);

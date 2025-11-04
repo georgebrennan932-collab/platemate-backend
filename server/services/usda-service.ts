@@ -355,7 +355,8 @@ export class USDAService {
           /\b[A-Z]{2,}\s+[A-Z]{2,}/, // Multiple ALL CAPS words (test against original description)
           /\b(WENDY'S|MCDONALD'S|BURGER KING|KFC|TACO BELL|SUBWAY|DOMINO'S|PIZZA HUT)\b/i,
           /\b(OSCAR MAYER|JOHNSONVILLE|HORMEL|TYSON|BUTTERBALL|HILLSHIRE FARM)\b/i,
-          /\b(KRAFT|HEINZ|CAMPBELL'S|NESTLE|KELLOGG'S|GENERAL MILLS)\b/i
+          /\b(KRAFT|HEINZ|CAMPBELL'S|NESTLE|KELLOGG'S|GENERAL MILLS)\b/i,
+          /\b(MALBRA|WARBURTONS|HOVIS|KINGSMILL|ALLINSON)\b/i // UK bread brands
         ];
         
         // Test ALL CAPS pattern against original description, others against lowercased
@@ -376,6 +377,9 @@ export class USDAService {
         const descriptionIsRaw = /, raw$/.test(description);
         
         const genericBoosts = [
+          { pattern: /^bread, white, toasted/, boost: 200, label: "generic white toast" },
+          { pattern: /^bread, wheat, toasted/, boost: 200, label: "generic wheat toast" },
+          { pattern: /^bread, (white|wheat|whole wheat|whole grain|multigrain), /, boost: 180, label: "generic bread" },
           { pattern: /^[a-z\s,]+, raw$/, boost: 150, label: "raw generic" },
           { pattern: /^[a-z\s,]+, cooked$/, boost: 140, label: "cooked generic" },
           { pattern: /^[a-z\s,]+, fried/, boost: 140, label: "fried generic" },
