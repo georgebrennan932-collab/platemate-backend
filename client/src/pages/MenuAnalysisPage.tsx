@@ -38,7 +38,7 @@ export function MenuAnalysisPage() {
     }
   }, [location]);
 
-  // Fetch webpage content - will fail with 403, triggering manual input
+  // Fetch webpage content
   const { data: webpageData, isLoading: isFetchingPage, error: fetchError } = useQuery({
     queryKey: ['/api/fetch-webpage', menuUrl],
     enabled: !!menuUrl && !useManualInput,
@@ -48,10 +48,13 @@ export function MenuAnalysisPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to fetch webpage' }));
         
-        // If it's a 403 (disabled for security), switch to manual input
-        if (response.status === 403) {
-          setUseManualInput(true);
-        }
+        // If fetching fails, switch to manual input mode
+        setUseManualInput(true);
+        toast({
+          title: "Couldn't fetch menu automatically",
+          description: errorData.suggestion || "Please paste the menu text manually",
+          variant: "default"
+        });
         
         throw new Error(errorData.error || `HTTP ${response.status}: Failed to fetch webpage`);
       }
@@ -60,6 +63,15 @@ export function MenuAnalysisPage() {
       return data;
     }
   });
+
+  // Auto-analyze when webpage data is fetched (currently disabled on backend for security)
+  // This code path won't execute in MVP but is kept for future enhancement
+  useEffect(() => {
+    if (webpageData?.content && !analyzeMenuMutation.data && !analyzeMenuMutation.isPending) {
+      console.log('📄 Auto-analyzing fetched menu content');
+      analyzeMenuMutation.mutate(webpageData.content);
+    }
+  }, [webpageData]);
 
   // Analyze menu mutation (triggered by button click, not automatic)
   const analyzeMenuMutation = useMutation({
@@ -170,8 +182,8 @@ export function MenuAnalysisPage() {
       </div>
 
       <div className="p-4 max-w-4xl mx-auto">
-        {/* Manual Input Mode */}
-        {useManualInput && !isAnalyzing && !menuAnalysis && (
+        {/* Manual Input Mode - Keep visible even after analysis for revisions */}
+        {useManualInput && !isAnalyzing && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -184,8 +196,35 @@ export function MenuAnalysisPage() {
               </h2>
             </div>
             <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-              For security reasons, automatic URL fetching is currently disabled. Please copy and paste the restaurant menu text below, and we'll analyze it to recommend meals that match your goals.
+              {menuUrl ? 
+                "Great! We detected a menu URL from your QR code scan. For your security, please visit the link, copy the menu text, and paste it below for AI analysis." :
+                "Scan a menu QR code or paste restaurant menu text below, and we'll analyze it to recommend meals that match your nutrition goals."
+              }
             </p>
+            {menuUrl && (
+              <div className="mb-4 space-y-3">
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border-2 border-purple-200 dark:border-purple-800">
+                  <p className="text-purple-900 dark:text-purple-100 text-sm font-semibold mb-2">
+                    📱 QR Code Detected
+                  </p>
+                  <p className="text-purple-700 dark:text-purple-300 text-xs break-all">
+                    {menuUrl}
+                  </p>
+                </div>
+                <a 
+                  href={menuUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-4 rounded-xl font-medium transition-all duration-200 text-center"
+                  data-testid="link-open-menu-url"
+                >
+                  📄 Open Menu in New Tab
+                </a>
+                <p className="text-gray-500 dark:text-gray-400 text-xs text-center">
+                  After opening, copy the menu text and paste it below
+                </p>
+              </div>
+            )}
             <textarea
               value={manualMenuText}
               onChange={(e) => setManualMenuText(e.target.value)}

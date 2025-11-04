@@ -770,19 +770,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Access to internal/private networks is not allowed" });
       }
 
-      // SSRF Protection: For this MVP, we'll use a simpler approach - 
-      // only allow well-known, safe domains to prevent SSRF entirely
-      // This is the most secure approach for production
-      const allowedDomains = [
-        // Add approved restaurant/menu domains here
-        // For now, we'll be restrictive and only allow HTTPS from known sources
-      ];
-
-      // For MVP security: Disable server-side fetching entirely
-      // Users should manually paste menu text instead
+      // SECURITY: For MVP, disable automatic URL fetching to prevent SSRF attacks
+      // Full protection requires DNS validation, redirect handling with IP checks,
+      // and multiple security layers that are complex to implement correctly.
+      // Instead, users can manually paste menu text which is secure and works well.
+      console.log(`🔒 Automatic URL fetching disabled for security (SSRF protection)`);
+      
       return res.status(403).json({ 
-        error: "Server-side URL fetching is temporarily disabled for security. Please copy and paste the menu text directly into the app.",
-        suggestion: "We're working on a more secure implementation of this feature."
+        error: "Automatic menu fetching is disabled for security",
+        suggestion: "Please visit the URL, copy the menu text, and paste it manually into the app",
+        detectedUrl: url
       });
 
     } catch (error) {
