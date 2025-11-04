@@ -53,7 +53,12 @@ Preferred communication style: Simple, everyday language.
   - **Improved UI Contrast**: Food cards redesigned with lighter purple/white gradients for better text readability on mobile devices
   - **Auto-save on Diary**: Edits to food items are automatically saved when adding to diary, eliminating confusion about unsaved changes
 - **AI Daily Reflections**: AI-powered daily nutrition insights based on user data.
-- **Scan-a-Menu Feature**: QR code scanning for restaurant menus, AI-powered meal recommendations.
+- **Scan-a-Menu Feature**: QR code scanning for restaurant menus with AI-powered meal recommendations.
+  - **Security**: Domain allowlist system prevents SSRF attacks while enabling automatic fetching from trusted platforms
+  - **Allowlisted Domains**: Squarespace, Wix, WordPress, Shopify, and 11 other common restaurant menu hosting platforms
+  - **Domain Validation**: Exact match or true subdomain matching (e.g., `menu.squarespace.com` allowed, `evilsquarespace.com` rejected)
+  - **Additional Protections**: No redirect following, private IP blocking, 10-second timeout, content-type validation
+  - **Fallback Workflow**: Non-allowlisted URLs gracefully fall back to manual text input with clear user guidance
 - **AI Coach Personalization**: User profile data used to tailor AI advice, respecting dietary restrictions and allergies.
 - **AI Coach Avatar System**: Visual avatar interface with 5 distinct personalities (Military Drill Sergeant, Friendly Gym Bro, Zen Wellness Coach, Clinical Expert, Dark Humour), featuring animated avatars with personality-specific color schemes, breathing animations, particle effects, and thinking indicators. Optimized WebP images (93% size reduction) with lazy loading for mobile performance.
 

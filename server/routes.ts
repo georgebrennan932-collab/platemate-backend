@@ -770,17 +770,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Access to internal/private networks is not allowed" });
       }
 
-      // SECURITY: For MVP, disable automatic URL fetching to prevent SSRF attacks
-      // Full protection requires DNS validation, redirect handling with IP checks,
-      // and multiple security layers that are complex to implement correctly.
-      // Instead, users can manually paste menu text which is secure and works well.
-      console.log(`🔒 Automatic URL fetching disabled for security (SSRF protection)`);
-      
-      return res.status(403).json({ 
-        error: "Automatic menu fetching is disabled for security",
-        suggestion: "Please visit the URL, copy the menu text, and paste it manually into the app",
-        detectedUrl: url
-      });
+      // SECURITY: Only fetch from allowlisted domains (common menu hosting platforms)
+      // This provides automatic value while limiting SSRF attack surface
+      const allowedDomains = [
+        'squarespace.com',
+        'wix.com',
+        'weebly.com',
+        'wordpress.com',
+        'shopify.com',
+        'godaddy.com',
+        'webflow.io',
+        'site123.com',
+        'jimdo.com',
+        'yola.com',
+        'menupages.com',
+        'allmenus.com',
+        'opentable.com',
+        'yelp.com',
+        'business.google.com' // Google My Business menus only
+      ];
+
+      // SECURITY: Proper domain matching to prevent bypass via lookalike domains
+      // Allow exact match OR subdomain (with preceding dot)
+      // This prevents "evilsquarespace.com" from passing the check
+      const isAllowedDomain = allowedDomains.some(domain => 
+        hostname === domain || hostname.endsWith('.' + domain)
+      );
+
+      if (!isAllowedDomain) {
+        console.log(`🔒 Domain not in allowlist: ${hostname}`);
+        return res.status(403).json({ 
+          error: "For security, we can only automatically fetch menus from known restaurant website providers",
+          suggestion: "Please visit the URL, copy the menu text, and paste it manually into the app",
+          detectedUrl: url
+        });
+      }
+
+      console.log(`📄 Fetching menu from allowed domain: ${hostname}`);
+
+      try {
+        // Disable redirects to prevent SSRF bypass
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'PlateMate/1.0 (Menu Scanner Bot)',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+          },
+          redirect: 'manual', // SECURITY: Don't follow redirects
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
+
+        // Reject redirects
+        if (response.status >= 300 && response.status < 400) {
+          throw new Error('Redirects are not supported for security reasons');
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('text/html') && !contentType.includes('text/plain')) {
+          throw new Error('URL does not contain readable menu text');
+        }
+
+        const html = await response.text();
+        
+        // Extract text content from HTML (simple extraction)
+        let textContent = html
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        console.log(`✅ Fetched menu content from ${hostname} (${textContent.length} chars)`);
+
+        return res.json({
+          success: true,
+          content: textContent,
+          url
+        });
+      } catch (fetchError: any) {
+        console.error(`❌ Failed to fetch URL: ${fetchError.message}`);
+        return res.status(400).json({ 
+          error: `Failed to fetch menu: ${fetchError.message}`,
+          suggestion: "Try copying and pasting the menu text manually instead"
+        });
+      }
 
     } catch (error) {
       console.error("Webpage fetch error:", error);

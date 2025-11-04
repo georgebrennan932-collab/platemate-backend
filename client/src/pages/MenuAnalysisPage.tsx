@@ -64,8 +64,7 @@ export function MenuAnalysisPage() {
     }
   });
 
-  // Auto-analyze when webpage data is fetched (currently disabled on backend for security)
-  // This code path won't execute in MVP but is kept for future enhancement
+  // Auto-analyze when webpage data is fetched from allowlisted domains
   useEffect(() => {
     if (webpageData?.content && !analyzeMenuMutation.data && !analyzeMenuMutation.isPending) {
       console.log('📄 Auto-analyzing fetched menu content');
@@ -197,7 +196,7 @@ export function MenuAnalysisPage() {
             </div>
             <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
               {menuUrl ? 
-                "Great! We detected a menu URL from your QR code scan. For your security, please visit the link, copy the menu text, and paste it below for AI analysis." :
+                "We detected a menu URL from your QR code scan. If it's from a known restaurant platform, we'll fetch it automatically. Otherwise, please visit the link, copy the menu text, and paste it below." :
                 "Scan a menu QR code or paste restaurant menu text below, and we'll analyze it to recommend meals that match your nutrition goals."
               }
             </p>
