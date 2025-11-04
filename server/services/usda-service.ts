@@ -371,9 +371,15 @@ export class USDAService {
         }
         
         // Boost generic/simple descriptions
+        // CRITICAL: Match preparation method in search to result
+        const searchHasCookingMethod = /(fried|battered|cooked|grilled|baked|roasted|steamed|boiled)/i.test(searchName);
+        const descriptionIsRaw = /, raw$/.test(description);
+        
         const genericBoosts = [
           { pattern: /^[a-z\s,]+, raw$/, boost: 150, label: "raw generic" },
           { pattern: /^[a-z\s,]+, cooked$/, boost: 140, label: "cooked generic" },
+          { pattern: /^[a-z\s,]+, fried/, boost: 140, label: "fried generic" },
+          { pattern: /^[a-z\s,]+, battered/, boost: 140, label: "battered generic" },
           { pattern: /^[a-z\s,]+, fresh$/, boost: 130, label: "fresh generic" },
           { pattern: /^\w+, \w+$/, boost: 120, label: "simple two-word" }, // e.g., "Bacon, pork"
           { pattern: /^(pork|beef|chicken|fish|turkey), /, boost: 110, label: "generic meat" },
@@ -384,8 +390,14 @@ export class USDAService {
         
         for (const { pattern, boost, label } of genericBoosts) {
           if (pattern.test(description)) {
-            score += boost;
-            console.log(`📈 Generic boost (+${boost}) for ${label}: ${food.description}`);
+            // If search wants fried/battered but result is raw, penalize instead of boost
+            if (searchHasCookingMethod && descriptionIsRaw) {
+              score -= 500; // Heavy penalty for raw when cooked method requested
+              console.log(`📉 Raw penalty (-500) when search wants cooked: ${food.description}`);
+            } else {
+              score += boost;
+              console.log(`📈 Generic boost (+${boost}) for ${label}: ${food.description}`);
+            }
             break; // Apply only the first matching boost
           }
         }
