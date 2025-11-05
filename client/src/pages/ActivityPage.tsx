@@ -4,6 +4,7 @@ import { Activity, ArrowLeft, RefreshCw, TrendingUp, Calendar } from "lucide-rea
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { buildApiUrl } from '@/lib/api-config';
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 
@@ -34,7 +35,7 @@ export function ActivityPage() {
   // Mutation to update steps
   const updateStepsMutation = useMutation({
     mutationFn: async (stepCount: number) => {
-      const res = await fetch('/api/steps', {
+      const res = await fetch(buildApiUrl('/api/steps'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

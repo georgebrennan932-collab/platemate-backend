@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { buildApiUrl } from '@/lib/api-config';
 import { Link } from "wouter";
 import { Calendar, Clock, Loader2, Sparkles, ChevronLeft, ChevronRight, Trash2, Utensils, ShoppingCart, Truck, Home, Package, LogIn, Plus } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "date-fns";
@@ -49,7 +50,7 @@ export default function ShiftPlannerPage() {
   const { data: schedules, isLoading } = useQuery<ShiftSchedule[]>({
     queryKey: ["/api/shift-schedules", startDate, endDate],
     queryFn: async () => {
-      const response = await fetch(`/api/shift-schedules?startDate=${startDate}&endDate=${endDate}`, {
+      const response = await fetch(buildApiUrl(`/api/shift-schedules?startDate=${startDate}&endDate=${endDate}`), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`
         }

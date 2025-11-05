@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { soundService } from "@/lib/sound-service";
 import { InsightShareCard } from "@/components/insight-share-card";
 import { generateAndShareCard } from "@/lib/share-image-generator";
+import { buildApiUrl } from '@/lib/api-config';
 import { Link } from "wouter";
 
 export function InsightsPage() {
@@ -30,7 +31,7 @@ export function InsightsPage() {
   // Generate new reflection
   const generateMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/reflections/generate?period=${period}`, {
+      const response = await fetch(buildApiUrl(`/api/reflections/generate?period=${period}`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -60,7 +61,7 @@ export function InsightsPage() {
   // Refresh reflection (deletes cached one and regenerates with current data)
   const refreshMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/reflections/refresh?period=${period}`, {
+      const response = await fetch(buildApiUrl(`/api/reflections/refresh?period=${period}`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -115,7 +116,7 @@ Track your nutrition with AI-powered insights on PlateMate!`;
 
       // Only update share status if user actually shared
       if (shared) {
-        await fetch(`/api/reflections/${reflection.id}/share`, {
+        await fetch(buildApiUrl(`/api/reflections/${reflection.id}/share`), {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',

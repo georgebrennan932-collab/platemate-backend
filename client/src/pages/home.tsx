@@ -29,6 +29,7 @@ import { updateStreak } from "@/lib/streak-tracker";
 import { ShiftCheckInModal } from "@/components/shift-checkin-modal";
 import { ProfileReminderBanner } from "@/components/profile-reminder-banner";
 import { getPortionOptions, portionToGrams } from "@/lib/portionHelpers";
+import { buildApiUrl } from '@/lib/api-config';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type AppState = 'camera' | 'processing' | 'results' | 'error' | 'confirmation';
@@ -712,7 +713,7 @@ export default function Home() {
       const controller = new AbortController();
       setNutritionUpdateController(controller);
       
-      const response = await fetch('/api/calculate-nutrition', {
+      const response = await fetch(buildApiUrl('/api/calculate-nutrition'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ foods: foodsToUpdate }),

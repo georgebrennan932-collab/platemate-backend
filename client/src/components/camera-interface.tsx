@@ -12,6 +12,7 @@ import { ScannerModal } from "@/components/scanner-modal";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { scanBarcodeFromImage } from "@/services/scanner-service";
 import { compressImage, preprocessAndCompress } from "@/lib/image-compression";
+import { buildApiUrl } from '@/lib/api-config';
 import type { FoodAnalysis } from "@shared/schema";
 
 interface CameraInterfaceProps {
@@ -84,7 +85,7 @@ export function CameraInterface({
       const formData = new FormData();
       formData.append('image', imageToUpload);
       
-      const response = await fetch('/api/analyze', {
+      const response = await fetch(buildApiUrl('/api/analyze'), {
         method: 'POST',
         body: formData,
       });

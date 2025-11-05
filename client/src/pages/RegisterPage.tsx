@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { buildApiUrl } from '@/lib/api-config';
 
 export default function RegisterPage() {
   const [, setLocation] = useLocation();
@@ -15,7 +16,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/register", {
+      const res = await fetch(buildApiUrl("/api/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

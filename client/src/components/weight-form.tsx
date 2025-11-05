@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { buildApiUrl } from '@/lib/api-config';
 import { insertWeightEntrySchema } from "@shared/schema";
 
 // Form schema with unit-aware validation (omit server-side fields)
@@ -105,7 +106,7 @@ export function WeightForm({ onSuccess, compact = false }: WeightFormProps) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      return fetch('/api/weights', {
+      return fetch(buildApiUrl('/api/weights'), {
         method: 'POST',
         body: formData,
         credentials: 'include',

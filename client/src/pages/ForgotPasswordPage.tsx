@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { buildApiUrl } from '@/lib/api-config';
 
 export default function ForgotPasswordPage() {
   const [, setLocation] = useLocation();
@@ -24,7 +25,7 @@ export default function ForgotPasswordPage() {
     setIsVerifying(true);
 
     try {
-      const res = await fetch("/api/reset-password-verify", {
+      const res = await fetch(buildApiUrl("/api/reset-password-verify"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -60,7 +61,7 @@ export default function ForgotPasswordPage() {
     setIsResetting(true);
 
     try {
-      const res = await fetch("/api/reset-password", {
+      const res = await fetch(buildApiUrl("/api/reset-password"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { motion } from "framer-motion";
 import { updateStreak } from "@/lib/streak-tracker";
 import { soundService } from "@/lib/sound-service";
+import { buildApiUrl } from '@/lib/api-config';
 
 // Extended food item with baseline data for editing
 interface EditableFood extends DetectedFood {
@@ -365,7 +366,7 @@ export function ResultsDisplay({ data, onScanAnother }: ResultsDisplayProps) {
       const controller = new AbortController();
       nutritionUpdateControllerRef.current = controller;
       
-      const response = await fetch('/api/calculate-nutrition', {
+      const response = await fetch(buildApiUrl('/api/calculate-nutrition'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ foods: foodsToUpdate }),
