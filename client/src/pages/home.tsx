@@ -1110,7 +1110,7 @@ export default function Home() {
         <div className="max-w-md mx-auto px-6 mb-6">
           <motion.button
             onClick={() => {
-              console.log("🍽️ MENU SCANNER BUTTON CLICKED - Opening QR scanner");
+              console.log("🍽️ MENU SCANNER BUTTON CLICKED - Opening menu scanner");
               setScannerMode('menu');
               setShowBarcodeScanner(true);
             }}
@@ -1119,11 +1119,11 @@ export default function Home() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <QrCode className="h-6 w-6" />
-            <span className="text-lg">Scan Restaurant Menu QR Code</span>
+            <Camera className="h-6 w-6" />
+            <span className="text-lg">📸 Scan Menu with Camera</span>
           </motion.button>
           <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">
-            Scan QR codes that link to restaurant menus
+            Take photos of restaurant menus for AI analysis
           </p>
         </div>
       )}
