@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { soundService } from "@/lib/sound-service";
+import { buildApiUrl } from "@/lib/api-config";
 
 interface MenuRecommendation {
   name: string;
@@ -177,7 +178,7 @@ export function MenuAnalysisPage() {
       });
       
       console.log('📸 Sending request to /api/extract-menu-text');
-      const response = await fetch('/api/extract-menu-text', {
+      const response = await fetch(buildApiUrl('/api/extract-menu-text'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

@@ -1,6 +1,7 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { soundService } from './sound-service';
+import { buildApiUrl } from './api-config';
 
 export interface NotificationConfig {
   title: string;
@@ -360,7 +361,7 @@ class NotificationService {
   private async getMotivationalContent(): Promise<{title: string, body: string}> {
     try {
       // Try to fetch daily coaching content
-      const response = await fetch('/api/coaching/daily');
+      const response = await fetch(buildApiUrl('/api/coaching/daily'));
       if (response.ok) {
         const data = await response.json();
         return {

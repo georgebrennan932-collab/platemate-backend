@@ -4,6 +4,8 @@
  * Automatically syncs when connection is restored
  */
 
+import { buildApiUrl } from './api-config';
+
 export interface QueuedEntry {
   id: string;
   type: 'diary' | 'analysis';
@@ -183,7 +185,7 @@ class OfflineQueueService {
   private async syncEntry(entry: QueuedEntry): Promise<void> {
     if (entry.type === 'diary') {
       // Sync diary entry
-      const response = await fetch('/api/diary', {
+      const response = await fetch(buildApiUrl('/api/diary'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,7 +206,7 @@ class OfflineQueueService {
         formData.append('image', blob);
       }
 
-      const response = await fetch('/api/analyze', {
+      const response = await fetch(buildApiUrl('/api/analyze'), {
         method: 'POST',
         body: formData
       });

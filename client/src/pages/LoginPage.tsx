@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import pmLogo from "@assets/pm-logo.png";
+import { buildApiUrl } from "@/lib/api-config";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
@@ -16,7 +17,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch(buildApiUrl("/api/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password: password.trim() }),
