@@ -169,11 +169,14 @@ export function MenuAnalysisPage() {
   // Extract text from menu photos mutation
   const extractTextMutation = useMutation({
     mutationFn: async (photos: MenuPhoto[]) => {
+      console.log(`📸 Extracting text from ${photos.length} photos`);
       const formData = new FormData();
       photos.forEach((photo, index) => {
+        console.log(`📸 Adding photo ${index + 1}:`, photo.file.name, photo.file.type, photo.file.size);
         formData.append('images', photo.file);
       });
       
+      console.log('📸 Sending request to /api/extract-menu-text');
       const response = await fetch('/api/extract-menu-text', {
         method: 'POST',
         headers: {
@@ -182,12 +185,17 @@ export function MenuAnalysisPage() {
         body: formData
       });
       
+      console.log('📸 Response status:', response.status);
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to extract text' }));
+        console.error('📸 Extraction failed:', errorData);
         throw new Error(errorData.error || 'Failed to extract menu text from photos');
       }
       
-      return await response.json();
+      const result = await response.json();
+      console.log('📸 Extraction successful:', result);
+      return result;
     },
     onSuccess: (data) => {
       soundService.playSuccess();
