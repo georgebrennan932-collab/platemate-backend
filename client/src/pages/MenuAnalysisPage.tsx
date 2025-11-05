@@ -264,57 +264,30 @@ export function MenuAnalysisPage() {
               <ArrowLeft className="h-6 w-6" />
             </button>
           </Link>
-          <h1 className="text-2xl font-bold">Scan-a-Menu</h1>
+          <h1 className="text-2xl font-bold">📸 Menu Scanner</h1>
         </div>
         <p className="text-purple-100 text-sm ml-14">
-          AI-powered meal recommendations based on your goals
+          Photograph menus for AI-powered meal recommendations
         </p>
       </div>
 
       <div className="p-4 max-w-4xl mx-auto">
-        {/* Manual Input Mode - Keep visible even after analysis for revisions */}
-        {useManualInput && !isAnalyzing && (
+        {/* Camera and Manual Input - Always visible for photo scanning and manual text entry */}
+        {!isAnalyzing && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6"
           >
             <div className="flex items-center space-x-3 mb-4">
-              <FileText className="h-6 w-6 text-purple-600" />
+              <Camera className="h-6 w-6 text-purple-600" />
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                Paste Menu Text
+                📸 Scan Menu with Camera
               </h2>
             </div>
             <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-              {menuUrl ? 
-                "We detected a menu URL from your QR code scan. If it's from a known restaurant platform, we'll fetch it automatically. Otherwise, please visit the link, copy the menu text, and paste it below." :
-                "Scan a menu QR code or paste restaurant menu text below, and we'll analyze it to recommend meals that match your nutrition goals."
-              }
+              Take photos of restaurant menus and we'll use AI to extract the text and recommend meals that match your nutrition goals.
             </p>
-            {menuUrl && (
-              <div className="mb-4 space-y-3">
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border-2 border-purple-200 dark:border-purple-800">
-                  <p className="text-purple-900 dark:text-purple-100 text-sm font-semibold mb-2">
-                    📱 QR Code Detected
-                  </p>
-                  <p className="text-purple-700 dark:text-purple-300 text-xs break-all">
-                    {menuUrl}
-                  </p>
-                </div>
-                <a 
-                  href={menuUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-4 rounded-xl font-medium transition-all duration-200 text-center"
-                  data-testid="link-open-menu-url"
-                >
-                  📄 Open Menu in New Tab
-                </a>
-                <p className="text-gray-500 dark:text-gray-400 text-xs text-center">
-                  After opening, copy the menu text and paste it below
-                </p>
-              </div>
-            )}
             
             {/* Photo Scanner Section */}
             <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border-2 border-green-200 dark:border-green-800">
@@ -322,7 +295,7 @@ export function MenuAnalysisPage() {
                 <div className="flex items-center gap-2">
                   <Camera className="h-5 w-5 text-green-600 dark:text-green-400" />
                   <h3 className="font-semibold text-green-900 dark:text-green-100">
-                    Or Take Photos of Menu
+                    Add Menu Photos
                   </h3>
                 </div>
                 <span className="text-xs text-green-700 dark:text-green-300 bg-green-200 dark:bg-green-800 px-2 py-1 rounded">
@@ -402,38 +375,73 @@ export function MenuAnalysisPage() {
               )}
             </div>
             
-            <textarea
-              value={manualMenuText}
-              onChange={(e) => setManualMenuText(e.target.value)}
-              placeholder="Paste the restaurant menu here..."
-              className="w-full h-48 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:border-purple-500 focus:outline-none resize-none"
-              data-testid="input-manual-menu"
-            />
-            <button
-              onClick={() => {
-                if (manualMenuText.trim().length > 10) {
-                  analyzeMenuMutation.mutate(manualMenuText.trim());
-                } else {
-                  toast({
-                    title: "Menu text too short",
-                    description: "Please paste more menu content to analyze",
-                    variant: "destructive"
-                  });
-                }
-              }}
-              disabled={manualMenuText.trim().length < 10 || analyzeMenuMutation.isPending}
-              className="mt-4 w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-4 rounded-xl font-bold transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              data-testid="button-analyze-menu"
-            >
-              {analyzeMenuMutation.isPending ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Analyzing...</span>
-                </>
-              ) : (
-                <span>Analyze Menu</span>
+            {/* Manual Text Input Section */}
+            <div className="mt-6">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <h3 className="font-semibold text-gray-700 dark:text-gray-300">
+                  Or Paste Menu Text Manually
+                </h3>
+              </div>
+              
+              {menuUrl && (
+                <div className="mb-4 space-y-3">
+                  <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border-2 border-purple-200 dark:border-purple-800">
+                    <p className="text-purple-900 dark:text-purple-100 text-sm font-semibold mb-2">
+                      📱 QR Code Detected
+                    </p>
+                    <p className="text-purple-700 dark:text-purple-300 text-xs break-all">
+                      {menuUrl}
+                    </p>
+                  </div>
+                  <a 
+                    href={menuUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-4 rounded-xl font-medium transition-all duration-200 text-center"
+                    data-testid="link-open-menu-url"
+                  >
+                    📄 Open Menu in New Tab
+                  </a>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs text-center">
+                    After opening, copy the menu text and paste it below
+                  </p>
+                </div>
               )}
-            </button>
+              
+              <textarea
+                value={manualMenuText}
+                onChange={(e) => setManualMenuText(e.target.value)}
+                placeholder="Paste the restaurant menu here..."
+                className="w-full h-48 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white focus:border-purple-500 focus:outline-none resize-none"
+                data-testid="input-manual-menu"
+              />
+              <button
+                onClick={() => {
+                  if (manualMenuText.trim().length > 10) {
+                    analyzeMenuMutation.mutate(manualMenuText.trim());
+                  } else {
+                    toast({
+                      title: "Menu text too short",
+                      description: "Please paste more menu content to analyze",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                disabled={manualMenuText.trim().length < 10 || analyzeMenuMutation.isPending}
+                className="mt-4 w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-4 rounded-xl font-bold transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                data-testid="button-analyze-menu"
+              >
+                {analyzeMenuMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <span>Analyze Menu</span>
+                )}
+              </button>
+            </div>
           </motion.div>
         )}
 
