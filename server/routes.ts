@@ -896,9 +896,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           console.log(`📸 Processing image: ${file.originalname}, size: ${file.size} bytes, type: ${file.mimetype}`);
           
+          // Resize large images to reduce data URI size (max 2000px width/height)
+          let imageBuffer = file.buffer;
+          if (file.size > 1024 * 1024) { // If > 1MB, resize
+            console.log(`📸 Resizing large image (${file.size} bytes)...`);
+            imageBuffer = await sharp(file.buffer)
+              .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
+              .jpeg({ quality: 85 })
+              .toBuffer();
+            console.log(`📸 Resized to ${imageBuffer.length} bytes`);
+          }
+          
           // Convert image to base64
-          const base64Image = file.buffer.toString('base64');
-          const dataUri = `data:${file.mimetype};base64,${base64Image}`;
+          const base64Image = imageBuffer.toString('base64');
+          const dataUri = `data:image/jpeg;base64,${base64Image}`;
           
           console.log(`📸 Converted to data URI, length: ${dataUri.length} chars`);
 
@@ -918,7 +929,7 @@ Format the output as clean, readable text that preserves the menu structure.`;
           console.log(`✅ Extracted ${extractedText.length} chars from image ${extractedTexts.length}`);
         } catch (error: any) {
           console.error(`❌ Failed to extract text from image:`, error.message);
-          console.error(`❌ Full error:`, error);
+          console.error(`❌ Full error stack:`, error.stack);
           // Continue with other images even if one fails
         }
       }
