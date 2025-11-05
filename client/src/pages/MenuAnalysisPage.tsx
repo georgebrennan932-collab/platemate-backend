@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, Loader2, PlusCircle, Flame, Activity, FileText } from "lucide-react";
+import { ArrowLeft, Loader2, PlusCircle, Flame, Activity, FileText, Camera, X } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,12 @@ interface MenuRecommendation {
   matchReason: string;
 }
 
+interface MenuPhoto {
+  id: string;
+  file: File;
+  preview: string;
+}
+
 export function MenuAnalysisPage() {
   const [location] = useLocation();
   const { toast } = useToast();
@@ -25,6 +31,8 @@ export function MenuAnalysisPage() {
   const [manualMenuText, setManualMenuText] = useState<string>("");
   const [useManualInput, setUseManualInput] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
+  const [menuPhotos, setMenuPhotos] = useState<MenuPhoto[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Extract URL from query parameters
   useEffect(() => {
@@ -158,6 +166,89 @@ export function MenuAnalysisPage() {
     }
   });
 
+  // Extract text from menu photos mutation
+  const extractTextMutation = useMutation({
+    mutationFn: async (photos: MenuPhoto[]) => {
+      const formData = new FormData();
+      photos.forEach((photo, index) => {
+        formData.append('images', photo.file);
+      });
+      
+      const response = await fetch('/api/extract-menu-text', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to extract text' }));
+        throw new Error(errorData.error || 'Failed to extract menu text from photos');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      soundService.playSuccess();
+      setManualMenuText(data.combinedText || '');
+      toast({
+        title: "Text Extracted!",
+        description: `Successfully extracted text from ${menuPhotos.length} photo(s)`,
+      });
+    },
+    onError: (error: Error) => {
+      soundService.playError();
+      toast({
+        title: "Extraction Failed",
+        description: error.message || "Failed to extract text from photos",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handle photo capture
+  const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    const newPhotos: MenuPhoto[] = Array.from(files).map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      preview: URL.createObjectURL(file)
+    }));
+    
+    setMenuPhotos(prev => [...prev, ...newPhotos]);
+    
+    toast({
+      title: "Photo Added",
+      description: `Added ${newPhotos.length} photo(s). Total: ${menuPhotos.length + newPhotos.length}`,
+    });
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Delete a photo
+  const handleDeletePhoto = (photoId: string) => {
+    setMenuPhotos(prev => {
+      const photo = prev.find(p => p.id === photoId);
+      if (photo) {
+        URL.revokeObjectURL(photo.preview);
+      }
+      return prev.filter(p => p.id !== photoId);
+    });
+  };
+
+  // Cleanup photo previews on unmount
+  useEffect(() => {
+    return () => {
+      menuPhotos.forEach(photo => URL.revokeObjectURL(photo.preview));
+    };
+  }, [menuPhotos]);
+
   const isLoading = isFetchingPage || isAnalyzing;
   // Only show fetch error if we're not in manual input mode
   const error = useManualInput ? analysisError : (fetchError || analysisError);
@@ -224,6 +315,93 @@ export function MenuAnalysisPage() {
                 </p>
               </div>
             )}
+            
+            {/* Photo Scanner Section */}
+            <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border-2 border-green-200 dark:border-green-800">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Camera className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <h3 className="font-semibold text-green-900 dark:text-green-100">
+                    Or Take Photos of Menu
+                  </h3>
+                </div>
+                <span className="text-xs text-green-700 dark:text-green-300 bg-green-200 dark:bg-green-800 px-2 py-1 rounded">
+                  {menuPhotos.length} photo{menuPhotos.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 text-xs mb-3">
+                Take photos of each menu page and we'll extract the text automatically
+              </p>
+              
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                onChange={handlePhotoCapture}
+                className="hidden"
+                data-testid="input-menu-photos"
+              />
+              
+              {/* Add Photo Button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 mb-3"
+                data-testid="button-add-photo"
+              >
+                <Camera className="h-5 w-5" />
+                <span>Add Menu Photo</span>
+              </button>
+              
+              {/* Photo Gallery */}
+              {menuPhotos.length > 0 && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    {menuPhotos.map((photo) => (
+                      <div key={photo.id} className="relative group">
+                        <img
+                          src={photo.preview}
+                          alt="Menu photo"
+                          className="w-full h-24 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700"
+                          data-testid={`img-menu-photo-${photo.id}`}
+                        />
+                        <button
+                          onClick={() => handleDeletePhoto(photo.id)}
+                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          data-testid={`button-delete-photo-${photo.id}`}
+                          title="Delete photo"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Extract Text Button */}
+                  <button
+                    onClick={() => extractTextMutation.mutate(menuPhotos)}
+                    disabled={extractTextMutation.isPending}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-4 rounded-lg font-bold transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    data-testid="button-extract-text"
+                  >
+                    {extractTextMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Extracting Text...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-5 w-5" />
+                        <span>Extract Menu Text from Photos</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+            
             <textarea
               value={manualMenuText}
               onChange={(e) => setManualMenuText(e.target.value)}

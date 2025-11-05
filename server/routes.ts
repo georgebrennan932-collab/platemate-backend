@@ -42,6 +42,19 @@ const upload = multer({
   }
 });
 
+// Separate multer instance for menu photo scanning (uses memory storage for base64 conversion)
+const uploadMemory = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
 // Request queue management for concurrent handling
 class RequestQueue {
   private activeRequests = 0;
@@ -862,6 +875,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Webpage fetch error:", error);
       res.status(500).json({ error: "Failed to fetch webpage content" });
+    }
+  });
+
+  // Extract text from menu photos using AI vision
+  app.post("/api/extract-menu-text", uploadMemory.array('images', 10), async (req: any, res) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "No images provided" });
+      }
+
+      console.log(`📸 Extracting text from ${files.length} menu photo(s)`);
+
+      // Process each image and extract text using AI vision
+      const extractedTexts: string[] = [];
+      
+      for (const file of files) {
+        try {
+          // Convert image to base64
+          const base64Image = file.buffer.toString('base64');
+          const dataUri = `data:${file.mimetype};base64,${base64Image}`;
+
+          // Use AI vision to extract text from the image
+          const prompt = `Extract all visible text from this restaurant menu image. Include:
+- All dish names
+- All descriptions
+- All prices
+- All section headers (appetizers, mains, desserts, etc.)
+
+Format the output as clean, readable text that preserves the menu structure.`;
+
+          const extractedText = await aiManager.extractTextFromImage(dataUri, prompt);
+          extractedTexts.push(extractedText);
+          
+          console.log(`✅ Extracted ${extractedText.length} chars from image ${extractedTexts.length}`);
+        } catch (error: any) {
+          console.error(`❌ Failed to extract text from image:`, error);
+          // Continue with other images even if one fails
+        }
+      }
+
+      if (extractedTexts.length === 0) {
+        return res.status(500).json({ error: "Failed to extract text from any images" });
+      }
+
+      // Combine all extracted text
+      const combinedText = extractedTexts.join('\n\n--- Next Page ---\n\n');
+
+      res.json({
+        success: true,
+        combinedText,
+        pagesProcessed: extractedTexts.length,
+        totalCharacters: combinedText.length
+      });
+    } catch (error) {
+      console.error("Text extraction error:", error);
+      res.status(500).json({ error: "Failed to extract text from menu photos" });
     }
   });
 
@@ -2208,6 +2279,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Generate reflection error:", error);
       res.status(500).json({ error: "Failed to generate reflection" });
+    }
+  });
+
+  app.post("/api/reflections/refresh", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const period = (req.query.period as 'daily' | 'weekly') || 'daily';
+      
+      // Currently only daily reflections are supported
+      if (period === 'weekly') {
+        return res.status(501).json({ error: "Weekly reflections coming soon! For now, use daily reflections." });
+      }
+
+      // Delete today's reflection if it exists
+      await storage.deleteTodayReflection(userId, period);
+
+      // Generate a fresh reflection with current diary data
+      const reflection = await reflectionService.generateDailyReflection(userId);
+      
+      res.json(reflection);
+    } catch (error) {
+      console.error("Refresh reflection error:", error);
+      res.status(500).json({ error: "Failed to refresh reflection" });
     }
   });
 

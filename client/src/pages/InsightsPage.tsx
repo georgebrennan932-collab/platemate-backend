@@ -57,6 +57,36 @@ export function InsightsPage() {
     },
   });
 
+  // Refresh reflection (deletes cached one and regenerates with current data)
+  const refreshMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/reflections/refresh?period=${period}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to refresh reflection');
+      return response.json();
+    },
+    onSuccess: () => {
+      soundService.playSuccess();
+      toast({
+        title: "Insights Refreshed!",
+        description: "Your reflection has been updated with your current diary data.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/reflections/latest?period=${period}`] });
+    },
+    onError: () => {
+      soundService.playError();
+      toast({
+        title: "Refresh Failed",
+        description: "Could not refresh reflection. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleShare = async () => {
     if (!reflection || !shareCardRef.current) return;
 
@@ -236,11 +266,12 @@ Track your nutrition with AI-powered insights on PlateMate!`;
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => generateMutation.mutate()}
-                    disabled={generateMutation.isPending}
-                    data-testid="button-regenerate"
+                    onClick={() => refreshMutation.mutate()}
+                    disabled={refreshMutation.isPending}
+                    data-testid="button-refresh-insights"
+                    title="Refresh insights with current diary data"
                   >
-                    <RefreshCw className={`w-4 h-4 ${generateMutation.isPending ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`w-4 h-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
                   </Button>
                   <Button
                     variant="outline"

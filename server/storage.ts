@@ -78,6 +78,7 @@ export interface IStorage {
   getReflectionsByUser(userId: string, period?: 'daily' | 'weekly'): Promise<Reflection[]>;
   getLatestReflection(userId: string, period: 'daily' | 'weekly'): Promise<Reflection | undefined>;
   updateReflectionShared(id: string, shareChannel: string): Promise<Reflection | undefined>;
+  deleteTodayReflection(userId: string, period: 'daily' | 'weekly'): Promise<boolean>;
   
   // Gamification methods (challenges and rewards)
   getAllChallenges(): Promise<Challenge[]>;
@@ -722,6 +723,28 @@ export class DatabaseStorage implements IStorage {
       .where(eq(reflections.id, id))
       .returning();
     return reflection || undefined;
+  }
+
+  async deleteTodayReflection(userId: string, period: 'daily' | 'weekly'): Promise<boolean> {
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(today);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    // Delete all reflections created today for this user and period
+    const result = await db
+      .delete(reflections)
+      .where(
+        and(
+          eq(reflections.userId, userId),
+          eq(reflections.reflectionPeriod, period),
+          gte(reflections.createdAt, today),
+          lt(reflections.createdAt, endOfToday)
+        )
+      );
+    
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Gamification methods

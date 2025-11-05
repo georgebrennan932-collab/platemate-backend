@@ -236,6 +236,83 @@ export class AIManager {
   }
 
   /**
+   * Extract text from an image using AI vision (for menu scanning)
+   */
+  async extractTextFromImage(imagePath: string, prompt: string): Promise<string> {
+    const availableProviders = this.getAvailableProviders();
+    
+    // Try each available provider
+    for (const provider of availableProviders) {
+      for (let attempt = 1; attempt <= provider.maxRetries; attempt++) {
+        try {
+          // Use provider-specific vision APIs for text extraction
+          if (provider.name === 'openai' && (provider as any).client) {
+            const response = await (provider as any).client.chat.completions.create({
+              model: 'gpt-4o',
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: prompt },
+                    { type: 'image_url', image_url: { url: imagePath } }
+                  ]
+                }
+              ],
+              max_tokens: 2000
+            });
+            
+            const extractedText = response.choices[0]?.message?.content || '';
+            if (extractedText) {
+              return extractedText;
+            }
+          }
+          
+          // Fallback for Gemini provider
+          if (provider.name === 'gemini' && (provider as any).model) {
+            const response = await (provider as any).model.generateContent([
+              prompt,
+              {
+                inlineData: {
+                  data: imagePath.split(',')[1], // Extract base64 data from data URI
+                  mimeType: imagePath.match(/data:([^;]+);/)?.[1] || 'image/jpeg'
+                }
+              }
+            ]);
+            
+            const extractedText = response.response.text();
+            if (extractedText) {
+              return extractedText;
+            }
+          }
+          
+        } catch (error: any) {
+          console.error(`Text extraction error with ${provider.name}:`, error.message);
+          
+          // If it's a rate limit error, move to next provider immediately
+          if (error.isRateLimit) {
+            console.log(`Rate limit hit on ${provider.name}, trying next provider`);
+            break;
+          }
+          
+          // If it's the last attempt with this provider, continue to next provider
+          if (attempt === provider.maxRetries) {
+            console.log(`Max retries reached for ${provider.name}, trying next provider`);
+            break;
+          }
+          
+          // Wait before retry (exponential backoff)
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          console.log(`Retrying ${provider.name} in ${waitTime}ms...`);
+          await this.sleep(waitTime);
+        }
+      }
+    }
+
+    // All providers failed
+    throw new Error('All AI providers failed to extract text from image');
+  }
+
+  /**
    * Detect food names from image using AI providers
    */
   async detectFoodNamesFromImage(imagePath: string): Promise<FoodDetectionResult> {
