@@ -297,90 +297,21 @@ export function MenuAnalysisPage() {
               Take photos of restaurant menus and we'll use AI to extract the text and recommend meals that match your nutrition goals.
             </p>
             
-            {/* Photo Scanner Section */}
-            <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border-2 border-green-200 dark:border-green-800">
+            {/* Photo Scanner Section - TEMPORARILY DISABLED */}
+            <div className="mb-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 rounded-lg border-2 border-gray-300 dark:border-gray-700 opacity-60">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Camera className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  <h3 className="font-semibold text-green-900 dark:text-green-100">
-                    Add Menu Photos
+                  <Camera className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                  <h3 className="font-semibold text-gray-700 dark:text-gray-300">
+                    Photo Scanner (Coming Soon)
                   </h3>
                 </div>
-                <span className="text-xs text-green-700 dark:text-green-300 bg-green-200 dark:bg-green-800 px-2 py-1 rounded">
-                  {menuPhotos.length} photo{menuPhotos.length !== 1 ? 's' : ''}
-                </span>
               </div>
-              <p className="text-gray-600 dark:text-gray-300 text-xs mb-3">
-                Take photos of each menu page and we'll extract the text automatically
+              <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">
+                AI photo text extraction is being optimized. For now, please use the manual text paste option below.
               </p>
               
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                multiple
-                onChange={handlePhotoCapture}
-                className="hidden"
-                data-testid="input-menu-photos"
-              />
-              
-              {/* Add Photo Button */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 mb-3"
-                data-testid="button-add-photo"
-              >
-                <Camera className="h-5 w-5" />
-                <span>Add Menu Photo</span>
-              </button>
-              
-              {/* Photo Gallery */}
-              {menuPhotos.length > 0 && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
-                    {menuPhotos.map((photo) => (
-                      <div key={photo.id} className="relative group">
-                        <img
-                          src={photo.preview}
-                          alt="Menu photo"
-                          className="w-full h-24 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700"
-                          data-testid={`img-menu-photo-${photo.id}`}
-                        />
-                        <button
-                          onClick={() => handleDeletePhoto(photo.id)}
-                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                          data-testid={`button-delete-photo-${photo.id}`}
-                          title="Delete photo"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Extract Text Button */}
-                  <button
-                    onClick={() => extractTextMutation.mutate(menuPhotos)}
-                    disabled={extractTextMutation.isPending}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-4 rounded-lg font-bold transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    data-testid="button-extract-text"
-                  >
-                    {extractTextMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        <span>Extracting Text...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="h-5 w-5" />
-                        <span>Extract Menu Text from Photos</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
+              {/* Disabled - buttons hidden for now */}
             </div>
             
             {/* Manual Text Input Section */}
