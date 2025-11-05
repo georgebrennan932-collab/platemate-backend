@@ -1108,20 +1108,17 @@ export default function Home() {
       {/* Menu Scanner Button */}
       {currentState === 'camera' && (
         <div className="max-w-md mx-auto px-6 mb-6">
-          <motion.button
-            onClick={() => {
-              console.log("🍽️ MENU SCANNER BUTTON CLICKED - Opening menu scanner");
-              setScannerMode('menu');
-              setShowBarcodeScanner(true);
-            }}
-            className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:to-red-700 text-white py-4 px-6 rounded-2xl font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-3 border-2 border-purple-300/50"
-            data-testid="button-menu-scanner"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Camera className="h-6 w-6" />
-            <span className="text-lg">📸 Scan Menu with Camera</span>
-          </motion.button>
+          <Link href="/menu-analysis">
+            <motion.button
+              className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:to-red-700 text-white py-4 px-6 rounded-2xl font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-3 border-2 border-purple-300/50"
+              data-testid="button-menu-scanner"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Camera className="h-6 w-6" />
+              <span className="text-lg">📸 Scan Menu with Camera</span>
+            </motion.button>
+          </Link>
           <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">
             Take photos of restaurant menus for AI analysis
           </p>
