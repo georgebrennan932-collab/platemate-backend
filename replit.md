@@ -14,6 +14,7 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: TanStack Query (React Query).
 - **Form Handling**: React Hook Form with Zod validation.
 - **Mobile Integration**: Capacitor for native iOS/Android apps, camera access, file system access, deep-link handling for OAuth.
+- **Mobile API Configuration**: Dynamic API base URL detection (`client/src/lib/api-config.ts`) that automatically uses full backend URL when running in native Capacitor environment, while using relative URLs in browser. Configured via `VITE_API_BASE_URL` environment variable for production mobile builds.
 - **UI/UX**: Mobile-first responsive design, atomic component architecture, Framer Motion animations, modern aesthetics with gradients.
 
 ## Backend
@@ -132,7 +133,23 @@ npm run build
 ```
 This creates optimized production files in `dist/public/`
 
-### 2. Sync to Android
+### 2. Configure Backend API URL
+**CRITICAL**: Before building, ensure the mobile app knows where to find your backend API:
+
+1. The app needs the full URL of your Replit backend server
+2. Set the `VITE_API_BASE_URL` environment variable in `.env` file:
+   ```bash
+   VITE_API_BASE_URL=https://your-actual-replit-url.repl.co
+   ```
+3. Replace `your-actual-replit-url` with your real Replit workspace URL
+4. This URL is embedded into the production build so the mobile app can reach your backend
+
+**Why this is needed:**
+- Web version: API calls use relative URLs like `/api/...` (works automatically)
+- Mobile version: Loads from `capacitor://localhost`, needs full backend URL
+- Without this configuration, all AI features will fail with "high demand" errors
+
+### 3. Sync to Android
 ```bash
 npx cap sync android
 ```
@@ -142,8 +159,9 @@ This command:
 - Updates native plugin registrations
 - Generates `capacitor.config.json` in Android assets
 - **Ensures app loads local files instead of dev server**
+- **Includes the VITE_API_BASE_URL in the bundled code**
 
-### 3. Build the Android App
+### 4. Build the Android App
 The Android app must be rebuilt using Android Studio to activate native plugins like Google Play Billing:
 
 1. **Open in Android Studio**:
