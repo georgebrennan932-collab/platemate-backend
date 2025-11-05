@@ -894,9 +894,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const file of files) {
         try {
+          console.log(`📸 Processing image: ${file.originalname}, size: ${file.size} bytes, type: ${file.mimetype}`);
+          
           // Convert image to base64
           const base64Image = file.buffer.toString('base64');
           const dataUri = `data:${file.mimetype};base64,${base64Image}`;
+          
+          console.log(`📸 Converted to data URI, length: ${dataUri.length} chars`);
 
           // Use AI vision to extract text from the image
           const prompt = `Extract all visible text from this restaurant menu image. Include:
@@ -907,12 +911,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 Format the output as clean, readable text that preserves the menu structure.`;
 
+          console.log(`📸 Calling AI vision to extract text...`);
           const extractedText = await aiManager.extractTextFromImage(dataUri, prompt);
           extractedTexts.push(extractedText);
           
           console.log(`✅ Extracted ${extractedText.length} chars from image ${extractedTexts.length}`);
         } catch (error: any) {
-          console.error(`❌ Failed to extract text from image:`, error);
+          console.error(`❌ Failed to extract text from image:`, error.message);
+          console.error(`❌ Full error:`, error);
           // Continue with other images even if one fails
         }
       }
