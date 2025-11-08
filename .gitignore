@@ -4,3 +4,40 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Environment variables (contains sensitive keys)
+.env
+.env.local
+.env.production
+.env.mobile
+
+# Replit-specific files (not needed for local development)
+.replit
+replit.nix
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# Testing
+coverage/
+
+# Build artifacts
+*.tsbuildinfo
+
+# Android/iOS build outputs (optional - uncomment if you don't want to track)
+# android/app/build/
+# android/.gradle/
+# ios/App/build/
+# ios/App/Pods/
