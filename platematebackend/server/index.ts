@@ -70,12 +70,13 @@ app.use("/api", emailAuthRoutes);
     res.status(status).json({ message });
   });
 
-  // ✅ Always serve static files on Render (no Vite dev mode)
-  serveStatic(app);
+  // Deployment setup for Render
+serveStatic(app);
 
-  // ✅ Correct Render binding
-  const PORT = parseInt(process.env.PORT || "10000", 10);
-  app.listen(PORT, "0.0.0.0", () => {
-    log(`✅ Server running on port ${PORT}`);
-  });
+const PORT = parseInt(process.env.PORT || "10000", 10);
+const HOST = process.env.RENDER ? "0.0.0.0" : "localhost";
+
+app.listen(PORT, HOST, () => {
+  log(`✅ Server running on ${HOST}:${PORT}`);
+});
 })();
