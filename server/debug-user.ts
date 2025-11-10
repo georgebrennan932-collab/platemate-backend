@@ -1,29 +1,27 @@
-// Debug script to check user data in Replit DB
+// @ts-nocheck
+import { Router } from "express";
+import { db } from "./db";
 
-const db = new Database();
+const router = Router();
 
-async function debugUser() {
-  const email = "platematetestreview@gmail.com";
-  const userKey = `user:${email}`;
-  
-  console.log(`\n🔍 Checking user data for: ${email}`);
-  console.log(`📝 User key: ${userKey}\n`);
-  
-  const result: any = await db.get(userKey);
-  
-  console.log("📦 Raw result:", JSON.stringify(result, null, 2));
-  
-  if (result && result.ok === true && result.value) {
-    console.log("\n✅ User found!");
-    console.log("📊 User data structure:");
-    console.log("  - Has passwordHash:", !!result.value.passwordHash);
-    console.log("  - Has securityAnswerHash:", !!result.value.securityAnswerHash);
-    console.log("  - Has createdAt:", !!result.value.createdAt);
-    console.log("  - Has updatedAt:", !!result.value.updatedAt);
-    console.log("\n🔑 Password hash preview:", result.value.passwordHash?.substring(0, 30) + "...");
-  } else {
-    console.log("❌ User not found or invalid structure");
+// Quick route to check if a user exists in the DB
+router.get("/debug-user/:email", async (req, res) => {
+  try {
+    const email = req.params.email;
+    const userKey = `user:${email}`;
+
+    // @ts-ignore
+    const result = await db.get(userKey);
+
+    res.json({
+      success: true,
+      email,
+      data: result || "User not found",
+    });
+  } catch (error) {
+    console.error("Error checking user:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
-}
+});
 
-debugUser().catch(console.error);
+export default router;

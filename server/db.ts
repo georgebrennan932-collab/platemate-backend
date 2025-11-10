@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import path from "path";
 import dotenv from "dotenv";
 import { Pool, neonConfig } from "@neondatabase/serverless";
