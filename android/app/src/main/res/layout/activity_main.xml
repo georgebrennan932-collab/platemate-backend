@@ -9,30 +9,4 @@
     <WebView
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
-    <FrameLayout
-        android:id="@+id/barcodeButton"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:background="@drawable/rounded_orange_bg"
-        android:gravity="center">
-
-        <!-- QR Icon -->
-        <ImageView
-            android:id="@+id/qrIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_qr"
-            android:tint="@android:color/white"
-            android:layout_gravity="center"/>
-
-        <!-- Scan Line -->
-        <View
-            android:id="@+id/scanLine"
-            android:layout_width="40dp"
-            android:layout_height="2dp"
-            android:background="@android:color/white"
-            android:layout_gravity="center_horizontal|top"/>
-    </FrameLayout>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

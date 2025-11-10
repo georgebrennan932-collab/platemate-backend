@@ -1,0 +1,25 @@
+# Ignore environment and build stuff
+node_modules/
+dist/
+.env
+.env.example
+
+# Ignore uploaded files and images
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
+# Ignore archives and videos
+*.zip
+*.tar
+*.gz
+*.mp4
+*.mov
+
+# Misc
+.DS_Store
+.replit
+.local

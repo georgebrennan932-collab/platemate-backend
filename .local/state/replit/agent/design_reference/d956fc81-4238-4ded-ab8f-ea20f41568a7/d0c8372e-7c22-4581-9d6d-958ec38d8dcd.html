@@ -1,0 +1,476 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriScan - AI Nutrition Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                },
+                fontFamily: {
+                    sans: ["Roboto", "sans-serif"],
+                }
+            },
+        }
+    };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: hsl(0 0% 100%);
+            --foreground: hsl(222.2 84% 4.9%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222.2 84% 4.9%);
+            --primary: hsl(122 39% 49%);
+            --primary-foreground: hsl(0 0% 98%);
+            --secondary: hsl(210 40% 98%);
+            --secondary-foreground: hsl(222.2 84% 4.9%);
+            --muted: hsl(210 40% 96%);
+            --muted-foreground: hsl(215.4 16.3% 46.9%);
+            --accent: hsl(210 40% 96%);
+            --accent-foreground: hsl(222.2 84% 4.9%);
+            --border: hsl(214.3 31.8% 91.4%);
+            --input: hsl(214.3 31.8% 91.4%);
+            --ring: hsl(122 39% 49%);
+            --radius: 0.5rem;
+        }
+        
+        .camera-viewfinder {
+            background: linear-gradient(45deg, transparent 15px, rgba(76, 175, 80, 0.3) 15px, rgba(76, 175, 80, 0.3) 16px, transparent 16px),
+                        linear-gradient(-45deg, transparent 15px, rgba(76, 175, 80, 0.3) 15px, rgba(76, 175, 80, 0.3) 16px, transparent 16px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+        
+        .pulse-green {
+            animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse-green {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        
+        .nutrient-protein { color: hsl(217 91% 60%); }
+        .nutrient-carbs { color: hsl(25 95% 53%); }
+        .nutrient-fat { color: hsl(48 96% 53%); }
+        .nutrient-calories { color: hsl(0 84% 60%); }
+        
+        .progress-protein { background-color: hsl(217 91% 60%); }
+        .progress-carbs { background-color: hsl(25 95% 53%); }
+        .progress-fat { background-color: hsl(48 96% 53%); }
+        .progress-calories { background-color: hsl(0 84% 60%); }
+    </style>
+</head>
+<body class="bg-background text-foreground font-sans">
+    <!-- @COMPONENT: AppHeader -->
+    <header class="bg-primary text-primary-foreground p-4 shadow-lg">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-leaf text-2xl"></i>
+                <h1 class="text-xl font-bold">NutriScan</h1>
+            </div>
+            <button class="p-2 rounded-full hover:bg-primary/80 transition-colors">
+                <i class="fas fa-history text-lg"></i>
+            </button>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: AppHeader -->
+
+    <div class="max-w-md mx-auto min-h-screen bg-background">
+        <!-- @COMPONENT: MainInterface -->
+        <div id="cameraInterface" class="relative">
+            <!-- Camera View -->
+            <div class="relative bg-black aspect-square overflow-hidden">
+                <!-- Mock camera feed background -->
+                <!-- A top-down view of a colorful breakfast plate with eggs, bacon, toast and fruit -->
+                <img src="https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=800" 
+                     alt="Camera viewfinder showing food plate" 
+                     class="w-full h-full object-cover" 
+                     data-mock="true" />
+                
+                <!-- Camera overlay guides -->
+                <div class="absolute inset-0 camera-viewfinder pointer-events-none"></div>
+                
+                <!-- Plate detection overlay -->
+                <div class="absolute inset-8 border-2 border-primary rounded-full border-dashed opacity-60 pulse-green"></div>
+                
+                <!-- Top overlay with instructions -->
+                <div class="absolute top-4 left-4 right-4 bg-black/70 text-white p-3 rounded-lg">
+                    <p class="text-sm text-center">Position your plate within the circle</p>
+                </div>
+                
+                <!-- Camera controls -->
+                <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center space-x-6">
+                    <!-- Gallery button -->
+                    <button class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm border border-white/30">
+                        <i class="fas fa-images text-white text-lg"></i>
+                    </button>
+                    
+                    <!-- Capture button -->
+                    <button id="captureBtn" class="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-xl border-4 border-white hover:scale-105 transition-transform">
+                        <i class="fas fa-camera text-primary-foreground text-xl"></i>
+                    </button>
+                    
+                    <!-- Flash toggle -->
+                    <button class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm border border-white/30">
+                        <i class="fas fa-bolt text-white text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Upload alternative -->
+            <div class="p-4 bg-secondary/50">
+                <div class="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                    <i class="fas fa-cloud-upload-alt text-3xl text-muted-foreground mb-3"></i>
+                    <p class="text-muted-foreground mb-2">Or upload a photo from your gallery</p>
+                    <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                        Choose File
+                    </button>
+                    <!-- @FUNCTIONALITY: File input should accept image types and trigger analysis -->
+                </div>
+            </div>
+        </div>
+
+        <!-- @COMPONENT: ProcessingState [hidden by default] -->
+        <div id="processingState" class="hidden p-6 text-center">
+            <div class="bg-card rounded-xl shadow-lg p-8">
+                <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-brain text-primary text-2xl animate-pulse"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Analyzing your meal...</h3>
+                <p class="text-muted-foreground mb-4">Our AI is identifying food items and calculating nutrition</p>
+                <div class="w-full bg-muted rounded-full h-2 mb-2">
+                    <div class="bg-primary h-2 rounded-full animate-pulse" style="width: 65%"></div>
+                </div>
+                <p class="text-sm text-muted-foreground">Processing image...</p>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: ProcessingState -->
+
+        <!-- @COMPONENT: ResultsDisplay [shown after analysis] -->
+        <div id="resultsDisplay" class="p-4 space-y-4">
+            <!-- Photo thumbnail and actions -->
+            <div class="bg-card rounded-xl shadow-lg p-4">
+                <div class="flex items-center space-x-4">
+                    <!-- Analyzed photo thumbnail -->
+                    <div class="w-20 h-20 rounded-lg overflow-hidden bg-muted">
+                        <!-- Same breakfast plate image as thumbnail -->
+                        <img src="https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?ixlib=rb-4.0.3&auto=format&fit=crop&w=160&h=160" 
+                             alt="Analyzed food plate thumbnail" 
+                             class="w-full h-full object-cover" 
+                             data-mock="true" />
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-lg">Breakfast Plate</h3>
+                        <p class="text-muted-foreground text-sm">
+                            <span data-bind="analysis.timestamp">Just now</span> • 
+                            <span data-bind="analysis.confidence">95% confidence</span>
+                        </p>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <button class="p-2 text-muted-foreground hover:text-foreground transition-colors">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                        <button class="p-2 text-muted-foreground hover:text-foreground transition-colors">
+                            <i class="fas fa-bookmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nutrition Summary Cards -->
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Calories -->
+                <div class="bg-card rounded-xl p-4 shadow-lg border-l-4 border-red-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-muted-foreground">Calories</span>
+                        <i class="fas fa-fire nutrient-calories"></i>
+                    </div>
+                    <p class="text-2xl font-bold nutrient-calories" data-bind="nutrition.calories">485</p>
+                    <p class="text-xs text-muted-foreground">24% daily value</p>
+                </div>
+
+                <!-- Protein -->
+                <div class="bg-card rounded-xl p-4 shadow-lg border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-muted-foreground">Protein</span>
+                        <i class="fas fa-dumbbell nutrient-protein"></i>
+                    </div>
+                    <p class="text-2xl font-bold nutrient-protein" data-bind="nutrition.protein">28g</p>
+                    <p class="text-xs text-muted-foreground">56% daily value</p>
+                </div>
+
+                <!-- Carbs -->
+                <div class="bg-card rounded-xl p-4 shadow-lg border-l-4 border-orange-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-muted-foreground">Carbs</span>
+                        <i class="fas fa-bread-slice nutrient-carbs"></i>
+                    </div>
+                    <p class="text-2xl font-bold nutrient-carbs" data-bind="nutrition.carbs">45g</p>
+                    <p class="text-xs text-muted-foreground">15% daily value</p>
+                </div>
+
+                <!-- Fat -->
+                <div class="bg-card rounded-xl p-4 shadow-lg border-l-4 border-yellow-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-muted-foreground">Fat</span>
+                        <i class="fas fa-tint nutrient-fat"></i>
+                    </div>
+                    <p class="text-2xl font-bold nutrient-fat" data-bind="nutrition.fat">22g</p>
+                    <p class="text-xs text-muted-foreground">34% daily value</p>
+                </div>
+            </div>
+
+            <!-- Detailed Breakdown -->
+            <div class="bg-card rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-utensils text-primary mr-2"></i>
+                    Food Items Detected
+                </h3>
+                
+                <!-- @MAP: detectedFoods.map(food => ( -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-egg text-primary"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium" data-bind="food.name">Scrambled Eggs</p>
+                                <p class="text-sm text-muted-foreground" data-bind="food.portion">~2 large eggs</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold" data-bind="food.calories">180 cal</p>
+                            <p class="text-xs text-muted-foreground">14g protein</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-bacon text-primary"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium" data-bind="food.name">Bacon</p>
+                                <p class="text-sm text-muted-foreground" data-bind="food.portion">~3 strips</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold" data-bind="food.calories">135 cal</p>
+                            <p class="text-xs text-muted-foreground">9g protein</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-bread-slice text-primary"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium" data-bind="food.name">Whole Wheat Toast</p>
+                                <p class="text-sm text-muted-foreground" data-bind="food.portion">~1 slice</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold" data-bind="food.calories">85 cal</p>
+                            <p class="text-xs text-muted-foreground">3g protein</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-apple-alt text-primary"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium" data-bind="food.name">Mixed Berries</p>
+                                <p class="text-sm text-muted-foreground" data-bind="food.portion">~1/2 cup</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold" data-bind="food.calories">85 cal</p>
+                            <p class="text-xs text-muted-foreground">2g protein</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+
+            <!-- Macro Breakdown Chart -->
+            <div class="bg-card rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-chart-pie text-primary mr-2"></i>
+                    Macronutrient Breakdown
+                </h3>
+                
+                <div class="space-y-4">
+                    <!-- Protein -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+                            <span class="font-medium">Protein</span>
+                        </div>
+                        <span class="text-sm text-muted-foreground">23%</span>
+                    </div>
+                    <div class="w-full bg-muted rounded-full h-2">
+                        <div class="progress-protein h-2 rounded-full" style="width: 23%"></div>
+                    </div>
+
+                    <!-- Carbohydrates -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-orange-500 rounded-full"></div>
+                            <span class="font-medium">Carbohydrates</span>
+                        </div>
+                        <span class="text-sm text-muted-foreground">37%</span>
+                    </div>
+                    <div class="w-full bg-muted rounded-full h-2">
+                        <div class="progress-carbs h-2 rounded-full" style="width: 37%"></div>
+                    </div>
+
+                    <!-- Fat -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                            <span class="font-medium">Fat</span>
+                        </div>
+                        <span class="text-sm text-muted-foreground">40%</span>
+                    </div>
+                    <div class="w-full bg-muted rounded-full h-2">
+                        <div class="progress-fat h-2 rounded-full" style="width: 40%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex space-x-3 pt-4">
+                <button class="flex-1 bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add to Diary
+                </button>
+                <button class="flex-1 bg-secondary text-secondary-foreground py-3 px-4 rounded-lg font-medium hover:bg-secondary/90 transition-colors">
+                    <i class="fas fa-camera mr-2"></i>
+                    Scan Another
+                </button>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: ResultsDisplay -->
+
+        <!-- @COMPONENT: ErrorState [hidden by default] -->
+        <div id="errorState" class="hidden p-6">
+            <div class="bg-card rounded-xl shadow-lg p-8 text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Unable to Analyze Image</h3>
+                <p class="text-muted-foreground mb-4">We couldn't identify any food items in this image. Please try:</p>
+                <ul class="text-sm text-muted-foreground text-left mb-6 space-y-1">
+                    <li>• Ensure good lighting</li>
+                    <li>• Position the plate clearly in frame</li>
+                    <li>• Remove any obstructions</li>
+                    <li>• Take photo from above the plate</li>
+                </ul>
+                <button class="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                    Try Again
+                </button>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: ErrorState -->
+        <!-- @END_COMPONENT: MainInterface -->
+    </div>
+
+    <!-- @STATE: currentView:string = 'camera' | 'processing' | 'results' | 'error' -->
+    <!-- @STATE: analysisData:object = null -->
+    <!-- @STATE: isProcessing:boolean = false -->
+
+    <script>
+        // Simple state management for demo purposes
+        (function() {
+            const states = {
+                camera: document.getElementById('cameraInterface'),
+                processing: document.getElementById('processingState'), 
+                results: document.getElementById('resultsDisplay'),
+                error: document.getElementById('errorState')
+            };
+            
+            let currentState = 'camera';
+            
+            function showState(stateName) {
+                // Hide all states
+                Object.values(states).forEach(element => {
+                    if (element) element.classList.add('hidden');
+                });
+                
+                // Show target state
+                if (states[stateName]) {
+                    states[stateName].classList.remove('hidden');
+                }
+                
+                currentState = stateName;
+            }
+            
+            // Demo: Capture button triggers analysis flow
+            document.getElementById('captureBtn')?.addEventListener('click', function() {
+                showState('processing');
+                
+                // Simulate processing time
+                setTimeout(() => {
+                    showState('results');
+                }, 3000);
+            });
+            
+            // Initialize with camera view (already visible)
+            showState('camera');
+            
+            // TODO: Implement actual camera API integration
+            // TODO: Implement file upload functionality  
+            // TODO: Integrate with computer vision API for food recognition
+            // TODO: Connect to nutrition database for accurate data
+            // TODO: Implement portion size estimation algorithms
+            // TODO: Add error handling for API failures
+            // TODO: Implement save to diary functionality
+            // TODO: Add sharing capabilities
+        })();
+    </script>
+</body>
+</html>

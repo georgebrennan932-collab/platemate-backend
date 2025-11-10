@@ -1,0 +1,58 @@
+{
+  "name": "rest-express",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "NODE_ENV=development tsx server/index.ts",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "start": "NODE_ENV=production node dist/index.js",
+    "check": "tsc",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/browser": "^7.0.2",
+    "@capacitor/camera": "^7.0.2",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/device": "^7.0.2",
+    "@capacitor/filesystem": "^7.1.4",
+    "@capacitor/ios": "^7.4.3",
+    "@capacitor/local-notifications": "^7.0.3",
+    "@capacitor/motion": "^7.0.1",
+    "@capacitor/splash-screen": "^7.0.3",
+    "@capacitor/status-bar": "^7.0.3",
+    "@google-cloud/storage": "^7.17.2",
+    "@google/genai": "^1.17.0",
+    "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^3.0.2",
+    "connect-pg-simple": "^10.0.0",
+    "cross-env": "^10.1.0",
+    "date-fns": "^3.6.0",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.39.1",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "pg": "^8.11.3",
+    "multer": "^2.0.2",
+    "uuid": "^13.0.0",
+    "ws": "^8.18.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/connect-pg-simple": "^7.0.3",
+    "@types/express": "4.17.21",
+    "@types/express-session": "^1.18.0",
+    "@types/node": "^20.16.11",
+    "drizzle-kit": "^0.30.4",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.6.3",
+    "vite": "^6.3.6"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.8"
+  }
+}

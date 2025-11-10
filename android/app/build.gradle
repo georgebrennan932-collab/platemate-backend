@@ -1,13 +1,15 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
 
 android {
-    namespace "com.georgebrennan.platemate3"
+    configurations.all {
+        resolutionStrategy.force 'androidx.health.connect:connect-client:1.1.0-alpha01'
+    }
+    namespace "com.platemate.app"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.georgebrennan.platemate3"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        applicationId "com.platemate.app"
+        minSdkVersion 26
+        targetSdkVersion 35
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -37,10 +39,6 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
-    implementation "com.airbnb.android:lottie:6.1.0"
-    implementation "com.android.billingclient:billing:8.0.0"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.20"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

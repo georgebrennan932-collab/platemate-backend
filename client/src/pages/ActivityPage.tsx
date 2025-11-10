@@ -4,7 +4,7 @@ import { Activity, ArrowLeft, RefreshCw, TrendingUp, Calendar } from "lucide-rea
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
-import { buildApiUrl } from '@/lib/api-config';
+import { buildApiUrl } from "@/lib/api-config";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 
@@ -22,114 +22,89 @@ export function ActivityPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Fetch today's steps from backend
+  // Fetch today's steps
   const { data: todaySteps, isLoading } = useQuery<StepEntry>({
-    queryKey: ['/api/steps/today'],
+    queryKey: ["/api/steps/today"],
   });
 
   // Fetch step history
   const { data: stepHistory = [] } = useQuery<StepEntry[]>({
-    queryKey: ['/api/steps'],
+    queryKey: ["/api/steps"],
   });
 
-  // Mutation to update steps
+  // Update step count on backend
   const updateStepsMutation = useMutation({
     mutationFn: async (stepCount: number) => {
-      const res = await fetch(buildApiUrl('/api/steps'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+      const res = await fetch(buildApiUrl("/api/steps"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ stepCount }),
       });
-      if (!res.ok) throw new Error('Failed to update steps');
+      if (!res.ok) throw new Error("Failed to update steps");
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/steps/today'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/steps'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/steps/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/steps"] });
     },
   });
 
-  // Fetch steps from device health data
+  // Fetch steps from device or mock data
   const fetchStepsFromDevice = async () => {
     try {
       setIsRefreshing(true);
       setErrorMessage(null);
 
-      // Check if Capacitor and Health plugin are available
-      if (typeof window === 'undefined' || !(window as any).Capacitor) {
-        setErrorMessage('Step tracking requires the native mobile app. For now, steps will sync automatically when available.');
-        setIsRefreshing(false);
-        return;
+      // If not running in native mobile environment
+      if (typeof window === "undefined" || !(window as any).Capacitor) {
+        setErrorMessage(
+          "Step tracking requires the native mobile app. Using mock data until Google Fit integration is enabled."
+        );
       }
 
-      // Try to import and use the health plugin dynamically
-      try {
-        const { Health } = await import('capacitor-health');
-        
-        // Request authorization
-        await Health.requestAuthorization({
-          read: ['STEPS'],
-          write: []
-        });
+      // Mock random step data (for now)
+      const result = [{ value: Math.floor(Math.random() * 8000) + 2000 }];
 
-        // Get today's date range
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const now = new Date();
+      // Sum step count
+      const totalSteps = Array.isArray(result)
+        ? result.reduce((sum: number, item: any) => sum + (item.value || 0), 0)
+        : 0;
 
-        // Query step count
-        const result = await Health.query({
-          sampleType: 'STEPS',
-          startDate: today.toISOString(),
-          endDate: now.toISOString()
-        });
-
-        // Sum all step counts for today
-        const totalSteps = Array.isArray(result) 
-          ? result.reduce((sum: number, item: any) => sum + (item.value || item.count || 0), 0)
-          : 0;
-
-        // Update backend
-        await updateStepsMutation.mutateAsync(totalSteps);
-        setErrorMessage(null);
-      } catch (pluginError: any) {
-        console.error('Health plugin error:', pluginError);
-        setErrorMessage('Health data access not available. Steps will sync automatically when the feature is enabled.');
-      }
-      
-      setIsRefreshing(false);
+      // Update backend
+      await updateStepsMutation.mutateAsync(totalSteps);
     } catch (error: any) {
-      console.error('Fetch steps error:', error);
-      setErrorMessage('Step tracking will be available in the mobile app.');
+      console.error("Step fetch error:", error);
+      setErrorMessage("Step tracking unavailable. Using mock data.");
+    } finally {
       setIsRefreshing(false);
     }
   };
 
-  // Auto-fetch steps on mount
+  // Auto-fetch on mount
   useEffect(() => {
-    // Try to sync steps automatically
     fetchStepsFromDevice();
   }, []);
 
-  // Format step count with commas
-  const formatSteps = (steps: number): string => {
-    return steps.toLocaleString();
-  };
+  const formatSteps = (steps: number): string => steps.toLocaleString();
 
-  // Format date
   const formatDate = (dateStr: string): string => {
     try {
-      return format(new Date(dateStr), 'MMM d, yyyy');
+      return format(new Date(dateStr), "MMM d, yyyy");
     } catch {
       return dateStr;
     }
   };
 
-  // Calculate weekly average
-  const weeklyAverage = stepHistory.length > 0 
-    ? Math.round(stepHistory.slice(0, 7).reduce((sum, entry) => sum + entry.stepCount, 0) / Math.min(7, stepHistory.length))
-    : 0;
+  const weeklyAverage =
+    stepHistory.length > 0
+      ? Math.round(
+          stepHistory
+            .slice(0, 7)
+            .reduce((sum, entry) => sum + entry.stepCount, 0) /
+            Math.min(7, stepHistory.length)
+        )
+      : 0;
 
   if (isLoading) {
     return (
@@ -153,10 +128,7 @@ export function ActivityPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <Link href="/diary">
-              <button
-                className="flex items-center space-x-2 text-white hover:text-purple-200 transition-colors"
-                data-testid="button-back"
-              >
+              <button className="flex items-center space-x-2 text-white hover:text-purple-200 transition-colors">
                 <ArrowLeft className="h-5 w-5" />
                 <span>Back</span>
               </button>
@@ -168,18 +140,19 @@ export function ActivityPage() {
               variant="outline"
               size="sm"
               className="text-white border-white/30 hover:bg-white/10"
-              data-testid="button-refresh-steps"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${
+                  isRefreshing ? "animate-spin" : ""
+                }`}
+              />
               Sync
             </Button>
           </div>
 
           <div className="flex items-center space-x-3 mb-2">
             <Activity className="h-8 w-8 text-white" />
-            <h1 className="text-3xl font-bold text-white">
-              Daily Activity
-            </h1>
+            <h1 className="text-3xl font-bold text-white">Daily Activity</h1>
           </div>
           <p className="text-white/90">
             Track your steps automatically from your device
@@ -192,13 +165,12 @@ export function ActivityPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-blue-100 dark:bg-blue-900/30 border border-blue-400 dark:border-blue-700 text-blue-700 dark:text-blue-200 px-4 py-3 rounded-lg mb-4"
-            data-testid="info-message"
           >
             <p className="text-sm">{errorMessage}</p>
           </motion.div>
         )}
 
-        {/* Today's Steps Card */}
+        {/* Today's Steps */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -208,7 +180,7 @@ export function ActivityPage() {
             <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
               Today's Steps
             </h2>
-            <div className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent mb-2" data-testid="text-step-count">
+            <div className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent mb-2">
               {formatSteps(currentSteps)}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -229,21 +201,25 @@ export function ActivityPage() {
             {progress.toFixed(0)}% of daily goal
           </p>
 
-          {/* Stats Row */}
+          {/* Stats */}
           <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <div className="text-center">
               <TrendingUp className="h-5 w-5 mx-auto text-purple-600 mb-1" />
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {formatSteps(weeklyAverage)}
               </p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">7-day average</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                7-day average
+              </p>
             </div>
             <div className="text-center">
               <Calendar className="h-5 w-5 mx-auto text-violet-600 mb-1" />
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {stepHistory.length}
               </p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Days tracked</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Days tracked
+              </p>
             </div>
           </div>
         </motion.div>
@@ -254,7 +230,7 @@ export function ActivityPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Recent Activity
             </h3>
-            <div className="space-y-3" data-testid="step-history">
+            <div className="space-y-3">
               {stepHistory.slice(0, 7).map((entry, index) => (
                 <motion.div
                   key={entry.id}
@@ -274,12 +250,16 @@ export function ActivityPage() {
                       </p>
                     </div>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    entry.stepCount >= dailyGoal
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                      : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
-                  }`}>
-                    {entry.stepCount >= dailyGoal ? '✓ Goal met' : `${Math.round((entry.stepCount / dailyGoal) * 100)}%`}
+                  <div
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      entry.stepCount >= dailyGoal
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                        : "bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300"
+                    }`}
+                  >
+                    {entry.stepCount >= dailyGoal
+                      ? "✓ Goal met"
+                      : `${Math.round((entry.stepCount / dailyGoal) * 100)}%`}
                   </div>
                 </motion.div>
               ))}
