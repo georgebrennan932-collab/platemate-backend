@@ -63,7 +63,8 @@ app.use("/api", emailAuthRoutes);
     console.error("⚠️ Failed to initialize challenges:", error);
   }
 
-  // Global error handler
+  // redeploy trigger test
+// Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
