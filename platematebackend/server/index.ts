@@ -3,7 +3,7 @@ dotenv.config();
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { serveStatic, log } from "./vite"; // ✅ removed setupVite
 import emailAuthRoutes from "./email-auth";
 import { appTokenMiddleware } from "./middleware/app-token-middleware";
 
@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: false }));
 // Serve static files from 'public' directory (before token middleware)
 app.use(express.static("public"));
 
-// App token validation middleware (now in BLOCKING mode)
+// App token validation middleware (BLOCKING mode)
 app.use(appTokenMiddleware);
 
 // Request logging middleware
@@ -63,19 +63,19 @@ app.use("/api", emailAuthRoutes);
     console.error("⚠️ Failed to initialize challenges:", error);
   }
 
-  // redeploy trigger test
-// Global error handler
+  // Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
     res.status(status).json({ message });
   });
 
-  // Deployment setup for Render
-serveStatic(app);
+  // ✅ Always serve static files on Render (no Vite dev mode)
+  serveStatic(app);
 
-const PORT = parseInt(process.env.PORT || "10000", 10);
-app.listen(PORT, "0.0.0.0", () => {
-  log(`✅ Server running on port ${PORT}`);
-});
+  // ✅ Correct Render binding
+  const PORT = parseInt(process.env.PORT || "10000", 10);
+  app.listen(PORT, "0.0.0.0", () => {
+    log(`✅ Server running on port ${PORT}`);
+  });
 })();
