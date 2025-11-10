@@ -74,7 +74,7 @@ app.use("/api", emailAuthRoutes);
 serveStatic(app);
 
 const PORT = parseInt(process.env.PORT || "10000", 10);
-const HOST = process.env.RENDER ? "0.0.0.0" : "localhost";
+const HOST = "0.0.0.0";
 
 app.listen(PORT, HOST, () => {
   log(`✅ Server running on ${HOST}:${PORT}`);
