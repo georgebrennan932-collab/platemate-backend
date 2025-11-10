@@ -21,7 +21,14 @@
     "express-session": "^1.18.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.0",
+    "@types/ws": "^8.18.1",
+    "drizzle-zod": "^0.8.3",
+    "openai": "^6.8.1",
     "typescript": "^5.9.3",
-    "vite": "^7.2.2"
+    "vite": "^7.2.2",
+    "ws": "^8.18.3",
+    "zod": "^4.1.12"
   }
 }
