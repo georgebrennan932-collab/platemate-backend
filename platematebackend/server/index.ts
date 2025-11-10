@@ -78,9 +78,10 @@ app.use("/api", emailAuthRoutes);
     serveStatic(app);
   }
 
-  // ✅ FIXED: use localhost instead of 0.0.0.0 for Windows compatibility
+  // ✅ FIXED: use 0.0.0.0 for Render deployment
   const PORT = parseInt(process.env.PORT || "5000", 10);
-  app.listen(PORT, "localhost", () => {
-    log(`✅ Server running locally on http://localhost:${PORT}`);
+  app.listen(PORT, "0.0.0.0", () => {
+    log(`✅ Server running on port ${PORT}`);
   });
 })();
+
