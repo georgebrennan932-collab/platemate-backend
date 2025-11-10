@@ -1,28 +1,21 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import express, { type Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { serveStatic, log } from "./vite"; // ✅ removed setupVite
+import { serveStatic, log } from "./vite";
 import emailAuthRoutes from "./email-auth";
 import { appTokenMiddleware } from "./middleware/app-token-middleware";
 
 const app = express();
 
-// Disable ETags globally to prevent 304 Not Modified responses
 app.set("etag", false);
-
-// Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Serve static files from 'public' directory (before token middleware)
 app.use(express.static("public"));
-
-// App token validation middleware (BLOCKING mode)
 app.use(appTokenMiddleware);
 
-// Request logging middleware
+// Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -49,13 +42,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Register authentication routes
 app.use("/api", emailAuthRoutes);
 
 (async () => {
   const server = await registerRoutes(app);
 
-  // Initialize gamification challenges
   try {
     const { challengeService } = await import("./services/challenge-service");
     await challengeService.initializeChallenges();
@@ -63,20 +54,18 @@ app.use("/api", emailAuthRoutes);
     console.error("⚠️ Failed to initialize challenges:", error);
   }
 
-  // Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    res.status(status).json({ message });
+    const status = err.status || 500;
+    res.status(status).json({ message: err.message || "Internal Server Error" });
   });
 
-  // Deployment setup for Render
-serveStatic(app);
+  // Render deployment setup
+  serveStatic(app);
 
-const PORT = parseInt(process.env.PORT || "10000", 10);
-const HOST = "0.0.0.0";
+  const PORT = parseInt(process.env.PORT || "10000", 10);
+  const HOST = "0.0.0.0";
 
-app.listen(PORT, HOST, () => {
-  log(`✅ Server running on ${HOST}:${PORT}`);
-});
+  app.listen(PORT, HOST, () => {
+    log(`✅ Server running on ${HOST}:${PORT}`);
+  });
 })();
