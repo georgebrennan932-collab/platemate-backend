@@ -71,18 +71,11 @@ app.use("/api", emailAuthRoutes);
     res.status(status).json({ message });
   });
 
-  // Development vs production setup
-  const isDeployment = process.env.NODE_ENV === "production";
-  if (!isDeployment) {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  // Deployment setup for Render
+serveStatic(app);
 
-  // ✅ FIXED: use 0.0.0.0 for Render deployment
-  const PORT = parseInt(process.env.PORT || "5000", 10);
-  app.listen(PORT, "0.0.0.0", () => {
-    log(`✅ Server running on port ${PORT}`);
-  });
+const PORT = parseInt(process.env.PORT || "10000", 10);
+app.listen(PORT, "0.0.0.0", () => {
+  log(`✅ Server running on port ${PORT}`);
+});
 })();
-
