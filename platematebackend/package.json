@@ -2,13 +2,17 @@
   "name": "platemate-backend",
   "version": "1.0.0",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "build": "echo '⚠️ Skipping TypeScript type checking on Render build' && exit 0",
-    "start": "NODE_ENV=production npx ts-node --esm --transpile-only server/index.ts"
+    "start": "NODE_ENV=production npx ts-node --esm --transpile-only --require module-alias/register server/index.ts"
   },
   "engines": {
     "node": "20.x",
     "npm": "9.x"
+  },
+  "_moduleAliases": {
+    "@shared": "shared"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.17.2",
@@ -22,6 +26,7 @@
     "drizzle-zod": "^0.8.3",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+    "module-alias": "^2.2.3",
     "neon": "^2.0.0",
     "openai": "^4.47.1",
     "pg": "^8.13.0",
