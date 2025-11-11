@@ -4,7 +4,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmitOnError false",
+    "build": "tsc --noEmitOnError false --skipLibCheck true",
     "start": "NODE_ENV=production node dist/server/index.js"
   },
   "engines": {
