@@ -4,7 +4,7 @@
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
-    "rootDir": "server",
+    "rootDir": ".",
     "outDir": "dist",
     "strict": false,
     "esModuleInterop": true,
