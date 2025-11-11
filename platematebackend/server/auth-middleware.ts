@@ -1,56 +1,41 @@
 import { Request, Response, NextFunction } from "express";
-import { sessions } from "./session-store";
-
+import jwt from "jsonwebtoken";
 import { db } from "./db";
+import { users } from "../shared/schema";
+import { eq } from "drizzle-orm";
 
-// Middleware to validate email/password auth session
-export async function emailAuthMiddleware(req: any, res: Response, next: NextFunction) {
+export interface AuthenticatedRequest extends Request {
+  user?: any;
+}
+
+export const authMiddleware = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
-      // No token provided - continue as unauthenticated
-      return next();
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Missing or invalid token" });
     }
 
-    const email = sessions[token];
-    
-    if (!email) {
-      // Invalid token - continue as unauthenticated
-      return next();
+    const token = authHeader.split(" ")[1];
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+
+    // ✅ Get user by email (adjust if your token stores userId instead)
+    const result = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.email, decoded.email),
+    });
+
+    if (!result) {
+      return res.status(401).json({ error: "User not found" });
     }
 
-    // Verify user still exists in database
-    const userKey = `user:${email}`;
-    const userResult: any = await db.get(userKey);
-
-    if (!userResult || userResult.ok !== true) {
-      // User no longer exists - clean up session
-      delete sessions[token];
-      return next();
-    }
-
-    // Attach user info to request
-    // Use email as the userId for consistency
-    req.user = {
-      email,
-      // Add claims.sub for compatibility with old routes
-      claims: {
-        sub: email
-      }
-    };
-
+    req.user = result;
     next();
-  } catch (error) {
-    console.error("Email auth middleware error:", error);
-    next(); // Continue even if middleware fails
+  } catch (err) {
+    console.error("Auth error:", err);
+    return res.status(401).json({ error: "Unauthorized" });
   }
-}
-
-// Middleware to require authentication
-export function requireAuth(req: any, res: Response, next: NextFunction) {
-  if (!req.user || !req.user.email) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  next();
-}
+};
