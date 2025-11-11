@@ -1,10 +1,10 @@
-import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, DiaryEntry, ProviderError, ProviderStatus, DailyCoaching, EducationalTip } from "./types";
-import { OpenAIProvider } from "./openai-provider";
-import { GeminiProvider } from "./gemini-provider";
-import { HuggingFaceProvider } from "./huggingface-provider";
-import { usdaService } from "../services/usda-service";
-import { openFoodFactsService } from "../services/openfoodfacts-service";
-import { imageAnalysisCache } from "../services/image-analysis-cache";
+import { AIProvider, FoodAnalysisResult, FoodDetectionResult, DietAdviceResult, DiaryEntry, ProviderError, ProviderStatus, DailyCoaching, EducationalTip } from "./types.js";
+import { OpenAIProvider } from "./openai-provider.js";
+import { GeminiProvider } from "./gemini-provider.js";
+import { HuggingFaceProvider } from "./huggingface-provider.js";
+import { usdaService } from "../services/usda-service.js";
+import { openFoodFactsService } from "../services/openfoodfacts-service.js";
+import { imageAnalysisCache } from "../services/image-analysis-cache.js";
 
 export class AIManager {
   private providers: AIProvider[] = [];
