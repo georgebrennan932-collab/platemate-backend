@@ -1644,7 +1644,7 @@ export class AIManager {
     const availableProviders = this.getAvailableProviders();
     
     // Import the user context service
-    const { userContextService } = await import('../services/user-context-service');
+    const { userContextService } = await import('../services/user-context-service.js');
     
     // Format context for AI prompt
     const contextString = userContextService.formatContextForAI(userContext);
