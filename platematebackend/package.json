@@ -28,8 +28,6 @@
   "devDependencies": {
     "@types/node": "^24.10.0",
     "node": "^25.1.0",
-    "ts": "^0.2.2",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "ts": "^0.2.2"
   }
 }
