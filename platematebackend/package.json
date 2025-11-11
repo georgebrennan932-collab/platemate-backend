@@ -2,14 +2,13 @@
   "name": "platemate-backend",
   "version": "1.0.0",
   "license": "MIT",
-  "type": "module",
   "scripts": {
     "build": "echo '⚠️ Skipping TypeScript type checking on Render build' && exit 0",
-    "start": "NODE_ENV=production npx ts-node --esm --transpile-only --require module-alias/register server/index.ts"
-  },
+    "start": "NODE_ENV=production ts-node --transpile-only server/index.ts"
+
   "engines": {
-    "node": "20.x",
-    "npm": "9.x"
+    "node": "20.0.0",
+    "npm": "9.0.0"
   },
   "_moduleAliases": {
     "@shared": "shared"
