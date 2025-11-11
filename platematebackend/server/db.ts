@@ -1,19 +1,17 @@
-import path from "path";
 import dotenv from "dotenv";
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import ws from "ws";
-import * as schema from "@shared/schema";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import * as schema from "../shared/schema";
 
-// ✅ Force-load the correct .env file from the project root
+// ✅ Load environment variables
 dotenv.config();
 
-neonConfig.webSocketConstructor = ws;
-
 if (!process.env.DATABASE_URL) {
-  console.error("❌ DATABASE_URL not found in environment!");
-  throw new Error("DATABASE_URL must be set. Check your .env file location and spelling.");
+  throw new Error("❌ DATABASE_URL not found. Check your .env file.");
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+// ✅ Create Neon SQL client (HTTP mode for Render)
+const sql = neon(process.env.DATABASE_URL);
+
+// ✅ Initialize Drizzle ORM with your schema
+export const db = drizzle(sql, { schema });
