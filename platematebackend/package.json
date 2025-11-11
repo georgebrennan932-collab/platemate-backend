@@ -4,9 +4,10 @@
   "type": "module",
   "license": "MIT",
  "scripts": {
-  "build": "tsc --noEmit --skipLibCheck --ignoreDeprecations 5.0 || echo '⚠️ Type errors ignored for Render'",
+  "build": "tsc --noEmit --skipLibCheck || echo '⚠️ TypeScript errors ignored for Render build'",
   "start": "NODE_ENV=production node --loader ts-node/esm server/index.ts"
 },
+
 
   "engines": {
   "node": "20.x",
