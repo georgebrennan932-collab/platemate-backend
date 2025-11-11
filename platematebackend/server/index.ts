@@ -1,4 +1,4 @@
-import 'module-alias/register';
+import 'module-alias/register.js';
 import dotenv from "dotenv";
 dotenv.config();
 
