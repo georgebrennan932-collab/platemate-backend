@@ -4,7 +4,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "echo 'Skipping TypeScript build on Render (already built locally)'",
+    "build": "npx tsc --noEmitOnError false",
     "start": "NODE_ENV=production node dist/server/index.js"
   },
   "engines": {
@@ -29,5 +29,8 @@
     "module-alias": "^2.2.3",
     "neon": "^2.0.0",
     "openai": "^4.47.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
   }
 }
