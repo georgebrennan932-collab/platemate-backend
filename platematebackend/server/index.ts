@@ -3,10 +3,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { serveStatic, log } from "./vite";
-import emailAuthRoutes from "./email-auth";
-import { appTokenMiddleware } from "./middleware/app-token-middleware";
+import { registerRoutes } from "./routes.js";
+import { serveStatic, log } from "./vite.js";
+import emailAuthRoutes from "./email-auth.js";
+import { appTokenMiddleware } from "./middleware/app-token-middleware.js";
 
 const app = express();
 
