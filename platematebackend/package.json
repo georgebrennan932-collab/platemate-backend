@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc --noEmitOnError false",
-    "start": "NODE_ENV=production node dist/server/index.js"
+    "start": "node -e \"console.log('Node version:', process.version); console.log('CWD:', process.cwd()); console.log('NODE_PATH:', process.env.NODE_PATH); require('module-alias/register.js'); require('./dist/server/index.js');\""
   },
   "engines": {
     "node": ">=20.0.0",
@@ -15,7 +15,6 @@
     "@shared": "shared"
   },
   "dependencies": {
-  
     "@google-cloud/storage": "^7.17.2",
     "@google/genai": "^1.17.6",
     "@neondatabase/serverless": "^0.10.4",
