@@ -83,7 +83,7 @@ app.use("/api", emailAuthRoutes);
   serveStatic(app);
 
   /* ---------- Railway bind (PORT provided by platform) ---------- */
-  const PORT = Number(process.env.PORT ?? 8080);
+  const PORT = Number(process.env.PORT || 8080);
   const HOST = "0.0.0.0";
   app.listen(PORT, HOST, () => {
     console.log(`🚆 Server listening on http://${HOST}:${PORT}`);
