@@ -4,9 +4,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-  "build": "tsc --project tsconfig.json",
-  "start": "NODE_ENV=production node -r module-alias/register dist/server/index.js"
-},
+    "build": "tsc",
+    "postinstall": "npm install module-alias",
+    "start": "NODE_ENV=production node -r module-alias/register dist/server/index.js"
+  },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=9.0.0"
@@ -28,9 +29,7 @@
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
     "neon": "^2.0.0",
-    "openai": "^4.47.1"
-  },
-  "devDependencies": {
+    "openai": "^4.47.1",
     "typescript": "^5.9.3"
   }
 }
