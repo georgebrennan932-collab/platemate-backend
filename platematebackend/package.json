@@ -4,10 +4,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "postinstall": "npm install module-alias",
-    "start": "NODE_ENV=production node -r module-alias/register dist/server/index.js"
-  },
+  "build": "tsc",
+  "start": "NODE_ENV=production node -r module-alias/register dist/server/index.js",
+  "force-rebuild": "echo force rebuild $(date)"
+}
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=9.0.0"
