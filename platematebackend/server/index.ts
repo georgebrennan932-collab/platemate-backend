@@ -1,4 +1,6 @@
-import 'module-alias/register.js';
+// server/index.ts
+
+import "module-alias/register.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -10,13 +12,19 @@ import { appTokenMiddleware } from "./middleware/app-token-middleware.js";
 
 const app = express();
 
+/* ---------- Core middleware ---------- */
 app.set("etag", false);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static("public"));
 app.use(appTokenMiddleware);
 
-// Logging middleware (typed)
+/* ---------- Simple health check ---------- */
+app.get("/healthz", (_req, res) => {
+  res.status(200).json({ ok: true, uptime: process.uptime() });
+});
+
+/* ---------- Request logging (typed) ---------- */
 app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
   const path = req.path;
@@ -39,7 +47,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
         try {
           logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
         } catch {
-          // ignore stringify errors
+          /* ignore stringify errors */
         }
       }
       if (logLine.length > 120) logLine = logLine.slice(0, 119) + "…";
@@ -50,33 +58,34 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+/* ---------- Routes ---------- */
 app.use("/api", emailAuthRoutes);
 
 (async () => {
-  const server = await registerRoutes(app);
+  // register app routes that may need async setup
+  await registerRoutes(app);
 
-  // Initialize gamification challenges (best-effort)
+  // best-effort init of challenge data (don’t crash app if it fails)
   try {
-    const { challengeService } = await import("./services/challenge-service");
+    const { challengeService } = await import("./services/challenge-service.js");
     await challengeService.initializeChallenges();
-  } catch (error) {
-    console.error("⚠️ Failed to initialize challenges:", error);
+  } catch (err) {
+    console.error("⚠️ Failed to initialize challenges:", err);
   }
 
-  // Global error handler
+  /* ---------- Global error handler ---------- */
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err?.status || 500;
     res.status(status).json({ message: err?.message || "Internal Server Error" });
   });
 
-  // 🧠 Brute-force Render deployment binding
+  /* ---------- Static (if you serve any) ---------- */
   serveStatic(app);
 
-  // Ignore whatever Node thinks; force host & port for Render
-  const PORT = parseInt(process.env.PORT || "10000", 10);
-  const HOST = "0.0.0.0"; // hardcoded to bind publicly
-
+  /* ---------- Railway bind (PORT provided by platform) ---------- */
+  const PORT = Number(process.env.PORT ?? 8080);
+  const HOST = "0.0.0.0";
   app.listen(PORT, HOST, () => {
-    console.log(`✅ [FORCED] Server running on Render at http://${HOST}:${PORT}`);
+    console.log(`🚆 Server listening on http://${HOST}:${PORT}`);
   });
-})(); // 👈 closes the async IIFE
+})();
