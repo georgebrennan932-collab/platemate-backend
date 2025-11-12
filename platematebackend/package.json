@@ -4,10 +4,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-  "build": "tsc",
-  "start": "NODE_ENV=production node -r module-alias/register dist/server/index.js",
-  "force-rebuild": "echo force rebuild $(date)"
-}
+    "build": "tsc",
+    "start": "NODE_ENV=production node -r module-alias/register dist/server/index.js",
+    "force-rebuild": "echo force rebuild $(date)"
+  },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=9.0.0"
@@ -29,7 +29,9 @@
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
     "neon": "^2.0.0",
-    "openai": "^4.47.1",
+    "openai": "^4.47.1"
+  },
+  "devDependencies": {
     "typescript": "^5.9.3"
   }
 }
